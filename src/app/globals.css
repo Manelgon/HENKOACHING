@@ -2,6 +2,31 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ═══ ROXBOROUGH CF ═══ */
+@font-face {
+  font-family: 'Roxborough CF';
+  src: url('/fonts/roxborough-cf-regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Roxborough CF';
+  src: url('/fonts/roxborough-cf-bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Roxborough CF';
+  src: url('/fonts/roxborough-cf-heavy.otf') format('opentype');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 @layer base {
   html {
     scroll-behavior: smooth;
@@ -12,12 +37,13 @@
   }
 
   h1 {
-    font-family: 'Hey Gotcha', 'Raleway', sans-serif;
-    @apply uppercase tracking-wider;
+    font-family: 'Roxborough CF', 'Georgia', serif;
+    font-weight: 900;
   }
 
   h2, h3 {
     font-family: 'Roxborough CF', 'Georgia', serif;
+    font-weight: 700;
   }
 }
 
@@ -31,25 +57,14 @@
   }
 
   .section-title {
-    font-family: 'Hey Gotcha', sans-serif;
-    @apply text-henko-turquoise uppercase tracking-wider;
+    font-family: 'Roxborough CF', Georgia, serif;
+    font-weight: 400;
+    @apply text-henko-turquoise tracking-wide;
   }
 
   .section-subtitle {
     font-family: 'Roxborough CF', Georgia, serif;
+    font-weight: 700;
     @apply text-gray-800;
   }
-}
-
-/* Hey Gotcha — usar variable CSS como fallback visual hasta cargar la fuente */
-@font-face {
-  font-family: 'Hey Gotcha';
-  src: local('Hey Gotcha');
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Roxborough CF';
-  src: local('Roxborough CF');
-  font-display: swap;
 }
