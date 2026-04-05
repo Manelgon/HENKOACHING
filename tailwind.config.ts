@@ -19,6 +19,7 @@ const config: Config = {
         },
       },
       fontFamily: {
+        gotcha: ['Hey Gotcha', 'sans-serif'],
         roxborough: ['Roxborough CF', 'Georgia', 'serif'],
         raleway: ['var(--font-raleway)', 'Raleway', 'sans-serif'],
       },
