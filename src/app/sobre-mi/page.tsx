@@ -27,7 +27,7 @@ export default function SobreMiPage() {
 
             {/* Texto */}
             <div>
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6" style={{ fontFamily: 'Roxborough CF, Georgia, serif' }}>
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
                 Jennifer Cervera
               </h2>
               <p className="text-henko-turquoise font-raleway font-semibold mb-6">
@@ -70,7 +70,7 @@ export default function SobreMiPage() {
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-14">
             <p className="section-title text-sm mb-3">Cómo pienso</p>
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900" style={{ fontFamily: 'Roxborough CF, Georgia, serif' }}>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
               Lo que guía mi forma de trabajar
             </h2>
           </div>
@@ -94,7 +94,7 @@ export default function SobreMiPage() {
               },
             ].map((val) => (
               <div key={val.title} className="bg-henko-white p-8 border border-gray-100">
-                <h3 className="text-lg font-bold text-gray-900 mb-3 font-raleway" style={{ fontFamily: 'Roxborough CF, Georgia, serif' }}>
+                <h3 className="text-lg font-bold text-gray-900 mb-3 font-raleway">
                   {val.title}
                 </h3>
                 <p className="text-gray-500 font-raleway text-sm leading-relaxed">{val.desc}</p>
@@ -108,7 +108,7 @@ export default function SobreMiPage() {
       <section className="bg-henko-turquoise py-20 text-white">
         <div className="max-w-3xl mx-auto px-6 text-center">
           <p className="font-raleway uppercase tracking-widest text-sm text-white/60 mb-6">El nombre</p>
-          <h2 className="text-3xl md:text-4xl font-bold mb-6" style={{ fontFamily: 'Roxborough CF, Georgia, serif' }}>
+          <h2 className="text-3xl md:text-4xl font-bold mb-6">
             ¿Por qué Henkoaching?
           </h2>
           <p className="text-white/80 font-raleway leading-relaxed text-lg">
@@ -125,7 +125,7 @@ export default function SobreMiPage() {
       {/* CTA */}
       <section className="bg-henko-white py-20">
         <div className="max-w-2xl mx-auto px-6 text-center">
-          <h2 className="text-2xl text-gray-900 font-bold mb-4" style={{ fontFamily: 'Roxborough CF, Georgia, serif' }}>
+          <h2 className="text-2xl text-gray-900 font-bold mb-4">
             ¿Te resuena lo que hago?
           </h2>
           <p className="text-gray-400 font-raleway text-sm mb-8">

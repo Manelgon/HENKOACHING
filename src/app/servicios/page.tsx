@@ -92,7 +92,7 @@ export default function ServiciosPage() {
                 <span className={`inline-block ${service.color} text-white font-raleway text-xs font-bold tracking-widest px-3 py-1 mb-6`}>
                   {service.num}
                 </span>
-                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2" style={{ fontFamily: 'Roxborough CF, Georgia, serif' }}>
+                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
                   {service.title}
                 </h2>
                 <p className="text-henko-turquoise font-raleway font-semibold mb-6">{service.subtitle}</p>
@@ -117,7 +117,7 @@ export default function ServiciosPage() {
                   <p className="text-xs font-raleway uppercase tracking-widest font-semibold text-gray-400 mb-4">
                     Resultado
                   </p>
-                  <p className="text-xl md:text-2xl text-gray-800 leading-relaxed" style={{ fontFamily: 'Roxborough CF, Georgia, serif' }}>
+                  <p className="text-xl md:text-2xl text-gray-800 leading-relaxed">
                     {service.result}
                   </p>
                 </div>
@@ -131,7 +131,7 @@ export default function ServiciosPage() {
       <section className="bg-henko-turquoise py-20 text-white">
         <div className="max-w-4xl mx-auto px-6 text-center">
           <p className="font-raleway uppercase tracking-widest text-sm text-white/60 mb-4">Para quien lo necesita todo</p>
-          <h2 className="text-3xl md:text-4xl font-bold mb-6" style={{ fontFamily: 'Roxborough CF, Georgia, serif' }}>
+          <h2 className="text-3xl md:text-4xl font-bold mb-6">
             Acompañamiento integral
           </h2>
           <p className="text-white/80 font-raleway text-lg leading-relaxed mb-10">
@@ -149,7 +149,7 @@ export default function ServiciosPage() {
       <section className="bg-henko-white py-16">
         <div className="max-w-2xl mx-auto px-6 text-center">
           <p className="text-gray-400 font-raleway text-sm mb-4">¿No sabes por dónde empezar?</p>
-          <h2 className="text-2xl text-gray-900 font-bold mb-6" style={{ fontFamily: 'Roxborough CF, Georgia, serif' }}>
+          <h2 className="text-2xl text-gray-900 font-bold mb-6">
             Lo descubrimos juntos en una primera conversación.
           </h2>
           <Link href="/contacto" className="btn-primary inline-block">

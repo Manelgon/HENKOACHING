@@ -90,7 +90,7 @@ export default function TrabajaConmigoPage() {
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-14">
             <p className="section-title text-sm mb-3">Áreas de trabajo</p>
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900" style={{ fontFamily: 'Roxborough CF, Georgia, serif' }}>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
               Puedes trabajar una parte concreta<br />o todo de forma integrada
             </h2>
           </div>
@@ -101,7 +101,7 @@ export default function TrabajaConmigoPage() {
                 <span className={`inline-block ${area.color} text-white font-raleway text-xs font-bold tracking-widest px-3 py-1 mb-6`}>
                   {area.num}
                 </span>
-                <h3 className="text-xl font-bold text-gray-900 mb-4" style={{ fontFamily: 'Roxborough CF, Georgia, serif' }}>
+                <h3 className="text-xl font-bold text-gray-900 mb-4">
                   {area.title}
                 </h3>
                 <p className="text-gray-500 font-raleway text-sm leading-relaxed">{area.desc}</p>
@@ -120,7 +120,7 @@ export default function TrabajaConmigoPage() {
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-16">
             <p className="section-title text-sm mb-3">El proceso</p>
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900" style={{ fontFamily: 'Roxborough CF, Georgia, serif' }}>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
               Un proceso claro, adaptado a cada empresa
             </h2>
           </div>
@@ -137,7 +137,7 @@ export default function TrabajaConmigoPage() {
                   )}
                 </div>
                 <div className="pb-12">
-                  <h3 className="text-xl font-bold text-gray-900 mb-2" style={{ fontFamily: 'Roxborough CF, Georgia, serif' }}>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">
                     {step.title}
                   </h3>
                   <p className="text-gray-500 font-raleway text-sm leading-relaxed">{step.desc}</p>
@@ -153,7 +153,7 @@ export default function TrabajaConmigoPage() {
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-14">
             <p className="font-raleway uppercase tracking-widest text-sm text-white/60 mb-3">Resultados</p>
-            <h2 className="text-3xl md:text-4xl font-bold" style={{ fontFamily: 'Roxborough CF, Georgia, serif' }}>
+            <h2 className="text-3xl md:text-4xl font-bold">
               Lo que empieza a cambiar
             </h2>
           </div>
@@ -175,7 +175,7 @@ export default function TrabajaConmigoPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div>
               <p className="section-title text-sm mb-3">Lo que me diferencia</p>
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-8" style={{ fontFamily: 'Roxborough CF, Georgia, serif' }}>
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-8">
                 El cambio no es solo organizativo.<br />Es también personal.
               </h2>
               <div className="space-y-5 text-gray-500 font-raleway text-base leading-relaxed">
@@ -205,7 +205,7 @@ export default function TrabajaConmigoPage() {
                 <div className="absolute -top-6 -right-6 w-24 h-24 bg-henko-turquoise/20" />
                 <div className="absolute inset-0 flex items-center justify-center p-10">
                   <blockquote className="text-center">
-                    <p className="text-2xl text-henko-turquoise leading-relaxed" style={{ fontFamily: 'Roxborough CF, Georgia, serif' }}>
+                    <p className="text-2xl text-henko-turquoise leading-relaxed">
                       "Sin el cambio interno, el cambio externo no se sostiene."
                     </p>
                   </blockquote>
@@ -219,7 +219,7 @@ export default function TrabajaConmigoPage() {
       {/* ═══ SECCIÓN 6 — CTA FINAL ═══ */}
       <section className="bg-henko-yellow/30 py-24">
         <div className="max-w-2xl mx-auto px-6 text-center">
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-10" style={{ fontFamily: 'Roxborough CF, Georgia, serif' }}>
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-10">
             Podemos trabajar una sola área o integrar todo el proceso según lo que tu empresa necesite.
           </h2>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">

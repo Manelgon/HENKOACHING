@@ -42,7 +42,7 @@ export default function Home() {
       <section className="bg-henko-turquoise py-24 text-white">
         <div className="max-w-6xl mx-auto px-6">
           <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-3xl md:text-5xl font-bold mb-10 leading-snug" style={{ fontFamily: 'Roxborough CF, Georgia, serif' }}>
+            <h2 className="text-3xl md:text-5xl font-bold mb-10 leading-snug">
               Cuando una empresa crece o cambia,<br />
               el orden deja de ser opcional.
             </h2>
@@ -61,7 +61,7 @@ export default function Home() {
             </div>
             <div className="mt-12 pt-10 border-t border-white/20">
               <p className="text-xl font-raleway text-white/60 mb-3">No falta talento. No falta trabajo.</p>
-              <p className="text-2xl md:text-3xl font-bold" style={{ fontFamily: 'Roxborough CF, Georgia, serif' }}>
+              <p className="text-2xl md:text-3xl font-bold">
                 Falta orden, claridad y coherencia.
               </p>
             </div>
@@ -76,7 +76,7 @@ export default function Home() {
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-14">
             <p className="section-title text-sm mb-3">Para quién</p>
-            <h2 className="text-3xl md:text-4xl text-gray-900 font-bold" style={{ fontFamily: 'Roxborough CF, Georgia, serif' }}>
+            <h2 className="text-3xl md:text-4xl text-gray-900 font-bold">
               Trabajo con empresas<br />que están en momentos clave.
             </h2>
           </div>
@@ -109,7 +109,7 @@ export default function Home() {
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-14">
             <p className="section-title text-sm mb-3">Servicios</p>
-            <h2 className="text-3xl md:text-4xl text-gray-900 font-bold" style={{ fontFamily: 'Roxborough CF, Georgia, serif' }}>
+            <h2 className="text-3xl md:text-4xl text-gray-900 font-bold">
               Tres formas de acompañar tu empresa
             </h2>
           </div>
@@ -123,7 +123,7 @@ export default function Home() {
                 <span className={`inline-block ${service.color} text-white font-raleway text-xs font-bold tracking-widest px-3 py-1 mb-6`}>
                   {service.num}
                 </span>
-                <h3 className="text-xl font-bold text-gray-900 mb-4" style={{ fontFamily: 'Roxborough CF, Georgia, serif' }}>
+                <h3 className="text-xl font-bold text-gray-900 mb-4">
                   {service.title}
                 </h3>
                 <p className="text-gray-500 font-raleway text-sm leading-relaxed">{service.desc}</p>
@@ -149,7 +149,7 @@ export default function Home() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div>
               <p className="section-title text-sm mb-3">Mi enfoque</p>
-              <h2 className="text-3xl md:text-4xl text-gray-900 mb-6 font-bold" style={{ fontFamily: 'Roxborough CF, Georgia, serif' }}>
+              <h2 className="text-3xl md:text-4xl text-gray-900 mb-6 font-bold">
                 El cambio no se impone.<br />Se construye.
               </h2>
               <div className="space-y-4 text-gray-500 font-raleway text-base leading-relaxed">
@@ -173,7 +173,7 @@ export default function Home() {
                 <div className="absolute -top-6 -right-6 w-24 h-24 bg-henko-turquoise/20" />
                 <div className="absolute inset-0 flex items-center justify-center p-10">
                   <blockquote className="text-center">
-                    <p className="text-2xl text-henko-turquoise leading-relaxed" style={{ fontFamily: 'Roxborough CF, Georgia, serif' }}>
+                    <p className="text-2xl text-henko-turquoise leading-relaxed">
                       "Cuando la mariposa toma alas, no queda nada de la oruga"
                     </p>
                   </blockquote>
@@ -189,10 +189,10 @@ export default function Home() {
       ═══════════════════════════════════════════ */}
       <section className="bg-henko-yellow/30 py-24">
         <div className="max-w-3xl mx-auto px-6 text-center">
-          <h2 className="text-3xl md:text-4xl text-gray-900 mb-4 font-bold" style={{ fontFamily: 'Roxborough CF, Georgia, serif' }}>
+          <h2 className="text-3xl md:text-4xl text-gray-900 mb-4 font-bold">
             Si sientes que tu empresa podría funcionar mejor de lo que está funcionando ahora,
           </h2>
-          <p className="text-2xl text-henko-turquoise font-bold mb-10" style={{ fontFamily: 'Roxborough CF, Georgia, serif' }}>
+          <p className="text-2xl text-henko-turquoise font-bold mb-10">
             probablemente tengas razón.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">

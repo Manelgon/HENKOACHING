@@ -43,7 +43,7 @@ export default function ContactoPage() {
               {submitted ? (
                 <div className="bg-henko-greenblue/20 border border-henko-greenblue p-10">
                   <div className="w-3 h-3 rounded-full bg-henko-turquoise mb-6" />
-                  <h2 className="text-2xl font-bold text-gray-900 mb-4" style={{ fontFamily: 'Roxborough CF, Georgia, serif' }}>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4">
                     Mensaje recibido.
                   </h2>
                   <p className="text-gray-500 font-raleway leading-relaxed">
@@ -133,7 +133,7 @@ export default function ContactoPage() {
             <div className="space-y-10">
               <div>
                 <p className="section-title text-xs mb-3">Qué pasa después</p>
-                <h2 className="text-2xl font-bold text-gray-900 mb-6" style={{ fontFamily: 'Roxborough CF, Georgia, serif' }}>
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">
                   Una primera llamada de 30 minutos
                 </h2>
                 <div className="space-y-4 text-gray-500 font-raleway text-sm leading-relaxed">
@@ -151,7 +151,7 @@ export default function ContactoPage() {
 
               {/* Quote */}
               <div className="bg-henko-greenblue/20 p-8">
-                <p className="text-henko-turquoise text-lg leading-relaxed" style={{ fontFamily: 'Roxborough CF, Georgia, serif' }}>
+                <p className="text-henko-turquoise text-lg leading-relaxed">
                   "Si sientes que tu empresa podría funcionar mejor,<br />probablemente tengas razón."
                 </p>
               </div>
