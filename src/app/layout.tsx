@@ -3,6 +3,7 @@ import { Raleway } from 'next/font/google'
 import './globals.css'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
+import ScrollAnimationProvider from '@/components/ScrollAnimationProvider'
 
 const raleway = Raleway({
   subsets: ['latin'],
@@ -25,7 +26,9 @@ export default function RootLayout({
     <html lang="es" className={raleway.variable}>
       <body className="antialiased">
         <Navbar />
-        {children}
+        <ScrollAnimationProvider>
+          {children}
+        </ScrollAnimationProvider>
         <Footer />
       </body>
     </html>
