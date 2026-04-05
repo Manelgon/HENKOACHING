@@ -1,0 +1,55 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-henko-white text-gray-800 font-raleway;
+  }
+
+  h1 {
+    font-family: 'Hey Gotcha', 'Raleway', sans-serif;
+    @apply uppercase tracking-wider;
+  }
+
+  h2, h3 {
+    font-family: 'Roxborough CF', 'Georgia', serif;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-henko-turquoise text-white px-8 py-3 font-raleway font-semibold tracking-wide uppercase text-sm transition-all duration-200 hover:bg-henko-turquoise-light hover:shadow-lg;
+  }
+
+  .btn-outline {
+    @apply border-2 border-henko-turquoise text-henko-turquoise px-8 py-3 font-raleway font-semibold tracking-wide uppercase text-sm transition-all duration-200 hover:bg-henko-turquoise hover:text-white;
+  }
+
+  .section-title {
+    font-family: 'Hey Gotcha', sans-serif;
+    @apply text-henko-turquoise uppercase tracking-wider;
+  }
+
+  .section-subtitle {
+    font-family: 'Roxborough CF', Georgia, serif;
+    @apply text-gray-800;
+  }
+}
+
+/* Hey Gotcha — usar variable CSS como fallback visual hasta cargar la fuente */
+@font-face {
+  font-family: 'Hey Gotcha';
+  src: local('Hey Gotcha');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Roxborough CF';
+  src: local('Roxborough CF');
+  font-display: swap;
+}
