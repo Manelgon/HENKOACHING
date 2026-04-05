@@ -8,41 +8,46 @@ export default function Home() {
       {/* ═══════════════════════════════════════════
           SECCIÓN 1 — HERO
       ═══════════════════════════════════════════ */}
-      <section className="relative min-h-screen bg-henko-white flex items-center pt-36 pb-16">
+      <section className="relative min-h-screen bg-henko-white flex items-center pt-28 pb-16">
         <div className="max-w-6xl mx-auto px-6 w-full">
-          <div className="max-w-3xl">
-            {/* Logo hero */}
-            <div className="mb-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+
+            {/* Texto izquierda */}
+            <div>
+              <h1 className="text-5xl md:text-7xl font-bold text-gray-900 leading-tight mb-6">
+                Orden para tu empresa,<br />
+                <span className="text-henko-turquoise">tu liderazgo</span><br />
+                y tu mente.
+              </h1>
+              <p className="text-lg md:text-xl text-gray-500 font-raleway leading-relaxed mb-10 max-w-xl">
+                Porque cuando hay orden, todo funciona mejor.
+                <br />
+                <em>También tú.</em>
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Link href="/trabaja-conmigo" className="btn-primary text-center">
+                  Trabajar conmigo
+                </Link>
+                <Link href="/servicios" className="btn-outline text-center">
+                  Descubrir cómo puedo ayudarte
+                </Link>
+              </div>
+            </div>
+
+            {/* Logo derecha */}
+            <div className="hidden lg:flex items-center justify-center">
               <Image
                 src="/henkologo.png"
                 alt="Henkoaching"
-                width={260}
-                height={130}
-                className="object-contain object-left"
+                width={420}
+                height={280}
+                className="object-contain"
                 priority
               />
             </div>
-            <h1 className="text-5xl md:text-7xl font-bold text-gray-900 leading-tight mb-6">
-              Orden para tu empresa,<br />
-              <span className="text-henko-turquoise">tu liderazgo</span><br />
-              y tu mente.
-            </h1>
-            <p className="text-lg md:text-xl text-gray-500 font-raleway leading-relaxed mb-10 max-w-xl">
-              Porque cuando hay orden, todo funciona mejor.
-              <br />
-              <em>También tú.</em>
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Link href="/trabaja-conmigo" className="btn-primary text-center">
-                Trabajar conmigo
-              </Link>
-              <Link href="/servicios" className="btn-outline text-center">
-                Descubrir cómo puedo ayudarte
-              </Link>
-            </div>
+
           </div>
         </div>
-        <div className="absolute right-0 top-0 w-1/3 h-full bg-henko-greenblue/20 -z-10 hidden lg:block" />
       </section>
 
       {/* ═══════════════════════════════════════════
