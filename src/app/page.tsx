@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 
+
 export default function Home() {
   return (
     <main className="overflow-hidden">
@@ -51,31 +52,105 @@ export default function Home() {
       {/* ═══ SECCIÓN 2 — EL PROBLEMA ═══ */}
       <section className="bg-henko-turquoise py-24 text-white">
         <div className="max-w-6xl mx-auto px-6">
-          <div className="max-w-3xl mx-auto text-center">
-            <h2 data-animate className="text-3xl md:text-5xl font-bold mb-10 leading-snug">
+
+          {/* Título */}
+          <div className="max-w-3xl mx-auto text-center mb-16">
+            <h2 data-animate className="text-3xl md:text-5xl font-bold leading-snug">
               Cuando una empresa crece o cambia,<br />
               el orden deja de ser opcional.
             </h2>
-            <div data-animate data-delay="200" className="text-white/80 font-raleway text-base md:text-lg leading-loose space-y-5">
-              <p>Hay momentos en los que la empresa sigue avanzando… pero cada vez con más esfuerzo.</p>
-              <p>
-                Todo el mundo hace de todo, pero nadie tiene del todo claro qué le corresponde.<br />
-                Las decisiones se acumulan, cuesta delegar y el liderazgo se diluye.
-              </p>
-              <p>Se repiten tareas. Se posponen cambios.<br />
-                Y muchas veces se sigue haciendo lo mismo… porque siempre se ha hecho así.</p>
-              <p>
-                El día a día se vuelve reactivo.<br />
-                Y sin darte cuenta, la empresa empieza a ocuparlo todo: tu tiempo, tu energía, tu cabeza.
-              </p>
-            </div>
-            <div data-animate data-delay="400" className="mt-12 pt-10 border-t border-white/20">
-              <p className="text-xl font-raleway text-white/60 mb-3">No falta talento. No falta trabajo.</p>
-              <p className="text-2xl md:text-3xl font-bold">
-                Falta orden, claridad y coherencia.
-              </p>
-            </div>
           </div>
+
+          {/* Tarjetas de síntomas — full width apiladas */}
+          <div className="flex flex-col gap-5 max-w-5xl mx-auto">
+
+            {/* Tarjeta 1 — Avance con esfuerzo */}
+            <div
+              data-animate="scale"
+              data-delay="0"
+              className="bg-white/10 border border-white/20 rounded-3xl overflow-hidden hover:bg-white/20 transition-colors duration-300 grid grid-cols-1 md:grid-cols-2"
+            >
+              <div className="relative min-h-40">
+                <Image src="/image.png" alt="Avance con esfuerzo" fill className="object-cover" />
+              </div>
+              <div className="p-5 flex flex-col justify-center">
+                <h3 className="font-bold text-lg mb-2 flex items-center gap-3">
+                  <span className="text-2xl opacity-80">↗</span>
+                  Avance con esfuerzo
+                </h3>
+                <p className="font-raleway text-white/75 text-sm leading-relaxed">
+                  La empresa sigue adelante… pero cada vez cuesta más. La inercia sustituye al impulso.
+                </p>
+              </div>
+            </div>
+
+            {/* Tarjeta 2 — Roles sin definir */}
+            <div
+              data-animate="scale"
+              data-delay="100"
+              className="bg-white/10 border border-white/20 rounded-3xl overflow-hidden hover:bg-white/20 transition-colors duration-300 grid grid-cols-1 md:grid-cols-2"
+            >
+              <div className="relative min-h-40">
+                <Image src="/roles.png" alt="Roles sin definir" fill className="object-cover" />
+              </div>
+              <div className="p-5 flex flex-col justify-center">
+                <h3 className="font-bold text-lg mb-2 flex items-center gap-3">
+                  <span className="text-2xl opacity-80">⟳</span>
+                  Roles sin definir
+                </h3>
+                <p className="font-raleway text-white/75 text-sm leading-relaxed">
+                  Todo el mundo hace de todo, pero nadie tiene claro qué le corresponde. Las decisiones se acumulan y el liderazgo se diluye.
+                </p>
+              </div>
+            </div>
+
+            {/* Tarjeta 3 — Cambios que se posponen */}
+            <div
+              data-animate="scale"
+              data-delay="200"
+              className="bg-white/10 border border-white/20 rounded-3xl overflow-hidden hover:bg-white/20 transition-colors duration-300 grid grid-cols-1 md:grid-cols-2"
+            >
+              <div className="p-5 flex flex-col justify-center">
+                <h3 className="font-bold text-lg mb-2 flex items-center gap-3">
+                  <span className="text-2xl opacity-80">⏸</span>
+                  Cambios que se posponen
+                </h3>
+                <p className="font-raleway text-white/75 text-sm leading-relaxed">
+                  Se repiten las mismas tareas y se evitan los mismos cambios. Se sigue haciendo lo mismo porque siempre se ha hecho así.
+                </p>
+              </div>
+            </div>
+
+            {/* Tarjeta 4 — Modo reactivo permanente */}
+            <div
+              data-animate="scale"
+              data-delay="300"
+              className="bg-white/10 border border-white/20 rounded-3xl overflow-hidden hover:bg-white/20 transition-colors duration-300 grid grid-cols-1 md:grid-cols-2"
+            >
+              <div className="relative min-h-40">
+                <Image src="/reactivo.png" alt="Modo reactivo permanente" fill className="object-cover" />
+              </div>
+              <div className="p-5 flex flex-col justify-center">
+                <h3 className="font-bold text-lg mb-2 flex items-center gap-3">
+                  <span className="text-2xl opacity-80">⚡</span>
+                  Modo reactivo permanente
+                  </h3>
+                  <p className="font-raleway text-white/75 text-sm leading-relaxed">
+                    El día a día manda. Y sin darte cuenta, la empresa ocupa tu tiempo, tu energía y tu cabeza.
+                  </p>
+                </div>
+            </div>
+
+          </div>
+
+          {/* Remate */}
+          <div data-animate data-delay="400" className="mt-16 pt-12 border-t border-white/20 max-w-3xl mx-auto text-center">
+            <p className="text-xl font-raleway text-white/60 mb-3">No falta talento. No falta trabajo.</p>
+            <p className="text-2xl md:text-3xl font-bold">
+              Falta orden, claridad y coherencia.
+            </p>
+          </div>
+
         </div>
       </section>
 
