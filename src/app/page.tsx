@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 
 export default function Home() {
   return (
@@ -7,12 +8,20 @@ export default function Home() {
       {/* ═══════════════════════════════════════════
           SECCIÓN 1 — HERO
       ═══════════════════════════════════════════ */}
-      <section className="relative min-h-screen bg-henko-white flex items-center pt-24 pb-16">
+      <section className="relative min-h-screen bg-henko-white flex items-center pt-36 pb-16">
         <div className="max-w-6xl mx-auto px-6 w-full">
           <div className="max-w-3xl">
-            <p className="text-henko-turquoise font-raleway uppercase tracking-widest text-sm font-semibold mb-6">
-              Henkoaching
-            </p>
+            {/* Logo hero */}
+            <div className="mb-10">
+              <Image
+                src="/henkologo.png"
+                alt="Henkoaching"
+                width={260}
+                height={130}
+                className="object-contain object-left"
+                priority
+              />
+            </div>
             <h1 className="text-5xl md:text-7xl font-bold text-gray-900 leading-tight mb-6">
               Orden para tu empresa,<br />
               <span className="text-henko-turquoise">tu liderazgo</span><br />

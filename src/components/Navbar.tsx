@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 
 const links = [
@@ -33,15 +34,17 @@ export default function Navbar() {
         scrolled ? 'bg-henko-white/95 backdrop-blur-sm shadow-sm' : 'bg-transparent'
       }`}
     >
-      <nav className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-        {/* Logo text */}
-        <Link href="/" className="flex flex-col leading-none">
-          <span className="text-henko-turquoise font-semibold tracking-widest uppercase text-sm font-raleway">
-            HENKOACHING
-          </span>
-          <span className="text-gray-400 text-xs tracking-wider font-raleway">
-            coaching & mindfullness
-          </span>
+      <nav className="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
+        {/* Logo imagen */}
+        <Link href="/" className="flex items-center">
+          <Image
+            src="/hk.png"
+            alt="Henkoaching"
+            width={56}
+            height={56}
+            className="object-contain"
+            priority
+          />
         </Link>
 
         {/* Desktop links */}
