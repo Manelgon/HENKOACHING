@@ -23,7 +23,7 @@ export default function ContactoPage() {
       <section className="bg-henko-white py-20">
         <div className="max-w-6xl mx-auto px-6">
           <p className="section-title text-sm mb-4">Contacto</p>
-          <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6 font-raleway uppercase tracking-wide">
+          <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
             Hablemos
           </h1>
           <p className="text-xl text-gray-500 font-raleway max-w-xl leading-relaxed">

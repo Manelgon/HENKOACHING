@@ -13,7 +13,7 @@ export default function Home() {
             <p className="text-henko-turquoise font-raleway uppercase tracking-widest text-sm font-semibold mb-6">
               Henkoaching
             </p>
-            <h1 className="text-5xl md:text-7xl font-bold text-gray-900 leading-tight mb-6 font-raleway uppercase tracking-wide">
+            <h1 className="text-5xl md:text-7xl font-bold text-gray-900 leading-tight mb-6">
               Orden para tu empresa,<br />
               <span className="text-henko-turquoise">tu liderazgo</span><br />
               y tu mente.

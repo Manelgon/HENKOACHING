@@ -67,7 +67,7 @@ export default function TrabajaConmigoPage() {
         <div className="max-w-6xl mx-auto px-6">
           <div className="max-w-3xl">
             <p className="section-title text-sm mb-4">Trabaja conmigo</p>
-            <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6 font-raleway uppercase tracking-wide leading-tight">
+            <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
               Cómo puedo ayudarte a que tu empresa funcione mejor
             </h1>
             <p className="text-xl text-gray-500 font-raleway max-w-xl leading-relaxed mb-10">
