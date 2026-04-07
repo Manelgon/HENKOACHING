@@ -54,8 +54,8 @@ export default function Home() {
         <div className="max-w-6xl mx-auto px-6">
 
           {/* Título */}
-          <div className="max-w-3xl mx-auto text-center mb-16">
-            <h2 data-animate className="text-3xl md:text-5xl font-bold leading-snug">
+          <div className="text-center mb-16">
+            <h2 data-animate className="text-2xl md:text-4xl lg:text-5xl font-bold leading-snug whitespace-nowrap">
               Cuando una empresa crece o cambia,<br />
               el orden deja de ser opcional.
             </h2>
@@ -155,32 +155,62 @@ export default function Home() {
       </section>
 
       {/* ═══ SECCIÓN 3 — A QUIÉN ACOMPAÑO ═══ */}
-      <section className="bg-henko-white py-24">
-        <div className="max-w-6xl mx-auto px-6">
-          <div data-animate className="text-center mb-14">
-            <p className="section-title text-sm mb-3">Para quién</p>
-            <h2 className="text-3xl md:text-4xl text-gray-900 font-bold">
+      <section className="relative bg-henko-white py-24 overflow-hidden">
+
+        {/* Líneas onduladas Dalí */}
+        <svg className="absolute inset-0 w-full h-full" viewBox="0 0 1280 800" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M 0 120 C 180 60 320 200 560 130 C 800 60 1050 190 1280 120" stroke="#2BA8A0" strokeOpacity="0.2" strokeWidth="2" fill="none"/>
+          <path d="M 0 260 C 150 340 380 180 620 270 C 860 360 1080 200 1280 260" stroke="#2BA8A0" strokeOpacity="0.12" strokeWidth="1.5" fill="none"/>
+          <path d="M 0 400 C 200 320 420 490 680 390 C 920 290 1100 460 1280 400" stroke="#2BA8A0" strokeOpacity="0.2" strokeWidth="2" fill="none"/>
+          <path d="M 0 540 C 160 630 360 450 600 550 C 840 650 1060 480 1280 540" stroke="#2BA8A0" strokeOpacity="0.12" strokeWidth="1.5" fill="none"/>
+          <path d="M 0 680 C 220 600 440 760 700 670 C 940 580 1120 720 1280 680" stroke="#2BA8A0" strokeOpacity="0.15" strokeWidth="2" fill="none"/>
+        </svg>
+
+        <div className="relative z-10 max-w-6xl mx-auto px-6">
+          {/* Título */}
+          <div data-animate className="text-center mb-16">
+            <p className="section-title text-sm mb-4">Para quién</p>
+            <h2 className="text-4xl md:text-5xl text-gray-900 leading-tight">
               Trabajo con empresas<br />que están en momentos clave.
             </h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+          {/* Tarjetas — fila 1 */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
             {[
-              { label: 'Empresas en crecimiento', desc: 'Que necesitan estructura para escalar sin caos.', delay: '100' },
-              { label: 'Cambio generacional', desc: 'Transiciones que requieren orden y claridad de roles.', delay: '200' },
-              { label: 'Transformación digital', desc: 'Procesos que deben evolucionar sin perder el equipo.', delay: '300' },
-              { label: 'Cambio cultural', desc: 'Organizaciones que quieren trabajar de otra manera.', delay: '100' },
-              { label: 'Equipos que crecieron rápido', desc: 'Sin una base clara desde la que sostenerse.', delay: '200' },
-              { label: 'CEOs que quieren soltar', desc: 'Que ya no quieren (ni deben) estar en todo.', delay: '300' },
+              { num: '01', label: 'Empresas en crecimiento', desc: 'Que necesitan estructura para escalar sin caos.', radius: 'rounded-[4px_80px_16px_70px]', bg: 'bg-henko-greenblue/20', border: 'border-henko-greenblue/40', delay: '0' },
+              { num: '02', label: 'Cambio generacional', desc: 'Transiciones que requieren orden y claridad de roles.', radius: 'rounded-[4px_80px_16px_70px]', bg: 'bg-henko-purple/20', border: 'border-henko-purple/40', delay: '100' },
+              { num: '03', label: 'Transformación digital', desc: 'Procesos que deben evolucionar sin perder el equipo.', radius: 'rounded-[4px_80px_16px_70px]', bg: 'bg-henko-greenblue/20', border: 'border-henko-greenblue/40', delay: '200' },
             ].map((item) => (
               <div
-                key={item.label}
-                data-animate
+                key={item.num}
+                data-animate="scale"
                 data-delay={item.delay}
-                className="bg-henko-greenblue/20 border border-henko-greenblue/40 p-6 hover:bg-henko-greenblue/40 transition-colors duration-200"
+                className={`${item.bg} ${item.radius} border ${item.border} p-7 hover:opacity-80 transition-opacity duration-300`}
               >
-                <div className="w-2 h-2 rounded-full bg-henko-turquoise mb-4" />
-                <h3 className="text-gray-900 font-semibold font-raleway mb-2">{item.label}</h3>
-                <p className="text-gray-500 text-sm font-raleway leading-relaxed">{item.desc}</p>
+                <span className="section-title text-xs block mb-3">{item.num}</span>
+                <h3 className="text-gray-900 font-bold text-lg mb-2 leading-snug">{item.label}</h3>
+                <p className="text-gray-500 font-raleway text-sm leading-relaxed">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Tarjetas — fila 2 */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              { num: '04', label: 'Cambio cultural', desc: 'Organizaciones que quieren trabajar de otra manera.', radius: 'rounded-[4px_80px_16px_70px]', bg: 'bg-henko-purple/20', border: 'border-henko-purple/40', delay: '100' },
+              { num: '05', label: 'Equipos que crecieron rápido', desc: 'Sin una base clara desde la que sostenerse.', radius: 'rounded-[4px_80px_16px_70px]', bg: 'bg-henko-greenblue/20', border: 'border-henko-greenblue/40', delay: '200' },
+              { num: '06', label: 'CEOs que quieren soltar', desc: 'Que ya no quieren (ni deben) estar en todo.', radius: 'rounded-[4px_80px_16px_70px]', bg: 'bg-henko-purple/10', border: 'border-henko-purple/50', delay: '300' },
+            ].map((item) => (
+              <div
+                key={item.num}
+                data-animate="scale"
+                data-delay={item.delay}
+                className={`${item.bg} ${item.radius} border ${item.border} p-7 hover:opacity-80 transition-opacity duration-300`}
+              >
+                <span className="section-title text-xs block mb-3">{item.num}</span>
+                <h3 className="text-gray-900 font-bold text-lg mb-2 leading-snug">{item.label}</h3>
+                <p className="text-gray-500 font-raleway text-sm leading-relaxed">{item.desc}</p>
               </div>
             ))}
           </div>
@@ -188,40 +218,50 @@ export default function Home() {
       </section>
 
       {/* ═══ SECCIÓN 4 — QUÉ HAGO ═══ */}
-      <section className="bg-henko-greenblue/15 py-24">
-        <div className="max-w-6xl mx-auto px-6">
-          <div data-animate className="text-center mb-14">
+      <section className="relative bg-henko-white py-24 overflow-hidden">
+        <svg className="absolute inset-0 w-full h-full" viewBox="0 0 1280 800" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M 0 100 C 200 40 380 180 620 100 C 860 20 1080 160 1280 100" stroke="#2BA8A0" strokeOpacity="0.15" strokeWidth="2" fill="none"/>
+          <path d="M 0 280 C 160 360 340 200 580 280 C 820 360 1060 220 1280 280" stroke="#958cba" strokeOpacity="0.12" strokeWidth="1.5" fill="none"/>
+          <path d="M 0 450 C 220 370 420 530 700 440 C 960 350 1120 500 1280 450" stroke="#2BA8A0" strokeOpacity="0.15" strokeWidth="2" fill="none"/>
+          <path d="M 0 620 C 180 700 400 540 660 620 C 900 700 1100 560 1280 620" stroke="#958cba" strokeOpacity="0.1" strokeWidth="1.5" fill="none"/>
+          <path d="M 0 760 C 240 680 460 800 740 740 C 980 680 1160 780 1280 760" stroke="#2BA8A0" strokeOpacity="0.12" strokeWidth="2" fill="none"/>
+        </svg>
+        <div className="relative z-10 max-w-6xl mx-auto px-6">
+          <div data-animate className="text-center mb-16">
             <p className="section-title text-sm mb-3">Servicios</p>
             <h2 className="text-3xl md:text-4xl text-gray-900 font-bold">
               Tres formas de acompañar tu empresa
             </h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 items-stretch">
             {[
-              { num: '01', title: 'Orden y estructura', desc: 'Procesos claros, roles definidos y una operativa que funciona sin depender de ti.', color: 'bg-henko-turquoise', delay: '100' },
-              { num: '02', title: 'Reclutamiento consciente', desc: 'Personas que encajan, aportan y sostienen la cultura de la empresa.', color: 'bg-henko-purple', delay: '250' },
-              { num: '03', title: 'Liderazgo y desarrollo', desc: 'Equipos más conscientes, mejor comunicación y liderazgo que realmente sostiene.', color: 'bg-henko-coral', delay: '400' },
+              { num: '01', title: 'Orden y estructura', desc: 'Procesos claros, roles definidos y una operativa que funciona sin depender de ti.', bg: 'bg-henko-turquoise', border: 'border-henko-turquoise', delay: '0' },
+              { num: '02', title: 'Reclutamiento consciente', desc: 'Personas que encajan, aportan y sostienen la cultura de la empresa.', bg: 'bg-henko-purple', border: 'border-henko-purple', delay: '150' },
+              { num: '03', title: 'Liderazgo y desarrollo', desc: 'Equipos más conscientes, mejor comunicación y liderazgo que realmente sostiene.', bg: 'bg-henko-turquoise', border: 'border-henko-turquoise', delay: '300' },
             ].map((service) => (
               <div
                 key={service.num}
                 data-animate="scale"
                 data-delay={service.delay}
-                className="bg-henko-white p-8 border border-gray-100 hover:shadow-md transition-shadow duration-200"
+                className={`flex flex-col items-center text-center border-2 ${service.border} rounded-3xl p-8 hover:opacity-90 transition-opacity duration-300`}
               >
-                <span className={`inline-block ${service.color} text-white font-raleway text-xs font-bold tracking-widest px-3 py-1 mb-6`}>
-                  {service.num}
-                </span>
-                <h3 className="text-xl font-bold text-gray-900 mb-4">{service.title}</h3>
-                <p className="text-gray-500 font-raleway text-sm leading-relaxed">{service.desc}</p>
+                <div className={`${service.bg} rounded-full w-44 h-44 shrink-0 flex items-center justify-center mb-8`}>
+                  <span className="text-white font-roxborough font-bold text-5xl">{service.num}</span>
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">{service.title}</h3>
+                <p className="text-gray-500 font-raleway text-sm leading-relaxed mb-6 flex-1">{service.desc}</p>
+                <Link href="/servicios" className="btn-outline text-xs mt-auto">
+                  Saber más
+                </Link>
               </div>
             ))}
           </div>
-          <p data-animate data-delay="200" className="text-center text-gray-400 font-raleway text-sm mt-10 italic">
+          <p data-animate data-delay="200" className="text-center text-gray-400 font-raleway text-sm mt-14 italic">
             Puedes trabajar una sola área o integrarlas según lo que tu empresa necesite.
           </p>
           <div data-animate data-delay="300" className="text-center mt-8">
-            <Link href="/servicios" className="btn-primary inline-block">
-              Ver todos los servicios
+            <Link href="/contacto" className="btn-primary inline-block">
+              Hablemos
             </Link>
           </div>
         </div>
