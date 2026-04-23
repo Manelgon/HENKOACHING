@@ -1,281 +1,411 @@
 import Link from 'next/link'
 import Image from 'next/image'
+import AnimatedButterfly from '@/components/AnimatedButterfly'
+import {
+  AvanceSVG,
+  RolesSVG,
+  PospuestosSVG,
+  ReactivoSVG,
+} from '@/components/SymptomIllustrations'
+
+const SYMPTOMS = [
+  {
+    title: 'Avance con esfuerzo',
+    desc: 'La empresa sigue adelante… pero cada vez cuesta más. La inercia sustituye al impulso y todo se siente cuesta arriba.',
+    bg: '#c8e8e2',
+    Svg: AvanceSVG,
+    flip: false,
+  },
+  {
+    title: 'Roles sin definir',
+    desc: 'Todo el mundo hace de todo, pero nadie tiene claro qué le corresponde. Las decisiones se acumulan.',
+    bg: '#f0e4a0',
+    Svg: RolesSVG,
+    flip: false,
+  },
+  {
+    title: 'Cambios que se posponen',
+    desc: 'Se evitan los mismos cambios. Se sigue haciendo lo mismo porque siempre se ha hecho así.',
+    bg: '#c9bedd',
+    Svg: PospuestosSVG,
+    flip: true,
+  },
+  {
+    title: 'Modo reactivo permanente',
+    desc: 'El día a día manda. Y sin darte cuenta, la empresa ocupa todo tu tiempo, energía y cabeza apagando fuegos.',
+    bg: '#e8b8b8',
+    Svg: ReactivoSVG,
+    flip: true,
+  },
+]
+
+const SERVICES = [
+  {
+    num: '01',
+    title: 'Orden y estructura',
+    desc: 'Procesos claros, roles definidos y una operativa que funciona de manera autónoma sin depender exclusivamente de ti.',
+    bg: 'bg-henko-turquoise',
+    text: 'text-white',
+    numClass: 'text-white/40',
+  },
+  {
+    num: '02',
+    title: 'Reclutamiento consciente',
+    desc: 'Atracción de talento y personas que encajan verdaderamente, aportan valor continuo y sostienen la cultura de tu empresa.',
+    bg: 'bg-henko-greenblue',
+    text: 'text-gray-900',
+    numClass: 'text-black/15',
+  },
+  {
+    num: '03',
+    title: 'Liderazgo y desarrollo',
+    desc: 'Equipos más conscientes, comunicación efectiva interdepartamental y un liderazgo humano que realmente sostiene.',
+    bg: 'bg-henko-yellow',
+    text: 'text-gray-900',
+    numClass: 'text-black/15',
+  },
+]
+
+const AUDIENCE = [
+  { title: 'Empresas en crecimiento', sub: 'Que necesitan estructura firme para escalar sin caer en el caos organizativo.', bg: 'bg-henko-greenblue', text: 'text-gray-900' },
+  { title: 'Cambio generacional', sub: 'Transiciones familiares o de liderazgo que requieren orden y claridad de roles desde el primer día.', bg: 'bg-henko-yellow', text: 'text-gray-900' },
+  { title: 'Transformación digital', sub: 'Procesos operativos que deben evolucionar hacia lo digital sin que el equipo se quede atrás.', bg: 'bg-henko-coral', text: 'text-gray-900' },
+  { title: 'Cambio cultural', sub: 'Organizaciones que quieren renovar su forma de trabajar y comunicarse internamente.', bg: 'bg-henko-purple', text: 'text-white' },
+  { title: 'Equipos que crecieron rápido', sub: 'Equipos que escalaron muy rápido sin una base clara desde la que sostenerse.', bg: 'bg-white border border-gray-200/70', text: 'text-gray-900' },
+  { title: 'CEOs que quieren soltar', sub: 'Líderes y fundadores que ya no quieren ni deben participar en la microgestión diaria.', bg: 'bg-henko-turquoise', text: 'text-white' },
+]
+
+const ENFOQUE_PILLS = [
+  { label: 'Diagnóstico real', bg: 'bg-henko-greenblue', text: 'text-gray-900' },
+  { label: 'Sin dependencias externas', bg: 'bg-henko-yellow', text: 'text-gray-900' },
+  { label: 'Cambio sostenible', bg: 'bg-henko-turquoise', text: 'text-white' },
+  { label: 'Desde las raíces', bg: 'bg-henko-coral', text: 'text-gray-900' },
+]
 
 export default function Home() {
   return (
     <main className="overflow-hidden bg-henko-white">
 
-      {/* ═══ SECCIÓN 1 — HERO ═══ */}
-      <section className="relative min-h-[90vh] bg-henko-white flex items-center pt-32 pb-24">
-        <div className="max-w-7xl mx-auto px-6 w-full relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+      {/* ═══ HERO — Centrado con blobs animados y mariposa ═══ */}
+      <section className="relative min-h-screen flex items-center justify-center bg-henko-white pt-20 overflow-hidden">
+        {/* Blobs morphing */}
+        <div
+          className="blob-1 absolute pointer-events-none"
+          style={{
+            width: 360, height: 468, top: -80, right: -100,
+            background: '#addbd2', opacity: 0.65,
+            borderRadius: '60% 40% 70% 30% / 50% 60% 40% 60%',
+          }}
+        />
+        <div
+          className="blob-2 absolute pointer-events-none"
+          style={{
+            width: 200, height: 260, bottom: 80, left: -60,
+            background: '#eddc88', opacity: 0.65,
+            borderRadius: '60% 40% 70% 30% / 50% 60% 40% 60%',
+          }}
+        />
+        <div
+          className="blob-3 absolute pointer-events-none"
+          style={{
+            width: 160, height: 208, top: '35%', left: '12%',
+            background: '#958cba', opacity: 0.4,
+            borderRadius: '60% 40% 70% 30% / 50% 60% 40% 60%',
+          }}
+        />
+        <div
+          className="blob-4 absolute pointer-events-none"
+          style={{
+            width: 130, height: 169, bottom: '18%', right: '8%',
+            background: '#d69494', opacity: 0.5,
+            borderRadius: '60% 40% 70% 30% / 50% 60% 40% 60%',
+          }}
+        />
 
-            {/* Texto izquierda */}
-            <div className="z-20">
-              <h1 data-animate="left" className="text-5xl md:text-6xl lg:text-7xl font-roxborough text-gray-900 leading-[1.1] mb-8">
-                Orden para tu empresa,<br />
-                <span className="text-henko-turquoise italic font-light">tu liderazgo</span><br />
-                y tu mente.
-              </h1>
-              <p data-animate="left" data-delay="200" className="text-lg md:text-xl text-gray-600 font-raleway leading-relaxed mb-10 max-w-xl font-light">
-                Porque cuando hay orden, todo funciona mejor.
-                <br />
-                <em className="font-medium text-gray-900">También tú.</em>
-              </p>
-              <div data-animate="left" data-delay="400" className="flex flex-col sm:flex-row gap-5">
-                <Link href="/trabaja-conmigo" className="bg-henko-turquoise text-white px-8 py-4 rounded-full font-bold text-center hover:bg-henko-greenblue transition-all duration-300 shadow-lg hover:shadow-cyan-500/20">
-                  Trabajar conmigo
-                </Link>
-                <Link href="/servicios" className="bg-white text-gray-800 border-2 border-gray-100 px-8 py-4 rounded-full font-bold text-center hover:border-gray-200 transition-all duration-300 hover:shadow-md">
-                  Descubrir cómo puedo ayudarte
-                </Link>
-              </div>
-            </div>
+        <div className="relative z-10 max-w-3xl mx-auto px-6 text-center">
+          <div className="relative inline-block">
+            <Image
+              src="/henkologo.png"
+              alt="Henkoaching"
+              width={360}
+              height={360}
+              className="object-contain mx-auto mb-7"
+              style={{ width: 360, height: 'auto' }}
+              priority
+            />
+            <AnimatedButterfly size={52} style={{ top: 22, right: 4 }} />
+          </div>
 
-            {/* Logo o Imagen Hero derecha (Bento Style) */}
-            <div data-animate="right" data-delay="200" className="hidden lg:block relative h-[600px]">
-              {/* Bento Decoration */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-gradient-to-tr from-henko-turquoise/10 to-henko-purple/10 rounded-full blur-3xl -z-10"></div>
-              <div className="relative w-full h-full bg-white rounded-[3rem] p-12 shadow-2xl flex items-center justify-center border border-gray-100 overflow-hidden group">
-                <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-white z-0"></div>
-                <div className="relative z-10 transform transition-transform duration-700 group-hover:scale-105 w-full h-full">
-                  <Image
-                    src="/henkologo.png"
-                    alt="Henkoaching"
-                    fill
-                    className="object-contain drop-shadow-sm p-8"
-                    priority
-                  />
-                </div>
-              </div>
-            </div>
+          <p className="font-roxborough italic text-2xl md:text-3xl text-gray-700 mb-3 leading-relaxed">
+            Cuando una empresa crece o cambia,<br />
+            el orden deja de ser opcional.
+          </p>
+          <p className="text-xs md:text-sm tracking-[0.22em] text-henko-turquoise font-semibold uppercase mb-10">
+            coaching &amp; mindfulness empresarial
+          </p>
 
+          <div className="flex flex-wrap gap-4 justify-center">
+            <Link
+              href="/trabaja-conmigo"
+              className="inline-flex items-center gap-2 bg-henko-turquoise text-white px-8 py-3.5 rounded-full text-sm font-semibold tracking-wide hover:bg-henko-turquoise-light hover:shadow-lg hover:shadow-henko-turquoise/30 transition-all duration-200"
+            >
+              Trabaja conmigo
+            </Link>
+            <Link
+              href="/servicios"
+              className="inline-flex items-center gap-2 bg-transparent border-2 border-henko-turquoise text-henko-turquoise px-8 py-3.5 rounded-full text-sm font-semibold tracking-wide hover:bg-henko-turquoise hover:text-white transition-all duration-200"
+            >
+              Ver servicios
+            </Link>
           </div>
         </div>
       </section>
 
-      {/* ═══ SECCIÓN 2 — EL PROBLEMA ═══ */}
-      <section className="bg-gray-50 py-32 relative">
-        <div className="max-w-7xl mx-auto px-6 relative z-10">
+      {/* ═══ SÍNTOMAS — Grid 2x2 horizontal ═══ */}
+      <section className="bg-henko-white py-24 md:py-28 px-6 md:px-12">
+        <div className="max-w-7xl mx-auto">
+          <p className="font-raleway font-bold text-henko-turquoise tracking-[0.18em] uppercase text-[11px] mb-4">¿Te suena familiar?</p>
+          <h2 data-animate className="font-roxborough text-4xl md:text-5xl text-gray-900 mb-14 leading-tight">
+            Las señales de que<br />
+            <em className="italic text-henko-turquoise font-light">algo debe cambiar</em>
+          </h2>
 
-          {/* Título */}
-          <div className="text-center mb-20 max-w-4xl mx-auto">
-            <h2 data-animate className="text-4xl md:text-5xl lg:text-6xl font-roxborough text-gray-900 leading-tight">
-              Cuando una empresa crece o cambia,<br />
-              <span className="italic text-gray-500 font-light">el orden deja de ser opcional.</span>
-            </h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {SYMPTOMS.map((s, i) => {
+              const Svg = s.Svg
+              const text = (
+                <div className="flex-1 p-8 md:p-9" style={{ background: s.bg }}>
+                  <h3 className="font-roxborough text-xl md:text-2xl text-gray-900 mb-3 leading-tight">
+                    {s.title}
+                  </h3>
+                  <p className="text-sm leading-relaxed text-gray-700">
+                    {s.desc}
+                  </p>
+                </div>
+              )
+              const illus = (
+                <div className="relative flex-shrink-0 bg-henko-white overflow-hidden" style={{ flex: '0 0 45%' }}>
+                  <Svg />
+                </div>
+              )
+              return (
+                <div
+                  key={i}
+                  data-animate="scale"
+                  data-delay={i * 100}
+                  className="bg-henko-white rounded-[2.5rem] overflow-hidden flex flex-col md:flex-row border border-black/5 shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.1)] hover:-translate-y-1 transition-all duration-300 min-h-[220px]"
+                >
+                  {s.flip ? (<>{illus}{text}</>) : (<>{text}{illus}</>)}
+                </div>
+              )
+            })}
           </div>
 
-          {/* Bento Grid — Síntomas */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6 max-w-6xl mx-auto">
-
-            {/* Tarjeta 1 — Avance con esfuerzo (Larga) */}
-            <div data-animate="scale" data-delay="0" className="lg:col-span-8 bg-white border border-gray-100 rounded-[3rem] overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col md:flex-row group">
-              <div className="p-10 md:p-12 flex flex-col justify-center flex-1">
-                <span className="w-12 h-12 rounded-full bg-red-50 text-red-500 flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform">↗</span>
-                <h3 className="font-roxborough text-2xl md:text-3xl text-gray-900 mb-4">
-                  Avance con esfuerzo
-                </h3>
-                <p className="font-raleway text-gray-500 text-lg leading-relaxed font-light">
-                  La empresa sigue adelante… pero cada vez cuesta más. La inercia sustituye al impulso y todo se siente cuesta arriba.
-                </p>
-              </div>
-              <div className="relative w-full md:w-2/5 min-h-[250px] bg-gray-100 overflow-hidden">
-                <Image src="/image.png" alt="Avance con esfuerzo" fill sizes="(max-width: 768px) 100vw, 40vw" className="object-cover group-hover:scale-105 transition-transform duration-700" />
-              </div>
-            </div>
-
-            {/* Tarjeta 2 — Roles sin definir (Corta) */}
-            <div data-animate="scale" data-delay="100" className="lg:col-span-4 bg-henko-turquoise/5 border border-henko-turquoise/20 rounded-[3rem] p-10 md:p-12 hover:shadow-lg transition-all duration-300 group flex flex-col justify-center">
-              <span className="w-12 h-12 rounded-full bg-white text-henko-turquoise flex items-center justify-center text-2xl mb-6 shadow-sm group-hover:rotate-180 transition-transform duration-700">⟳</span>
-              <h3 className="font-roxborough text-2xl md:text-3xl text-gray-900 mb-4">
-                Roles sin definir
-              </h3>
-              <p className="font-raleway text-gray-600 text-base leading-relaxed font-light">
-                Todo el mundo hace de todo, pero nadie tiene claro qué le corresponde. Las decisiones se acumulan.
+          {/* Banner — borde turquesa transparente */}
+          <div data-animate data-delay="400" className="mt-5 rounded-[2rem] border-2 border-henko-turquoise px-10 md:px-12 py-8 md:py-9 flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
+            <div>
+              <p className="font-roxborough text-xl md:text-2xl text-gray-900 mb-1.5">
+                No falta talento. No falta trabajo.
               </p>
-            </div>
-
-            {/* Tarjeta 3 — Cambios pospuestos (Corta) */}
-            <div data-animate="scale" data-delay="200" className="lg:col-span-4 bg-henko-purple/5 border border-henko-purple/20 rounded-[3rem] p-10 md:p-12 hover:shadow-lg transition-all duration-300 group flex flex-col justify-center">
-              <span className="w-12 h-12 rounded-full bg-white text-henko-purple flex items-center justify-center text-xl mb-6 shadow-sm group-hover:-translate-y-2 transition-transform">⏸</span>
-              <h3 className="font-roxborough text-2xl md:text-3xl text-gray-900 mb-4">
-                Cambios que se posponen
-              </h3>
-              <p className="font-raleway text-gray-600 text-base leading-relaxed font-light">
-                Se evitan los mismos cambios. Se sigue haciendo lo mismo porque siempre se ha hecho así.
-              </p>
-            </div>
-
-            {/* Tarjeta 4 — Modo reactivo (Larga) */}
-            <div data-animate="scale" data-delay="300" className="lg:col-span-8 bg-white text-gray-900 border border-gray-100 rounded-[3rem] overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col md:flex-row group">
-              <div className="relative w-full md:w-2/5 min-h-[250px] overflow-hidden bg-gray-100">
-                <Image src="/reactivo.png" alt="Modo reactivo permanente" fill sizes="(max-width: 768px) 100vw, 40vw" className="object-cover group-hover:scale-105 transition-transform duration-700" />
-              </div>
-              <div className="p-10 md:p-12 flex flex-col justify-center flex-1 relative z-20">
-                <span className="w-12 h-12 rounded-full bg-yellow-50 text-yellow-500 flex items-center justify-center text-xl mb-6">⚡</span>
-                <h3 className="font-roxborough text-2xl md:text-3xl text-gray-900 mb-4">
-                  Modo reactivo permanente
-                </h3>
-                <p className="font-raleway text-gray-500 text-lg leading-relaxed font-light">
-                  El día a día manda. Y sin darte cuenta, la empresa ocupa todo tu tiempo, energía y cabeza apagando fuegos constantemente.
-                </p>
-              </div>
-            </div>
-
-          </div>
-
-          {/* Remate Bento */}
-          <div data-animate data-delay="400" className="mt-6 max-w-6xl mx-auto">
-            <div className="bg-gradient-to-r from-henko-purple/15 to-purple-100/60 p-10 md:p-14 rounded-[3rem] text-center shadow-lg border border-purple-200/50">
-              <p className="text-xl md:text-2xl font-raleway text-purple-900 mb-2 font-medium">No falta talento. No falta trabajo.</p>
-              <p className="text-3xl md:text-5xl font-roxborough text-gray-900 mb-10">
+              <p className="font-roxborough text-xl md:text-2xl text-henko-turquoise italic">
                 Falta orden, claridad y coherencia.
               </p>
-              <Link href="/contacto" className="inline-flex items-center gap-3 bg-henko-purple text-white px-8 py-4 rounded-full font-raleway font-bold text-sm tracking-widest uppercase hover:bg-henko-purple/90 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
-                Hablemos →
-              </Link>
             </div>
+            <Link
+              href="/contacto"
+              className="inline-flex items-center gap-2 bg-henko-turquoise text-white px-7 py-3.5 rounded-full text-sm font-semibold tracking-wide hover:bg-henko-turquoise-light hover:shadow-lg transition-all duration-200 whitespace-nowrap"
+            >
+              Hablemos →
+            </Link>
           </div>
-
         </div>
       </section>
 
-      {/* ═══ SECCIÓN 3 — A QUIÉN ACOMPAÑO (Bento Grids Asimétricos) ═══ */}
-      <section className="bg-white py-32 overflow-hidden">
-        <div className="max-w-7xl mx-auto px-6">
-
-          <div data-animate className="text-center mb-20">
-            <p className="font-raleway font-bold text-henko-turquoise tracking-widest uppercase text-sm mb-4">Para quién</p>
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-roxborough text-gray-900 leading-tight">
-              Acompaño a empresas que<br />
-              <span className="italic font-light text-gray-500">están en momentos clave</span>
-            </h2>
+      {/* ═══ SERVICIOS ═══ */}
+      <section className="py-24 md:py-28 px-6 md:px-12" style={{ background: '#f2ebe5' }}>
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row md:justify-between md:items-end mb-14 gap-6">
+            <div>
+              <p className="font-raleway font-bold text-henko-turquoise tracking-[0.18em] uppercase text-[11px] mb-4">Servicios</p>
+              <h2 data-animate className="font-roxborough text-4xl md:text-5xl text-gray-900 leading-tight">
+                Tres formas de<br />
+                <em className="italic text-henko-turquoise font-light">acompañar tu organización</em>
+              </h2>
+            </div>
+            <Link
+              href="/servicios"
+              className="inline-flex items-center gap-2 bg-transparent border-2 border-henko-turquoise text-henko-turquoise px-7 py-3 rounded-full text-sm font-semibold tracking-wide hover:bg-henko-turquoise hover:text-white transition-all duration-200 self-start md:self-auto"
+            >
+              Ver todos →
+            </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            {[
-              { num: '01', col: 'col-span-1', label: 'Empresas en crecimiento', desc: 'Que necesitan estructura firme para escalar sin caer en el caos organizativo.', bg: 'bg-henko-greenblue/10', color: 'text-henko-greenblue' },
-              { num: '02', col: 'col-span-1 lg:col-span-2', label: 'Cambio generacional', desc: 'Transiciones familiares o de liderazgo que requieren un profundo orden y claridad de roles desde el primer día.', bg: 'bg-henko-purple/10', color: 'text-henko-purple' },
-              { num: '03', col: 'col-span-1 lg:col-span-2', label: 'Transformación digital', desc: 'Procesos operativos que deben evolucionar hacia lo digital sin que el equipo se quede atrás ni pierda motivación.', bg: 'bg-yellow-50', color: 'text-yellow-500' },
-              { num: '04', col: 'col-span-1', label: 'Cambio cultural', desc: 'Organizaciones que quieren renovar su forma de trabajar y comunicarse.', bg: 'bg-henko-coral/10', color: 'text-henko-coral' },
-              { num: '05', col: 'col-span-1', label: 'Equipos rápidos', desc: 'Equipos que crecieron muy rápido sin una base clara desde la que sostenerse.', bg: 'bg-henko-greenblue/10', color: 'text-henko-greenblue' },
-              { num: '06', col: 'col-span-1 lg:col-span-2', label: 'CEOs que quieren soltar', desc: 'Líderes y fundadores que ya no quieren (ni deben) participar en la microgestión diaria.', bg: 'bg-henko-purple/10', color: 'text-henko-purple' },
-            ].map((item, i) => (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {SERVICES.map((s, i) => (
               <div
-                key={item.num}
+                key={s.num}
                 data-animate="scale"
                 data-delay={i * 100}
-                className={`${item.col} ${item.bg} rounded-[3rem] p-10 flex flex-col justify-between hover:shadow-xl transition-all duration-300 relative overflow-hidden group min-h-[300px]`}
+                className={`${s.bg} ${s.text} rounded-[2.5rem] p-10 min-h-[260px] flex flex-col justify-between hover:-translate-y-1.5 hover:shadow-2xl transition-all duration-300`}
               >
-                <span className={`font-hey-gotcha text-8xl absolute -right-4 -top-6 opacity-30 select-none transition-transform group-hover:scale-110 ${item.color}`}>{item.num}</span>
-                <h3 className={`text-gray-900 font-roxborough text-3xl mb-4 relative z-10 w-4/5`}>{item.label}</h3>
-                <p className={`text-gray-600 font-raleway text-lg leading-relaxed font-light relative z-10 w-full lg:w-4/5`}>{item.desc}</p>
+                <p className={`font-roxborough italic text-5xl leading-none mb-6 ${s.numClass}`}>
+                  {s.num}
+                </p>
+                <div>
+                  <h3 className="font-roxborough text-xl md:text-2xl mb-3">{s.title}</h3>
+                  <p className="text-sm leading-relaxed opacity-80">{s.desc}</p>
+                </div>
               </div>
             ))}
           </div>
 
-        </div>
-      </section>
-
-      {/* ═══ SECCIÓN 4 — QUÉ HAGO (Servicios) ═══ */}
-      <section className="bg-gray-50 py-32 relative">
-        <div className="max-w-7xl mx-auto px-6">
-          <div data-animate className="text-center mb-20">
-            <p className="font-raleway font-bold text-henko-purple tracking-widest uppercase text-sm mb-4">Servicios</p>
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-roxborough text-gray-900 leading-tight">
-              Tres formas de<br />
-              <span className="italic font-light text-gray-500">acompañar tu organización</span>
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto mb-16">
-            {[
-              { num: '01', title: 'Orden y estructura', desc: 'Procesos claros, roles definidos y una operativa que funciona de manera autónoma sin depender exclusivamente de ti.', link: '/servicios', accent: 'bg-henko-greenblue text-henko-greenblue' },
-              { num: '02', title: 'Reclutamiento consciente', desc: 'Atracción de talento y personas que encajan verdaderamente, aportan valor continuo y sostienen la cultura de tu empresa.', link: '/servicios', accent: 'bg-henko-purple text-henko-purple' },
-              { num: '03', title: 'Liderazgo y desarrollo', desc: 'Equipos mucho más conscientes, comunicación efectiva interdepartamental y un liderazgo humano que realmente sostiene.', link: '/servicios', accent: 'bg-henko-coral text-henko-coral' },
-            ].map((service, i) => (
-              <Link
-                href={service.link}
-                key={service.num}
-                data-animate="scale"
-                data-delay={i * 150}
-                className="bg-white rounded-[3rem] p-10 md:p-12 border border-gray-100 hover:shadow-2xl transition-all duration-500 group flex flex-col relative overflow-hidden"
-              >
-                {/* Decorative background element hover */}
-                <div className={`absolute -bottom-20 -right-20 w-48 h-48 rounded-full ${service.accent.split(' ')[0]} opacity-0 group-hover:opacity-5 blur-3xl transition-opacity duration-500`}></div>
-
-                <span className={`font-hey-gotcha text-7xl mb-6 ${service.accent.split(' ')[1]}`}>{service.num}</span>
-                <h3 className="text-2xl md:text-3xl font-roxborough text-gray-900 mb-4">{service.title}</h3>
-                <p className="text-gray-500 font-raleway text-lg leading-relaxed mb-8 flex-1 font-light">{service.desc}</p>
-                <div className={`font-raleway font-bold text-sm tracking-wide uppercase group-hover:pl-2 transition-all flex items-center gap-2 ${service.accent.split(' ')[1]}`}>
-                  Saber más <span className="text-lg leading-none">→</span>
-                </div>
-              </Link>
-            ))}
-          </div>
-
-          <p data-animate data-delay="300" className="text-center text-gray-500 font-raleway text-lg mt-8 italic max-w-2xl mx-auto">
+          <p className="mt-7 text-sm text-gray-500 italic leading-relaxed max-w-2xl">
             Puedes trabajar de forma específica en una sola área o integrar las tres disciplinas de manera transversal según la fase en la que se encuentre tu empresa.
           </p>
         </div>
       </section>
 
-      {/* ═══ SECCIÓN 5 — CÓMO TRABAJO ═══ */}
-      <section className="bg-white py-32">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="bg-gray-50 border border-gray-100 rounded-[4rem] p-12 lg:p-24 overflow-hidden relative shadow-lg">
-            <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-              <div>
-                <p data-animate="left" className="font-raleway font-bold text-henko-purple tracking-widest uppercase text-sm mb-6">Mi enfoque</p>
-                <h2 data-animate="left" data-delay="100" className="text-4xl md:text-5xl lg:text-5xl font-roxborough text-gray-900 leading-tight mb-8">
-                  El cambio no se impone.<br />
-                  <span className="italic text-gray-500 font-light">Se construye desde dentro.</span>
-                </h2>
+      {/* ═══ PARA QUIÉN ═══ */}
+      <section className="bg-henko-white py-24 md:py-28 px-6 md:px-12">
+        <div className="max-w-7xl mx-auto">
+          <p className="font-raleway font-bold text-henko-turquoise tracking-[0.18em] uppercase text-[11px] mb-4">Para quién</p>
+          <h2 data-animate className="font-roxborough text-4xl md:text-5xl text-gray-900 mb-14 leading-tight">
+            Acompaño a empresas que<br />
+            <em className="italic text-henko-turquoise font-light">están en momentos clave</em>
+          </h2>
 
-                <div data-animate="left" data-delay="200" className="space-y-6 text-gray-600 font-raleway text-lg leading-relaxed font-light">
-                  <p>Entro en la empresa para entender cómo funciona realmente en su base, no solo lo que parece que pasa en la superficie.</p>
-                  <p>Ordenamos la estructura, mejoramos los canales de comunicación y trabajamos el liderazgo desde las raíces, para que la transformación no dependa de alguien externo, sino que se sostenga orgánicamente en tu equipo.</p>
-                </div>
-
-                <p data-animate="left" data-delay="300" className="text-henko-turquoise font-roxborough text-2xl italic mt-10">
-                  Ahí es donde el cambio se vuelve real.
-                </p>
-
-                <div data-animate="left" data-delay="400" className="mt-12">
-                  <Link href="/trabaja-conmigo" className="inline-flex items-center gap-4 bg-gray-900 text-white px-8 py-4 rounded-full font-bold hover:bg-gray-800 transition-all shadow-md">
-                    Descubrir mi metodología
-                  </Link>
-                </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {AUDIENCE.map((a, i) => (
+              <div
+                key={i}
+                data-animate="scale"
+                data-delay={i * 80}
+                className={`${a.bg} ${a.text} rounded-[2.5rem] p-9 min-h-[200px]`}
+              >
+                <h3 className="font-roxborough text-lg md:text-xl mb-3 leading-tight">{a.title}</h3>
+                <p className="text-sm leading-relaxed opacity-75">{a.sub}</p>
               </div>
+            ))}
+          </div>
 
-              {/* Imagen mariposa — columna derecha */}
-              <div data-animate="right" className="hidden lg:flex items-center justify-center h-[500px] relative">
-                <Image src="/mariposa.png" alt="Mariposa Metamorfosis" fill sizes="50vw" className="object-contain" />
-              </div>
-            </div>
+          <div className="text-center mt-12">
+            <Link
+              href="/trabaja-conmigo"
+              className="inline-flex items-center gap-2 bg-henko-turquoise text-white px-8 py-3.5 rounded-full text-sm font-semibold tracking-wide hover:bg-henko-turquoise-light hover:shadow-lg hover:shadow-henko-turquoise/30 transition-all duration-200"
+            >
+              Descubrir cómo puedo ayudarte →
+            </Link>
           </div>
         </div>
       </section>
 
-      {/* ═══ SECCIÓN 6 — CTA FINAL ═══ */}
-      <section className="bg-henko-white py-16 pb-32">
-        <div className="max-w-5xl mx-auto px-6 text-center">
-          <div className="bg-gradient-to-br from-henko-purple/15 to-purple-100/60 rounded-[4rem] p-10 md:p-16 shadow-xl border border-purple-200/50">
-            <h2 data-animate className="text-4xl md:text-5xl font-roxborough text-gray-900 mb-3 leading-tight">
-              Si sientes que tu empresa podría funcionar mejor de lo que está funcionando ahora...
+      {/* ═══ ENFOQUE ═══ */}
+      <section className="py-24 md:py-28 px-6 md:px-12" style={{ background: '#f2ebe5' }}>
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-20 items-center">
+          <div>
+            <p className="font-raleway font-bold text-henko-turquoise tracking-[0.18em] uppercase text-[11px] mb-4">Mi enfoque</p>
+            <h2 data-animate="left" className="font-roxborough text-4xl md:text-5xl text-gray-900 mb-7 leading-tight">
+              El cambio no se impone.<br />
+              <em className="italic text-henko-turquoise font-light">Se construye desde dentro.</em>
             </h2>
-            <p data-animate data-delay="200" className="text-xl md:text-3xl font-raleway text-purple-900 mt-6 mb-10">
-              <span className="font-bold">probablemente tengas razón.</span>
+            <p data-animate="left" data-delay="100" className="text-base md:text-[15px] leading-[1.85] text-gray-600 mb-4">
+              Entro en la empresa para entender cómo funciona realmente en su base, no solo lo que parece que pasa en la superficie.
             </p>
-            <div data-animate data-delay="400" className="flex flex-col sm:flex-row gap-6 justify-center">
-              <Link href="/trabaja-conmigo" className="bg-gray-900 text-white px-10 py-5 rounded-full font-bold hover:bg-gray-800 transition-all shadow-lg hover:-translate-y-1">
-                Trabajar conmigo
-              </Link>
-              <Link href="/contacto" className="bg-white/60 backdrop-blur-md text-gray-900 border border-gray-900/10 px-10 py-5 rounded-full font-bold hover:bg-white transition-all shadow-sm hover:-translate-y-1">
-                Descubrir cómo puedo ayudarte
-              </Link>
-            </div>
+            <p data-animate="left" data-delay="200" className="text-base md:text-[15px] leading-[1.85] text-gray-600 mb-9">
+              Ordenamos la estructura, mejoramos los canales de comunicación y trabajamos el liderazgo desde las raíces, para que la transformación se sostenga orgánicamente en tu equipo.
+            </p>
+            <Link
+              href="/sobre-mi"
+              className="inline-flex items-center gap-2 bg-transparent border-2 border-henko-turquoise text-henko-turquoise px-7 py-3 rounded-full text-sm font-semibold tracking-wide hover:bg-henko-turquoise hover:text-white transition-all duration-200"
+            >
+              Descubrir mi metodología →
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            {ENFOQUE_PILLS.map((pill, i) => (
+              <div
+                key={i}
+                data-animate="scale"
+                data-delay={i * 100}
+                className={`${pill.bg} ${pill.text} rounded-[2rem] p-7 md:p-8 min-h-[140px] flex items-end`}
+              >
+                <p className="font-roxborough text-lg md:text-xl leading-snug">{pill.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ QUOTE ═══ */}
+      <section className="relative py-28 md:py-32 px-6 md:px-12 bg-gray-900 overflow-hidden">
+        <div
+          className="absolute pointer-events-none"
+          style={{
+            width: 320, height: 416, top: -100, right: -80,
+            background: '#1f8f9b', opacity: 0.18,
+            borderRadius: '60% 40% 70% 30% / 50% 60% 40% 60%',
+          }}
+        />
+        <div
+          className="absolute pointer-events-none"
+          style={{
+            width: 220, height: 286, bottom: -70, left: -60,
+            background: '#eddc88', opacity: 0.14,
+            borderRadius: '60% 40% 70% 30% / 50% 60% 40% 60%',
+          }}
+        />
+
+        <div data-animate className="max-w-3xl mx-auto text-center relative z-10">
+          <p className="font-roxborough italic text-3xl md:text-5xl text-white leading-[1.35] mb-7">
+            &ldquo;Cuando la mariposa toma alas,<br />
+            no queda nada de la oruga&rdquo;
+          </p>
+          <div className="w-12 h-0.5 bg-henko-turquoise mx-auto mb-5" />
+          <p className="text-xs text-white/40 tracking-[0.14em]">JENNIFER CERVERA · HENKOACHING</p>
+        </div>
+      </section>
+
+      {/* ═══ CTA FINAL ═══ */}
+      <section className="relative bg-henko-white py-28 md:py-32 px-6 md:px-12 text-center overflow-hidden">
+        <div
+          className="absolute pointer-events-none"
+          style={{
+            width: 260, height: 338, top: -60, left: -80,
+            background: '#addbd2', opacity: 0.55,
+            borderRadius: '60% 40% 70% 30% / 50% 60% 40% 60%',
+          }}
+        />
+        <div
+          className="absolute pointer-events-none"
+          style={{
+            width: 190, height: 247, bottom: -40, right: -60,
+            background: '#eddc88', opacity: 0.55,
+            borderRadius: '60% 40% 70% 30% / 50% 60% 40% 60%',
+          }}
+        />
+
+        <div className="relative z-10 max-w-3xl mx-auto">
+          <p className="font-raleway font-bold text-henko-turquoise tracking-[0.18em] uppercase text-[11px] mb-4">¿Listo para el siguiente paso?</p>
+          <h2 data-animate className="font-roxborough text-4xl md:text-5xl text-gray-900 mb-4 leading-tight">
+            Si sientes que tu empresa podría<br />funcionar mejor...
+          </h2>
+          <p data-animate data-delay="100" className="font-roxborough italic text-xl md:text-2xl text-henko-turquoise mb-10">
+            probablemente tengas razón.
+          </p>
+          <div data-animate data-delay="200" className="flex flex-wrap gap-4 justify-center">
+            <Link
+              href="/trabaja-conmigo"
+              className="inline-flex items-center gap-2 bg-henko-turquoise text-white px-9 py-4 rounded-full text-[15px] font-semibold tracking-wide hover:bg-henko-turquoise-light hover:shadow-lg hover:shadow-henko-turquoise/30 transition-all duration-200"
+            >
+              Trabajar conmigo
+            </Link>
+            <Link
+              href="/servicios"
+              className="inline-flex items-center gap-2 bg-transparent border-2 border-henko-turquoise text-henko-turquoise px-9 py-4 rounded-full text-[15px] font-semibold tracking-wide hover:bg-henko-turquoise hover:text-white transition-all duration-200"
+            >
+              Descubrir cómo puedo ayudarte
+            </Link>
           </div>
         </div>
       </section>
