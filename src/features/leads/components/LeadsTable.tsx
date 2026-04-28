@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { useAction } from '@/shared/feedback/FeedbackContext'
 
 type Lead = {
   id: string
@@ -19,19 +20,36 @@ type Lead = {
 
 export default function LeadsTable({ leads }: { leads: Lead[] }) {
   const router = useRouter()
+  const runAction = useAction()
   const [expandido, setExpandido] = useState<string | null>(null)
 
   async function marcarLeido(id: string, leido: boolean) {
     const supabase = createClient()
-    await supabase.from('leads').update({ leido }).eq('id', id)
-    router.refresh()
+    const result = await runAction(
+      leido ? 'Marcando como leído' : 'Marcando como no leído',
+      async () => {
+        const { error } = await supabase.from('leads').update({ leido }).eq('id', id)
+        if (error) throw new Error(error.message)
+        return null
+      },
+      { silentSuccess: true },
+    )
+    if (result.ok) router.refresh()
   }
 
   async function archivar(id: string) {
     if (!confirm('¿Archivar este lead?')) return
     const supabase = createClient()
-    await supabase.from('leads').update({ archivado: true }).eq('id', id)
-    router.refresh()
+    const result = await runAction(
+      'Archivando lead',
+      async () => {
+        const { error } = await supabase.from('leads').update({ archivado: true }).eq('id', id)
+        if (error) throw new Error(error.message)
+        return null
+      },
+      { successMessage: 'Lead archivado' },
+    )
+    if (result.ok) router.refresh()
   }
 
   if (leads.length === 0) {

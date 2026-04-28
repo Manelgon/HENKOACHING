@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { cambiarEstadoSolicitud, getCvUrl } from '@/actions/solicitudes'
 import type { EstadoSolicitud } from '@/lib/supabase/database.types'
+import { useAction } from '@/shared/feedback/FeedbackContext'
 
 const ESTADO_META: Record<EstadoSolicitud, { label: string; badge: string }> = {
   nuevo:      { label: 'Nueva',       badge: 'bg-henko-greenblue text-henko-turquoise' },
@@ -34,6 +35,7 @@ type Props = {
 
 export default function AdminSolicitudes({ solicitudes, ofertas }: Props) {
   const router = useRouter()
+  const runAction = useAction()
   const [filtroOferta, setFiltroOferta] = useState<string>('todas')
 
   const filtradas = useMemo(() =>
@@ -49,14 +51,23 @@ export default function AdminSolicitudes({ solicitudes, ofertas }: Props) {
   ]
 
   async function descargarCv(path: string) {
-    const result = await getCvUrl(path)
-    if (result.url) window.open(result.url, '_blank')
-    else alert('No se pudo abrir el CV: ' + result.error)
+    const result = await runAction(
+      'Generando enlace del CV',
+      () => getCvUrl(path),
+      { silentSuccess: true },
+    )
+    if (result.ok && result.data.url) {
+      window.open(result.data.url, '_blank')
+    }
   }
 
   async function cambiarEstado(id: string, estado: EstadoSolicitud) {
-    await cambiarEstadoSolicitud(id, estado)
-    router.refresh()
+    const result = await runAction(
+      `Actualizando estado a "${ESTADO_META[estado].label}"`,
+      () => cambiarEstadoSolicitud(id, estado),
+      { successMessage: 'Estado actualizado' },
+    )
+    if (result.ok) router.refresh()
   }
 
   return (

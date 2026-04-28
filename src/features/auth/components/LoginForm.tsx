@@ -1,26 +1,35 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { login } from '@/actions/auth'
+import { useAction, useToast } from '@/shared/feedback/FeedbackContext'
 
 export function LoginForm() {
   const searchParams = useSearchParams()
   const oauthError = searchParams.get('error')
-  const [error, setError] = useState<string | null>(
-    oauthError === 'auth_callback_failed' ? 'Error al iniciar sesión. Intenta de nuevo.' : null
-  )
-  const [loading, setLoading] = useState(false)
+  const runAction = useAction()
+  const pushToast = useToast()
+  const [warned, setWarned] = useState(false)
+
+  useEffect(() => {
+    if (oauthError === 'auth_callback_failed' && !warned) {
+      pushToast('error', 'Error al iniciar sesión. Intenta de nuevo.')
+      setWarned(true)
+    }
+  }, [oauthError, warned, pushToast])
 
   async function handleSubmit(formData: FormData) {
-    setLoading(true)
-    setError(null)
-    const result = await login(formData)
-    if (result?.error) {
-      setError('Email o contraseña incorrectos.')
-      setLoading(false)
-    }
+    await runAction(
+      'Iniciando sesión',
+      async () => {
+        const result = await login(formData)
+        if (result?.error) throw new Error('Email o contraseña incorrectos.')
+        return null
+      },
+      { silentSuccess: true },
+    )
   }
 
   return (
@@ -67,21 +76,11 @@ export function LoginForm() {
         </Link>
       </div>
 
-      {error && (
-        <p className="text-sm text-red-500 font-raleway">{error}</p>
-      )}
-
       <button
         type="submit"
-        disabled={loading}
-        className="w-full bg-henko-turquoise text-white px-6 py-3 rounded-2xl font-bold font-raleway hover:bg-henko-greenblue transition-all shadow-md disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        className="w-full bg-henko-turquoise text-white px-6 py-3 rounded-2xl font-bold font-raleway hover:bg-henko-greenblue transition-all shadow-md flex items-center justify-center gap-2"
       >
-        {loading ? (
-          <>
-            <span className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            Entrando...
-          </>
-        ) : 'Entrar'}
+        Entrar
       </button>
     </form>
   )

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { crearOferta, actualizarOferta, cambiarEstadoOferta, eliminarOferta } from '@/actions/ofertas'
+import { useAction } from '@/shared/feedback/FeedbackContext'
 
 type Catalogo = { id: number; nombre: string; slug: string }
 
@@ -51,9 +52,9 @@ const inputClass = 'w-full px-4 py-2.5 rounded-xl text-sm border-[1.5px] border-
 
 export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas }: Props) {
   const router = useRouter()
+  const runAction = useAction()
   const [editando, setEditando] = useState<string | null>(null)
   const [nueva, setNueva] = useState(false)
-  const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [draft, setDraft] = useState<Draft>(emptyDraft(sectores, modalidades, jornadas))
 
@@ -82,7 +83,6 @@ export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas 
       setError('Título, empresa y descripción son obligatorios')
       return
     }
-    setSaving(true)
     setError(null)
 
     const input = {
@@ -99,12 +99,16 @@ export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas 
       estado: draft.estado,
     }
 
-    const result = editando
-      ? await actualizarOferta(editando, input)
-      : await crearOferta(input)
+    const description = editando ? 'Guardando cambios de la oferta' : 'Publicando oferta'
+    const successMessage = editando ? 'Cambios guardados' : 'Oferta publicada'
 
-    setSaving(false)
-    if (result.error) {
+    const result = await runAction(
+      description,
+      () => editando ? actualizarOferta(editando, input) : crearOferta(input),
+      { successMessage },
+    )
+
+    if (!result.ok) {
       setError(result.error)
       return
     }
@@ -121,14 +125,20 @@ export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas 
 
   const toggleEstado = async (o: OfertaView) => {
     const nuevoEstado = o.estado === 'publicada' ? 'cerrada' : 'publicada'
-    await cambiarEstadoOferta(o.id, nuevoEstado)
-    router.refresh()
+    const description = nuevoEstado === 'publicada' ? `Activando "${o.titulo}"` : `Cerrando "${o.titulo}"`
+    const successMessage = nuevoEstado === 'publicada' ? 'Oferta activada' : 'Oferta cerrada'
+    const result = await runAction(description, () => cambiarEstadoOferta(o.id, nuevoEstado), { successMessage })
+    if (result.ok) router.refresh()
   }
 
   const borrar = async (o: OfertaView) => {
     if (!confirm(`¿Eliminar oferta "${o.titulo}"?`)) return
-    await eliminarOferta(o.id)
-    router.refresh()
+    const result = await runAction(
+      `Eliminando "${o.titulo}"`,
+      () => eliminarOferta(o.id),
+      { successMessage: 'Oferta eliminada' },
+    )
+    if (result.ok) router.refresh()
   }
 
   const modalAbierto = editando !== null || nueva
@@ -300,10 +310,9 @@ export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas 
               <button
                 type="button"
                 onClick={save}
-                disabled={saving}
-                className="flex-1 inline-flex items-center justify-center gap-2 bg-henko-turquoise text-white px-6 py-3 rounded-full text-sm font-semibold hover:bg-henko-turquoise-light hover:shadow-lg transition-all disabled:opacity-60"
+                className="flex-1 inline-flex items-center justify-center gap-2 bg-henko-turquoise text-white px-6 py-3 rounded-full text-sm font-semibold hover:bg-henko-turquoise-light hover:shadow-lg transition-all"
               >
-                {saving ? 'Guardando...' : nueva ? 'Publicar oferta' : 'Guardar cambios'}
+                {nueva ? 'Publicar oferta' : 'Guardar cambios'}
               </button>
               <button
                 type="button"

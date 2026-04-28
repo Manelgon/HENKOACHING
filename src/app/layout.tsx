@@ -2,6 +2,8 @@ import type { Metadata } from 'next'
 import { Raleway } from 'next/font/google'
 import './globals.css'
 import ScrollAnimationProvider from '@/components/ScrollAnimationProvider'
+import { FeedbackProvider } from '@/shared/feedback/FeedbackContext'
+import GlobalFeedback from '@/shared/feedback/GlobalFeedback'
 
 const raleway = Raleway({
   subsets: ['latin'],
@@ -52,9 +54,12 @@ export default function RootLayout({
   return (
     <html lang="es" className={raleway.variable}>
       <body className="antialiased">
-        <ScrollAnimationProvider>
-          {children}
-        </ScrollAnimationProvider>
+        <FeedbackProvider>
+          <ScrollAnimationProvider>
+            {children}
+          </ScrollAnimationProvider>
+          <GlobalFeedback />
+        </FeedbackProvider>
       </body>
     </html>
   )

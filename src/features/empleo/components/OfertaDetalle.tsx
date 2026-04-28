@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { aplicarAOferta } from '@/actions/solicitudes'
 import type { OfertaDetalle as OfertaDetalleType } from '@/features/empleo/queries'
+import { useAction } from '@/shared/feedback/FeedbackContext'
 
 type Props = {
   oferta: OfertaDetalleType
@@ -13,21 +14,16 @@ type Props = {
 }
 
 export default function OfertaDetalle({ oferta: o, yaAplicado, isCandidato, isLoggedIn }: Props) {
+  const runAction = useAction()
   const [aplicado, setAplicado] = useState(yaAplicado)
-  const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
 
   async function aplicar() {
-    setError(null)
-    setSubmitting(true)
-    const result = await aplicarAOferta(o.id)
-    if (result.error) {
-      setError(result.error)
-      setSubmitting(false)
-      return
-    }
-    setAplicado(true)
-    setSubmitting(false)
+    const result = await runAction(
+      'Enviando solicitud',
+      () => aplicarAOferta(o.id),
+      { successMessage: 'Solicitud enviada' },
+    )
+    if (result.ok) setAplicado(true)
   }
 
   return (
@@ -118,12 +114,10 @@ export default function OfertaDetalle({ oferta: o, yaAplicado, isCandidato, isLo
                 <div className="flex flex-col gap-2.5">
                   <button
                     onClick={aplicar}
-                    disabled={submitting}
-                    className="w-full inline-flex items-center justify-center gap-2 bg-henko-turquoise text-white px-6 py-3 rounded-full text-sm font-semibold hover:bg-henko-turquoise-light hover:shadow-lg transition-all disabled:opacity-60"
+                    className="w-full inline-flex items-center justify-center gap-2 bg-henko-turquoise text-white px-6 py-3 rounded-full text-sm font-semibold hover:bg-henko-turquoise-light hover:shadow-lg transition-all"
                   >
-                    {submitting ? 'Aplicando...' : 'Aplicar a esta oferta'}
+                    Aplicar a esta oferta
                   </button>
-                  {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
                 </div>
               ) : (
                 <div className="flex flex-col gap-2.5">

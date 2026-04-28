@@ -4,6 +4,7 @@ import { useState, useRef, Fragment } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { signupCandidato, uploadCv } from '@/actions/candidato'
+import { useAction } from '@/shared/feedback/FeedbackContext'
 
 type Experiencia = { empresa: string; cargo: string; desde: string; hasta: string }
 type Educacion = { centro: string; titulo: string; ano: string }
@@ -28,9 +29,9 @@ const labelClass = 'text-[11px] tracking-[0.12em] font-bold text-henko-turquoise
 
 export default function CandidatoSignupFlow() {
   const router = useRouter()
+  const runAction = useAction()
   const [step, setStep] = useState(1)
   const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const [form, setForm] = useState<FormState>({
     nombre: '', apellidos: '', email: '', password: '',
     telefono: '', ubicacion: '', cargo: '',
@@ -45,35 +46,41 @@ export default function CandidatoSignupFlow() {
     setForm(f => ({ ...f, [key]: val }))
 
   async function finalizar() {
-    setError(null)
     setSubmitting(true)
 
-    const result = await signupCandidato({
-      nombre: form.nombre,
-      apellidos: form.apellidos,
-      email: form.email,
-      password: form.password,
-      telefono: form.telefono,
-      ubicacion: form.ubicacion,
-      cargo: form.cargo,
-      experiencias: form.exp,
-      educacion: form.edu,
-      idiomas: form.idiomas,
-    })
+    const signup = await runAction(
+      'Creando perfil',
+      () => signupCandidato({
+        nombre: form.nombre,
+        apellidos: form.apellidos,
+        email: form.email,
+        password: form.password,
+        telefono: form.telefono,
+        ubicacion: form.ubicacion,
+        cargo: form.cargo,
+        experiencias: form.exp,
+        educacion: form.edu,
+        idiomas: form.idiomas,
+      }),
+      { successMessage: 'Perfil creado' },
+    )
 
-    if ('error' in result && result.error) {
-      setError(result.error)
+    if (!signup.ok) {
       setSubmitting(false)
       return
     }
 
-    // Subir CV si hay
     if (form.cv) {
-      const fd = new FormData()
-      fd.append('cv', form.cv)
-      const cvResult = await uploadCv(fd)
-      if (cvResult.error) {
-        setError('Cuenta creada, pero error al subir CV: ' + cvResult.error)
+      const cv = await runAction(
+        'Subiendo CV',
+        () => {
+          const fd = new FormData()
+          fd.append('cv', form.cv as File)
+          return uploadCv(fd)
+        },
+        { successMessage: 'CV subido' },
+      )
+      if (!cv.ok) {
         setSubmitting(false)
         return
       }
@@ -120,12 +127,6 @@ export default function CandidatoSignupFlow() {
             </Fragment>
           ))}
         </div>
-
-        {error && (
-          <div className="mb-6 px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700">
-            {error}
-          </div>
-        )}
 
         {step === 1 && <StepCuenta form={form} upd={upd} next={() => setStep(2)} />}
         {step === 2 && <StepPerfil form={form} upd={upd} back={() => setStep(1)} next={() => setStep(3)} />}

@@ -12,6 +12,7 @@ import {
   eliminarProfile,
 } from '@/actions/profiles'
 import type { UserRole } from '@/lib/supabase/database.types'
+import { useAction } from '@/shared/feedback/FeedbackContext'
 
 type ProfileRow = {
   id: string
@@ -43,13 +44,12 @@ function fmtDate(d: string | null) {
 
 export default function ProfilesAdmin({ profiles }: { profiles: ProfileRow[] }) {
   const router = useRouter()
+  const runAction = useAction()
   const [search, setSearch] = useState('')
   const [filterRole, setFilterRole] = useState<UserRole | 'todos'>('todos')
   const [filterEstado, setFilterEstado] = useState<'todos' | 'activos' | 'desactivados' | 'sin_verificar'>('todos')
   const [openCreate, setOpenCreate] = useState(false)
   const [editing, setEditing] = useState<ProfileRow | null>(null)
-  const [busy, setBusy] = useState(false)
-  const [msg, setMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
 
   const filtered = useMemo(() => {
     return profiles.filter((p) => {
@@ -66,18 +66,13 @@ export default function ProfilesAdmin({ profiles }: { profiles: ProfileRow[] }) 
     })
   }, [profiles, search, filterRole, filterEstado])
 
-  function refresh() {
-    router.refresh()
-  }
-
-  async function handle(label: string, fn: () => Promise<{ error?: string; ok?: boolean }>) {
-    setBusy(true)
-    setMsg(null)
-    const r = await fn()
-    setBusy(false)
-    if (r.error) setMsg({ type: 'err', text: `${label}: ${r.error}` })
-    else setMsg({ type: 'ok', text: `${label}: hecho` })
-    refresh()
+  async function handle(
+    description: string,
+    successMessage: string,
+    fn: () => Promise<{ error?: string; ok?: boolean }>,
+  ) {
+    const result = await runAction(description, fn, { successMessage })
+    if (result.ok) router.refresh()
   }
 
   return (
@@ -125,15 +120,6 @@ export default function ProfilesAdmin({ profiles }: { profiles: ProfileRow[] }) 
           + Crear usuario
         </button>
       </div>
-
-      {/* Mensaje */}
-      {msg && (
-        <div className={`mb-4 px-4 py-3 rounded-xl text-sm font-raleway ${
-          msg.type === 'ok' ? 'bg-henko-greenblue/40 text-henko-turquoise' : 'bg-red-50 text-red-700'
-        }`}>
-          {msg.text}
-        </div>
-      )}
 
       {/* Tabla */}
       <div className="bg-white rounded-2xl border border-black/5 overflow-hidden">
@@ -193,10 +179,9 @@ export default function ProfilesAdmin({ profiles }: { profiles: ProfileRow[] }) 
       {/* Modal crear */}
       {openCreate && (
         <CreateModal
-          busy={busy}
           onClose={() => setOpenCreate(false)}
           onSubmit={async (data) => {
-            await handle('Crear usuario', () => crearProfile(data))
+            await handle('Creando usuario', 'Usuario creado', () => crearProfile(data))
             setOpenCreate(false)
           }}
         />
@@ -206,16 +191,15 @@ export default function ProfilesAdmin({ profiles }: { profiles: ProfileRow[] }) 
       {editing && (
         <EditDrawer
           profile={editing}
-          busy={busy}
           onClose={() => setEditing(null)}
-          onUpdate={(data) => handle('Actualizar', () => actualizarProfile(editing.id, data))}
-          onChangeEmail={(email) => handle('Cambiar email', () => cambiarEmailProfile(editing.id, email))}
-          onResetPassword={() => handle('Reset password', () => resetPasswordProfile(editing.id))}
-          onDesactivar={() => handle('Desactivar', () => desactivarProfile(editing.id))}
-          onReactivar={() => handle('Reactivar', () => reactivarProfile(editing.id))}
+          onUpdate={(data) => handle('Actualizando perfil', 'Perfil actualizado', () => actualizarProfile(editing.id, data))}
+          onChangeEmail={(email) => handle('Cambiando email', 'Email actualizado', () => cambiarEmailProfile(editing.id, email))}
+          onResetPassword={() => handle('Enviando email de recuperación', 'Email enviado', () => resetPasswordProfile(editing.id))}
+          onDesactivar={() => handle('Desactivando cuenta', 'Cuenta desactivada', () => desactivarProfile(editing.id))}
+          onReactivar={() => handle('Reactivando cuenta', 'Cuenta reactivada', () => reactivarProfile(editing.id))}
           onEliminar={() => {
             if (!confirm(`¿Eliminar permanentemente a ${editing.email}? Esta acción no se puede deshacer.`)) return
-            handle('Eliminar', () => eliminarProfile(editing.id))
+            handle('Eliminando usuario', 'Usuario eliminado', () => eliminarProfile(editing.id))
             setEditing(null)
           }}
         />
@@ -234,11 +218,9 @@ function Stat({ label, val, bg, light }: { label: string; val: number; bg: strin
 }
 
 function CreateModal({
-  busy,
   onClose,
   onSubmit,
 }: {
-  busy: boolean
   onClose: () => void
   onSubmit: (data: { email: string; password: string; nombre: string; apellidos: string; role: UserRole; telefono?: string }) => void
 }) {
@@ -275,8 +257,8 @@ function CreateModal({
           </div>
           <div className="flex justify-end gap-2 pt-3">
             <button type="button" onClick={onClose} className="px-4 py-2 text-gray-500 text-sm">Cancelar</button>
-            <button type="submit" disabled={busy} className="px-4 py-2 rounded-xl bg-henko-turquoise text-white text-sm font-medium disabled:opacity-50">
-              {busy ? 'Creando…' : 'Crear'}
+            <button type="submit" className="px-4 py-2 rounded-xl bg-henko-turquoise text-white text-sm font-medium">
+              Crear
             </button>
           </div>
         </form>
@@ -287,7 +269,6 @@ function CreateModal({
 
 function EditDrawer({
   profile,
-  busy,
   onClose,
   onUpdate,
   onChangeEmail,
@@ -297,7 +278,6 @@ function EditDrawer({
   onEliminar,
 }: {
   profile: ProfileRow
-  busy: boolean
   onClose: () => void
   onUpdate: (data: { nombre?: string; apellidos?: string; telefono?: string; role?: UserRole }) => void
   onChangeEmail: (email: string) => void
@@ -337,7 +317,6 @@ function EditDrawer({
           </div>
           <button
             type="button"
-            disabled={busy}
             onClick={() => onUpdate({ nombre, apellidos, telefono, role })}
             className="w-full px-4 py-2.5 rounded-xl bg-henko-turquoise text-white text-sm font-medium disabled:opacity-50"
           >
@@ -349,7 +328,7 @@ function EditDrawer({
           <Field label="Nuevo email" type="email" value={newEmail} onChange={setNewEmail} />
           <button
             type="button"
-            disabled={busy || newEmail === profile.email}
+            disabled={newEmail === profile.email}
             onClick={() => onChangeEmail(newEmail)}
             className="w-full px-4 py-2.5 rounded-xl bg-gray-900 text-white text-sm font-medium disabled:opacity-50"
           >
@@ -360,7 +339,6 @@ function EditDrawer({
         <Section title="Contraseña">
           <button
             type="button"
-            disabled={busy}
             onClick={onResetPassword}
             className="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm font-medium hover:bg-gray-50 disabled:opacity-50"
           >
@@ -372,8 +350,7 @@ function EditDrawer({
           {profile.banned ? (
             <button
               type="button"
-              disabled={busy}
-              onClick={onReactivar}
+                onClick={onReactivar}
               className="w-full px-4 py-2.5 rounded-xl bg-green-600 text-white text-sm font-medium disabled:opacity-50"
             >
               Reactivar cuenta
@@ -381,8 +358,7 @@ function EditDrawer({
           ) : (
             <button
               type="button"
-              disabled={busy}
-              onClick={onDesactivar}
+                onClick={onDesactivar}
               className="w-full px-4 py-2.5 rounded-xl bg-yellow-500 text-white text-sm font-medium disabled:opacity-50"
             >
               Desactivar cuenta
@@ -393,7 +369,6 @@ function EditDrawer({
         <Section title="Zona peligrosa">
           <button
             type="button"
-            disabled={busy}
             onClick={onEliminar}
             className="w-full px-4 py-2.5 rounded-xl bg-red-600 text-white text-sm font-medium disabled:opacity-50"
           >

@@ -8,6 +8,7 @@ import { actualizarPerfilCandidato, uploadCv } from '@/actions/candidato'
 import { signout } from '@/actions/auth'
 import { getCvUrl } from '@/actions/solicitudes'
 import type { EstadoSolicitud } from '@/lib/supabase/database.types'
+import { useAction } from '@/shared/feedback/FeedbackContext'
 
 type Tab = 'solicitudes' | 'perfil' | 'cv'
 
@@ -192,19 +193,15 @@ function TabSolicitudes({ solicitudes }: { solicitudes: SolicitudView[] }) {
 
 function TabPerfil({ perfil }: { perfil: PerfilView }) {
   const router = useRouter()
-  const [saving, setSaving] = useState(false)
-  const [msg, setMsg] = useState<string | null>(null)
+  const runAction = useAction()
 
   async function onSubmit(formData: FormData) {
-    setSaving(true)
-    setMsg(null)
-    const result = await actualizarPerfilCandidato(formData)
-    if (result.error) setMsg('Error: ' + result.error)
-    else {
-      setMsg('Cambios guardados')
-      router.refresh()
-    }
-    setSaving(false)
+    const result = await runAction(
+      'Guardando cambios del perfil',
+      () => actualizarPerfilCandidato(formData),
+      { successMessage: 'Cambios guardados' },
+    )
+    if (result.ok) router.refresh()
   }
 
   return (
@@ -220,14 +217,11 @@ function TabPerfil({ perfil }: { perfil: PerfilView }) {
         <Field label="UBICACIÓN" name="ubicacion" defaultValue={perfil.ubicacion} />
         <Field label="CARGO OBJETIVO" name="cargo" defaultValue={perfil.cargo} />
 
-        {msg && <p className={`text-sm ${msg.startsWith('Error') ? 'text-red-500' : 'text-henko-turquoise'}`}>{msg}</p>}
-
         <button
           type="submit"
-          disabled={saving}
-          className="mt-2 inline-flex items-center gap-2 bg-henko-turquoise text-white px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-henko-turquoise-light hover:shadow-lg transition-all disabled:opacity-60"
+          className="mt-2 inline-flex items-center gap-2 bg-henko-turquoise text-white px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-henko-turquoise-light hover:shadow-lg transition-all"
         >
-          {saving ? 'Guardando...' : 'Guardar cambios'}
+          Guardar cambios
         </button>
       </form>
     </div>
@@ -250,27 +244,30 @@ function Field({ label, name, defaultValue, disabled }: { label: string; name: s
 
 function TabCV({ cv }: { cv: CvView }) {
   const router = useRouter()
+  const runAction = useAction()
   const fileRef = useRef<HTMLInputElement>(null)
-  const [uploading, setUploading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
 
   async function onUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-    setError(null)
-    setUploading(true)
     const fd = new FormData()
     fd.append('cv', file)
-    const result = await uploadCv(fd)
-    if (result.error) setError(result.error)
-    else router.refresh()
-    setUploading(false)
+    const result = await runAction(
+      'Subiendo CV',
+      () => uploadCv(fd),
+      { successMessage: 'CV actualizado' },
+    )
+    if (result.ok) router.refresh()
   }
 
   async function descargar() {
     if (!cv) return
-    const result = await getCvUrl(cv.storage_path)
-    if (result.url) window.open(result.url, '_blank')
+    const result = await runAction(
+      'Generando enlace del CV',
+      () => getCvUrl(cv.storage_path),
+      { silentSuccess: true },
+    )
+    if (result.ok && result.data.url) window.open(result.data.url, '_blank')
   }
 
   const fechaSubida = cv?.created_at
@@ -302,8 +299,6 @@ function TabCV({ cv }: { cv: CvView }) {
           </>
         )}
 
-        {error && <p className="text-sm text-red-500 mb-3">{error}</p>}
-
         <input
           ref={fileRef}
           type="file"
@@ -325,10 +320,9 @@ function TabCV({ cv }: { cv: CvView }) {
           <button
             type="button"
             onClick={() => fileRef.current?.click()}
-            disabled={uploading}
-            className="inline-flex items-center gap-2 bg-henko-turquoise text-white px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-henko-turquoise-light hover:shadow-lg transition-all disabled:opacity-60"
+            className="inline-flex items-center gap-2 bg-henko-turquoise text-white px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-henko-turquoise-light hover:shadow-lg transition-all"
           >
-            {uploading ? 'Subiendo...' : cv ? 'Actualizar CV' : 'Subir CV'}
+            {cv ? 'Actualizar CV' : 'Subir CV'}
           </button>
         </div>
       </div>

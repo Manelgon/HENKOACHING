@@ -1,20 +1,21 @@
 'use client'
 
-import { useState } from 'react'
 import { updatePassword } from '@/actions/auth'
+import { useAction } from '@/shared/feedback/FeedbackContext'
 
 export function UpdatePasswordForm() {
-  const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
+  const runAction = useAction()
 
   async function handleSubmit(formData: FormData) {
-    setLoading(true)
-    setError(null)
-    const result = await updatePassword(formData)
-    if (result?.error) {
-      setError(result.error)
-      setLoading(false)
-    }
+    await runAction(
+      'Actualizando contraseña',
+      async () => {
+        const result = await updatePassword(formData)
+        if (result?.error) throw new Error(result.error)
+        return null
+      },
+      { silentSuccess: true },
+    )
   }
 
   return (
@@ -34,19 +35,11 @@ export function UpdatePasswordForm() {
         />
       </div>
 
-      {error && <p className="text-sm text-red-500 font-raleway">{error}</p>}
-
       <button
         type="submit"
-        disabled={loading}
-        className="w-full bg-henko-turquoise text-white px-6 py-3 rounded-2xl font-bold font-raleway hover:bg-henko-greenblue transition-all shadow-md disabled:opacity-60 flex items-center justify-center gap-2"
+        className="w-full bg-henko-turquoise text-white px-6 py-3 rounded-2xl font-bold font-raleway hover:bg-henko-greenblue transition-all shadow-md flex items-center justify-center gap-2"
       >
-        {loading ? (
-          <>
-            <span className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            Guardando...
-          </>
-        ) : 'Actualizar contraseña'}
+        Actualizar contraseña
       </button>
     </form>
   )

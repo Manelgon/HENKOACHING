@@ -4,21 +4,23 @@ import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { loginCandidato } from '@/actions/candidato'
+import { useAction } from '@/shared/feedback/FeedbackContext'
 
 export default function CandidatoLoginForm() {
+  const runAction = useAction()
   const [form, setForm] = useState({ email: '', password: '' })
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError(null)
-    setLoading(true)
-    const result = await loginCandidato(form.email, form.password)
-    if (result?.error) {
-      setError(result.error)
-      setLoading(false)
-    }
+    await runAction(
+      'Iniciando sesión',
+      async () => {
+        const result = await loginCandidato(form.email, form.password)
+        if (result?.error) throw new Error(result.error)
+        return null
+      },
+      { silentSuccess: true },
+    )
   }
 
   return (
@@ -94,16 +96,11 @@ export default function CandidatoLoginForm() {
               />
             </div>
 
-            {error && (
-              <p className="text-sm text-red-500 mb-4">{error}</p>
-            )}
-
             <button
               type="submit"
-              disabled={loading}
-              className="w-full inline-flex items-center justify-center gap-2 bg-henko-turquoise text-white px-6 py-3.5 rounded-full text-sm font-semibold hover:bg-henko-turquoise-light hover:shadow-lg disabled:opacity-70 transition-all"
+              className="w-full inline-flex items-center justify-center gap-2 bg-henko-turquoise text-white px-6 py-3.5 rounded-full text-sm font-semibold hover:bg-henko-turquoise-light hover:shadow-lg transition-all"
             >
-              {loading ? 'Entrando...' : 'Acceder'}
+              Acceder
             </button>
           </form>
 

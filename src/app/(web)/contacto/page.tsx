@@ -4,31 +4,28 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import PageHeader from '@/components/PageHeader'
 import { crearLead } from '@/actions/leads'
+import { useAction } from '@/shared/feedback/FeedbackContext'
 
 export default function ContactoPage() {
+  const runAction = useAction()
   const [form, setForm] = useState({ nombre: '', empresa: '', email: '', servicio: '', mensaje: '' })
   const [sent, setSent] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    setError(null)
-    setLoading(true)
-    const result = await crearLead({
-      tipo: 'contacto_general',
-      nombre: form.nombre,
-      email: form.email,
-      asunto: form.empresa ? `Contacto de ${form.empresa}` : 'Consulta general',
-      mensaje: form.mensaje,
-      servicio_interes: form.servicio || undefined,
-    })
-    setLoading(false)
-    if (result.error) {
-      setError(result.error)
-      return
-    }
-    setSent(true)
+    const result = await runAction(
+      'Enviando mensaje',
+      () => crearLead({
+        tipo: 'contacto_general',
+        nombre: form.nombre,
+        email: form.email,
+        asunto: form.empresa ? `Contacto de ${form.empresa}` : 'Consulta general',
+        mensaje: form.mensaje,
+        servicio_interes: form.servicio || undefined,
+      }),
+      { successMessage: 'Mensaje enviado, te respondo en menos de 24h' },
+    )
+    if (result.ok) setSent(true)
   }
 
   const inputClass = 'w-full px-4 py-3.5 rounded-2xl text-sm border-[1.5px] border-black/10 bg-white text-gray-900 outline-none focus:border-henko-turquoise transition-colors'
@@ -110,14 +107,11 @@ export default function ContactoPage() {
                     value={form.mensaje} onChange={(e) => setForm({ ...form, mensaje: e.target.value })} />
                 </div>
 
-                {error && <p className="text-sm text-red-500 mb-4">{error}</p>}
-
                 <button
                   type="submit"
-                  disabled={loading}
-                  className="w-full inline-flex items-center justify-center gap-2 bg-henko-turquoise text-white px-7 py-4 rounded-full text-[15px] font-semibold hover:bg-henko-turquoise-light hover:shadow-lg disabled:opacity-70 transition-all"
+                  className="w-full inline-flex items-center justify-center gap-2 bg-henko-turquoise text-white px-7 py-4 rounded-full text-[15px] font-semibold hover:bg-henko-turquoise-light hover:shadow-lg transition-all"
                 >
-                  {loading ? 'Enviando...' : 'Enviar mensaje →'}
+                  Enviar mensaje →
                 </button>
               </form>
             )}

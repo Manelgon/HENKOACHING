@@ -2,23 +2,19 @@
 
 import { useState } from 'react'
 import { resetPassword } from '@/actions/auth'
+import { useAction } from '@/shared/feedback/FeedbackContext'
 
 export function ForgotPasswordForm() {
-  const [error, setError] = useState<string | null>(null)
+  const runAction = useAction()
   const [success, setSuccess] = useState(false)
-  const [loading, setLoading] = useState(false)
 
   async function handleSubmit(formData: FormData) {
-    setLoading(true)
-    setError(null)
-    const result = await resetPassword(formData)
-    if (result?.error) {
-      setError(result.error)
-      setLoading(false)
-    } else {
-      setSuccess(true)
-      setLoading(false)
-    }
+    const result = await runAction(
+      'Enviando enlace de recuperación',
+      () => resetPassword(formData),
+      { successMessage: 'Enlace enviado. Revisa tu email.' },
+    )
+    if (result.ok) setSuccess(true)
   }
 
   if (success) {
@@ -50,19 +46,11 @@ export function ForgotPasswordForm() {
         />
       </div>
 
-      {error && <p className="text-sm text-red-500 font-raleway">{error}</p>}
-
       <button
         type="submit"
-        disabled={loading}
-        className="w-full bg-henko-turquoise text-white px-6 py-3 rounded-2xl font-bold font-raleway hover:bg-henko-greenblue transition-all shadow-md disabled:opacity-60 flex items-center justify-center gap-2"
+        className="w-full bg-henko-turquoise text-white px-6 py-3 rounded-2xl font-bold font-raleway hover:bg-henko-greenblue transition-all shadow-md flex items-center justify-center gap-2"
       >
-        {loading ? (
-          <>
-            <span className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            Enviando...
-          </>
-        ) : 'Enviar enlace'}
+        Enviar enlace
       </button>
     </form>
   )
