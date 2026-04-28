@@ -2,52 +2,39 @@
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
-import { OFERTAS, SECTORES, MODALIDADES, type Oferta } from '@/features/empleo/data'
+import PageHeader from '@/components/PageHeader'
+import type { OfertaListing } from '@/features/empleo/queries'
 
-export default function OfertasListing() {
+type Props = {
+  ofertas: OfertaListing[]
+  sectores: string[]
+  modalidades: string[]
+}
+
+export default function OfertasListing({ ofertas, sectores, modalidades }: Props) {
   const [sector, setSector] = useState<string>('Todos')
   const [modalidad, setModalidad] = useState<string>('Todas')
   const [busqueda, setBusqueda] = useState('')
 
-  const filtradas = useMemo(() => OFERTAS.filter(o => {
-    if (!o.activa) return false
+  const sectoresOpts = ['Todos', ...sectores]
+  const modalidadesOpts = ['Todas', ...modalidades]
+
+  const filtradas = useMemo(() => ofertas.filter(o => {
     if (sector !== 'Todos' && o.sector !== sector) return false
     if (modalidad !== 'Todas' && o.modalidad !== modalidad) return false
     const q = busqueda.toLowerCase()
     if (q && !o.titulo.toLowerCase().includes(q) && !o.empresa.toLowerCase().includes(q)) return false
     return true
-  }), [sector, modalidad, busqueda])
+  }), [ofertas, sector, modalidad, busqueda])
 
   return (
     <div className="bg-henko-white pt-24 pb-24 font-raleway">
-      {/* Header */}
-      <section className="relative overflow-hidden px-6 md:px-12 pt-16 pb-20 bg-henko-turquoise rounded-b-[3rem]">
-        <div
-          className="absolute pointer-events-none"
-          style={{
-            width: 320, height: 416, top: -80, right: -60,
-            background: 'rgba(255,255,255,0.08)',
-            borderRadius: '60% 40% 70% 30% / 50% 60% 40% 60%',
-          }}
-        />
-        <div
-          className="absolute pointer-events-none"
-          style={{
-            width: 200, height: 260, bottom: -40, left: 40,
-            background: 'rgba(255,255,255,0.06)',
-            borderRadius: '60% 40% 70% 30% / 50% 60% 40% 60%',
-          }}
-        />
-        <div className="relative z-10 max-w-4xl">
-          <p className="font-raleway font-bold text-white/60 tracking-[0.18em] uppercase text-[11px] mb-4">Portal de empleo</p>
-          <h1 className="font-roxborough text-4xl md:text-5xl text-white leading-tight mb-5">Oportunidades de trabajo</h1>
-          <p className="text-white/75 text-lg leading-relaxed max-w-2xl">
-            Posiciones seleccionadas por Henkoaching para empresas en transformación.
-          </p>
-        </div>
-      </section>
+      <PageHeader
+        overline="Portal de empleo"
+        title="Oportunidades de trabajo"
+        subtitle="Posiciones seleccionadas por Henkoaching para empresas en transformación."
+      />
 
-      {/* Filtros + listing */}
       <section className="px-6 md:px-12 pt-14 max-w-7xl mx-auto">
         <div className="flex flex-wrap items-center gap-3 mb-10">
           <input
@@ -57,7 +44,7 @@ export default function OfertasListing() {
             className="flex-1 min-w-[260px] px-5 py-3 rounded-full text-sm border-[1.5px] border-black/10 bg-white outline-none focus:border-henko-turquoise transition-colors"
           />
           <div className="flex flex-wrap gap-2">
-            {SECTORES.map(s => (
+            {sectoresOpts.map(s => (
               <button
                 key={s}
                 onClick={() => setSector(s)}
@@ -72,7 +59,7 @@ export default function OfertasListing() {
             ))}
           </div>
           <div className="flex flex-wrap gap-2">
-            {MODALIDADES.map(m => (
+            {modalidadesOpts.map(m => (
               <button
                 key={m}
                 onClick={() => setModalidad(m)}
@@ -99,7 +86,7 @@ export default function OfertasListing() {
           {filtradas.length === 0 && (
             <div className="text-center py-20 text-gray-400">
               <p className="font-roxborough text-2xl mb-2">No hay resultados</p>
-              <p className="text-sm">Prueba con otros filtros</p>
+              <p className="text-sm">{ofertas.length === 0 ? 'Aún no hay ofertas publicadas' : 'Prueba con otros filtros'}</p>
             </div>
           )}
         </div>
@@ -132,24 +119,22 @@ export default function OfertasListing() {
   )
 }
 
-function OfertaRow({ o }: { o: Oferta }) {
+function OfertaRow({ o }: { o: OfertaListing }) {
   return (
     <Link
-      href={`/empleo/${o.id}`}
+      href={`/empleo/${o.slug}`}
       className="group bg-white rounded-3xl px-9 py-7 flex flex-col md:flex-row md:items-center md:justify-between gap-6 border border-black/5 hover:-translate-y-0.5 hover:shadow-[0_8px_28px_rgba(0,0,0,0.08)] transition-all"
     >
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2.5 mb-1.5 flex-wrap">
           <h3 className="font-roxborough text-xl text-gray-900">{o.titulo}</h3>
-          {o.activa && (
-            <span className="text-[10px] px-2.5 py-0.5 rounded-full font-bold bg-henko-greenblue text-henko-turquoise tracking-wider">
-              ACTIVA
-            </span>
-          )}
+          <span className="text-[10px] px-2.5 py-0.5 rounded-full font-bold bg-henko-greenblue text-henko-turquoise tracking-wider">
+            ACTIVA
+          </span>
         </div>
         <p className="text-sm text-gray-500 mb-3">{o.empresa} · {o.ubicacion}</p>
         <div className="flex gap-2 flex-wrap">
-          {[o.modalidad, o.jornada, o.sector].map((tag, i) => (
+          {[o.modalidad, o.jornada, o.sector].filter(Boolean).map((tag, i) => (
             <span key={i} className="text-xs px-3 py-1 rounded-full font-semibold" style={{ background: '#f2ebe5', color: '#777' }}>
               {tag}
             </span>

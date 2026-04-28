@@ -4,36 +4,33 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 
+async function getRedirectForRole(userId: string): Promise<string> {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', userId)
+    .single()
+
+  if (data?.role === 'candidato') return '/candidato/dashboard'
+  return '/dashboard'
+}
+
 export async function login(formData: FormData) {
   const supabase = await createClient()
 
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data, error } = await supabase.auth.signInWithPassword({
     email: formData.get('email') as string,
     password: formData.get('password') as string,
   })
 
-  if (error) {
-    return { error: error.message }
+  if (error || !data.user) {
+    return { error: error?.message || 'Error al iniciar sesión' }
   }
 
+  const target = await getRedirectForRole(data.user.id)
   revalidatePath('/', 'layout')
-  redirect('/dashboard')
-}
-
-export async function signup(formData: FormData) {
-  const supabase = await createClient()
-
-  const { error } = await supabase.auth.signUp({
-    email: formData.get('email') as string,
-    password: formData.get('password') as string,
-  })
-
-  if (error) {
-    return { error: error.message }
-  }
-
-  revalidatePath('/', 'layout')
-  redirect('/check-email')
+  redirect(target)
 }
 
 export async function signout() {
@@ -68,6 +65,9 @@ export async function updatePassword(formData: FormData) {
     return { error: error.message }
   }
 
+  const { data: { user } } = await supabase.auth.getUser()
+  const target = user ? await getRedirectForRole(user.id) : '/login'
+
   revalidatePath('/', 'layout')
-  redirect('/dashboard')
+  redirect(target)
 }

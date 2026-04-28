@@ -3,17 +3,31 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import PageHeader from '@/components/PageHeader'
+import { crearLead } from '@/actions/leads'
 
 export default function ContactoPage() {
   const [form, setForm] = useState({ nombre: '', empresa: '', email: '', servicio: '', mensaje: '' })
   const [sent, setSent] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
+    setError(null)
     setLoading(true)
-    await new Promise((r) => setTimeout(r, 900))
+    const result = await crearLead({
+      tipo: 'contacto_general',
+      nombre: form.nombre,
+      email: form.email,
+      asunto: form.empresa ? `Contacto de ${form.empresa}` : 'Consulta general',
+      mensaje: form.mensaje,
+      servicio_interes: form.servicio || undefined,
+    })
     setLoading(false)
+    if (result.error) {
+      setError(result.error)
+      return
+    }
     setSent(true)
   }
 
@@ -95,6 +109,8 @@ export default function ContactoPage() {
                     className={inputClass + ' resize-y leading-relaxed'}
                     value={form.mensaje} onChange={(e) => setForm({ ...form, mensaje: e.target.value })} />
                 </div>
+
+                {error && <p className="text-sm text-red-500 mb-4">{error}</p>}
 
                 <button
                   type="submit"

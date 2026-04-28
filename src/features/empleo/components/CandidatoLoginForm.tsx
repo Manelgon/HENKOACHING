@@ -2,18 +2,23 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import Image from 'next/image'
+import { loginCandidato } from '@/actions/candidato'
 
 export default function CandidatoLoginForm() {
-  const router = useRouter()
   const [form, setForm] = useState({ email: '', password: '' })
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError(null)
     setLoading(true)
-    setTimeout(() => router.push('/candidato/dashboard'), 600)
+    const result = await loginCandidato(form.email, form.password)
+    if (result?.error) {
+      setError(result.error)
+      setLoading(false)
+    }
   }
 
   return (
@@ -77,7 +82,7 @@ export default function CandidatoLoginForm() {
                 className="w-full px-4 py-3 rounded-xl text-sm border-[1.5px] border-black/10 bg-white outline-none focus:border-henko-turquoise transition-colors"
               />
             </div>
-            <div className="mb-8">
+            <div className="mb-4">
               <label className="text-[11px] tracking-[0.12em] font-bold text-henko-turquoise mb-1.5 block">CONTRASEÑA</label>
               <input
                 type="password"
@@ -88,6 +93,11 @@ export default function CandidatoLoginForm() {
                 className="w-full px-4 py-3 rounded-xl text-sm border-[1.5px] border-black/10 bg-white outline-none focus:border-henko-turquoise transition-colors"
               />
             </div>
+
+            {error && (
+              <p className="text-sm text-red-500 mb-4">{error}</p>
+            )}
+
             <button
               type="submit"
               disabled={loading}

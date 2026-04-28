@@ -3,6 +3,7 @@
 import { useState, useRef, Fragment } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { signupCandidato, uploadCv } from '@/actions/candidato'
 
 type Experiencia = { empresa: string; cargo: string; desde: string; hasta: string }
 type Educacion = { centro: string; titulo: string; ano: string }
@@ -28,6 +29,8 @@ const labelClass = 'text-[11px] tracking-[0.12em] font-bold text-henko-turquoise
 export default function CandidatoSignupFlow() {
   const router = useRouter()
   const [step, setStep] = useState(1)
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [form, setForm] = useState<FormState>({
     nombre: '', apellidos: '', email: '', password: '',
     telefono: '', ubicacion: '', cargo: '',
@@ -40,6 +43,45 @@ export default function CandidatoSignupFlow() {
 
   const upd = <K extends keyof FormState>(key: K, val: FormState[K]) =>
     setForm(f => ({ ...f, [key]: val }))
+
+  async function finalizar() {
+    setError(null)
+    setSubmitting(true)
+
+    const result = await signupCandidato({
+      nombre: form.nombre,
+      apellidos: form.apellidos,
+      email: form.email,
+      password: form.password,
+      telefono: form.telefono,
+      ubicacion: form.ubicacion,
+      cargo: form.cargo,
+      experiencias: form.exp,
+      educacion: form.edu,
+      idiomas: form.idiomas,
+    })
+
+    if ('error' in result && result.error) {
+      setError(result.error)
+      setSubmitting(false)
+      return
+    }
+
+    // Subir CV si hay
+    if (form.cv) {
+      const fd = new FormData()
+      fd.append('cv', form.cv)
+      const cvResult = await uploadCv(fd)
+      if (cvResult.error) {
+        setError('Cuenta creada, pero error al subir CV: ' + cvResult.error)
+        setSubmitting(false)
+        return
+      }
+    }
+
+    router.push('/candidato/dashboard')
+    router.refresh()
+  }
 
   return (
     <div className="min-h-screen bg-henko-white pt-20 font-raleway">
@@ -79,6 +121,12 @@ export default function CandidatoSignupFlow() {
           ))}
         </div>
 
+        {error && (
+          <div className="mb-6 px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700">
+            {error}
+          </div>
+        )}
+
         {step === 1 && <StepCuenta form={form} upd={upd} next={() => setStep(2)} />}
         {step === 2 && <StepPerfil form={form} upd={upd} back={() => setStep(1)} next={() => setStep(3)} />}
         {step === 3 && <StepExperiencia form={form} upd={upd} back={() => setStep(2)} next={() => setStep(4)} />}
@@ -88,7 +136,8 @@ export default function CandidatoSignupFlow() {
             upd={upd}
             fileRef={fileRef}
             back={() => setStep(3)}
-            finish={() => router.push('/candidato/dashboard')}
+            finish={finalizar}
+            submitting={submitting}
           />
         )}
       </div>
@@ -104,12 +153,13 @@ function Heading({ children }: { children: React.ReactNode }) {
   return <h1 className="font-roxborough text-3xl md:text-4xl text-gray-900 mb-8 leading-tight">{children}</h1>
 }
 
-function PrimaryBtn({ children, onClick, full = false, type = 'button' }: { children: React.ReactNode; onClick?: () => void; full?: boolean; type?: 'button' | 'submit' }) {
+function PrimaryBtn({ children, onClick, full = false, type = 'button', disabled }: { children: React.ReactNode; onClick?: () => void; full?: boolean; type?: 'button' | 'submit'; disabled?: boolean }) {
   return (
     <button
       type={type}
       onClick={onClick}
-      className={`inline-flex items-center justify-center gap-2 bg-henko-turquoise text-white px-7 py-3.5 rounded-full text-sm font-semibold hover:bg-henko-turquoise-light hover:shadow-lg transition-all ${full ? 'w-full' : ''}`}
+      disabled={disabled}
+      className={`inline-flex items-center justify-center gap-2 bg-henko-turquoise text-white px-7 py-3.5 rounded-full text-sm font-semibold hover:bg-henko-turquoise-light hover:shadow-lg transition-all disabled:opacity-60 disabled:cursor-not-allowed ${full ? 'w-full' : ''}`}
     >
       {children}
     </button>
@@ -129,6 +179,12 @@ function SecondaryBtn({ children, onClick }: { children: React.ReactNode; onClic
 }
 
 function StepCuenta({ form, upd, next }: { form: FormState; upd: <K extends keyof FormState>(k: K, v: FormState[K]) => void; next: () => void }) {
+  const validar = () => {
+    if (!form.nombre.trim() || !form.apellidos.trim()) return alert('Completa nombre y apellidos')
+    if (!form.email.includes('@')) return alert('Email inválido')
+    if (form.password.length < 8) return alert('Contraseña mínimo 8 caracteres')
+    next()
+  }
   return (
     <div>
       <Eyebrow>Paso 1</Eyebrow>
@@ -153,7 +209,7 @@ function StepCuenta({ form, upd, next }: { form: FormState; upd: <K extends keyo
         <input className={inputClass} type="password" placeholder="Mínimo 8 caracteres" value={form.password} onChange={(e) => upd('password', e.target.value)} />
       </div>
 
-      <PrimaryBtn onClick={next} full>Continuar →</PrimaryBtn>
+      <PrimaryBtn onClick={validar} full>Continuar →</PrimaryBtn>
     </div>
   )
 }
@@ -341,12 +397,13 @@ function StepExperiencia({ form, upd, back, next }: { form: FormState; upd: <K e
   )
 }
 
-function StepCV({ form, upd, fileRef, back, finish }: {
+function StepCV({ form, upd, fileRef, back, finish, submitting }: {
   form: FormState
   upd: <K extends keyof FormState>(k: K, v: FormState[K]) => void
   fileRef: React.RefObject<HTMLInputElement | null>
   back: () => void
   finish: () => void
+  submitting: boolean
 }) {
   return (
     <div>
@@ -400,7 +457,9 @@ function StepCV({ form, upd, fileRef, back, finish }: {
       <div className="flex gap-3">
         <SecondaryBtn onClick={back}>← Volver</SecondaryBtn>
         <div className="flex-1">
-          <PrimaryBtn onClick={finish} full>Crear perfil →</PrimaryBtn>
+          <PrimaryBtn onClick={finish} full disabled={submitting}>
+            {submitting ? 'Creando perfil...' : 'Crear perfil →'}
+          </PrimaryBtn>
         </div>
       </div>
     </div>
