@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { crearOferta, actualizarOferta, cambiarEstadoOferta, eliminarOferta } from '@/actions/ofertas'
 
@@ -131,102 +131,20 @@ export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas 
     router.refresh()
   }
 
-  if (editando || nueva) {
-    return (
-      <div>
-        <button
-          type="button"
-          onClick={cancel}
-          className="text-sm text-henko-turquoise font-semibold mb-6 hover:underline"
-        >
-          ← Volver
-        </button>
-        <h2 className="font-roxborough text-3xl text-gray-900 mb-7">
-          {nueva ? 'Nueva oferta' : 'Editar oferta'}
-        </h2>
+  const modalAbierto = editando !== null || nueva
 
-        <div className="bg-white rounded-3xl p-9 border border-black/5 max-w-2xl">
-          <Field label="TÍTULO DEL PUESTO" value={draft.titulo} onChange={(v) => update('titulo', v)} placeholder="ej. Responsable de Operaciones" />
-          <Field label="EMPRESA" value={draft.empresa} onChange={(v) => update('empresa', v)} placeholder="Nombre de la empresa (se crea si no existe)" />
-          <Field label="UBICACIÓN" value={draft.ubicacion} onChange={(v) => update('ubicacion', v)} placeholder="Palma, Mallorca" />
-          <Field label="SALARIO" value={draft.salario_texto} onChange={(v) => update('salario_texto', v)} placeholder="ej. 30.000 – 36.000 €/año" />
-
-          <div className="grid grid-cols-3 gap-3 mb-4">
-            <SelectField label="MODALIDAD" value={draft.modalidad_id} onChange={(v) => update('modalidad_id', v)} options={modalidades} />
-            <SelectField label="JORNADA" value={draft.jornada_id} onChange={(v) => update('jornada_id', v)} options={jornadas} />
-            <SelectField label="SECTOR" value={draft.sector_id} onChange={(v) => update('sector_id', v)} options={sectores} />
-          </div>
-
-          <div className="mb-4">
-            <label className={labelClass}>ESTADO</label>
-            <select
-              className={inputClass + ' appearance-none'}
-              value={draft.estado}
-              onChange={(e) => update('estado', e.target.value as Draft['estado'])}
-            >
-              <option value="borrador">Borrador (no visible)</option>
-              <option value="publicada">Publicada</option>
-              <option value="pausada">Pausada</option>
-              <option value="cerrada">Cerrada</option>
-            </select>
-          </div>
-
-          <div className="mb-4">
-            <label className={labelClass}>DESCRIPCIÓN</label>
-            <textarea
-              rows={5}
-              className={inputClass + ' resize-y leading-relaxed'}
-              placeholder="Describe el puesto, responsabilidades y contexto..."
-              value={draft.descripcion}
-              onChange={(e) => update('descripcion', e.target.value)}
-            />
-          </div>
-
-          <div className="mb-4">
-            <label className={labelClass}>REQUISITOS (uno por línea)</label>
-            <textarea
-              rows={4}
-              className={inputClass + ' resize-y leading-relaxed'}
-              placeholder="Experiencia mínima 3 años&#10;Inglés C1&#10;..."
-              value={draft.requisitos}
-              onChange={(e) => update('requisitos', e.target.value)}
-            />
-          </div>
-
-          <div className="mb-6">
-            <label className={labelClass}>QUÉ OFRECEMOS (uno por línea)</label>
-            <textarea
-              rows={4}
-              className={inputClass + ' resize-y leading-relaxed'}
-              placeholder="Salario competitivo&#10;Horario flexible&#10;..."
-              value={draft.ofrecemos}
-              onChange={(e) => update('ofrecemos', e.target.value)}
-            />
-          </div>
-
-          {error && <p className="text-sm text-red-500 mb-4">{error}</p>}
-
-          <div className="flex gap-3">
-            <button
-              type="button"
-              onClick={save}
-              disabled={saving}
-              className="flex-1 inline-flex items-center justify-center gap-2 bg-henko-turquoise text-white px-6 py-3 rounded-full text-sm font-semibold hover:bg-henko-turquoise-light hover:shadow-lg transition-all disabled:opacity-60"
-            >
-              {saving ? 'Guardando...' : nueva ? 'Publicar oferta' : 'Guardar cambios'}
-            </button>
-            <button
-              type="button"
-              onClick={cancel}
-              className="inline-flex items-center gap-2 bg-transparent border-2 border-henko-turquoise text-henko-turquoise px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-henko-turquoise hover:text-white transition-all"
-            >
-              Cancelar
-            </button>
-          </div>
-        </div>
-      </div>
-    )
-  }
+  useEffect(() => {
+    if (!modalAbierto) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') cancel()
+    }
+    document.addEventListener('keydown', onKey)
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.body.style.overflow = ''
+    }
+  }, [modalAbierto])
 
   return (
     <div>
@@ -290,6 +208,114 @@ export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas 
           </div>
         ))}
       </div>
+
+      {modalAbierto && (
+        <div
+          className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 backdrop-blur-sm px-4 py-10"
+          onClick={cancel}
+        >
+          <div
+            className="bg-white rounded-3xl border border-black/5 w-full max-w-2xl shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-9 pt-7 pb-5 border-b border-black/5">
+              <h2 className="font-roxborough text-2xl text-gray-900">
+                {nueva ? 'Nueva oferta' : 'Editar oferta'}
+              </h2>
+              <button
+                type="button"
+                onClick={cancel}
+                aria-label="Cerrar"
+                className="w-9 h-9 rounded-full hover:bg-black/5 flex items-center justify-center text-gray-400 hover:text-gray-700 transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="px-9 py-7">
+              <Field label="TÍTULO DEL PUESTO" value={draft.titulo} onChange={(v) => update('titulo', v)} placeholder="ej. Responsable de Operaciones" />
+              <Field label="EMPRESA" value={draft.empresa} onChange={(v) => update('empresa', v)} placeholder="Nombre de la empresa (se crea si no existe)" />
+              <Field label="UBICACIÓN" value={draft.ubicacion} onChange={(v) => update('ubicacion', v)} placeholder="Palma, Mallorca" />
+              <Field label="SALARIO" value={draft.salario_texto} onChange={(v) => update('salario_texto', v)} placeholder="ej. 30.000 – 36.000 €/año" />
+
+              <div className="grid grid-cols-3 gap-3 mb-4">
+                <SelectField label="MODALIDAD" value={draft.modalidad_id} onChange={(v) => update('modalidad_id', v)} options={modalidades} />
+                <SelectField label="JORNADA" value={draft.jornada_id} onChange={(v) => update('jornada_id', v)} options={jornadas} />
+                <SelectField label="SECTOR" value={draft.sector_id} onChange={(v) => update('sector_id', v)} options={sectores} />
+              </div>
+
+              <div className="mb-4">
+                <label className={labelClass}>ESTADO</label>
+                <select
+                  className={inputClass + ' appearance-none'}
+                  value={draft.estado}
+                  onChange={(e) => update('estado', e.target.value as Draft['estado'])}
+                >
+                  <option value="borrador">Borrador (no visible)</option>
+                  <option value="publicada">Publicada</option>
+                  <option value="pausada">Pausada</option>
+                  <option value="cerrada">Cerrada</option>
+                </select>
+              </div>
+
+              <div className="mb-4">
+                <label className={labelClass}>DESCRIPCIÓN</label>
+                <textarea
+                  rows={5}
+                  className={inputClass + ' resize-y leading-relaxed'}
+                  placeholder="Describe el puesto, responsabilidades y contexto..."
+                  value={draft.descripcion}
+                  onChange={(e) => update('descripcion', e.target.value)}
+                />
+              </div>
+
+              <div className="mb-4">
+                <label className={labelClass}>REQUISITOS (uno por línea)</label>
+                <textarea
+                  rows={4}
+                  className={inputClass + ' resize-y leading-relaxed'}
+                  placeholder="Experiencia mínima 3 años&#10;Inglés C1&#10;..."
+                  value={draft.requisitos}
+                  onChange={(e) => update('requisitos', e.target.value)}
+                />
+              </div>
+
+              <div className="mb-2">
+                <label className={labelClass}>QUÉ OFRECEMOS (uno por línea)</label>
+                <textarea
+                  rows={4}
+                  className={inputClass + ' resize-y leading-relaxed'}
+                  placeholder="Salario competitivo&#10;Horario flexible&#10;..."
+                  value={draft.ofrecemos}
+                  onChange={(e) => update('ofrecemos', e.target.value)}
+                />
+              </div>
+
+              {error && <p className="text-sm text-red-500 mt-3">{error}</p>}
+            </div>
+
+            <div className="flex gap-3 px-9 py-5 border-t border-black/5">
+              <button
+                type="button"
+                onClick={save}
+                disabled={saving}
+                className="flex-1 inline-flex items-center justify-center gap-2 bg-henko-turquoise text-white px-6 py-3 rounded-full text-sm font-semibold hover:bg-henko-turquoise-light hover:shadow-lg transition-all disabled:opacity-60"
+              >
+                {saving ? 'Guardando...' : nueva ? 'Publicar oferta' : 'Guardar cambios'}
+              </button>
+              <button
+                type="button"
+                onClick={cancel}
+                className="inline-flex items-center gap-2 bg-transparent border-2 border-henko-turquoise text-henko-turquoise px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-henko-turquoise hover:text-white transition-all"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
