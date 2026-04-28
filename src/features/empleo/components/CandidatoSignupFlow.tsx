@@ -5,6 +5,9 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { signupCandidato, uploadCv } from '@/actions/candidato'
 import { useAction } from '@/shared/feedback/FeedbackContext'
+import { FormError } from '@/components/FormError'
+
+type StepCuentaErrors = { nombre?: string; apellidos?: string; email?: string; password?: string }
 
 type Experiencia = { empresa: string; cargo: string; desde: string; hasta: string }
 type Educacion = { centro: string; titulo: string; ano: string }
@@ -180,34 +183,66 @@ function SecondaryBtn({ children, onClick }: { children: React.ReactNode; onClic
 }
 
 function StepCuenta({ form, upd, next }: { form: FormState; upd: <K extends keyof FormState>(k: K, v: FormState[K]) => void; next: () => void }) {
+  const [errors, setErrors] = useState<StepCuentaErrors>({})
+
   const validar = () => {
-    if (!form.nombre.trim() || !form.apellidos.trim()) return alert('Completa nombre y apellidos')
-    if (!form.email.includes('@')) return alert('Email inválido')
-    if (form.password.length < 8) return alert('Contraseña mínimo 8 caracteres')
+    const errs: StepCuentaErrors = {}
+    if (!form.nombre.trim()) errs.nombre = 'Introduce tu nombre'
+    if (!form.apellidos.trim()) errs.apellidos = 'Introduce tus apellidos'
+    if (!form.email.trim()) errs.email = 'Introduce tu email'
+    else if (!form.email.includes('@')) errs.email = 'Email inválido'
+    if (!form.password) errs.password = 'Introduce una contraseña'
+    else if (form.password.length < 8) errs.password = 'Contraseña mínimo 8 caracteres'
+    if (Object.keys(errs).length) {
+      setErrors(errs)
+      return
+    }
+    setErrors({})
     next()
   }
+
+  const fieldClass = (hasError: boolean) =>
+    `w-full px-4 py-3 rounded-xl text-sm border-[1.5px] bg-white outline-none transition-colors ${
+      hasError ? 'border-red-300 focus:border-red-400' : 'border-black/10 focus:border-henko-turquoise'
+    }`
+  const errLabelClass = (hasError: boolean) =>
+    `text-[11px] tracking-[0.12em] font-bold mb-1.5 block ${
+      hasError ? 'text-red-600' : 'text-henko-turquoise'
+    }`
+
+  const update = <K extends keyof FormState>(key: K, value: FormState[K]) => {
+    upd(key, value)
+    if (errors[key as keyof StepCuentaErrors]) {
+      setErrors((prev) => ({ ...prev, [key]: undefined }))
+    }
+  }
+
   return (
     <div>
       <Eyebrow>Paso 1</Eyebrow>
       <Heading>Crea tu cuenta</Heading>
 
-      <div className="grid grid-cols-2 gap-4 mb-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
         <div>
-          <label className={labelClass}>NOMBRE</label>
-          <input className={inputClass} placeholder="Tu nombre" value={form.nombre} onChange={(e) => upd('nombre', e.target.value)} />
+          <label className={errLabelClass(!!errors.nombre)}>NOMBRE</label>
+          <input className={fieldClass(!!errors.nombre)} placeholder="Tu nombre" value={form.nombre} onChange={(e) => update('nombre', e.target.value)} />
+          <FormError msg={errors.nombre} />
         </div>
         <div>
-          <label className={labelClass}>APELLIDOS</label>
-          <input className={inputClass} placeholder="Tus apellidos" value={form.apellidos} onChange={(e) => upd('apellidos', e.target.value)} />
+          <label className={errLabelClass(!!errors.apellidos)}>APELLIDOS</label>
+          <input className={fieldClass(!!errors.apellidos)} placeholder="Tus apellidos" value={form.apellidos} onChange={(e) => update('apellidos', e.target.value)} />
+          <FormError msg={errors.apellidos} />
         </div>
       </div>
       <div className="mb-4">
-        <label className={labelClass}>EMAIL</label>
-        <input className={inputClass} type="email" placeholder="tu@email.com" value={form.email} onChange={(e) => upd('email', e.target.value)} />
+        <label className={errLabelClass(!!errors.email)}>EMAIL</label>
+        <input className={fieldClass(!!errors.email)} type="email" placeholder="tu@email.com" value={form.email} onChange={(e) => update('email', e.target.value)} />
+        <FormError msg={errors.email} />
       </div>
       <div className="mb-8">
-        <label className={labelClass}>CONTRASEÑA</label>
-        <input className={inputClass} type="password" placeholder="Mínimo 8 caracteres" value={form.password} onChange={(e) => upd('password', e.target.value)} />
+        <label className={errLabelClass(!!errors.password)}>CONTRASEÑA</label>
+        <input className={fieldClass(!!errors.password)} type="password" placeholder="Mínimo 8 caracteres" value={form.password} onChange={(e) => update('password', e.target.value)} />
+        <FormError msg={errors.password} />
       </div>
 
       <PrimaryBtn onClick={validar} full>Continuar →</PrimaryBtn>

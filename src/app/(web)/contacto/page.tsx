@@ -3,16 +3,31 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import PageHeader from '@/components/PageHeader'
+import { FormError } from '@/components/FormError'
 import { crearLead } from '@/actions/leads'
 import { useAction } from '@/shared/feedback/FeedbackContext'
+
+type Errors = { nombre?: string; email?: string; mensaje?: string }
 
 export default function ContactoPage() {
   const runAction = useAction()
   const [form, setForm] = useState({ nombre: '', empresa: '', email: '', servicio: '', mensaje: '' })
+  const [errors, setErrors] = useState<Errors>({})
   const [sent, setSent] = useState(false)
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
+    const errs: Errors = {}
+    if (!form.nombre.trim()) errs.nombre = 'Introduce tu nombre'
+    if (!form.email.trim()) errs.email = 'Introduce tu email'
+    else if (!form.email.includes('@')) errs.email = 'Email inválido'
+    if (!form.mensaje.trim()) errs.mensaje = 'Cuéntame qué necesitas'
+    if (Object.keys(errs).length) {
+      setErrors(errs)
+      return
+    }
+    setErrors({})
+
     const result = await runAction(
       'Enviando mensaje',
       () => crearLead({
@@ -28,8 +43,21 @@ export default function ContactoPage() {
     if (result.ok) setSent(true)
   }
 
-  const inputClass = 'w-full px-4 py-3.5 rounded-2xl text-sm border-[1.5px] border-black/10 bg-white text-gray-900 outline-none focus:border-henko-turquoise transition-colors'
-  const labelClass = 'text-[11px] tracking-[0.12em] font-bold text-henko-turquoise mb-1.5 block'
+  const inputClass = (hasError: boolean) =>
+    `w-full px-4 py-3.5 rounded-2xl text-sm border-[1.5px] bg-white text-gray-900 outline-none transition-colors ${
+      hasError ? 'border-red-300 focus:border-red-400' : 'border-black/10 focus:border-henko-turquoise'
+    }`
+  const labelClass = (hasError: boolean) =>
+    `text-[11px] tracking-[0.12em] font-bold mb-1.5 block ${
+      hasError ? 'text-red-600' : 'text-henko-turquoise'
+    }`
+
+  const updateField = <K extends keyof typeof form>(key: K, value: string) => {
+    setForm((prev) => ({ ...prev, [key]: value }))
+    if (errors[key as keyof Errors]) {
+      setErrors((prev) => ({ ...prev, [key]: undefined }))
+    }
+  }
 
   return (
     <div className="bg-henko-white pt-24 font-raleway">
@@ -65,32 +93,60 @@ export default function ContactoPage() {
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleSubmit}>
+              <form onSubmit={handleSubmit} noValidate>
                 <h2 className="font-roxborough text-3xl md:text-5xl text-gray-900 mb-9 leading-tight">Escríbeme</h2>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                   <div>
-                    <label className={labelClass} htmlFor="nombre">NOMBRE</label>
-                    <input id="nombre" name="nombre" type="text" required placeholder="Tu nombre" className={inputClass}
-                      value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} />
+                    <label className={labelClass(!!errors.nombre)} htmlFor="nombre">NOMBRE</label>
+                    <input
+                      id="nombre"
+                      name="nombre"
+                      type="text"
+                      placeholder="Tu nombre"
+                      className={inputClass(!!errors.nombre)}
+                      value={form.nombre}
+                      onChange={(e) => updateField('nombre', e.target.value)}
+                    />
+                    <FormError msg={errors.nombre} />
                   </div>
                   <div>
-                    <label className={labelClass} htmlFor="empresa">EMPRESA</label>
-                    <input id="empresa" name="empresa" type="text" placeholder="Tu empresa" className={inputClass}
-                      value={form.empresa} onChange={(e) => setForm({ ...form, empresa: e.target.value })} />
+                    <label className={labelClass(false)} htmlFor="empresa">EMPRESA</label>
+                    <input
+                      id="empresa"
+                      name="empresa"
+                      type="text"
+                      placeholder="Tu empresa"
+                      className={inputClass(false)}
+                      value={form.empresa}
+                      onChange={(e) => updateField('empresa', e.target.value)}
+                    />
                   </div>
                 </div>
 
                 <div className="mb-4">
-                  <label className={labelClass} htmlFor="email">EMAIL</label>
-                  <input id="email" name="email" type="email" required placeholder="tu@email.com" className={inputClass}
-                    value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+                  <label className={labelClass(!!errors.email)} htmlFor="email">EMAIL</label>
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    placeholder="tu@email.com"
+                    className={inputClass(!!errors.email)}
+                    value={form.email}
+                    onChange={(e) => updateField('email', e.target.value)}
+                  />
+                  <FormError msg={errors.email} />
                 </div>
 
                 <div className="mb-4">
-                  <label className={labelClass} htmlFor="servicio">¿QUÉ TE INTERESA?</label>
-                  <select id="servicio" name="servicio" className={inputClass + ' appearance-none'}
-                    value={form.servicio} onChange={(e) => setForm({ ...form, servicio: e.target.value })}>
+                  <label className={labelClass(false)} htmlFor="servicio">¿QUÉ TE INTERESA?</label>
+                  <select
+                    id="servicio"
+                    name="servicio"
+                    className={inputClass(false) + ' appearance-none'}
+                    value={form.servicio}
+                    onChange={(e) => updateField('servicio', e.target.value)}
+                  >
                     <option value="">Selecciona un servicio</option>
                     <option>Consultoría de Operaciones</option>
                     <option>Reclutamiento Consciente</option>
@@ -100,11 +156,17 @@ export default function ContactoPage() {
                 </div>
 
                 <div className="mb-8">
-                  <label className={labelClass} htmlFor="mensaje">CUÉNTAME</label>
-                  <textarea id="mensaje" name="mensaje" rows={5} required
+                  <label className={labelClass(!!errors.mensaje)} htmlFor="mensaje">CUÉNTAME</label>
+                  <textarea
+                    id="mensaje"
+                    name="mensaje"
+                    rows={5}
                     placeholder="¿Qué está pasando en tu empresa? ¿Qué te trajo hasta aquí?"
-                    className={inputClass + ' resize-y leading-relaxed'}
-                    value={form.mensaje} onChange={(e) => setForm({ ...form, mensaje: e.target.value })} />
+                    className={inputClass(!!errors.mensaje) + ' resize-y leading-relaxed'}
+                    value={form.mensaje}
+                    onChange={(e) => updateField('mensaje', e.target.value)}
+                  />
+                  <FormError msg={errors.mensaje} />
                 </div>
 
                 <button

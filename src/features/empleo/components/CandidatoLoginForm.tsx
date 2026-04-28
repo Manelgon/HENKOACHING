@@ -5,13 +5,26 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { loginCandidato } from '@/actions/candidato'
 import { useAction } from '@/shared/feedback/FeedbackContext'
+import { FormError } from '@/components/FormError'
+
+type Errors = { email?: string; password?: string }
 
 export default function CandidatoLoginForm() {
   const runAction = useAction()
   const [form, setForm] = useState({ email: '', password: '' })
+  const [errors, setErrors] = useState<Errors>({})
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
+    const errs: Errors = {}
+    if (!form.email.trim()) errs.email = 'Introduce tu email'
+    else if (!form.email.includes('@')) errs.email = 'Email inválido'
+    if (!form.password) errs.password = 'Introduce tu contraseña'
+    if (Object.keys(errs).length) {
+      setErrors(errs)
+      return
+    }
+    setErrors({})
     await runAction(
       'Iniciando sesión',
       async () => {
@@ -22,6 +35,15 @@ export default function CandidatoLoginForm() {
       { silentSuccess: true },
     )
   }
+
+  const inputClass = (hasError: boolean) =>
+    `w-full px-4 py-3 rounded-xl text-sm border-[1.5px] bg-white outline-none transition-colors ${
+      hasError ? 'border-red-300 focus:border-red-400' : 'border-black/10 focus:border-henko-turquoise'
+    }`
+  const labelClass = (hasError: boolean) =>
+    `text-[11px] tracking-[0.12em] font-bold mb-1.5 block ${
+      hasError ? 'text-red-600' : 'text-henko-turquoise'
+    }`
 
   return (
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2 font-raleway">
@@ -72,28 +94,34 @@ export default function CandidatoLoginForm() {
             Entra en tu perfil y aplica a las ofertas disponibles.
           </p>
 
-          <form onSubmit={submit}>
+          <form onSubmit={submit} noValidate>
             <div className="mb-4">
-              <label className="text-[11px] tracking-[0.12em] font-bold text-henko-turquoise mb-1.5 block">EMAIL</label>
+              <label className={labelClass(!!errors.email)}>EMAIL</label>
               <input
                 type="email"
-                required
                 value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                onChange={(e) => {
+                  setForm({ ...form, email: e.target.value })
+                  if (errors.email) setErrors((v) => ({ ...v, email: undefined }))
+                }}
                 placeholder="tu@email.com"
-                className="w-full px-4 py-3 rounded-xl text-sm border-[1.5px] border-black/10 bg-white outline-none focus:border-henko-turquoise transition-colors"
+                className={inputClass(!!errors.email)}
               />
+              <FormError msg={errors.email} />
             </div>
             <div className="mb-4">
-              <label className="text-[11px] tracking-[0.12em] font-bold text-henko-turquoise mb-1.5 block">CONTRASEÑA</label>
+              <label className={labelClass(!!errors.password)}>CONTRASEÑA</label>
               <input
                 type="password"
-                required
                 value={form.password}
-                onChange={(e) => setForm({ ...form, password: e.target.value })}
+                onChange={(e) => {
+                  setForm({ ...form, password: e.target.value })
+                  if (errors.password) setErrors((v) => ({ ...v, password: undefined }))
+                }}
                 placeholder="••••••••"
-                className="w-full px-4 py-3 rounded-xl text-sm border-[1.5px] border-black/10 bg-white outline-none focus:border-henko-turquoise transition-colors"
+                className={inputClass(!!errors.password)}
               />
+              <FormError msg={errors.password} />
             </div>
 
             <button
