@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { crearOferta, actualizarOferta, cambiarEstadoOferta, eliminarOferta } from '@/actions/ofertas'
 import { useAction } from '@/shared/feedback/FeedbackContext'
+import { TablePagination, usePagination } from '@/components/TablePagination'
 
 type Catalogo = { id: number; nombre: string; slug: string }
 
@@ -57,6 +58,7 @@ export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas 
   const [nueva, setNueva] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [draft, setDraft] = useState<Draft>(emptyDraft(sectores, modalidades, jornadas))
+  const pagination = usePagination(ofertas, 20)
 
   const update = <K extends keyof Draft>(k: K, v: Draft[K]) => setDraft(d => ({ ...d, [k]: v }))
 
@@ -181,7 +183,7 @@ export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas 
             <p className="text-sm">Aún no hay ofertas. Crea la primera con &quot;Nueva oferta&quot;.</p>
           </div>
         )}
-        {ofertas.map((o) => (
+        {pagination.paginated.map((o) => (
           <div
             key={o.id}
             className="px-7 py-4 border-b border-black/5 last:border-0 grid grid-cols-[3fr_2fr_1fr_1fr_140px] items-center hover:bg-henko-white/40 transition-colors"
@@ -217,6 +219,17 @@ export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas 
             </div>
           </div>
         ))}
+
+        <TablePagination
+          page={pagination.page}
+          pageSize={pagination.pageSize}
+          total={pagination.total}
+          totalPages={pagination.totalPages}
+          from={pagination.from}
+          to={pagination.to}
+          onPageChange={pagination.setPage}
+          onPageSizeChange={pagination.setPageSize}
+        />
       </div>
 
       {modalAbierto && (

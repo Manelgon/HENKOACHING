@@ -13,6 +13,7 @@ import {
 } from '@/actions/profiles'
 import type { UserRole } from '@/lib/supabase/database.types'
 import { useAction } from '@/shared/feedback/FeedbackContext'
+import { TablePagination, usePagination } from '@/components/TablePagination'
 
 type ProfileRow = {
   id: string
@@ -65,6 +66,8 @@ export default function ProfilesAdmin({ profiles }: { profiles: ProfileRow[] }) 
       return true
     })
   }, [profiles, search, filterRole, filterEstado])
+
+  const pagination = usePagination(filtered, 20)
 
   async function handle(
     description: string,
@@ -139,7 +142,7 @@ export default function ProfilesAdmin({ profiles }: { profiles: ProfileRow[] }) 
               <tr>
                 <td colSpan={6} className="text-center text-gray-400 py-10">Sin resultados</td>
               </tr>
-            ) : filtered.map((p) => (
+            ) : pagination.paginated.map((p) => (
               <tr key={p.id} className="border-t border-black/5 hover:bg-gray-50/50">
                 <td className="px-5 py-3">
                   <div className="font-medium text-gray-900">{p.email}</div>
@@ -174,6 +177,17 @@ export default function ProfilesAdmin({ profiles }: { profiles: ProfileRow[] }) 
             ))}
           </tbody>
         </table>
+
+        <TablePagination
+          page={pagination.page}
+          pageSize={pagination.pageSize}
+          total={pagination.total}
+          totalPages={pagination.totalPages}
+          from={pagination.from}
+          to={pagination.to}
+          onPageChange={pagination.setPage}
+          onPageSizeChange={pagination.setPageSize}
+        />
       </div>
 
       {/* Modal crear */}

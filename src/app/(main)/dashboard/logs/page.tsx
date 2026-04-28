@@ -8,7 +8,8 @@ export const metadata = {
 
 export const dynamic = 'force-dynamic'
 
-const PAGE_SIZE = 100
+const ALLOWED_SIZES = [10, 20, 50, 100] as const
+const DEFAULT_SIZE = 20
 
 type SearchParams = Promise<{
   accion?: string
@@ -16,6 +17,7 @@ type SearchParams = Promise<{
   actor?: string
   q?: string
   page?: string
+  size?: string
 }>
 
 export default async function LogsPage({ searchParams }: { searchParams: SearchParams }) {
@@ -33,8 +35,12 @@ export default async function LogsPage({ searchParams }: { searchParams: SearchP
   if (actor?.role !== 'admin') redirect('/dashboard')
 
   const page = Math.max(1, parseInt(params.page ?? '1', 10) || 1)
-  const from = (page - 1) * PAGE_SIZE
-  const to = from + PAGE_SIZE - 1
+  const requestedSize = parseInt(params.size ?? '', 10)
+  const pageSize: number = (ALLOWED_SIZES as readonly number[]).includes(requestedSize)
+    ? requestedSize
+    : DEFAULT_SIZE
+  const from = (page - 1) * pageSize
+  const to = from + pageSize - 1
 
   let query = supabase
     .from('audit_logs')
@@ -72,7 +78,7 @@ export default async function LogsPage({ searchParams }: { searchParams: SearchP
         logs={logs ?? []}
         total={count ?? 0}
         page={page}
-        pageSize={PAGE_SIZE}
+        pageSize={pageSize}
         acciones={accionesUnicas}
         recursos={recursosUnicos}
         currentFilters={{

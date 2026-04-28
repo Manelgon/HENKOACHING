@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useAction } from '@/shared/feedback/FeedbackContext'
+import { TablePagination, usePagination } from '@/components/TablePagination'
 
 type Lead = {
   id: string
@@ -22,6 +23,7 @@ export default function LeadsTable({ leads }: { leads: Lead[] }) {
   const router = useRouter()
   const runAction = useAction()
   const [expandido, setExpandido] = useState<string | null>(null)
+  const pagination = usePagination(leads, 20)
 
   async function marcarLeido(id: string, leido: boolean) {
     const supabase = createClient()
@@ -76,7 +78,7 @@ export default function LeadsTable({ leads }: { leads: Lead[] }) {
         <span className="col-span-1 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Fecha</span>
       </div>
 
-      {leads.map((l) => {
+      {pagination.paginated.map((l) => {
         const fecha = l.created_at
           ? new Date(l.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })
           : ''
@@ -133,6 +135,17 @@ export default function LeadsTable({ leads }: { leads: Lead[] }) {
           </div>
         )
       })}
+
+      <TablePagination
+        page={pagination.page}
+        pageSize={pagination.pageSize}
+        total={pagination.total}
+        totalPages={pagination.totalPages}
+        from={pagination.from}
+        to={pagination.to}
+        onPageChange={pagination.setPage}
+        onPageSizeChange={pagination.setPageSize}
+      />
     </div>
   )
 }

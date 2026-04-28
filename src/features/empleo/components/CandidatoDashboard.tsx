@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
@@ -60,22 +60,55 @@ type Props = {
 
 export default function CandidatoDashboard({ perfil, cv, solicitudes }: Props) {
   const [tab, setTab] = useState<Tab>('solicitudes')
+  const [open, setOpen] = useState(false)
   const iniciales = `${perfil.nombre[0] ?? ''}${perfil.apellidos[0] ?? ''}`.toUpperCase() || 'CD'
 
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('keydown', onKey)
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.body.style.overflow = ''
+    }
+  }, [open])
+
+  const goTab = (next: Tab) => {
+    setTab(next)
+    setOpen(false)
+  }
+
   return (
-    <div className="min-h-screen grid grid-cols-1 md:grid-cols-[220px_1fr] bg-[#f5f0eb] font-raleway">
-      {/* Sidebar */}
-      <aside className="bg-henko-yellow flex flex-col py-8 md:sticky md:top-0 md:h-screen">
+    <div className="min-h-screen flex bg-[#f5f0eb] font-raleway">
+      {/* Backdrop */}
+      {open && (
+        <button
+          type="button"
+          aria-label="Cerrar menú"
+          onClick={() => setOpen(false)}
+          className="fixed inset-0 z-30 bg-black/40 backdrop-blur-sm md:hidden"
+        />
+      )}
+
+      {/* Sidebar (drawer en móvil, sticky en desktop) */}
+      <aside
+        className={`fixed inset-y-0 left-0 z-40 w-60 bg-henko-yellow flex flex-col py-8 transform transition-transform duration-300 md:translate-x-0 md:static md:inset-auto md:h-screen md:sticky md:top-0 ${
+          open ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+        }`}
+      >
         <div className="px-6 pb-7">
           <Link href="/">
             <Image src="/henkologo.png" alt="Henkoaching" width={140} height={40} className="object-contain" />
           </Link>
         </div>
-        <div className="px-3 flex-1">
+        <div className="px-3 flex-1 overflow-y-auto">
           {NAV.map(item => (
             <button
               key={item.id}
-              onClick={() => setTab(item.id)}
+              onClick={() => goTab(item.id)}
               className={`w-full text-left px-3.5 py-2.5 rounded-xl text-sm mb-0.5 flex items-center gap-2.5 transition-all ${
                 tab === item.id
                   ? 'bg-black/10 text-gray-900 font-bold'
@@ -94,8 +127,8 @@ export default function CandidatoDashboard({ perfil, cv, solicitudes }: Props) {
             <div className="w-8 h-8 rounded-full bg-henko-turquoise flex items-center justify-center text-xs text-white font-bold">
               {iniciales}
             </div>
-            <div>
-              <p className="text-sm font-semibold">{perfil.nombre} {perfil.apellidos}</p>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold truncate">{perfil.nombre} {perfil.apellidos}</p>
               <p className="text-[10px] text-gray-500">Candidata</p>
             </div>
           </div>
@@ -116,12 +149,36 @@ export default function CandidatoDashboard({ perfil, cv, solicitudes }: Props) {
         </div>
       </aside>
 
-      {/* Main */}
-      <main className="p-8 md:p-12 overflow-y-auto">
-        {tab === 'solicitudes' && <TabSolicitudes solicitudes={solicitudes} />}
-        {tab === 'perfil' && <TabPerfil perfil={perfil} />}
-        {tab === 'cv' && <TabCV cv={cv} />}
-      </main>
+      {/* Columna principal */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Top bar móvil */}
+        <div className="sticky top-0 z-20 md:hidden flex items-center gap-3 px-4 h-14 bg-white/90 backdrop-blur border-b border-black/5">
+          <Link href="/" className="flex items-center gap-2">
+            <Image src="/henkologo.png" alt="Henkoaching" width={120} height={32} className="object-contain" />
+          </Link>
+          <div className="flex-1" />
+          <div className="w-8 h-8 rounded-full bg-henko-turquoise flex items-center justify-center text-xs text-white font-bold">
+            {iniciales}
+          </div>
+          <button
+            type="button"
+            onClick={() => setOpen((v) => !v)}
+            aria-label={open ? 'Cerrar menú' : 'Abrir menú'}
+            aria-expanded={open}
+            className="w-9 h-9 rounded-lg flex flex-col items-center justify-center gap-[5px] hover:bg-black/5 transition-colors"
+          >
+            <span className={`block w-5 h-[2px] rounded bg-gray-900 transition-transform ${open ? 'translate-y-[7px] rotate-45' : ''}`} />
+            <span className={`block w-5 h-[2px] rounded bg-gray-900 transition-opacity ${open ? 'opacity-0' : ''}`} />
+            <span className={`block w-5 h-[2px] rounded bg-gray-900 transition-transform ${open ? '-translate-y-[7px] -rotate-45' : ''}`} />
+          </button>
+        </div>
+
+        <main className="flex-1 px-5 py-6 md:p-12 overflow-y-auto">
+          {tab === 'solicitudes' && <TabSolicitudes solicitudes={solicitudes} />}
+          {tab === 'perfil' && <TabPerfil perfil={perfil} />}
+          {tab === 'cv' && <TabCV cv={cv} />}
+        </main>
+      </div>
     </div>
   )
 }

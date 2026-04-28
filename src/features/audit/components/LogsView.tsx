@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import type { Json } from '@/lib/supabase/database.types'
+import { PAGE_SIZE_OPTIONS, type PageSize } from '@/components/TablePagination'
 
 type LogRow = {
   id: string
@@ -50,20 +51,27 @@ export default function LogsView({ logs, total, page, pageSize, acciones, recurs
   const [filters, setFilters] = useState(currentFilters)
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
+  const from = total === 0 ? 0 : (page - 1) * pageSize + 1
+  const to = Math.min(total, page * pageSize)
 
-  function applyFilters(next: typeof filters, nextPage = 1) {
+  function applyFilters(next: typeof filters, nextPage = 1, nextSize = pageSize) {
     const sp = new URLSearchParams()
     if (next.accion) sp.set('accion', next.accion)
     if (next.recurso) sp.set('recurso', next.recurso)
     if (next.actor) sp.set('actor', next.actor)
     if (next.q) sp.set('q', next.q)
     if (nextPage > 1) sp.set('page', String(nextPage))
+    if (nextSize !== 20) sp.set('size', String(nextSize))
     router.push(`${pathname}?${sp.toString()}`)
   }
 
   function clearFilters() {
     setFilters({ accion: '', recurso: '', actor: '', q: '' })
     router.push(pathname)
+  }
+
+  function changePageSize(newSize: PageSize) {
+    applyFilters(filters, 1, newSize)
   }
 
   const hasFilters = filters.accion || filters.recurso || filters.actor || filters.q
@@ -124,11 +132,6 @@ export default function LogsView({ logs, total, page, pageSize, acciones, recurs
         </div>
       </div>
 
-      {/* Resultado */}
-      <p className="text-xs text-gray-400 mb-3 font-raleway">
-        {total} registros · página {page} de {totalPages}
-      </p>
-
       <div className="bg-white rounded-2xl border border-black/5 overflow-hidden">
         <table className="w-full text-sm font-raleway">
           <thead className="bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
@@ -173,30 +176,51 @@ export default function LogsView({ logs, total, page, pageSize, acciones, recurs
             ))}
           </tbody>
         </table>
-      </div>
 
-      {/* Paginación */}
-      {totalPages > 1 && (
-        <div className="flex justify-center gap-2 mt-5">
-          <button
-            type="button"
-            disabled={page <= 1}
-            onClick={() => applyFilters(filters, page - 1)}
-            className="px-3 py-1.5 rounded-xl border border-gray-200 text-sm disabled:opacity-30"
-          >
-            ← Anterior
-          </button>
-          <span className="px-4 py-1.5 text-sm text-gray-500">{page} / {totalPages}</span>
-          <button
-            type="button"
-            disabled={page >= totalPages}
-            onClick={() => applyFilters(filters, page + 1)}
-            className="px-3 py-1.5 rounded-xl border border-gray-200 text-sm disabled:opacity-30"
-          >
-            Siguiente →
-          </button>
-        </div>
-      )}
+        {total > 0 && (
+          <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3 border-t border-black/5 bg-gray-50/50 text-xs font-raleway text-gray-500">
+            <div className="flex items-center gap-2">
+              <span>Mostrar</span>
+              <select
+                value={pageSize}
+                onChange={(e) => changePageSize(Number(e.target.value) as PageSize)}
+                className="px-2 py-1 rounded-lg border border-gray-200 bg-white text-gray-700 outline-none focus:border-henko-turquoise"
+                aria-label="Resultados por página"
+              >
+                {PAGE_SIZE_OPTIONS.map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+              <span>por página</span>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <span>{from}-{to} de {total}</span>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => applyFilters(filters, Math.max(1, page - 1))}
+                  disabled={page <= 1}
+                  className="w-7 h-7 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center"
+                  aria-label="Página anterior"
+                >
+                  ←
+                </button>
+                <span className="px-2 text-gray-700 font-medium">{page} / {totalPages}</span>
+                <button
+                  type="button"
+                  onClick={() => applyFilters(filters, Math.min(totalPages, page + 1))}
+                  disabled={page >= totalPages}
+                  className="w-7 h-7 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center"
+                  aria-label="Página siguiente"
+                >
+                  →
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Drawer detalle */}
       {detail && (

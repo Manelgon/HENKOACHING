@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { cambiarEstadoSolicitud, getCvUrl } from '@/actions/solicitudes'
 import type { EstadoSolicitud } from '@/lib/supabase/database.types'
 import { useAction } from '@/shared/feedback/FeedbackContext'
+import { TablePagination, usePagination } from '@/components/TablePagination'
 
 const ESTADO_META: Record<EstadoSolicitud, { label: string; badge: string }> = {
   nuevo:      { label: 'Nueva',       badge: 'bg-henko-greenblue text-henko-turquoise' },
@@ -42,6 +43,7 @@ export default function AdminSolicitudes({ solicitudes, ofertas }: Props) {
     filtroOferta === 'todas' ? solicitudes : solicitudes.filter(s => s.ofertaId === filtroOferta),
     [solicitudes, filtroOferta],
   )
+  const pagination = usePagination(filtradas, 20)
 
   const stats = [
     { label: 'Total',        val: solicitudes.length,                                            bg: 'bg-white border border-black/5' },
@@ -120,7 +122,7 @@ export default function AdminSolicitudes({ solicitudes, ofertas }: Props) {
             No hay solicitudes para mostrar.
           </div>
         )}
-        {filtradas.map((s) => {
+        {pagination.paginated.map((s) => {
           const meta = ESTADO_META[s.estado]
           return (
             <div
@@ -160,6 +162,17 @@ export default function AdminSolicitudes({ solicitudes, ofertas }: Props) {
             </div>
           )
         })}
+
+        <TablePagination
+          page={pagination.page}
+          pageSize={pagination.pageSize}
+          total={pagination.total}
+          totalPages={pagination.totalPages}
+          from={pagination.from}
+          to={pagination.to}
+          onPageChange={pagination.setPage}
+          onPageSizeChange={pagination.setPageSize}
+        />
       </div>
     </div>
   )
