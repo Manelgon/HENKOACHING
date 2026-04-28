@@ -45,12 +45,6 @@ export default async function MainLayout({ children }: { children: React.ReactNo
             </svg>
             Formularios de contacto
           </Link>
-          <Link href="/dashboard/trabaja-conmigo" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-700 hover:bg-gray-50 hover:text-henko-turquoise transition-all font-raleway text-sm font-medium group">
-            <svg className="w-5 h-5 text-gray-400 group-hover:text-henko-turquoise transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-            Trabaja conmigo
-          </Link>
           <p className="text-xs font-bold text-gray-400 uppercase tracking-widest px-3 pt-5 pb-2 font-raleway">Portal de empleo</p>
           <Link href="/dashboard/ofertas" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-700 hover:bg-gray-50 hover:text-henko-turquoise transition-all font-raleway text-sm font-medium group">
             <svg className="w-5 h-5 text-gray-400 group-hover:text-henko-turquoise transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -52,7 +52,7 @@ do $$ begin
 exception when duplicate_object then null; end $$;
 
 do $$ begin
-  create type tipo_lead as enum ('contacto_general', 'trabaja_conmigo', 'consulta_servicio');
+  create type tipo_lead as enum ('contacto_general', 'consulta_servicio');
 exception when duplicate_object then null; end $$;
 
 do $$ begin
