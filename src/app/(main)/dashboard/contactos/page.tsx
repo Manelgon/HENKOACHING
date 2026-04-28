@@ -17,7 +17,7 @@ export default async function ContactosPage() {
     .order('created_at', { ascending: false })
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="w-full">
       <div className="mb-10">
         <h1 className="font-roxborough text-4xl text-gray-900 mb-2">Formularios de contacto</h1>
         <p className="font-raleway text-gray-500 font-light">Mensajes recibidos desde la página de contacto</p>

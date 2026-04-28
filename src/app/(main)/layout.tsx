@@ -98,7 +98,7 @@ export default async function MainLayout({ children }: { children: React.ReactNo
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 ml-64 p-8">
+      <main className="flex-1 ml-64 px-6 py-4">
         {children}
       </main>
     </div>

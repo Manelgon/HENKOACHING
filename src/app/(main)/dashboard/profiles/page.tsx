@@ -58,7 +58,7 @@ export default async function ProfilesPage() {
   })
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="w-full">
       <div className="mb-10">
         <h1 className="font-roxborough text-4xl text-gray-900 mb-2">Profiles</h1>
         <p className="font-raleway text-gray-500 font-light">

@@ -27,7 +27,7 @@ export default async function DashboardPage() {
   ])
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="w-full">
       {/* Header */}
       <div className="mb-10">
         <h1 className="font-roxborough text-4xl text-gray-900 mb-2">Panel de gestión</h1>

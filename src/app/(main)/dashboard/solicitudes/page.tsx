@@ -48,7 +48,7 @@ export default async function DashboardSolicitudesPage() {
   })
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="w-full">
       <AdminSolicitudes solicitudes={solicitudesView} ofertas={ofertas ?? []} />
     </div>
   )

@@ -60,7 +60,7 @@ export default async function LogsPage({ searchParams }: { searchParams: SearchP
   const recursosUnicos = Array.from(new Set((facets ?? []).map((f) => f.recurso_tipo))).sort()
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="w-full">
       <div className="mb-10">
         <h1 className="font-roxborough text-4xl text-gray-900 mb-2">Logs del sistema</h1>
         <p className="font-raleway text-gray-500 font-light">

@@ -48,7 +48,7 @@ export default async function DashboardOfertasPage() {
   }))
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="w-full">
       <AdminOfertas
         ofertas={ofertasView}
         sectores={sectores ?? []}
