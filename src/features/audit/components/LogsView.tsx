@@ -133,7 +133,8 @@ export default function LogsView({ logs, total, page, pageSize, acciones, recurs
       </div>
 
       <div className="bg-white rounded-2xl border border-black/5 overflow-hidden">
-        <table className="w-full text-sm font-raleway">
+        {/* Tabla (desktop/tablet) */}
+        <table className="hidden md:table w-full text-sm font-raleway">
           <thead className="bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
             <tr>
               <th className="text-left px-4 py-3">Fecha</th>
@@ -176,6 +177,36 @@ export default function LogsView({ logs, total, page, pageSize, acciones, recurs
             ))}
           </tbody>
         </table>
+
+        {/* Tarjetas (móvil) */}
+        <div className="md:hidden">
+          {logs.length === 0 ? (
+            <p className="text-center text-gray-400 py-10 text-sm font-raleway">Sin registros</p>
+          ) : logs.map((log) => (
+            <div key={log.id} className="border-t border-black/5 first:border-t-0 px-4 py-4 font-raleway">
+              <div className="flex items-start justify-between gap-3 mb-1.5">
+                <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium ${actionColor(log.accion)}`}>
+                  {log.accion}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setDetail(log)}
+                  className="text-henko-turquoise hover:underline text-xs font-medium flex-shrink-0"
+                >
+                  Detalle
+                </button>
+              </div>
+              <div className="mb-1">
+                <span className="text-xs text-gray-500">{log.recurso_tipo}</span>
+                {log.recurso_label && <span className="text-xs text-gray-700"> · {log.recurso_label}</span>}
+              </div>
+              <div className="flex items-center justify-between text-xs text-gray-400">
+                <span>{log.actor_email ?? <em>anónimo</em>}</span>
+                <span>{fmtDateTime(log.created_at)}</span>
+              </div>
+            </div>
+          ))}
+        </div>
 
         {total > 0 && (
           <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3 border-t border-black/5 bg-gray-50/50 text-xs font-raleway text-gray-500">
@@ -225,7 +256,7 @@ export default function LogsView({ logs, total, page, pageSize, acciones, recurs
       {/* Drawer detalle */}
       {detail && (
         <div className="fixed inset-0 bg-black/40 flex justify-end z-50">
-          <div className="bg-white w-full max-w-lg h-full overflow-y-auto p-7 font-raleway">
+          <div className="bg-white w-full max-w-lg h-full overflow-y-auto p-4 md:p-7 font-raleway">
             <div className="flex justify-between items-start mb-6">
               <div>
                 <p className="text-xs uppercase tracking-wider text-gray-400">Log entry</p>

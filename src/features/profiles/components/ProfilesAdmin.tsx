@@ -126,7 +126,8 @@ export default function ProfilesAdmin({ profiles }: { profiles: ProfileRow[] }) 
 
       {/* Tabla */}
       <div className="bg-white rounded-2xl border border-black/5 overflow-hidden">
-        <table className="w-full text-sm font-raleway">
+        {/* Tabla (desktop/tablet) */}
+        <table className="hidden md:table w-full text-sm font-raleway">
           <thead className="bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
             <tr>
               <th className="text-left px-5 py-3">Email / Nombre</th>
@@ -177,6 +178,45 @@ export default function ProfilesAdmin({ profiles }: { profiles: ProfileRow[] }) 
             ))}
           </tbody>
         </table>
+
+        {/* Tarjetas (móvil) */}
+        <div className="md:hidden">
+          {filtered.length === 0 ? (
+            <p className="text-center text-gray-400 py-10 text-sm font-raleway">Sin resultados</p>
+          ) : pagination.paginated.map((p) => (
+            <div key={p.id} className="border-t border-black/5 first:border-t-0 px-4 py-4 font-raleway">
+              <div className="flex items-start justify-between gap-3 mb-2">
+                <div className="min-w-0">
+                  <p className="font-medium text-gray-900 text-sm truncate">{p.email}</p>
+                  <p className="text-xs text-gray-400 truncate">{p.nombre} {p.apellidos}</p>
+                </div>
+                <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium flex-shrink-0 ${ROLE_BADGE[p.role]}`}>
+                  {p.role}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <div className="flex items-center gap-3 text-gray-400">
+                  {p.banned ? (
+                    <span className="text-red-600 font-medium">Desactivado</span>
+                  ) : !p.emailConfirmed ? (
+                    <span className="text-yellow-700 font-medium">Sin verificar</span>
+                  ) : (
+                    <span className="text-green-700 font-medium">Activo</span>
+                  )}
+                  <span>·</span>
+                  <span>{fmtDate(p.createdAt)}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setEditing(p)}
+                  className="text-henko-turquoise hover:underline font-medium"
+                >
+                  Gestionar
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
 
         <TablePagination
           page={pagination.page}

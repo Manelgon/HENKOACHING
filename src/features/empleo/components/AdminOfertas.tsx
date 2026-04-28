@@ -175,50 +175,76 @@ export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas 
       </div>
 
       <div className="bg-white rounded-3xl border border-black/5 overflow-hidden">
-        <div className="px-7 py-3.5 border-b border-black/5 grid grid-cols-[3fr_2fr_1fr_1fr_140px] text-[10px] tracking-widest text-gray-400 font-bold">
+        <div className="hidden md:grid px-5 lg:px-7 py-3.5 border-b border-black/5 grid-cols-[3fr_2fr_1fr_1fr_140px] text-[10px] tracking-widest text-gray-400 font-bold">
           <span>OFERTA</span><span>EMPRESA</span><span>MODALIDAD</span><span>ESTADO</span><span></span>
         </div>
         {ofertas.length === 0 && (
-          <div className="px-7 py-12 text-center text-gray-400">
+          <div className="px-5 md:px-7 py-12 text-center text-gray-400">
             <p className="text-sm">Aún no hay ofertas. Crea la primera con &quot;Nueva oferta&quot;.</p>
           </div>
         )}
-        {pagination.paginated.map((o) => (
-          <div
-            key={o.id}
-            className="px-7 py-4 border-b border-black/5 last:border-0 grid grid-cols-[3fr_2fr_1fr_1fr_140px] items-center hover:bg-henko-white/40 transition-colors"
-          >
-            <div>
-              <p className="text-sm font-semibold">{o.titulo}</p>
-              <p className="text-[11px] text-gray-400">{o.fecha}</p>
-            </div>
-            <span className="text-sm text-gray-600">{o.empresa}</span>
-            <span className="text-xs text-gray-500">{o.modalidad_nombre}</span>
-            <span>
-              <span
-                className={`text-[11px] px-2.5 py-1 rounded-full font-bold ${
-                  o.estado === 'publicada' ? 'bg-henko-greenblue text-henko-turquoise' :
-                  o.estado === 'borrador' ? 'bg-henko-yellow text-yellow-900' :
-                  o.estado === 'pausada' ? 'bg-orange-100 text-orange-700' :
-                  'bg-black/5 text-gray-500'
-                }`}
-              >
-                {o.estado === 'publicada' ? 'Activa' : o.estado === 'borrador' ? 'Borrador' : o.estado === 'pausada' ? 'Pausada' : 'Cerrada'}
-              </span>
+        {pagination.paginated.map((o) => {
+          const estadoBadge = (
+            <span
+              className={`text-[11px] px-2.5 py-1 rounded-full font-bold ${
+                o.estado === 'publicada' ? 'bg-henko-greenblue text-henko-turquoise' :
+                o.estado === 'borrador' ? 'bg-henko-yellow text-yellow-900' :
+                o.estado === 'pausada' ? 'bg-orange-100 text-orange-700' :
+                'bg-black/5 text-gray-500'
+              }`}
+            >
+              {o.estado === 'publicada' ? 'Activa' : o.estado === 'borrador' ? 'Borrador' : o.estado === 'pausada' ? 'Pausada' : 'Cerrada'}
             </span>
-            <div className="flex gap-2.5 text-xs">
-              <button type="button" onClick={() => startEdit(o)} className="text-henko-turquoise font-semibold hover:underline">
-                Editar
-              </button>
-              <button type="button" onClick={() => toggleEstado(o)} className="text-gray-400 hover:text-gray-700">
-                {o.estado === 'publicada' ? 'Cerrar' : 'Activar'}
-              </button>
-              <button type="button" onClick={() => borrar(o)} className="text-red-400 hover:text-red-600">
-                Eliminar
-              </button>
+          )
+          return (
+            <div key={o.id} className="border-b border-black/5 last:border-0 hover:bg-henko-white/40 transition-colors">
+              {/* Tabla (desktop/tablet) */}
+              <div className="hidden md:grid px-5 lg:px-7 py-4 grid-cols-[3fr_2fr_1fr_1fr_140px] items-center">
+                <div>
+                  <p className="text-sm font-semibold">{o.titulo}</p>
+                  <p className="text-[11px] text-gray-400">{o.fecha}</p>
+                </div>
+                <span className="text-sm text-gray-600">{o.empresa}</span>
+                <span className="text-xs text-gray-500">{o.modalidad_nombre}</span>
+                <span>{estadoBadge}</span>
+                <div className="flex gap-2.5 text-xs">
+                  <button type="button" onClick={() => startEdit(o)} className="text-henko-turquoise font-semibold hover:underline">
+                    Editar
+                  </button>
+                  <button type="button" onClick={() => toggleEstado(o)} className="text-gray-400 hover:text-gray-700">
+                    {o.estado === 'publicada' ? 'Cerrar' : 'Activar'}
+                  </button>
+                  <button type="button" onClick={() => borrar(o)} className="text-red-400 hover:text-red-600">
+                    Eliminar
+                  </button>
+                </div>
+              </div>
+
+              {/* Tarjeta (móvil) */}
+              <div className="md:hidden px-4 py-4">
+                <div className="flex items-start justify-between gap-3 mb-2">
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold truncate">{o.titulo}</p>
+                    <p className="text-[11px] text-gray-400">{o.empresa} · {o.fecha}</p>
+                  </div>
+                  <div className="flex-shrink-0">{estadoBadge}</div>
+                </div>
+                <p className="text-[11px] text-gray-400 mb-3">{o.modalidad_nombre}</p>
+                <div className="flex flex-wrap gap-3 text-xs">
+                  <button type="button" onClick={() => startEdit(o)} className="text-henko-turquoise font-semibold hover:underline">
+                    Editar
+                  </button>
+                  <button type="button" onClick={() => toggleEstado(o)} className="text-gray-500 hover:text-gray-900">
+                    {o.estado === 'publicada' ? 'Cerrar' : 'Activar'}
+                  </button>
+                  <button type="button" onClick={() => borrar(o)} className="text-red-400 hover:text-red-600">
+                    Eliminar
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
 
         <TablePagination
           page={pagination.page}
@@ -234,15 +260,15 @@ export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas 
 
       {modalAbierto && (
         <div
-          className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 backdrop-blur-sm px-4 py-10"
+          className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 backdrop-blur-sm px-3 py-4 sm:px-4 sm:py-10"
           onClick={cancel}
         >
           <div
-            className="bg-white rounded-3xl border border-black/5 w-full max-w-2xl shadow-2xl"
+            className="bg-white rounded-2xl sm:rounded-3xl border border-black/5 w-full max-w-2xl shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between px-9 pt-7 pb-5 border-b border-black/5">
-              <h2 className="font-roxborough text-2xl text-gray-900">
+            <div className="flex items-center justify-between px-5 sm:px-9 pt-5 sm:pt-7 pb-4 sm:pb-5 border-b border-black/5">
+              <h2 className="font-roxborough text-xl sm:text-2xl text-gray-900">
                 {nueva ? 'Nueva oferta' : 'Editar oferta'}
               </h2>
               <button
@@ -257,13 +283,13 @@ export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas 
               </button>
             </div>
 
-            <div className="px-9 py-7">
+            <div className="px-5 sm:px-9 py-5 sm:py-7">
               <Field label="TÍTULO DEL PUESTO" value={draft.titulo} onChange={(v) => update('titulo', v)} placeholder="ej. Responsable de Operaciones" />
               <Field label="EMPRESA" value={draft.empresa} onChange={(v) => update('empresa', v)} placeholder="Nombre de la empresa (se crea si no existe)" />
               <Field label="UBICACIÓN" value={draft.ubicacion} onChange={(v) => update('ubicacion', v)} placeholder="Palma, Mallorca" />
               <Field label="SALARIO" value={draft.salario_texto} onChange={(v) => update('salario_texto', v)} placeholder="ej. 30.000 – 36.000 €/año" />
 
-              <div className="grid grid-cols-3 gap-3 mb-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
                 <SelectField label="MODALIDAD" value={draft.modalidad_id} onChange={(v) => update('modalidad_id', v)} options={modalidades} />
                 <SelectField label="JORNADA" value={draft.jornada_id} onChange={(v) => update('jornada_id', v)} options={jornadas} />
                 <SelectField label="SECTOR" value={draft.sector_id} onChange={(v) => update('sector_id', v)} options={sectores} />
@@ -319,20 +345,20 @@ export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas 
               {error && <p className="text-sm text-red-500 mt-3">{error}</p>}
             </div>
 
-            <div className="flex gap-3 px-9 py-5 border-t border-black/5">
+            <div className="flex flex-col-reverse sm:flex-row gap-3 px-5 sm:px-9 py-4 sm:py-5 border-t border-black/5">
+              <button
+                type="button"
+                onClick={cancel}
+                className="inline-flex items-center justify-center gap-2 bg-transparent border-2 border-henko-turquoise text-henko-turquoise px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-henko-turquoise hover:text-white transition-all"
+              >
+                Cancelar
+              </button>
               <button
                 type="button"
                 onClick={save}
                 className="flex-1 inline-flex items-center justify-center gap-2 bg-henko-turquoise text-white px-6 py-3 rounded-full text-sm font-semibold hover:bg-henko-turquoise-light hover:shadow-lg transition-all"
               >
                 {nueva ? 'Publicar oferta' : 'Guardar cambios'}
-              </button>
-              <button
-                type="button"
-                onClick={cancel}
-                className="inline-flex items-center gap-2 bg-transparent border-2 border-henko-turquoise text-henko-turquoise px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-henko-turquoise hover:text-white transition-all"
-              >
-                Cancelar
               </button>
             </div>
           </div>

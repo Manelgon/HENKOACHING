@@ -56,7 +56,7 @@ export default function LeadsTable({ leads }: { leads: Lead[] }) {
 
   if (leads.length === 0) {
     return (
-      <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm px-8 py-20 text-center">
+      <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm px-6 md:px-8 py-16 md:py-20 text-center">
         <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
           <svg className="w-8 h-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -70,7 +70,8 @@ export default function LeadsTable({ leads }: { leads: Lead[] }) {
 
   return (
     <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
-      <div className="grid grid-cols-12 gap-4 px-8 py-4 border-b border-gray-100 bg-gray-50">
+      {/* Cabecera (solo desktop/tablet) */}
+      <div className="hidden md:grid grid-cols-12 gap-4 px-6 lg:px-8 py-4 border-b border-gray-100 bg-gray-50">
         <span className="col-span-3 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Nombre</span>
         <span className="col-span-3 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Email</span>
         <span className="col-span-2 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Asunto</span>
@@ -85,8 +86,9 @@ export default function LeadsTable({ leads }: { leads: Lead[] }) {
         const open = expandido === l.id
         return (
           <div key={l.id} className={`border-b border-gray-100 last:border-0 ${!l.leido ? 'bg-henko-greenblue/10' : ''}`}>
+            {/* Fila tabla (desktop/tablet) */}
             <div
-              className="grid grid-cols-12 gap-4 px-8 py-4 items-start cursor-pointer hover:bg-gray-50 transition-colors"
+              className="hidden md:grid grid-cols-12 gap-4 px-6 lg:px-8 py-4 items-start cursor-pointer hover:bg-gray-50 transition-colors"
               onClick={() => {
                 setExpandido(open ? null : l.id)
                 if (!l.leido) marcarLeido(l.id, true)
@@ -101,14 +103,34 @@ export default function LeadsTable({ leads }: { leads: Lead[] }) {
               <span className="col-span-3 font-raleway text-sm text-gray-500 truncate">{l.mensaje}</span>
               <span className="col-span-1 font-raleway text-xs text-gray-400">{fecha}</span>
             </div>
+
+            {/* Tarjeta (móvil) */}
+            <div
+              className="md:hidden px-4 py-4 cursor-pointer hover:bg-gray-50 transition-colors"
+              onClick={() => {
+                setExpandido(open ? null : l.id)
+                if (!l.leido) marcarLeido(l.id, true)
+              }}
+            >
+              <div className="flex items-start justify-between gap-3 mb-1.5">
+                <p className="font-raleway font-semibold text-gray-900 text-sm flex items-center">
+                  {!l.leido && <span className="inline-block w-2 h-2 rounded-full bg-henko-turquoise mr-2 flex-shrink-0" />}
+                  {l.nombre}
+                </p>
+                <span className="font-raleway text-xs text-gray-400 flex-shrink-0">{fecha}</span>
+              </div>
+              <p className="font-raleway text-xs text-gray-500 truncate mb-1.5">{l.email}</p>
+              <p className="font-raleway text-xs text-gray-400 truncate">{l.mensaje}</p>
+            </div>
+
             {open && (
-              <div className="px-8 pb-6 text-sm text-gray-700 font-raleway">
-                <div className="grid grid-cols-2 gap-4 mb-4">
+              <div className="px-4 md:px-6 lg:px-8 pb-6 text-sm text-gray-700 font-raleway">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4">
                   {l.telefono && <p><b className="text-gray-400">Teléfono:</b> {l.telefono}</p>}
                   {l.servicio_interes && <p><b className="text-gray-400">Servicio:</b> {l.servicio_interes}</p>}
                 </div>
-                <p className="bg-gray-50 rounded-2xl px-5 py-4 leading-relaxed whitespace-pre-line">{l.mensaje}</p>
-                <div className="flex gap-3 mt-4">
+                <p className="bg-gray-50 rounded-2xl px-4 md:px-5 py-3 md:py-4 leading-relaxed whitespace-pre-line text-sm">{l.mensaje}</p>
+                <div className="flex flex-wrap gap-3 mt-4">
                   <a
                     href={`mailto:${l.email}`}
                     className="text-xs text-henko-turquoise font-semibold hover:underline"

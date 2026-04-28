@@ -113,52 +113,74 @@ export default function AdminSolicitudes({ solicitudes, ofertas }: Props) {
       </div>
 
       {/* Tabla */}
-      <div className="bg-white rounded-3xl border border-black/5 overflow-hidden overflow-x-auto">
-        <div className="px-7 py-3.5 border-b border-black/5 grid grid-cols-[2fr_2fr_1.5fr_1fr_140px] text-[10px] tracking-widest text-gray-400 font-bold min-w-[800px]">
+      <div className="bg-white rounded-3xl border border-black/5 overflow-hidden">
+        <div className="hidden md:grid px-5 lg:px-7 py-3.5 border-b border-black/5 grid-cols-[2fr_2fr_1.5fr_1fr_140px] text-[10px] tracking-widest text-gray-400 font-bold">
           <span>CANDIDATO</span><span>OFERTA</span><span>CV</span><span>ESTADO</span><span>GESTIONAR</span>
         </div>
         {filtradas.length === 0 && (
-          <div className="px-7 py-12 text-center text-gray-400 text-sm">
+          <div className="px-5 md:px-7 py-12 text-center text-gray-400 text-sm">
             No hay solicitudes para mostrar.
           </div>
         )}
         {pagination.paginated.map((s) => {
           const meta = ESTADO_META[s.estado]
-          return (
-            <div
-              key={s.id}
-              className="px-7 py-4 border-b border-black/5 last:border-0 grid grid-cols-[2fr_2fr_1.5fr_1fr_140px] items-center min-w-[800px] hover:bg-henko-white/40 transition-colors"
+          const cvNode = s.cvPath ? (
+            <button
+              type="button"
+              onClick={() => descargarCv(s.cvPath!)}
+              className="text-xs text-henko-turquoise font-semibold text-left hover:underline truncate pr-2"
             >
-              <div>
-                <p className="text-sm font-semibold">{s.candidato}</p>
-                <p className="text-[11px] text-gray-400">{s.email} · {s.fecha}</p>
-              </div>
-              <p className="text-sm text-gray-600">{s.ofertaTitulo}</p>
-              {s.cvPath ? (
-                <button
-                  type="button"
-                  onClick={() => descargarCv(s.cvPath!)}
-                  className="text-xs text-henko-turquoise font-semibold text-left hover:underline truncate pr-2"
-                >
-                  {s.cvNombre || 'Ver CV'}
-                </button>
-              ) : (
-                <span className="text-xs text-gray-300">Sin CV</span>
-              )}
-              <span>
-                <span className={`text-[11px] px-2.5 py-1 rounded-full font-bold whitespace-nowrap ${meta.badge}`}>
-                  {meta.label}
+              {s.cvNombre || 'Ver CV'}
+            </button>
+          ) : (
+            <span className="text-xs text-gray-300">Sin CV</span>
+          )
+          const estadoSelect = (
+            <select
+              value={s.estado}
+              onChange={(e) => cambiarEstado(s.id, e.target.value as EstadoSolicitud)}
+              className="px-3 py-1.5 rounded-lg text-xs border border-black/10 bg-henko-white outline-none cursor-pointer focus:border-henko-turquoise"
+            >
+              {Object.entries(ESTADO_META).map(([k, v]) => (
+                <option key={k} value={k}>{v.label}</option>
+              ))}
+            </select>
+          )
+          return (
+            <div key={s.id} className="border-b border-black/5 last:border-0 hover:bg-henko-white/40 transition-colors">
+              {/* Tabla (desktop/tablet) */}
+              <div className="hidden md:grid px-5 lg:px-7 py-4 grid-cols-[2fr_2fr_1.5fr_1fr_140px] items-center">
+                <div>
+                  <p className="text-sm font-semibold">{s.candidato}</p>
+                  <p className="text-[11px] text-gray-400">{s.email} · {s.fecha}</p>
+                </div>
+                <p className="text-sm text-gray-600">{s.ofertaTitulo}</p>
+                {cvNode}
+                <span>
+                  <span className={`text-[11px] px-2.5 py-1 rounded-full font-bold whitespace-nowrap ${meta.badge}`}>
+                    {meta.label}
+                  </span>
                 </span>
-              </span>
-              <select
-                value={s.estado}
-                onChange={(e) => cambiarEstado(s.id, e.target.value as EstadoSolicitud)}
-                className="px-3 py-1.5 rounded-lg text-xs border border-black/10 bg-henko-white outline-none cursor-pointer focus:border-henko-turquoise"
-              >
-                {Object.entries(ESTADO_META).map(([k, v]) => (
-                  <option key={k} value={k}>{v.label}</option>
-                ))}
-              </select>
+                {estadoSelect}
+              </div>
+
+              {/* Tarjeta (móvil) */}
+              <div className="md:hidden px-4 py-4">
+                <div className="flex items-start justify-between gap-3 mb-2">
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold truncate">{s.candidato}</p>
+                    <p className="text-[11px] text-gray-400 truncate">{s.email} · {s.fecha}</p>
+                  </div>
+                  <span className={`text-[11px] px-2.5 py-1 rounded-full font-bold whitespace-nowrap flex-shrink-0 ${meta.badge}`}>
+                    {meta.label}
+                  </span>
+                </div>
+                <p className="text-xs text-gray-500 mb-3 truncate">{s.ofertaTitulo}</p>
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">{cvNode}</div>
+                  {estadoSelect}
+                </div>
+              </div>
             </div>
           )
         })}
