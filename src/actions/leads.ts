@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { logAction } from '@/lib/audit/log-action'
 import type { TipoLead } from '@/lib/supabase/database.types'
 
 export async function crearLead(input: {
@@ -17,7 +18,7 @@ export async function crearLead(input: {
   }
 
   const supabase = await createClient()
-  const { error } = await supabase.from('leads').insert({
+  const { data: nuevo, error } = await supabase.from('leads').insert({
     tipo: input.tipo,
     nombre: input.nombre,
     email: input.email,
@@ -26,8 +27,18 @@ export async function crearLead(input: {
     mensaje: input.mensaje,
     servicio_interes: input.servicio_interes || null,
     origen: 'web',
-  })
+  }).select('id').single()
 
   if (error) return { error: error.message }
+
+  await logAction({
+    accion: 'lead.crear',
+    recursoTipo: 'lead',
+    recursoId: nuevo?.id ?? null,
+    recursoLabel: `${input.nombre} <${input.email}>`,
+    metadata: { tipo: input.tipo, servicio_interes: input.servicio_interes ?? null },
+    actorEmail: input.email,
+  })
+
   return { ok: true }
 }

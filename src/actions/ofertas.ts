@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { logAction } from '@/lib/audit/log-action'
 
 export type OfertaInput = {
   id?: string
@@ -59,7 +60,7 @@ export async function crearOferta(input: OfertaInput) {
     const empresa_id = await ensureEmpresa(input.empresa_nombre)
     const slug = `${slugify(input.titulo)}-${Date.now().toString(36)}`
 
-    const { error } = await supabase.from('ofertas').insert({
+    const { data: nueva, error } = await supabase.from('ofertas').insert({
       slug,
       titulo: input.titulo,
       empresa_id,
@@ -74,9 +75,17 @@ export async function crearOferta(input: OfertaInput) {
       estado: input.estado,
       fecha_publicacion: input.estado === 'publicada' ? new Date().toISOString() : null,
       publicado_por: user.id,
-    })
+    }).select('id').single()
 
     if (error) return { error: error.message }
+
+    await logAction({
+      accion: 'oferta.crear',
+      recursoTipo: 'oferta',
+      recursoId: nueva?.id ?? null,
+      recursoLabel: input.titulo,
+      metadata: { estado: input.estado, empresa: input.empresa_nombre },
+    })
 
     revalidatePath('/dashboard/ofertas')
     revalidatePath('/empleo')
@@ -113,6 +122,14 @@ export async function actualizarOferta(id: string, input: OfertaInput) {
 
     if (error) return { error: error.message }
 
+    await logAction({
+      accion: 'oferta.editar',
+      recursoTipo: 'oferta',
+      recursoId: id,
+      recursoLabel: input.titulo,
+      metadata: { estado: input.estado },
+    })
+
     revalidatePath('/dashboard/ofertas')
     revalidatePath('/empleo')
     revalidatePath(`/empleo/${id}`)
@@ -125,6 +142,12 @@ export async function actualizarOferta(id: string, input: OfertaInput) {
 export async function cambiarEstadoOferta(id: string, estado: 'borrador' | 'publicada' | 'pausada' | 'cerrada') {
   const supabase = await createClient()
 
+  const { data: anterior } = await supabase
+    .from('ofertas')
+    .select('titulo, estado')
+    .eq('id', id)
+    .maybeSingle()
+
   const { error } = await supabase
     .from('ofertas')
     .update({
@@ -135,6 +158,14 @@ export async function cambiarEstadoOferta(id: string, estado: 'borrador' | 'publ
 
   if (error) return { error: error.message }
 
+  await logAction({
+    accion: 'oferta.cambiar_estado',
+    recursoTipo: 'oferta',
+    recursoId: id,
+    recursoLabel: anterior?.titulo ?? null,
+    metadata: { estado_anterior: anterior?.estado ?? null, estado_nuevo: estado },
+  })
+
   revalidatePath('/dashboard/ofertas')
   revalidatePath('/empleo')
   return { ok: true }
@@ -143,12 +174,25 @@ export async function cambiarEstadoOferta(id: string, estado: 'borrador' | 'publ
 export async function eliminarOferta(id: string) {
   const supabase = await createClient()
 
+  const { data: oferta } = await supabase
+    .from('ofertas')
+    .select('titulo')
+    .eq('id', id)
+    .maybeSingle()
+
   const { error } = await supabase
     .from('ofertas')
     .update({ deleted_at: new Date().toISOString() })
     .eq('id', id)
 
   if (error) return { error: error.message }
+
+  await logAction({
+    accion: 'oferta.eliminar',
+    recursoTipo: 'oferta',
+    recursoId: id,
+    recursoLabel: oferta?.titulo ?? null,
+  })
 
   revalidatePath('/dashboard/ofertas')
   revalidatePath('/empleo')

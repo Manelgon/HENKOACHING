@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { logAction } from '@/lib/audit/log-action'
 import type { EstadoSolicitud } from '@/lib/supabase/database.types'
 
 export async function aplicarAOferta(ofertaId: string, mensaje?: string) {
@@ -39,14 +40,22 @@ export async function aplicarAOferta(ofertaId: string, mensaje?: string) {
 
   if (existing) return { error: 'Ya has aplicado a esta oferta' }
 
-  const { error } = await supabase.from('solicitudes').insert({
+  const { data: nueva, error } = await supabase.from('solicitudes').insert({
     candidato_id: user.id,
     oferta_id: ofertaId,
     cv_id: cv?.id ?? null,
     mensaje: mensaje || null,
-  })
+  }).select('id').single()
 
   if (error) return { error: error.message }
+
+  await logAction({
+    accion: 'solicitud.crear',
+    recursoTipo: 'solicitud',
+    recursoId: nueva?.id ?? null,
+    recursoLabel: user.email ?? null,
+    metadata: { oferta_id: ofertaId, cv_id: cv?.id ?? null },
+  })
 
   revalidatePath('/candidato/dashboard')
   revalidatePath(`/empleo/${ofertaId}`)
@@ -57,12 +66,25 @@ export async function aplicarAOferta(ofertaId: string, mensaje?: string) {
 export async function cambiarEstadoSolicitud(solicitudId: string, estado: EstadoSolicitud) {
   const supabase = await createClient()
 
+  const { data: anterior } = await supabase
+    .from('solicitudes')
+    .select('estado, candidato_id')
+    .eq('id', solicitudId)
+    .maybeSingle()
+
   const { error } = await supabase
     .from('solicitudes')
     .update({ estado })
     .eq('id', solicitudId)
 
   if (error) return { error: error.message }
+
+  await logAction({
+    accion: 'solicitud.cambiar_estado',
+    recursoTipo: 'solicitud',
+    recursoId: solicitudId,
+    metadata: { estado_anterior: anterior?.estado ?? null, estado_nuevo: estado },
+  })
 
   revalidatePath('/dashboard/solicitudes')
   revalidatePath('/candidato/dashboard')

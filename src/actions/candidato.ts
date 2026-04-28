@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { logAction } from '@/lib/audit/log-action'
 import type { NivelIdioma } from '@/lib/supabase/database.types'
 
 type ExperienciaInput = { empresa: string; cargo: string; desde: string; hasta: string }
@@ -111,6 +112,20 @@ export async function signupCandidato(input: CandidatoSignupInput) {
     )
   }
 
+  await logAction({
+    accion: 'profile.signup_candidato',
+    recursoTipo: 'profile',
+    recursoId: userId,
+    recursoLabel: input.email,
+    metadata: {
+      experiencias: experienciasValidas.length,
+      educacion: educacionValida.length,
+      idiomas: idiomasValidos.length,
+    },
+    actorId: userId,
+    actorEmail: input.email,
+  })
+
   return { ok: true, userId }
 }
 
@@ -155,6 +170,14 @@ export async function uploadCv(formData: FormData): Promise<{ error?: string; cv
     return { error: 'Error guardando: ' + insertError.message }
   }
 
+  await logAction({
+    accion: 'cv.subir',
+    recursoTipo: 'cv',
+    recursoId: cvId,
+    recursoLabel: file.name,
+    metadata: { tamano_bytes: file.size },
+  })
+
   revalidatePath('/candidato/dashboard')
   return { cvId }
 }
@@ -184,6 +207,14 @@ export async function actualizarPerfilCandidato(formData: FormData) {
 
   if (e2) return { error: e2.message }
 
+  await logAction({
+    accion: 'profile.editar_propio',
+    recursoTipo: 'profile',
+    recursoId: user.id,
+    recursoLabel: user.email ?? null,
+    metadata: { campos: ['nombre', 'apellidos', 'telefono', 'ubicacion', 'cargo_actual'] },
+  })
+
   revalidatePath('/candidato/dashboard')
   return { ok: true }
 }
@@ -192,7 +223,16 @@ export async function loginCandidato(email: string, password: string) {
   const supabase = await createClient()
 
   const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-  if (error || !data.user) return { error: error?.message || 'Email o contraseña incorrectos' }
+  if (error || !data.user) {
+    await logAction({
+      accion: 'auth.login_fallido',
+      recursoTipo: 'auth',
+      recursoLabel: email,
+      metadata: { motivo: error?.message ?? 'desconocido', portal: 'candidato' },
+      actorEmail: email,
+    })
+    return { error: error?.message || 'Email o contraseña incorrectos' }
+  }
 
   const { data: profile } = await supabase
     .from('profiles')
@@ -204,6 +244,16 @@ export async function loginCandidato(email: string, password: string) {
     await supabase.auth.signOut()
     return { error: 'Esta cuenta no es de candidato' }
   }
+
+  await logAction({
+    accion: 'auth.login',
+    recursoTipo: 'auth',
+    recursoId: data.user.id,
+    recursoLabel: data.user.email ?? email,
+    metadata: { portal: 'candidato' },
+    actorId: data.user.id,
+    actorEmail: data.user.email ?? email,
+  })
 
   revalidatePath('/', 'layout')
   redirect('/candidato/dashboard')

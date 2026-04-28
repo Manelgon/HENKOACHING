@@ -15,6 +15,7 @@
 --   7. Tablas empresa + ofertas
 --   8. Tablas solicitudes
 --   9. Tabla leads
+--   9b. Tabla audit_logs (auditoría global)
 --   10. Tablas blog
 --   11. Funciones helper de rol (dependen de profiles)
 --   12. Triggers
@@ -355,6 +356,30 @@ create index if not exists idx_leads_no_leidos on public.leads(created_at desc) 
 
 
 -- =============================================================================
+-- 9b. AUDIT LOGS (auditoría global de acciones del sistema)
+-- =============================================================================
+-- Registra TODAS las acciones mutativas del proyecto: quién, cuándo, qué.
+-- Inserción siempre vía service role (server actions) para garantizar que
+-- ninguna acción se salte el log. Lectura solo admins.
+create table if not exists public.audit_logs (
+  id uuid primary key default uuid_generate_v4(),
+  actor_id uuid references public.profiles(id) on delete set null,
+  actor_email text,           -- snapshot, sobrevive si se borra el profile
+  accion text not null,       -- ej: 'profile.crear', 'oferta.publicar'
+  recurso_tipo text not null, -- ej: 'profile', 'oferta', 'lead'
+  recurso_id text,            -- uuid o id como texto (puede ser null)
+  recurso_label text,         -- snapshot legible (email, título, etc.)
+  metadata jsonb default '{}'::jsonb,  -- antes/después, motivo, IP, etc.
+  created_at timestamptz default now()
+);
+
+create index if not exists idx_audit_actor on public.audit_logs(actor_id);
+create index if not exists idx_audit_recurso on public.audit_logs(recurso_tipo, recurso_id);
+create index if not exists idx_audit_accion on public.audit_logs(accion);
+create index if not exists idx_audit_created on public.audit_logs(created_at desc);
+
+
+-- =============================================================================
 -- 10. BLOG
 -- =============================================================================
 
@@ -585,6 +610,7 @@ alter table public.solicitudes enable row level security;
 alter table public.solicitud_eventos enable row level security;
 alter table public.solicitud_notas enable row level security;
 alter table public.leads enable row level security;
+alter table public.audit_logs enable row level security;
 alter table public.sectores enable row level security;
 alter table public.modalidades enable row level security;
 alter table public.jornadas enable row level security;
@@ -726,6 +752,14 @@ create policy "Leads: insert público" on public.leads
 drop policy if exists "Leads: recruiter all" on public.leads;
 create policy "Leads: recruiter all" on public.leads
   for all using (public.is_recruiter()) with check (public.is_recruiter());
+
+-- ----- AUDIT_LOGS (solo admins leen; escritura vía service role) -----
+-- No definimos policy de INSERT: el helper logAction() usa service role,
+-- que bypassa RLS. Esto evita que código cliente o RLS-mediado pueda
+-- inyectar logs falsos.
+drop policy if exists "Audit: admin lee" on public.audit_logs;
+create policy "Audit: admin lee" on public.audit_logs
+  for select using (public.is_admin());
 
 -- ----- CATÁLOGOS (lectura pública, escritura admin) -----
 drop policy if exists "Sectores: lectura pública" on public.sectores;
