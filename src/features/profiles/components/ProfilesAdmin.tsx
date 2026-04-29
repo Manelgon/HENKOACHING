@@ -286,9 +286,9 @@ function CreateModal({
   const [telefono, setTelefono] = useState('')
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl p-7 w-full max-w-md">
-        <h3 className="font-roxborough text-2xl mb-5">Crear usuario</h3>
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-start sm:items-center justify-center z-50 px-3 py-4 sm:p-4 overflow-y-auto">
+      <div className="bg-white rounded-2xl p-5 sm:p-7 w-full max-w-md">
+        <h3 className="font-roxborough text-xl sm:text-2xl mb-5">Crear usuario</h3>
         <form
           onSubmit={(e) => {
             e.preventDefault()
@@ -298,7 +298,7 @@ function CreateModal({
         >
           <Field label="Email" type="email" value={email} onChange={setEmail} required />
           <Field label="Contraseña inicial" type="text" value={password} onChange={setPassword} required minLength={8} />
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Field label="Nombre" value={nombre} onChange={setNombre} required />
             <Field label="Apellidos" value={apellidos} onChange={setApellidos} />
           </div>
@@ -309,7 +309,7 @@ function CreateModal({
               {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
             </select>
           </div>
-          <div className="flex justify-end gap-2 pt-3">
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-3">
             <button type="button" onClick={onClose} className="px-4 py-2 text-gray-500 text-sm">Cancelar</button>
             <button type="submit" className="px-4 py-2 rounded-xl bg-henko-turquoise text-white text-sm font-medium">
               Crear
@@ -347,18 +347,18 @@ function EditDrawer({
   const [newEmail, setNewEmail] = useState(profile.email)
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex justify-end z-50">
-      <div className="bg-white w-full max-w-md h-full overflow-y-auto p-7 font-raleway">
-        <div className="flex justify-between items-start mb-6">
-          <div>
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-end z-50">
+      <div className="bg-white w-full sm:max-w-md h-full overflow-y-auto p-5 sm:p-7 font-raleway">
+        <div className="flex justify-between items-start mb-6 gap-3">
+          <div className="min-w-0">
             <p className="text-xs uppercase tracking-wider text-gray-400">Profile</p>
-            <h3 className="font-roxborough text-2xl">{profile.email}</h3>
+            <h3 className="font-roxborough text-xl sm:text-2xl truncate">{profile.email}</h3>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-700">✕</button>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-700 flex-shrink-0">✕</button>
         </div>
 
         <Section title="Datos">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Field label="Nombre" value={nombre} onChange={setNombre} />
             <Field label="Apellidos" value={apellidos} onChange={setApellidos} />
           </div>

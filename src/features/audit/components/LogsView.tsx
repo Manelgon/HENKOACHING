@@ -255,14 +255,14 @@ export default function LogsView({ logs, total, page, pageSize, acciones, recurs
 
       {/* Drawer detalle */}
       {detail && (
-        <div className="fixed inset-0 bg-black/40 flex justify-end z-50">
-          <div className="bg-white w-full max-w-lg h-full overflow-y-auto p-4 md:p-7 font-raleway">
-            <div className="flex justify-between items-start mb-6">
-              <div>
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-end z-50">
+          <div className="bg-white w-full sm:max-w-lg h-full overflow-y-auto p-5 sm:p-7 font-raleway">
+            <div className="flex justify-between items-start mb-6 gap-3">
+              <div className="min-w-0">
                 <p className="text-xs uppercase tracking-wider text-gray-400">Log entry</p>
-                <h3 className="font-roxborough text-2xl">{detail.accion}</h3>
+                <h3 className="font-roxborough text-xl sm:text-2xl break-words">{detail.accion}</h3>
               </div>
-              <button onClick={() => setDetail(null)} className="text-gray-400 hover:text-gray-700">✕</button>
+              <button onClick={() => setDetail(null)} className="text-gray-400 hover:text-gray-700 flex-shrink-0">✕</button>
             </div>
 
             <DetailRow label="Fecha" value={fmtDateTime(detail.created_at)} />
