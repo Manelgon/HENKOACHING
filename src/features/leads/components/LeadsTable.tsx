@@ -1,10 +1,10 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { forwardRef, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAction } from '@/shared/feedback/FeedbackContext'
 import { TablePagination, usePagination } from '@/components/TablePagination'
-import { abrirLead, archivarLead, cambiarEstadoLead } from '@/actions/leads'
+import { abrirLead, archivarLead, cambiarEstadoLead, desarchivarLead, eliminarLead } from '@/actions/leads'
 import type { EstadoLead } from '@/lib/supabase/database.types'
 import { ESTADOS_LEAD, getEstadoMeta, getOrigenLabel } from './estados'
 import LeadDrawer from './LeadDrawer'
@@ -28,20 +28,49 @@ export type LeadRow = {
 }
 
 type Filtros = {
-  estado: EstadoLead | 'todos'
   origen: string | 'todos'
   busqueda: string
 }
 
+type Tab = EstadoLead | 'archivados'
+
 export default function LeadsTable({ leads }: { leads: LeadRow[] }) {
   const router = useRouter()
   const runAction = useAction()
-  const [filtros, setFiltros] = useState<Filtros>({ estado: 'todos', origen: 'todos', busqueda: '' })
+  const [tab, setTab] = useState<Tab>('nuevo')
+  const [filtros, setFiltros] = useState<Filtros>({ origen: 'todos', busqueda: '' })
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [showNew, setShowNew] = useState(false)
   const [convertirId, setConvertirId] = useState<string | null>(null)
   // Overrides optimistas mientras la server action está en vuelo
   const [overrides, setOverrides] = useState<Record<string, Partial<LeadRow>>>({})
+
+  // Refs para scroll automático a la pestaña activa en móvil
+  const tabsContainerRef = useRef<HTMLDivElement>(null)
+  const activeTabRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    if (activeTabRef.current && tabsContainerRef.current) {
+      activeTabRef.current.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' })
+    }
+  }, [tab])
+
+  // Contadores por pestaña
+  const counts = useMemo(() => {
+    const c: Record<Tab, number> = {
+      nuevo: 0,
+      pendiente: 0,
+      contactado: 0,
+      en_conversacion: 0,
+      descartado: 0,
+      archivados: 0,
+    }
+    for (const l of leads) {
+      if (l.archivado) c.archivados++
+      else c[l.estado]++
+    }
+    return c
+  }, [leads])
 
   // Limpiar overrides cuando los datos del servidor llegan con el cambio aplicado
   useEffect(() => {
@@ -76,7 +105,14 @@ export default function LeadsTable({ leads }: { leads: LeadRow[] }) {
   const filtered = useMemo(() => {
     const q = filtros.busqueda.trim().toLowerCase()
     return leadsConOverrides.filter((l) => {
-      if (filtros.estado !== 'todos' && l.estado !== filtros.estado) return false
+      // Tab: archivados o estado específico
+      if (tab === 'archivados') {
+        if (!l.archivado) return false
+      } else {
+        if (l.archivado) return false
+        if (l.estado !== tab) return false
+      }
+
       if (filtros.origen !== 'todos' && (l.origen ?? '') !== filtros.origen) return false
       if (q) {
         const hay = `${l.nombre} ${l.email} ${l.telefono ?? ''} ${l.asunto ?? ''} ${l.mensaje}`.toLowerCase()
@@ -84,7 +120,7 @@ export default function LeadsTable({ leads }: { leads: LeadRow[] }) {
       }
       return true
     })
-  }, [leadsConOverrides, filtros])
+  }, [leadsConOverrides, filtros, tab])
 
   const pagination = usePagination(filtered, 20)
 
@@ -151,47 +187,100 @@ export default function LeadsTable({ leads }: { leads: LeadRow[] }) {
     }
   }
 
+  async function desarchivar(id: string) {
+    const result = await runAction(
+      'Recuperando lead',
+      () => desarchivarLead(id),
+      { successMessage: 'Lead recuperado' },
+    )
+    if (result.ok) router.refresh()
+  }
+
+  async function eliminarDef(id: string) {
+    if (!confirm('¿Eliminar este lead definitivamente? Esta acción no se puede deshacer.')) return
+    const result = await runAction(
+      'Eliminando lead',
+      () => eliminarLead(id),
+      { successMessage: 'Lead eliminado' },
+    )
+    if (result.ok) {
+      setSelectedId(null)
+      router.refresh()
+    }
+  }
+
   return (
     <>
-      {/* Toolbar: filtros + acción nuevo lead */}
-      <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm px-4 md:px-6 py-4 mb-6">
-        <div className="flex flex-col md:flex-row md:items-center gap-3">
-          <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <input
-              type="text"
-              placeholder="Buscar por nombre, email, mensaje…"
-              value={filtros.busqueda}
-              onChange={(e) => setFiltros((f) => ({ ...f, busqueda: e.target.value }))}
-              className="px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 font-raleway text-sm outline-none focus:border-henko-turquoise focus:bg-white"
-            />
-            <select
-              value={filtros.estado}
-              onChange={(e) => setFiltros((f) => ({ ...f, estado: e.target.value as EstadoLead | 'todos' }))}
-              className="px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 font-raleway text-sm outline-none focus:border-henko-turquoise focus:bg-white"
-            >
-              <option value="todos">Todos los estados</option>
-              {ESTADOS_LEAD.map((e) => (
-                <option key={e.value} value={e.value}>{e.label}</option>
-              ))}
-            </select>
-            <select
-              value={filtros.origen}
-              onChange={(e) => setFiltros((f) => ({ ...f, origen: e.target.value }))}
-              className="px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 font-raleway text-sm outline-none focus:border-henko-turquoise focus:bg-white"
-            >
-              <option value="todos">Todos los orígenes</option>
-              {origenesPresentes.map((o) => (
-                <option key={o} value={o}>{getOrigenLabel(o)}</option>
-              ))}
-            </select>
-          </div>
+      {/* Botón "+ Nuevo lead" — encima en móvil, integrado con tabs en desktop */}
+      {tab !== 'archivados' && (
+        <div className="md:hidden mb-3 flex justify-end">
           <button
             type="button"
             onClick={() => setShowNew(true)}
-            className="px-5 py-2.5 rounded-xl bg-henko-turquoise text-white font-raleway font-semibold text-sm hover:bg-henko-turquoise-light transition-colors whitespace-nowrap"
+            className="px-4 py-2 rounded-xl bg-henko-turquoise text-white font-raleway font-semibold text-sm hover:bg-henko-turquoise-light transition-colors"
+          >
+            + Nuevo lead
+          </button>
+        </div>
+      )}
+
+      {/* Tabs por estado + botón nuevo (desktop) */}
+      <div className="flex items-end justify-between gap-4 mb-6 border-b border-gray-200">
+        <div
+          ref={tabsContainerRef}
+          className="flex items-center gap-1 overflow-x-auto flex-1 min-w-0 scrollbar-thin scroll-smooth"
+          style={{ scrollSnapType: 'x proximity', WebkitOverflowScrolling: 'touch' }}
+        >
+          {ESTADOS_LEAD.map((e) => (
+            <TabButton
+              key={e.value}
+              ref={tab === e.value ? activeTabRef : undefined}
+              active={tab === e.value}
+              onClick={() => setTab(e.value)}
+              label={e.label}
+              count={counts[e.value]}
+              dotColor={e.dot}
+            />
+          ))}
+          <TabButton
+            ref={tab === 'archivados' ? activeTabRef : undefined}
+            active={tab === 'archivados'}
+            onClick={() => setTab('archivados')}
+            label="Archivados"
+            count={counts.archivados}
+          />
+        </div>
+        {tab !== 'archivados' && (
+          <button
+            type="button"
+            onClick={() => setShowNew(true)}
+            className="hidden md:inline-flex mb-2 flex-shrink-0 px-5 py-2.5 rounded-xl bg-henko-turquoise text-white font-raleway font-semibold text-sm hover:bg-henko-turquoise-light transition-colors whitespace-nowrap"
           >
             + Nuevo lead manual
           </button>
+        )}
+      </div>
+
+      {/* Toolbar: filtros */}
+      <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm px-4 md:px-6 py-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <input
+            type="text"
+            placeholder="Buscar por nombre, email, mensaje…"
+            value={filtros.busqueda}
+            onChange={(e) => setFiltros((f) => ({ ...f, busqueda: e.target.value }))}
+            className="px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 font-raleway text-sm outline-none focus:border-henko-turquoise focus:bg-white"
+          />
+          <select
+            value={filtros.origen}
+            onChange={(e) => setFiltros((f) => ({ ...f, origen: e.target.value }))}
+            className="px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 font-raleway text-sm outline-none focus:border-henko-turquoise focus:bg-white"
+          >
+            <option value="todos">Todos los orígenes</option>
+            {origenesPresentes.map((o) => (
+              <option key={o} value={o}>{getOrigenLabel(o)}</option>
+            ))}
+          </select>
         </div>
       </div>
 
@@ -246,7 +335,26 @@ export default function LeadsTable({ leads }: { leads: LeadRow[] }) {
                     </span>
                   </span>
                   <span className="col-span-2 font-raleway text-xs text-gray-500 truncate">{getOrigenLabel(l.origen)}</span>
-                  <span className="col-span-2 font-raleway text-xs text-gray-400">{fecha}</span>
+                  {tab !== 'archivados' ? (
+                    <span className="col-span-2 font-raleway text-xs text-gray-400">{fecha}</span>
+                  ) : (
+                    <span className="col-span-2 flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); desarchivar(l.id) }}
+                        className="px-2.5 py-1 rounded-lg bg-henko-turquoise/10 text-henko-turquoise text-xs font-raleway font-semibold hover:bg-henko-turquoise/20 transition-colors"
+                      >
+                        Recuperar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); eliminarDef(l.id) }}
+                        className="px-2.5 py-1 rounded-lg bg-red-50 text-red-500 text-xs font-raleway font-semibold hover:bg-red-100 transition-colors"
+                      >
+                        Eliminar
+                      </button>
+                    </span>
+                  )}
                 </div>
 
                 {/* Tarjeta móvil */}
@@ -269,6 +377,24 @@ export default function LeadsTable({ leads }: { leads: LeadRow[] }) {
                     </span>
                     <span className="text-[10px] text-gray-400 font-raleway">{getOrigenLabel(l.origen)}</span>
                   </div>
+                  {tab === 'archivados' && (
+                    <div className="flex items-center gap-2 mt-3">
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); desarchivar(l.id) }}
+                        className="px-3 py-1.5 rounded-lg bg-henko-turquoise/10 text-henko-turquoise text-xs font-raleway font-semibold hover:bg-henko-turquoise/20 transition-colors"
+                      >
+                        Recuperar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); eliminarDef(l.id) }}
+                        className="px-3 py-1.5 rounded-lg bg-red-50 text-red-500 text-xs font-raleway font-semibold hover:bg-red-100 transition-colors"
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             )
@@ -298,6 +424,8 @@ export default function LeadsTable({ leads }: { leads: LeadRow[] }) {
             setConvertirId(selected.id)
             setSelectedId(null)
           }}
+          onDesarchivar={() => desarchivar(selected.id)}
+          onEliminar={() => eliminarDef(selected.id)}
         />
       )}
 
@@ -317,3 +445,41 @@ export default function LeadsTable({ leads }: { leads: LeadRow[] }) {
     </>
   )
 }
+
+type TabButtonProps = {
+  active: boolean
+  onClick: () => void
+  label: string
+  count: number
+  dotColor?: string
+}
+
+const TabButton = forwardRef<HTMLButtonElement, TabButtonProps>(function TabButton(
+  { active, onClick, label, count, dotColor },
+  ref,
+) {
+  return (
+    <button
+      ref={ref}
+      type="button"
+      onClick={onClick}
+      style={{ scrollSnapAlign: 'start' }}
+      className={`relative px-3 md:px-4 py-3 font-raleway text-sm font-semibold transition-colors whitespace-nowrap flex items-center gap-1.5 flex-shrink-0 ${
+        active
+          ? 'text-henko-turquoise'
+          : 'text-gray-400 hover:text-gray-600'
+      }`}
+    >
+      {dotColor && <span className={`w-1.5 h-1.5 rounded-full ${dotColor}`} />}
+      {label}
+      <span className={`text-xs font-normal px-1.5 py-0.5 rounded-full ${
+        active ? 'bg-henko-turquoise/10 text-henko-turquoise' : 'bg-gray-100 text-gray-400'
+      }`}>
+        {count}
+      </span>
+      {active && (
+        <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-henko-turquoise rounded-full" />
+      )}
+    </button>
+  )
+})

@@ -150,7 +150,7 @@ export default function DashboardShell({ sections, userEmail, userInitial, child
           </button>
         </div>
 
-        <main className="flex-1 px-4 py-5 lg:px-6 lg:py-4">
+        <main className="flex-1 px-4 pt-8 pb-5 lg:px-6 lg:pt-10 lg:pb-6">
           {children}
         </main>
       </div>

@@ -199,6 +199,65 @@ export async function archivarLead(id: string) {
 }
 
 // =============================================================================
+// DESARCHIVAR / RECUPERAR LEAD
+// =============================================================================
+export async function desarchivarLead(id: string) {
+  const supabase = await createClient()
+
+  const { data: actual } = await supabase
+    .from('leads')
+    .select('nombre, email')
+    .eq('id', id)
+    .single()
+
+  const { error } = await supabase
+    .from('leads')
+    .update({ archivado: false })
+    .eq('id', id)
+
+  if (error) return { error: error.message }
+
+  await logAction({
+    accion: 'lead.desarchivar',
+    recursoTipo: 'lead',
+    recursoId: id,
+    recursoLabel: actual ? `${actual.nombre} <${actual.email}>` : id,
+  })
+
+  revalidatePath('/dashboard/leads')
+  return { ok: true }
+}
+
+// =============================================================================
+// ELIMINAR LEAD (definitivo, solo desde archivados)
+// =============================================================================
+export async function eliminarLead(id: string) {
+  const supabase = await createClient()
+
+  const { data: actual } = await supabase
+    .from('leads')
+    .select('nombre, email, archivado')
+    .eq('id', id)
+    .single()
+
+  if (!actual) return { error: 'Lead no encontrado' }
+  if (!actual.archivado) return { error: 'Solo se pueden eliminar leads archivados' }
+
+  const { error } = await supabase.from('leads').delete().eq('id', id)
+  if (error) return { error: error.message }
+
+  await logAction({
+    accion: 'lead.eliminar',
+    recursoTipo: 'lead',
+    recursoId: id,
+    recursoLabel: `${actual.nombre} <${actual.email}>`,
+  })
+
+  revalidatePath('/dashboard/leads')
+  return { ok: true }
+}
+
+// =============================================================================
 // EDITAR DATOS DEL LEAD
 // =============================================================================
 export async function editarLead(id: string, input: {

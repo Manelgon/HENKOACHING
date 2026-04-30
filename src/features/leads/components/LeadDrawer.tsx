@@ -23,12 +23,16 @@ export default function LeadDrawer({
   onCambiarEstado,
   onArchivar,
   onConvertir,
+  onDesarchivar,
+  onEliminar,
 }: {
   lead: LeadRow
   onClose: () => void
   onCambiarEstado: (estado: EstadoLead) => void
   onArchivar: () => void
   onConvertir: () => void
+  onDesarchivar?: () => void
+  onEliminar?: () => void
 }) {
   const router = useRouter()
   const runAction = useAction()
@@ -132,20 +136,30 @@ export default function LeadDrawer({
         <div className="px-6 py-6 space-y-6">
           {/* Estado + acciones rápidas */}
           <div className="space-y-3">
-            <p className="font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Estado</p>
+            <div className="flex items-center justify-between">
+              <p className="font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Estado</p>
+              {lead.archivado && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gray-100 text-gray-500 text-[10px] font-raleway font-semibold uppercase tracking-wider">
+                  Archivado
+                </span>
+              )}
+            </div>
             <div className="flex flex-wrap gap-2">
               {ESTADOS_LEAD.map((e) => {
                 const active = lead.estado === e.value
+                const disabled = active || !!lead.archivado
                 return (
                   <button
                     key={e.value}
                     type="button"
                     onClick={() => onCambiarEstado(e.value)}
-                    disabled={active}
+                    disabled={disabled}
                     className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-raleway font-semibold transition-all ${
                       active
                         ? `${e.bg} ${e.color} ring-2 ring-offset-1 ring-current cursor-default`
-                        : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
+                        : lead.archivado
+                          ? 'bg-gray-50 text-gray-300 cursor-not-allowed'
+                          : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
                     }`}
                   >
                     <span className={`w-1.5 h-1.5 rounded-full ${e.dot}`} />
@@ -235,20 +249,45 @@ export default function LeadDrawer({
 
           {/* Acciones */}
           <div className="border-t border-gray-100 pt-5 flex flex-wrap gap-3">
-            <button
-              type="button"
-              onClick={onConvertir}
-              className="flex-1 min-w-[140px] px-4 py-2.5 rounded-xl bg-henko-turquoise text-white font-raleway font-semibold text-sm hover:bg-henko-turquoise-light transition-colors"
-            >
-              ✓ Convertir a cliente
-            </button>
-            <button
-              type="button"
-              onClick={onArchivar}
-              className="px-4 py-2.5 rounded-xl border border-red-200 text-red-500 font-raleway text-sm hover:bg-red-50 transition-colors"
-            >
-              Archivar
-            </button>
+            {lead.archivado ? (
+              <>
+                {onDesarchivar && (
+                  <button
+                    type="button"
+                    onClick={onDesarchivar}
+                    className="flex-1 min-w-[140px] px-4 py-2.5 rounded-xl bg-henko-turquoise text-white font-raleway font-semibold text-sm hover:bg-henko-turquoise-light transition-colors"
+                  >
+                    ↺ Recuperar lead
+                  </button>
+                )}
+                {onEliminar && (
+                  <button
+                    type="button"
+                    onClick={onEliminar}
+                    className="px-4 py-2.5 rounded-xl border border-red-200 text-red-500 font-raleway text-sm hover:bg-red-50 transition-colors"
+                  >
+                    Eliminar definitivamente
+                  </button>
+                )}
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={onConvertir}
+                  className="flex-1 min-w-[140px] px-4 py-2.5 rounded-xl bg-henko-turquoise text-white font-raleway font-semibold text-sm hover:bg-henko-turquoise-light transition-colors"
+                >
+                  ✓ Convertir a cliente
+                </button>
+                <button
+                  type="button"
+                  onClick={onArchivar}
+                  className="px-4 py-2.5 rounded-xl border border-red-200 text-red-500 font-raleway text-sm hover:bg-red-50 transition-colors"
+                >
+                  Archivar
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>

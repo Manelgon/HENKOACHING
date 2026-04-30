@@ -1,11 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useAction } from '@/shared/feedback/FeedbackContext'
 import { crearClienteManual } from '@/actions/clientes'
 import type { EstadoCliente, ServicioContratado, TarifaTipo } from '@/lib/supabase/database.types'
 import { ESTADOS_CLIENTE, SERVICIOS, TARIFAS } from './estados'
 import { ORIGENES_LEAD } from '@/features/leads/components/estados'
+
+const labelClass = 'text-[10px] tracking-[0.14em] text-henko-turquoise font-bold mb-1.5 block'
+const inputClass = 'w-full px-4 py-2.5 rounded-xl text-sm border-[1.5px] border-black/5 bg-henko-white outline-none focus:border-henko-turquoise transition-colors'
 
 export default function NewClienteModal({
   onClose,
@@ -32,6 +35,16 @@ export default function NewClienteModal({
     estado: 'activo' as EstadoCliente,
     origen: 'instagram',
   })
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', onKey)
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.body.style.overflow = ''
+    }
+  }, [onClose])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -62,75 +75,102 @@ export default function NewClienteModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40" onClick={onClose}>
-      <div
-        className="w-full max-w-3xl bg-white rounded-3xl shadow-2xl max-h-[90vh] overflow-y-auto"
+    <div
+      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 backdrop-blur-sm px-3 py-4 sm:px-4 sm:py-10"
+      onClick={onClose}
+    >
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white rounded-2xl sm:rounded-3xl border border-black/5 w-full max-w-3xl shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="px-6 md:px-8 py-6 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10">
-          <p className="font-roxborough text-2xl text-gray-900">Nuevo cliente manual</p>
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 sm:px-9 pt-5 sm:pt-7 pb-4 sm:pb-5 border-b border-black/5">
+          <h2 className="font-roxborough text-xl sm:text-2xl text-gray-900">Nuevo cliente manual</h2>
           <button
             type="button"
             onClick={onClose}
-            className="w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-400"
+            aria-label="Cerrar"
+            className="w-9 h-9 rounded-full hover:bg-black/5 flex items-center justify-center text-gray-400 hover:text-gray-700 transition-colors"
           >
-            ✕
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="px-6 md:px-8 py-6 space-y-6">
+        {/* Body */}
+        <div className="px-5 sm:px-9 py-5 sm:py-7 space-y-6">
           <Section title="Datos de contacto">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input label="Nombre *" value={form.nombre} onChange={(v) => setForm({ ...form, nombre: v })} required />
-              <Input label="Email *" type="email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} required />
-              <Input label="Teléfono" type="tel" value={form.telefono} onChange={(v) => setForm({ ...form, telefono: v })} />
-              <Input label="LinkedIn" value={form.linkedin_url} onChange={(v) => setForm({ ...form, linkedin_url: v })} placeholder="https://…" />
-              <Select label="Origen" value={form.origen} onChange={(v) => setForm({ ...form, origen: v })} options={ORIGENES_LEAD} />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Field label="NOMBRE *" value={form.nombre} onChange={(v) => setForm({ ...form, nombre: v })} required />
+              <Field label="EMAIL *" type="email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} required />
+              <Field label="TELÉFONO" type="tel" value={form.telefono} onChange={(v) => setForm({ ...form, telefono: v })} />
+              <Field label="LINKEDIN" value={form.linkedin_url} onChange={(v) => setForm({ ...form, linkedin_url: v })} placeholder="https://…" />
+              <Select
+                label="ORIGEN"
+                value={form.origen}
+                onChange={(v) => setForm({ ...form, origen: v })}
+                options={ORIGENES_LEAD}
+              />
             </div>
           </Section>
 
           <Section title="Datos fiscales">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input label="Empresa / Razón social" value={form.empresa} onChange={(v) => setForm({ ...form, empresa: v })} />
-              <Input label="NIF / CIF" value={form.nif_cif} onChange={(v) => setForm({ ...form, nif_cif: v })} />
-              <Input label="Web" value={form.web_url} onChange={(v) => setForm({ ...form, web_url: v })} placeholder="https://…" />
-              <Input label="Dirección fiscal" value={form.direccion_fiscal} onChange={(v) => setForm({ ...form, direccion_fiscal: v })} className="md:col-span-2" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Field label="EMPRESA / RAZÓN SOCIAL" value={form.empresa} onChange={(v) => setForm({ ...form, empresa: v })} />
+              <Field label="NIF / CIF" value={form.nif_cif} onChange={(v) => setForm({ ...form, nif_cif: v })} />
+              <Field label="WEB" value={form.web_url} onChange={(v) => setForm({ ...form, web_url: v })} placeholder="https://…" />
+              <div className="sm:col-span-2">
+                <Field label="DIRECCIÓN FISCAL" value={form.direccion_fiscal} onChange={(v) => setForm({ ...form, direccion_fiscal: v })} />
+              </div>
             </div>
           </Section>
 
           <Section title="Servicio contratado">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Select
-                label="Servicio"
+                label="SERVICIO"
                 value={form.servicio_contratado}
                 onChange={(v) => setForm({ ...form, servicio_contratado: v as ServicioContratado | '' })}
                 options={[{ value: '', label: 'Sin especificar' }, ...SERVICIOS]}
               />
-              <Input label="Fecha inicio" type="date" value={form.fecha_inicio} onChange={(v) => setForm({ ...form, fecha_inicio: v })} />
-              <Input label="Importe (€)" type="number" value={form.importe} onChange={(v) => setForm({ ...form, importe: v })} placeholder="1500" />
-              <Select label="Tipo de tarifa" value={form.tarifa} onChange={(v) => setForm({ ...form, tarifa: v as TarifaTipo })} options={TARIFAS} />
-              <Input label="Próxima sesión" type="datetime-local" value={form.proxima_sesion} onChange={(v) => setForm({ ...form, proxima_sesion: v })} />
-              <Select label="Estado" value={form.estado} onChange={(v) => setForm({ ...form, estado: v as EstadoCliente })} options={ESTADOS_CLIENTE.map((e) => ({ value: e.value, label: e.label }))} />
+              <Field label="FECHA INICIO" type="date" value={form.fecha_inicio} onChange={(v) => setForm({ ...form, fecha_inicio: v })} />
+              <Field label="IMPORTE (€)" type="number" value={form.importe} onChange={(v) => setForm({ ...form, importe: v })} placeholder="1500" />
+              <Select
+                label="TIPO DE TARIFA"
+                value={form.tarifa}
+                onChange={(v) => setForm({ ...form, tarifa: v as TarifaTipo })}
+                options={TARIFAS}
+              />
+              <Field label="PRÓXIMA SESIÓN" type="datetime-local" value={form.proxima_sesion} onChange={(v) => setForm({ ...form, proxima_sesion: v })} />
+              <Select
+                label="ESTADO"
+                value={form.estado}
+                onChange={(v) => setForm({ ...form, estado: v as EstadoCliente })}
+                options={ESTADOS_CLIENTE.map((e) => ({ value: e.value, label: e.label }))}
+              />
             </div>
           </Section>
+        </div>
 
-          <div className="border-t border-gray-100 pt-5 flex flex-col-reverse md:flex-row gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-5 py-2.5 rounded-xl border border-gray-200 text-gray-600 font-raleway text-sm hover:bg-gray-50"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              className="flex-1 px-5 py-2.5 rounded-xl bg-henko-turquoise text-white font-raleway font-semibold text-sm hover:bg-henko-turquoise-light"
-            >
-              Crear cliente
-            </button>
-          </div>
-        </form>
-      </div>
+        {/* Footer */}
+        <div className="flex flex-col-reverse sm:flex-row gap-3 px-5 sm:px-9 py-4 sm:py-5 border-t border-black/5">
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex items-center justify-center gap-2 bg-transparent border-2 border-henko-turquoise text-henko-turquoise px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-henko-turquoise hover:text-white transition-all"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            className="flex-1 inline-flex items-center justify-center gap-2 bg-henko-turquoise text-white px-6 py-3 rounded-full text-sm font-semibold hover:bg-henko-turquoise-light hover:shadow-lg transition-all"
+          >
+            Crear cliente
+          </button>
+        </div>
+      </form>
     </div>
   )
 }
@@ -138,27 +178,27 @@ export default function NewClienteModal({
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <p className="font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">{title}</p>
+      <p className="font-roxborough text-base sm:text-lg text-gray-900 mb-3">{title}</p>
       {children}
     </div>
   )
 }
 
-function Input({
-  label, value, onChange, type = 'text', required, placeholder, className = '',
+function Field({
+  label, value, onChange, type = 'text', required, placeholder,
 }: {
-  label: string; value: string; onChange: (v: string) => void; type?: string; required?: boolean; placeholder?: string; className?: string
+  label: string; value: string; onChange: (v: string) => void; type?: string; required?: boolean; placeholder?: string
 }) {
   return (
-    <div className={className}>
-      <label className="block font-raleway text-xs font-semibold text-gray-500 mb-1.5">{label}</label>
+    <div>
+      <label className={labelClass}>{label}</label>
       <input
         type={type}
+        className={inputClass}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         required={required}
         placeholder={placeholder}
-        className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 font-raleway text-sm outline-none focus:border-henko-turquoise focus:bg-white"
       />
     </div>
   )
@@ -171,11 +211,11 @@ function Select({
 }) {
   return (
     <div>
-      <label className="block font-raleway text-xs font-semibold text-gray-500 mb-1.5">{label}</label>
+      <label className={labelClass}>{label}</label>
       <select
+        className={inputClass + ' appearance-none'}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 font-raleway text-sm outline-none focus:border-henko-turquoise focus:bg-white"
       >
         {options.map((o) => (
           <option key={o.value} value={o.value}>{o.label}</option>
