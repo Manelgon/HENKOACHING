@@ -48,7 +48,7 @@ export async function login(formData: FormData) {
 
   const target = await getRedirectForRole(data.user.id)
   revalidatePath('/', 'layout')
-  redirect(target)
+  return { redirectTo: target }
 }
 
 export async function signout() {

@@ -256,5 +256,5 @@ export async function loginCandidato(email: string, password: string) {
   })
 
   revalidatePath('/', 'layout')
-  redirect('/candidato/dashboard')
+  return { redirectTo: '/candidato/dashboard' }
 }
