@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import { loginCandidato } from '@/actions/candidato'
 import { useAction } from '@/shared/feedback/FeedbackContext'
 import { FormError } from '@/components/FormError'
@@ -10,9 +11,11 @@ import { FormError } from '@/components/FormError'
 type Errors = { email?: string; password?: string }
 
 export default function CandidatoLoginForm() {
+  const router = useRouter()
   const runAction = useAction()
   const [form, setForm] = useState({ email: '', password: '' })
   const [errors, setErrors] = useState<Errors>({})
+  const [showPassword, setShowPassword] = useState(false)
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -25,15 +28,20 @@ export default function CandidatoLoginForm() {
       return
     }
     setErrors({})
-    await runAction(
+    const res = await runAction(
       'Iniciando sesión',
       async () => {
         const result = await loginCandidato(form.email, form.password)
         if (result?.error) throw new Error(result.error)
-        return null
+        return result?.redirectTo ?? '/candidato/dashboard'
       },
       { silentSuccess: true },
     )
+
+    if (res.ok) {
+      router.push(res.data)
+      router.refresh()
+    }
   }
 
   const inputClass = (hasError: boolean) =>
@@ -111,16 +119,35 @@ export default function CandidatoLoginForm() {
             </div>
             <div className="mb-4">
               <label className={labelClass(!!errors.password)}>CONTRASEÑA</label>
-              <input
-                type="password"
-                value={form.password}
-                onChange={(e) => {
-                  setForm({ ...form, password: e.target.value })
-                  if (errors.password) setErrors((v) => ({ ...v, password: undefined }))
-                }}
-                placeholder="••••••••"
-                className={inputClass(!!errors.password)}
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={form.password}
+                  onChange={(e) => {
+                    setForm({ ...form, password: e.target.value })
+                    if (errors.password) setErrors((v) => ({ ...v, password: undefined }))
+                  }}
+                  placeholder="••••••••"
+                  className={`${inputClass(!!errors.password)} pr-12`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-henko-turquoise transition-colors p-1"
+                >
+                  {showPassword ? (
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                    </svg>
+                  ) : (
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                  )}
+                </button>
+              </div>
               <FormError msg={errors.password} />
             </div>
 
