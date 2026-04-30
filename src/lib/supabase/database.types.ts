@@ -46,15 +46,7 @@ export type Database = {
           recurso_label?: string | null
           recurso_tipo?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "audit_logs_actor_id_fkey"
-            columns: ["actor_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       blog_categorias: {
         Row: {
@@ -87,41 +79,10 @@ export type Database = {
         Relationships: []
       }
       blog_post_tags: {
-        Row: {
-          post_id: string
-          tag_id: number
-        }
-        Insert: {
-          post_id: string
-          tag_id: number
-        }
-        Update: {
-          post_id?: string
-          tag_id?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "blog_post_tags_post_id_fkey"
-            columns: ["post_id"]
-            isOneToOne: false
-            referencedRelation: "blog_posts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "blog_post_tags_post_id_fkey"
-            columns: ["post_id"]
-            isOneToOne: false
-            referencedRelation: "blog_posts_publicados"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "blog_post_tags_tag_id_fkey"
-            columns: ["tag_id"]
-            isOneToOne: false
-            referencedRelation: "blog_tags"
-            referencedColumns: ["id"]
-          },
-        ]
+        Row: { post_id: string; tag_id: number }
+        Insert: { post_id: string; tag_id: number }
+        Update: { post_id?: string; tag_id?: number }
+        Relationships: []
       }
       blog_posts: {
         Row: {
@@ -184,22 +145,7 @@ export type Database = {
           updated_at?: string | null
           vistas?: number | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "blog_posts_autor_id_fkey"
-            columns: ["autor_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "blog_posts_categoria_id_fkey"
-            columns: ["categoria_id"]
-            isOneToOne: false
-            referencedRelation: "blog_categorias"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       blog_tags: {
         Row: {
@@ -253,15 +199,7 @@ export type Database = {
           titulo?: string
           updated_at?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "candidato_educacion_candidato_id_fkey"
-            columns: ["candidato_id"]
-            isOneToOne: false
-            referencedRelation: "candidato_profiles"
-            referencedColumns: ["user_id"]
-          },
-        ]
+        Relationships: []
       }
       candidato_experiencias: {
         Row: {
@@ -300,15 +238,7 @@ export type Database = {
           orden?: number | null
           updated_at?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "candidato_experiencias_candidato_id_fkey"
-            columns: ["candidato_id"]
-            isOneToOne: false
-            referencedRelation: "candidato_profiles"
-            referencedColumns: ["user_id"]
-          },
-        ]
+        Relationships: []
       }
       candidato_idiomas: {
         Row: {
@@ -335,15 +265,7 @@ export type Database = {
           nivel?: Database["public"]["Enums"]["nivel_idioma"]
           orden?: number | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "candidato_idiomas_candidato_id_fkey"
-            columns: ["candidato_id"]
-            isOneToOne: false
-            referencedRelation: "candidato_profiles"
-            referencedColumns: ["user_id"]
-          },
-        ]
+        Relationships: []
       }
       candidato_profiles: {
         Row: {
@@ -382,15 +304,187 @@ export type Database = {
           user_id?: string
           web_url?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "candidato_profiles_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
+      }
+      cliente_archivos: {
+        Row: {
+          cliente_id: string
+          created_at: string | null
+          deleted_at: string | null
+          id: string
+          nombre_archivo: string
+          storage_path: string
+          subido_por: string | null
+          tamano_bytes: number | null
+          tipo: string | null
+        }
+        Insert: {
+          cliente_id: string
+          created_at?: string | null
+          deleted_at?: string | null
+          id?: string
+          nombre_archivo: string
+          storage_path: string
+          subido_por?: string | null
+          tamano_bytes?: number | null
+          tipo?: string | null
+        }
+        Update: {
+          cliente_id?: string
+          created_at?: string | null
+          deleted_at?: string | null
+          id?: string
+          nombre_archivo?: string
+          storage_path?: string
+          subido_por?: string | null
+          tamano_bytes?: number | null
+          tipo?: string | null
+        }
+        Relationships: []
+      }
+      cliente_notas: {
+        Row: {
+          autor_id: string | null
+          cliente_id: string
+          contenido: string
+          created_at: string | null
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          autor_id?: string | null
+          cliente_id: string
+          contenido: string
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+        }
+        Update: {
+          autor_id?: string | null
+          cliente_id?: string
+          contenido?: string
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      cliente_sesiones: {
+        Row: {
+          cliente_id: string
+          created_at: string | null
+          duracion: number | null
+          fecha: string
+          id: string
+          notas: string | null
+          realizada: boolean | null
+          tipo: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          cliente_id: string
+          created_at?: string | null
+          duracion?: number | null
+          fecha: string
+          id?: string
+          notas?: string | null
+          realizada?: boolean | null
+          tipo?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          cliente_id?: string
+          created_at?: string | null
+          duracion?: number | null
+          fecha?: string
+          id?: string
+          notas?: string | null
+          realizada?: boolean | null
+          tipo?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      clientes: {
+        Row: {
+          creado_por: string | null
+          created_at: string | null
+          deleted_at: string | null
+          direccion_fiscal: string | null
+          email: string
+          empresa: string | null
+          estado: Database["public"]["Enums"]["estado_cliente"]
+          fecha_conversion: string | null
+          fecha_inicio: string | null
+          id: string
+          importe: number | null
+          lead_id: string | null
+          linkedin_url: string | null
+          nif_cif: string | null
+          nombre: string
+          origen: string | null
+          proxima_sesion: string | null
+          servicio_contratado:
+            | Database["public"]["Enums"]["servicio_contratado"]
+            | null
+          tarifa: Database["public"]["Enums"]["tarifa_tipo"] | null
+          telefono: string | null
+          updated_at: string | null
+          web_url: string | null
+        }
+        Insert: {
+          creado_por?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          direccion_fiscal?: string | null
+          email: string
+          empresa?: string | null
+          estado?: Database["public"]["Enums"]["estado_cliente"]
+          fecha_conversion?: string | null
+          fecha_inicio?: string | null
+          id?: string
+          importe?: number | null
+          lead_id?: string | null
+          linkedin_url?: string | null
+          nif_cif?: string | null
+          nombre: string
+          origen?: string | null
+          proxima_sesion?: string | null
+          servicio_contratado?:
+            | Database["public"]["Enums"]["servicio_contratado"]
+            | null
+          tarifa?: Database["public"]["Enums"]["tarifa_tipo"] | null
+          telefono?: string | null
+          updated_at?: string | null
+          web_url?: string | null
+        }
+        Update: {
+          creado_por?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          direccion_fiscal?: string | null
+          email?: string
+          empresa?: string | null
+          estado?: Database["public"]["Enums"]["estado_cliente"]
+          fecha_conversion?: string | null
+          fecha_inicio?: string | null
+          id?: string
+          importe?: number | null
+          lead_id?: string | null
+          linkedin_url?: string | null
+          nif_cif?: string | null
+          nombre?: string
+          origen?: string | null
+          proxima_sesion?: string | null
+          servicio_contratado?:
+            | Database["public"]["Enums"]["servicio_contratado"]
+            | null
+          tarifa?: Database["public"]["Enums"]["tarifa_tipo"] | null
+          telefono?: string | null
+          updated_at?: string | null
+          web_url?: string | null
+        }
+        Relationships: []
       }
       cvs: {
         Row: {
@@ -423,15 +517,7 @@ export type Database = {
           storage_path?: string
           tamano_bytes?: number | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "cvs_candidato_id_fkey"
-            columns: ["candidato_id"]
-            isOneToOne: false
-            referencedRelation: "candidato_profiles"
-            referencedColumns: ["user_id"]
-          },
-        ]
+        Relationships: []
       }
       empresas: {
         Row: {
@@ -473,15 +559,7 @@ export type Database = {
           updated_at?: string | null
           web_url?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "empresas_owner_user_id_fkey"
-            columns: ["owner_user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       jornadas: {
         Row: {
@@ -510,12 +588,42 @@ export type Database = {
         }
         Relationships: []
       }
+      lead_notas: {
+        Row: {
+          autor_id: string | null
+          contenido: string
+          created_at: string | null
+          id: string
+          lead_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          autor_id?: string | null
+          contenido: string
+          created_at?: string | null
+          id?: string
+          lead_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          autor_id?: string | null
+          contenido?: string
+          created_at?: string | null
+          id?: string
+          lead_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       leads: {
         Row: {
           archivado: boolean | null
           asunto: string | null
+          creado_manualmente: boolean | null
+          creado_por: string | null
           created_at: string | null
           email: string
+          estado: Database["public"]["Enums"]["estado_lead"]
           id: string
           leido: boolean | null
           mensaje: string
@@ -529,8 +637,11 @@ export type Database = {
         Insert: {
           archivado?: boolean | null
           asunto?: string | null
+          creado_manualmente?: boolean | null
+          creado_por?: string | null
           created_at?: string | null
           email: string
+          estado?: Database["public"]["Enums"]["estado_lead"]
           id?: string
           leido?: boolean | null
           mensaje: string
@@ -544,8 +655,11 @@ export type Database = {
         Update: {
           archivado?: boolean | null
           asunto?: string | null
+          creado_manualmente?: boolean | null
+          creado_por?: string | null
           created_at?: string | null
           email?: string
+          estado?: Database["public"]["Enums"]["estado_lead"]
           id?: string
           leido?: boolean | null
           mensaje?: string
@@ -655,43 +769,7 @@ export type Database = {
           ubicacion?: string | null
           updated_at?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "ofertas_empresa_id_fkey"
-            columns: ["empresa_id"]
-            isOneToOne: false
-            referencedRelation: "empresas"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "ofertas_jornada_id_fkey"
-            columns: ["jornada_id"]
-            isOneToOne: false
-            referencedRelation: "jornadas"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "ofertas_modalidad_id_fkey"
-            columns: ["modalidad_id"]
-            isOneToOne: false
-            referencedRelation: "modalidades"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "ofertas_publicado_por_fkey"
-            columns: ["publicado_por"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "ofertas_sector_id_fkey"
-            columns: ["sector_id"]
-            isOneToOne: false
-            referencedRelation: "sectores"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -793,22 +871,7 @@ export type Database = {
           nota?: string | null
           solicitud_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "solicitud_eventos_cambiado_por_fkey"
-            columns: ["cambiado_por"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "solicitud_eventos_solicitud_id_fkey"
-            columns: ["solicitud_id"]
-            isOneToOne: false
-            referencedRelation: "solicitudes"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       solicitud_notas: {
         Row: {
@@ -835,22 +898,7 @@ export type Database = {
           solicitud_id?: string
           updated_at?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "solicitud_notas_autor_id_fkey"
-            columns: ["autor_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "solicitud_notas_solicitud_id_fkey"
-            columns: ["solicitud_id"]
-            isOneToOne: false
-            referencedRelation: "solicitudes"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       solicitudes: {
         Row: {
@@ -883,36 +931,7 @@ export type Database = {
           oferta_id?: string
           updated_at?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "solicitudes_candidato_id_fkey"
-            columns: ["candidato_id"]
-            isOneToOne: false
-            referencedRelation: "candidato_profiles"
-            referencedColumns: ["user_id"]
-          },
-          {
-            foreignKeyName: "solicitudes_cv_id_fkey"
-            columns: ["cv_id"]
-            isOneToOne: false
-            referencedRelation: "cvs"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "solicitudes_oferta_id_fkey"
-            columns: ["oferta_id"]
-            isOneToOne: false
-            referencedRelation: "ofertas"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "solicitudes_oferta_id_fkey"
-            columns: ["oferta_id"]
-            isOneToOne: false
-            referencedRelation: "ofertas_publicadas"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
     }
     Views: {
@@ -937,62 +956,7 @@ export type Database = {
           updated_at: string | null
           vistas: number | null
         }
-        Insert: {
-          autor_id?: string | null
-          categoria_id?: number | null
-          contenido?: string | null
-          created_at?: string | null
-          deleted_at?: string | null
-          estado?: Database["public"]["Enums"]["estado_post"] | null
-          extracto?: string | null
-          fecha_publicacion?: string | null
-          id?: string | null
-          imagen_alt?: string | null
-          imagen_portada?: string | null
-          meta_descripcion?: string | null
-          meta_titulo?: string | null
-          slug?: string | null
-          tiempo_lectura?: number | null
-          titulo?: string | null
-          updated_at?: string | null
-          vistas?: number | null
-        }
-        Update: {
-          autor_id?: string | null
-          categoria_id?: number | null
-          contenido?: string | null
-          created_at?: string | null
-          deleted_at?: string | null
-          estado?: Database["public"]["Enums"]["estado_post"] | null
-          extracto?: string | null
-          fecha_publicacion?: string | null
-          id?: string | null
-          imagen_alt?: string | null
-          imagen_portada?: string | null
-          meta_descripcion?: string | null
-          meta_titulo?: string | null
-          slug?: string | null
-          tiempo_lectura?: number | null
-          titulo?: string | null
-          updated_at?: string | null
-          vistas?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "blog_posts_autor_id_fkey"
-            columns: ["autor_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "blog_posts_categoria_id_fkey"
-            columns: ["categoria_id"]
-            isOneToOne: false
-            referencedRelation: "blog_categorias"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       ofertas_publicadas: {
         Row: {
@@ -1018,89 +982,7 @@ export type Database = {
           ubicacion: string | null
           updated_at: string | null
         }
-        Insert: {
-          created_at?: string | null
-          deleted_at?: string | null
-          descripcion?: string | null
-          empresa_id?: string | null
-          estado?: Database["public"]["Enums"]["estado_oferta"] | null
-          fecha_expiracion?: string | null
-          fecha_publicacion?: string | null
-          id?: string | null
-          jornada_id?: number | null
-          modalidad_id?: number | null
-          ofrecemos?: string[] | null
-          publicado_por?: string | null
-          requisitos?: string[] | null
-          salario_max?: number | null
-          salario_min?: number | null
-          salario_texto?: string | null
-          sector_id?: number | null
-          slug?: string | null
-          titulo?: string | null
-          ubicacion?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          deleted_at?: string | null
-          descripcion?: string | null
-          empresa_id?: string | null
-          estado?: Database["public"]["Enums"]["estado_oferta"] | null
-          fecha_expiracion?: string | null
-          fecha_publicacion?: string | null
-          id?: string | null
-          jornada_id?: number | null
-          modalidad_id?: number | null
-          ofrecemos?: string[] | null
-          publicado_por?: string | null
-          requisitos?: string[] | null
-          salario_max?: number | null
-          salario_min?: number | null
-          salario_texto?: string | null
-          sector_id?: number | null
-          slug?: string | null
-          titulo?: string | null
-          ubicacion?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "ofertas_empresa_id_fkey"
-            columns: ["empresa_id"]
-            isOneToOne: false
-            referencedRelation: "empresas"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "ofertas_jornada_id_fkey"
-            columns: ["jornada_id"]
-            isOneToOne: false
-            referencedRelation: "jornadas"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "ofertas_modalidad_id_fkey"
-            columns: ["modalidad_id"]
-            isOneToOne: false
-            referencedRelation: "modalidades"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "ofertas_publicado_por_fkey"
-            columns: ["publicado_por"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "ofertas_sector_id_fkey"
-            columns: ["sector_id"]
-            isOneToOne: false
-            referencedRelation: "sectores"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
     }
     Functions: {
@@ -1111,6 +993,13 @@ export type Database = {
       slugify: { Args: { "": string }; Returns: string }
     }
     Enums: {
+      estado_cliente: "activo" | "pausado" | "finalizado"
+      estado_lead:
+        | "nuevo"
+        | "pendiente"
+        | "contactado"
+        | "en_conversacion"
+        | "descartado"
       estado_oferta: "borrador" | "publicada" | "pausada" | "cerrada"
       estado_post: "borrador" | "publicado" | "archivado"
       estado_solicitud:
@@ -1120,6 +1009,12 @@ export type Database = {
         | "descartado"
         | "contratado"
       nivel_idioma: "A1" | "A2" | "B1" | "B2" | "C1" | "C2" | "Nativo"
+      servicio_contratado:
+        | "operaciones"
+        | "reclutamiento"
+        | "liderazgo"
+        | "integral"
+      tarifa_tipo: "mensual" | "proyecto" | "sesion"
       tipo_lead: "contacto_general" | "consulta_servicio"
       user_role: "admin" | "recruiter" | "candidato" | "empresa"
     }
@@ -1249,6 +1144,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      estado_cliente: ["activo", "pausado", "finalizado"],
+      estado_lead: [
+        "nuevo",
+        "pendiente",
+        "contactado",
+        "en_conversacion",
+        "descartado",
+      ],
       estado_oferta: ["borrador", "publicada", "pausada", "cerrada"],
       estado_post: ["borrador", "publicado", "archivado"],
       estado_solicitud: [
@@ -1259,6 +1162,13 @@ export const Constants = {
         "contratado",
       ],
       nivel_idioma: ["A1", "A2", "B1", "B2", "C1", "C2", "Nativo"],
+      servicio_contratado: [
+        "operaciones",
+        "reclutamiento",
+        "liderazgo",
+        "integral",
+      ],
+      tarifa_tipo: ["mensual", "proyecto", "sesion"],
       tipo_lead: ["contacto_general", "consulta_servicio"],
       user_role: ["admin", "recruiter", "candidato", "empresa"],
     },
@@ -1267,6 +1177,10 @@ export const Constants = {
 
 export type EstadoSolicitud = Database["public"]["Enums"]["estado_solicitud"]
 export type EstadoOferta = Database["public"]["Enums"]["estado_oferta"]
+export type EstadoLead = Database["public"]["Enums"]["estado_lead"]
+export type EstadoCliente = Database["public"]["Enums"]["estado_cliente"]
+export type ServicioContratado = Database["public"]["Enums"]["servicio_contratado"]
+export type TarifaTipo = Database["public"]["Enums"]["tarifa_tipo"]
 export type UserRole = Database["public"]["Enums"]["user_role"]
 export type TipoLead = Database["public"]["Enums"]["tipo_lead"]
 export type NivelIdioma = Database["public"]["Enums"]["nivel_idioma"]

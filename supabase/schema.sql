@@ -56,6 +56,22 @@ do $$ begin
 exception when duplicate_object then null; end $$;
 
 do $$ begin
+  create type estado_lead as enum ('nuevo', 'pendiente', 'contactado', 'en_conversacion', 'descartado');
+exception when duplicate_object then null; end $$;
+
+do $$ begin
+  create type estado_cliente as enum ('activo', 'pausado', 'finalizado');
+exception when duplicate_object then null; end $$;
+
+do $$ begin
+  create type tarifa_tipo as enum ('mensual', 'proyecto', 'sesion');
+exception when duplicate_object then null; end $$;
+
+do $$ begin
+  create type servicio_contratado as enum ('operaciones', 'reclutamiento', 'liderazgo', 'integral');
+exception when duplicate_object then null; end $$;
+
+do $$ begin
   create type nivel_idioma as enum ('A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'Nativo');
 exception when duplicate_object then null; end $$;
 
@@ -344,15 +360,125 @@ create table if not exists public.leads (
   asunto text,
   mensaje text not null,
   servicio_interes text,
-  origen text,  -- ej: 'web', 'instagram', 'referido'
+  origen text,  -- ej: 'web', 'instagram', 'referido', 'linkedin', 'llamada', 'evento'
+  estado estado_lead not null default 'nuevo',
   leido boolean default false,
   archivado boolean default false,
+  creado_manualmente boolean default false,
+  creado_por uuid references public.profiles(id) on delete set null,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
 
 create index if not exists idx_leads_tipo on public.leads(tipo);
+create index if not exists idx_leads_estado on public.leads(estado) where archivado = false;
 create index if not exists idx_leads_no_leidos on public.leads(created_at desc) where leido = false and archivado = false;
+
+
+-- Notas/comentarios sobre un lead (privadas, solo recruiters)
+create table if not exists public.lead_notas (
+  id uuid primary key default uuid_generate_v4(),
+  lead_id uuid not null references public.leads(id) on delete cascade,
+  autor_id uuid references public.profiles(id) on delete set null,
+  contenido text not null,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+create index if not exists idx_lead_notas_lead on public.lead_notas(lead_id, created_at desc);
+
+
+-- =============================================================================
+-- 9c. CLIENTES (lead convertido o cliente manual)
+-- =============================================================================
+create table if not exists public.clientes (
+  id uuid primary key default uuid_generate_v4(),
+  -- Origen: si viene de un lead, referencia (nullable si es manual)
+  lead_id uuid references public.leads(id) on delete set null,
+
+  -- Datos contacto
+  nombre text not null,
+  email text not null,
+  telefono text,
+
+  -- Datos fiscales
+  empresa text,
+  nif_cif text,
+  direccion_fiscal text,
+
+  -- Datos del servicio
+  servicio_contratado servicio_contratado,
+  fecha_inicio date,
+  importe numeric(10,2),
+  tarifa tarifa_tipo,
+
+  -- Seguimiento
+  proxima_sesion timestamptz,
+  linkedin_url text,
+  web_url text,
+
+  -- Estado
+  estado estado_cliente not null default 'activo',
+
+  -- Origen del registro (heredado del lead o manual)
+  origen text,
+
+  -- Auditoría
+  fecha_conversion timestamptz default now(),
+  creado_por uuid references public.profiles(id) on delete set null,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now(),
+  deleted_at timestamptz
+);
+
+create index if not exists idx_clientes_estado on public.clientes(estado) where deleted_at is null;
+create index if not exists idx_clientes_email on public.clientes(email);
+create index if not exists idx_clientes_lead on public.clientes(lead_id);
+
+
+-- Notas sobre un cliente (todos los recruiters ven todas)
+create table if not exists public.cliente_notas (
+  id uuid primary key default uuid_generate_v4(),
+  cliente_id uuid not null references public.clientes(id) on delete cascade,
+  autor_id uuid references public.profiles(id) on delete set null,
+  contenido text not null,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+create index if not exists idx_cliente_notas_cliente on public.cliente_notas(cliente_id, created_at desc);
+
+
+-- Sesiones programadas / realizadas con el cliente
+create table if not exists public.cliente_sesiones (
+  id uuid primary key default uuid_generate_v4(),
+  cliente_id uuid not null references public.clientes(id) on delete cascade,
+  fecha timestamptz not null,
+  tipo text,        -- 'sesion', 'reunion', 'seguimiento', 'llamada'
+  duracion integer, -- minutos
+  notas text,
+  realizada boolean default false,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+create index if not exists idx_cliente_sesiones on public.cliente_sesiones(cliente_id, fecha desc);
+
+
+-- Archivos adjuntos al cliente (contratos, facturas, etc.)
+create table if not exists public.cliente_archivos (
+  id uuid primary key default uuid_generate_v4(),
+  cliente_id uuid not null references public.clientes(id) on delete cascade,
+  nombre_archivo text not null,
+  storage_path text not null unique,
+  tipo text,             -- 'contrato', 'factura', 'otro'
+  tamano_bytes bigint,
+  subido_por uuid references public.profiles(id) on delete set null,
+  created_at timestamptz default now(),
+  deleted_at timestamptz
+);
+
+create index if not exists idx_cliente_archivos on public.cliente_archivos(cliente_id) where deleted_at is null;
 
 
 -- =============================================================================
@@ -537,7 +663,8 @@ declare
   tablas text[] := array[
     'profiles', 'candidato_profiles', 'candidato_experiencias', 'candidato_educacion',
     'empresas', 'ofertas', 'solicitudes', 'solicitud_notas',
-    'leads', 'blog_posts'
+    'leads', 'lead_notas', 'clientes', 'cliente_notas', 'cliente_sesiones',
+    'blog_posts'
   ];
 begin
   foreach t in array tablas loop
@@ -610,6 +737,11 @@ alter table public.solicitudes enable row level security;
 alter table public.solicitud_eventos enable row level security;
 alter table public.solicitud_notas enable row level security;
 alter table public.leads enable row level security;
+alter table public.lead_notas enable row level security;
+alter table public.clientes enable row level security;
+alter table public.cliente_notas enable row level security;
+alter table public.cliente_sesiones enable row level security;
+alter table public.cliente_archivos enable row level security;
 alter table public.audit_logs enable row level security;
 alter table public.sectores enable row level security;
 alter table public.modalidades enable row level security;
@@ -753,6 +885,27 @@ drop policy if exists "Leads: recruiter all" on public.leads;
 create policy "Leads: recruiter all" on public.leads
   for all using (public.is_recruiter()) with check (public.is_recruiter());
 
+-- ----- LEAD_NOTAS, CLIENTES, CLIENTE_NOTAS, CLIENTE_SESIONES, CLIENTE_ARCHIVOS -----
+drop policy if exists "LeadNotas: recruiter all" on public.lead_notas;
+create policy "LeadNotas: recruiter all" on public.lead_notas
+  for all using (public.is_recruiter()) with check (public.is_recruiter());
+
+drop policy if exists "Clientes: recruiter all" on public.clientes;
+create policy "Clientes: recruiter all" on public.clientes
+  for all using (public.is_recruiter()) with check (public.is_recruiter());
+
+drop policy if exists "ClienteNotas: recruiter all" on public.cliente_notas;
+create policy "ClienteNotas: recruiter all" on public.cliente_notas
+  for all using (public.is_recruiter()) with check (public.is_recruiter());
+
+drop policy if exists "ClienteSesiones: recruiter all" on public.cliente_sesiones;
+create policy "ClienteSesiones: recruiter all" on public.cliente_sesiones
+  for all using (public.is_recruiter()) with check (public.is_recruiter());
+
+drop policy if exists "ClienteArchivos: recruiter all" on public.cliente_archivos;
+create policy "ClienteArchivos: recruiter all" on public.cliente_archivos
+  for all using (public.is_recruiter()) with check (public.is_recruiter());
+
 -- ----- AUDIT_LOGS (solo admins leen; escritura vía service role) -----
 -- No definimos policy de INSERT: el helper logAction() usa service role,
 -- que bypassa RLS. Esto evita que código cliente o RLS-mediado pueda
@@ -835,7 +988,17 @@ values
   ('cvs', 'cvs', false, 5242880, array['application/pdf']::text[]),
   ('avatars', 'avatars', true, 2097152, array['image/jpeg', 'image/png', 'image/webp']::text[]),
   ('ofertas', 'ofertas', true, 5242880, array['image/jpeg', 'image/png', 'image/webp']::text[]),
-  ('blog', 'blog', true, 5242880, array['image/jpeg', 'image/png', 'image/webp']::text[])
+  ('blog', 'blog', true, 5242880, array['image/jpeg', 'image/png', 'image/webp']::text[]),
+  ('cliente-archivos', 'cliente-archivos', false, 10485760, array[
+    'application/pdf',
+    'image/jpeg',
+    'image/png',
+    'image/webp',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  ]::text[])
 on conflict (id) do update set
   public = excluded.public,
   file_size_limit = excluded.file_size_limit,
@@ -906,6 +1069,12 @@ drop policy if exists "Blog storage: recruiter escribe" on storage.objects;
 create policy "Blog storage: recruiter escribe" on storage.objects
   for all using (bucket_id = 'blog' and public.is_recruiter())
   with check (bucket_id = 'blog' and public.is_recruiter());
+
+-- ----- Cliente-archivos (privado, solo recruiters) -----
+drop policy if exists "ClienteArchivos storage: recruiter all" on storage.objects;
+create policy "ClienteArchivos storage: recruiter all" on storage.objects
+  for all using (bucket_id = 'cliente-archivos' and public.is_recruiter())
+  with check (bucket_id = 'cliente-archivos' and public.is_recruiter());
 
 
 -- =============================================================================
