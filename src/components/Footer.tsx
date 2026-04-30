@@ -50,8 +50,10 @@ export default function Footer() {
           <p className="text-gray-400 text-xs font-raleway">
             © {new Date().getFullYear()} Henkoaching. Todos los derechos reservados.
           </p>
-          <div className="flex gap-4">
-            {/* Aquí podrían ir iconos sociales en el futuro si hiciera falta */}
+          <div className="flex gap-4 md:gap-6">
+            <Link href="/legal" className="text-gray-400 hover:text-henko-greenblue text-xs font-raleway transition-colors duration-300">
+              Legal
+            </Link>
           </div>
         </div>
       </footer>
