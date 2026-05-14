@@ -17,7 +17,7 @@ export default async function LeadsPage() {
   return (
     <div className="w-full">
       <div className="mb-8 md:mb-10">
-        <h1 className="font-roxborough text-3xl md:text-4xl text-gray-900 mb-2">Leads</h1>
+        <h1 className="font-roxborough text-2xl md:text-3xl text-gray-900 mb-2">Leads</h1>
         <p className="font-raleway text-gray-500 font-light">Gestiona tus contactos: del formulario web, redes sociales, llamadas o referencias.</p>
       </div>
 

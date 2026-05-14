@@ -87,6 +87,7 @@ export type Database = {
       blog_posts: {
         Row: {
           autor_id: string | null
+          canonical_url: string | null
           categoria_id: number | null
           contenido: string
           created_at: string | null
@@ -97,8 +98,11 @@ export type Database = {
           id: string
           imagen_alt: string | null
           imagen_portada: string | null
+          imagen_portada_alt: string | null
+          keywords: string[] | null
           meta_descripcion: string | null
           meta_titulo: string | null
+          og_image_url: string | null
           slug: string
           tiempo_lectura: number | null
           titulo: string
@@ -107,6 +111,7 @@ export type Database = {
         }
         Insert: {
           autor_id?: string | null
+          canonical_url?: string | null
           categoria_id?: number | null
           contenido: string
           created_at?: string | null
@@ -117,8 +122,11 @@ export type Database = {
           id?: string
           imagen_alt?: string | null
           imagen_portada?: string | null
+          imagen_portada_alt?: string | null
+          keywords?: string[] | null
           meta_descripcion?: string | null
           meta_titulo?: string | null
+          og_image_url?: string | null
           slug: string
           tiempo_lectura?: number | null
           titulo: string
@@ -127,6 +135,7 @@ export type Database = {
         }
         Update: {
           autor_id?: string | null
+          canonical_url?: string | null
           categoria_id?: number | null
           contenido?: string
           created_at?: string | null
@@ -137,15 +146,33 @@ export type Database = {
           id?: string
           imagen_alt?: string | null
           imagen_portada?: string | null
+          imagen_portada_alt?: string | null
+          keywords?: string[] | null
           meta_descripcion?: string | null
           meta_titulo?: string | null
+          og_image_url?: string | null
           slug?: string
           tiempo_lectura?: number | null
           titulo?: string
           updated_at?: string | null
           vistas?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "blog_posts_categoria_id_fkey"
+            columns: ["categoria_id"]
+            isOneToOne: false
+            referencedRelation: "blog_categorias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "blog_posts_autor_id_fkey"
+            columns: ["autor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       blog_tags: {
         Row: {
@@ -1184,3 +1211,4 @@ export type TarifaTipo = Database["public"]["Enums"]["tarifa_tipo"]
 export type UserRole = Database["public"]["Enums"]["user_role"]
 export type TipoLead = Database["public"]["Enums"]["tipo_lead"]
 export type NivelIdioma = Database["public"]["Enums"]["nivel_idioma"]
+export type EstadoPost = Database["public"]["Enums"]["estado_post"]

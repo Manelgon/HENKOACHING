@@ -14,7 +14,7 @@ export default function CheckEmailPage() {
       </div>
 
       <div>
-        <h1 className="font-roxborough text-4xl text-gray-900 mb-2">Revisa tu email</h1>
+        <h1 className="font-roxborough text-3xl text-gray-900 mb-2">Revisa tu email</h1>
         <p className="font-raleway text-gray-500 font-light max-w-sm mx-auto">
           Te hemos enviado un enlace de confirmación. Ábrelo para completar el registro.
         </p>

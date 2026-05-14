@@ -60,7 +60,7 @@ export default async function ClienteFichaPage({ params }: { params: Promise<{ i
       </div>
 
       <div className="mb-8 md:mb-10">
-        <h1 className="font-roxborough text-3xl md:text-4xl text-gray-900 mb-2">{cliente.nombre}</h1>
+        <h1 className="font-roxborough text-2xl md:text-3xl text-gray-900 mb-2">{cliente.nombre}</h1>
         {cliente.empresa && <p className="font-raleway text-gray-500 font-light">{cliente.empresa}</p>}
       </div>
 

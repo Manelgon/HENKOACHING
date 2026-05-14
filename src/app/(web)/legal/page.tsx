@@ -9,7 +9,7 @@ export default function Legal() {
           <Link href="/" className="inline-flex items-center text-henko-greenblue hover:text-henko-greenblue/80 text-sm font-raleway font-semibold mb-6 transition-colors">
             ← Volver
           </Link>
-          <h1 className="font-raleway text-4xl md:text-5xl font-bold text-gray-900 mb-4">Legal</h1>
+          <h1 className="font-raleway text-3xl md:text-4xl font-bold text-gray-900 mb-4">Legal</h1>
           <p className="text-gray-600 font-raleway text-lg">Información legal, privacidad y políticas de Henkoaching</p>
         </div>
       </div>

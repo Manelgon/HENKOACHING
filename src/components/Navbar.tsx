@@ -8,10 +8,10 @@ import { usePathname } from 'next/navigation'
 const links = [
   { href: '/', label: 'Inicio' },
   { href: '/servicios', label: 'Servicios' },
-  { href: '/trabaja-conmigo', label: 'Trabaja conmigo' },
   { href: '/empleo', label: 'Empleo' },
   { href: '/sobre-mi', label: 'Sobre mí' },
   { href: '/contacto', label: 'Contacto' },
+  { href: '/blog', label: 'Blog' },
 ]
 
 export default function Navbar() {
@@ -39,16 +39,14 @@ export default function Navbar() {
       <nav className="px-6 py-3 flex items-center justify-between">
         {/* Logo imagen */}
         <Link href="/" className="flex items-center group">
-          <div className="relative overflow-hidden rounded-full transition-transform duration-300 group-hover:scale-105">
-            <Image
-              src="/hk.png"
-              alt="Henkoaching"
-              width={56}
-              height={56}
-              className="object-contain"
-              priority
-            />
-          </div>
+          <Image
+            src="/hk.png"
+            alt="Henkoaching"
+            width={120}
+            height={75}
+            className="object-contain w-[64px] h-auto transition-transform duration-300 group-hover:scale-105"
+            priority
+          />
         </Link>
 
         {/* Desktop links */}
@@ -58,8 +56,8 @@ export default function Navbar() {
               <Link
                 href={link.href}
                 className={`font-raleway text-sm tracking-wide transition-all duration-300 px-3 py-2 rounded-full ${pathname === link.href
-                    ? 'text-henko-greenblue font-bold bg-henko-greenblue/5'
-                    : 'text-gray-600 hover:text-henko-greenblue hover:bg-gray-50'
+                    ? 'text-henko-turquoise font-bold bg-henko-turquoise/5'
+                    : 'text-gray-600 hover:text-henko-turquoise hover:bg-gray-50'
                   }`}
               >
                 {link.label}
@@ -73,7 +71,7 @@ export default function Navbar() {
           href="/candidato/login"
           aria-label="Acceder"
           title="Acceder"
-          className="hidden md:inline-flex items-center justify-center w-10 h-10 rounded-full text-gray-600 hover:text-henko-greenblue hover:bg-gray-50 transition-all duration-300"
+          className="hidden md:inline-flex items-center justify-center w-10 h-10 rounded-full text-gray-600 hover:text-henko-turquoise hover:bg-gray-50 transition-all duration-300"
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -99,7 +97,7 @@ export default function Navbar() {
             <li key={link.href}>
               <Link
                 href={link.href}
-                className={`font-raleway text-sm font-semibold tracking-wide block py-3 px-4 rounded-2xl transition-colors ${pathname === link.href ? 'bg-henko-greenblue/10 text-henko-greenblue' : 'text-gray-700 hover:bg-gray-50'
+                className={`font-raleway text-sm font-semibold tracking-wide block py-3 px-4 rounded-2xl transition-colors ${pathname === link.href ? 'bg-henko-turquoise/10 text-henko-turquoise' : 'text-gray-700 hover:bg-gray-50'
                   }`}
               >
                 {link.label}

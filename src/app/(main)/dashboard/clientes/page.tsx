@@ -18,7 +18,7 @@ export default async function ClientesPage() {
   return (
     <div className="w-full">
       <div className="mb-8 md:mb-10">
-        <h1 className="font-roxborough text-3xl md:text-4xl text-gray-900 mb-2">Clientes</h1>
+        <h1 className="font-roxborough text-2xl md:text-3xl text-gray-900 mb-2">Clientes</h1>
         <p className="font-raleway text-gray-500 font-light">Tu cartera de clientes activos, en pausa o finalizados.</p>
       </div>
 

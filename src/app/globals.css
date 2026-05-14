@@ -42,7 +42,7 @@
   }
 
   body {
-    @apply bg-henko-white text-gray-800 font-raleway;
+    @apply bg-white text-gray-800 font-raleway;
   }
 
   h1 {

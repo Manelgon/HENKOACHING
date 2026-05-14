@@ -55,49 +55,40 @@ export default function CandidatoLoginForm() {
 
   return (
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2 font-raleway">
-      {/* Panel izquierdo amarillo */}
-      <div className="relative hidden lg:flex flex-col justify-between p-14 bg-henko-yellow overflow-hidden">
-        <div
-          className="absolute pointer-events-none"
-          style={{
-            width: 200, height: 260, top: -50, right: -50,
-            background: '#addbd2', opacity: 0.5,
-            borderRadius: '60% 40% 70% 30% / 50% 60% 40% 60%',
-          }}
-        />
-        <div
-          className="absolute pointer-events-none"
-          style={{
-            width: 150, height: 195, bottom: -40, left: -40,
-            background: '#d69494', opacity: 0.4,
-            borderRadius: '60% 40% 70% 30% / 50% 60% 40% 60%',
-          }}
-        />
-        <Link href="/" className="relative z-10">
-          <Image src="/henkologo.png" alt="Henkoaching" width={180} height={50} className="object-contain" />
-        </Link>
-        <div className="relative z-10">
-          <p className="font-roxborough italic text-3xl text-gray-900 leading-tight mb-4">
+      {/* Panel izquierdo limpio */}
+      <div className="relative hidden lg:flex flex-col items-center justify-center p-16 bg-gradient-to-br from-henko-turquoise/15 to-henko-purple/15 border-r border-henko-turquoise/15 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-henko-turquoise/5 via-white/50 to-henko-purple/10" />
+        <div className="relative z-10 text-center">
+          <Link href="/">
+            <Image
+              src="/henkologo.png"
+              alt="Henkoaching"
+              width={640}
+              height={444}
+              className="mx-auto mb-10 drop-shadow-sm w-[320px] h-auto"
+            />
+          </Link>
+          <p className="font-roxborough italic text-2xl text-gray-900 leading-tight mb-3">
             Portal de Empleo
           </p>
-          <p className="text-sm text-gray-700 leading-relaxed max-w-sm">
+          <p className="font-raleway text-gray-500 text-base font-light max-w-sm mx-auto">
             Accede a tu perfil de candidato y gestiona tus solicitudes.
           </p>
         </div>
       </div>
 
       {/* Panel derecho formulario */}
-      <div className="flex items-center justify-center bg-henko-white p-8 md:p-14">
+      <div className="flex items-center justify-center bg-white p-8 md:p-14">
         <div className="w-full max-w-sm">
           <div className="lg:hidden mb-8">
             <Link href="/">
-              <Image src="/henkologo.png" alt="Henkoaching" width={160} height={50} className="mx-auto" />
+              <Image src="/henkologo.png" alt="Henkoaching" width={320} height={222} className="mx-auto w-[160px] h-auto" />
             </Link>
           </div>
           <p className="font-raleway font-bold text-henko-turquoise tracking-[0.18em] uppercase text-[11px] mb-4">
             Área de candidatos
           </p>
-          <h1 className="font-roxborough text-4xl text-gray-900 mb-2">Accede</h1>
+          <h1 className="font-roxborough text-3xl text-gray-900 mb-2">Accede</h1>
           <p className="text-sm text-gray-500 mb-9 leading-relaxed">
             Entra en tu perfil y aplica a las ofertas disponibles.
           </p>

@@ -15,6 +15,13 @@ export default async function CandidatoDashboardPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/candidato/login')
 
+  const { data: roleProfile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+  if (roleProfile?.role && roleProfile.role !== 'candidato') redirect('/dashboard')
+
   const [{ data: profile }, { data: candProfile }, { data: cvActivo }, solicitudes] = await Promise.all([
     supabase.from('profiles').select('nombre, apellidos, email, telefono').eq('id', user.id).single(),
     supabase.from('candidato_profiles').select('ubicacion, cargo_actual').eq('user_id', user.id).single(),

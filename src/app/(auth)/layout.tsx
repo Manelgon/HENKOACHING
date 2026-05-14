@@ -14,9 +14,9 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             <Image
               src="/henkologo.png"
               alt="Henkoaching"
-              width={320}
-              height={200}
-              className="mx-auto mb-10 drop-shadow-sm"
+              width={640}
+              height={444}
+              className="mx-auto mb-10 drop-shadow-sm w-[320px] h-auto"
             />
           </Link>
           <p className="font-raleway text-gray-500 text-lg font-light max-w-sm mx-auto">
@@ -29,7 +29,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-8 md:p-16">
         <div className="lg:hidden mb-8">
           <Link href="/">
-            <Image src="/henkologo.png" alt="Henkoaching" width={180} height={100} className="mx-auto" />
+            <Image src="/henkologo.png" alt="Henkoaching" width={360} height={250} className="mx-auto w-[180px] h-auto" />
           </Link>
         </div>
         <div className="w-full max-w-md">

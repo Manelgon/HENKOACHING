@@ -94,14 +94,14 @@ export default function CandidatoSignupFlow() {
   }
 
   return (
-    <div className="min-h-screen bg-henko-white pt-20 font-raleway">
-      <div className="max-w-2xl mx-auto px-6 md:px-10 py-14">
-        <Link href="/" className="inline-block mb-8 text-xs text-gray-400 hover:text-gray-600">
+    <div className="min-h-screen bg-white font-raleway">
+      <div className="max-w-2xl mx-auto px-6 md:px-10 pt-8 pb-14">
+        <Link href="/" className="inline-block mb-6 text-xs text-gray-400 hover:text-gray-600">
           ← Volver al sitio
         </Link>
 
         {/* Stepper */}
-        <div className="flex items-center gap-2 mb-12">
+        <div className="flex items-center gap-2 mb-10">
           {['Cuenta', 'Perfil', 'Experiencia', 'CV'].map((s, i) => (
             <Fragment key={s}>
               <div className="flex items-center gap-2">
@@ -110,7 +110,7 @@ export default function CandidatoSignupFlow() {
                     step > i + 1
                       ? 'bg-henko-turquoise text-white'
                       : step === i + 1
-                        ? 'bg-gray-900 text-white'
+                        ? 'bg-henko-turquoise text-white'
                         : 'bg-gray-200 text-gray-400'
                   }`}
                 >
@@ -154,7 +154,7 @@ function Eyebrow({ children }: { children: React.ReactNode }) {
 }
 
 function Heading({ children }: { children: React.ReactNode }) {
-  return <h1 className="font-roxborough text-3xl md:text-4xl text-gray-900 mb-8 leading-tight">{children}</h1>
+  return <h1 className="font-roxborough text-2xl md:text-3xl text-gray-900 mb-8 leading-tight">{children}</h1>
 }
 
 function PrimaryBtn({ children, onClick, full = false, type = 'button', disabled }: { children: React.ReactNode; onClick?: () => void; full?: boolean; type?: 'button' | 'submit'; disabled?: boolean }) {
@@ -349,7 +349,7 @@ function StepExperiencia({ form, upd, back, next }: { form: FormState; upd: <K e
 
       <h3 className="font-roxborough text-xl mb-4">Experiencia laboral</h3>
       {form.exp.map((ex, i) => (
-        <div key={i} className="bg-henko-white border border-black/5 rounded-2xl p-5 mb-3">
+        <div key={i} className="bg-white border border-henko-turquoise/15 shadow-sm rounded-2xl p-5 mb-3">
           <div className="grid grid-cols-2 gap-2.5 mb-2.5">
             <input
               className={inputClass}
@@ -406,7 +406,7 @@ function StepExperiencia({ form, upd, back, next }: { form: FormState; upd: <K e
 
       <h3 className="font-roxborough text-xl mt-5 mb-4">Educación</h3>
       {form.edu.map((ed, i) => (
-        <div key={i} className="bg-henko-white border border-black/5 rounded-2xl p-5 mb-3">
+        <div key={i} className="bg-white border border-henko-turquoise/15 shadow-sm rounded-2xl p-5 mb-3">
           <div className="grid grid-cols-2 gap-2.5 mb-2.5">
             <input
               className={inputClass}
@@ -470,7 +470,7 @@ function StepCV({ form, upd, fileRef, back, finish, submitting }: {
   return (
     <div>
       <Eyebrow>Paso 4</Eyebrow>
-      <h1 className="font-roxborough text-3xl md:text-4xl text-gray-900 mb-3 leading-tight">Sube tu CV</h1>
+      <h1 className="font-roxborough text-2xl md:text-3xl text-gray-900 mb-3 leading-tight">Sube tu CV</h1>
       <p className="text-sm text-gray-500 mb-8 leading-relaxed">
         Añade tu currículum en PDF. Lo usaremos en tus solicitudes a las ofertas.
       </p>
@@ -479,8 +479,8 @@ function StepCV({ form, upd, fileRef, back, finish, submitting }: {
         onClick={() => fileRef.current?.click()}
         className={`border-2 border-dashed rounded-3xl px-8 py-12 text-center cursor-pointer mb-8 transition-all ${
           form.cv
-            ? 'border-henko-turquoise bg-henko-greenblue/20'
-            : 'border-black/15 bg-[#faf7f4] hover:border-henko-turquoise/50'
+            ? 'border-henko-turquoise bg-henko-turquoise/10'
+            : 'border-henko-turquoise/25 bg-gray-50 hover:border-henko-turquoise/50'
         }`}
       >
         <input

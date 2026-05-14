@@ -60,13 +60,11 @@ export default function ContactoPage() {
   }
 
   return (
-    <div className="bg-henko-white pt-24 font-raleway">
+    <div className="bg-white pt-24 font-raleway">
       <PageHeader
         overline="Contacto"
         title="Hablemos"
         subtitle="Primera consulta gratuita de 45 minutos. Sin compromiso."
-        bgClass="bg-henko-coral"
-        dark={false}
       />
 
       <section className="px-6 md:px-12 py-20">
@@ -74,14 +72,14 @@ export default function ContactoPage() {
           {/* Form */}
           <div>
             {sent ? (
-              <div className="bg-henko-greenblue rounded-[2.5rem] px-12 py-16 text-center">
+              <div className="bg-white border border-henko-turquoise/15 rounded-[2.5rem] px-12 py-16 text-center shadow-sm">
                 <div className="w-16 h-16 rounded-full bg-henko-turquoise mx-auto mb-5 flex items-center justify-center">
                   <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                 </div>
-                <h2 className="font-roxborough text-3xl md:text-4xl text-gray-900 mb-3">¡Mensaje enviado!</h2>
-                <p className="text-[15px] leading-relaxed text-gray-700 opacity-80">
+                <h2 className="font-roxborough text-2xl md:text-3xl text-gray-900 mb-3">¡Mensaje enviado!</h2>
+                <p className="text-[15px] leading-relaxed text-gray-600">
                   Te respondo en menos de 24h para acordar tu consulta gratuita.
                 </p>
                 <button
@@ -94,7 +92,7 @@ export default function ContactoPage() {
               </div>
             ) : (
               <form onSubmit={handleSubmit} noValidate>
-                <h2 className="font-roxborough text-3xl md:text-5xl text-gray-900 mb-9 leading-tight">Escríbeme</h2>
+                <h2 className="font-roxborough text-2xl md:text-4xl text-gray-900 mb-9 leading-tight">Escríbeme</h2>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                   <div>
@@ -181,7 +179,7 @@ export default function ContactoPage() {
 
           {/* Info */}
           <div className="pt-2">
-            <h2 className="font-roxborough text-3xl md:text-5xl text-gray-900 mb-6 leading-tight">
+            <h2 className="font-roxborough text-2xl md:text-4xl text-gray-900 mb-6 leading-tight">
               Mallorca<br />
               <em className="italic text-henko-turquoise font-light">te respondo en 24h</em>
             </h2>
@@ -200,7 +198,7 @@ export default function ContactoPage() {
               </div>
             ))}
 
-            <div className="bg-henko-greenblue rounded-[2rem] px-8 py-8 mt-4">
+            <div className="bg-gray-50 border border-henko-turquoise/15 rounded-[2rem] px-8 py-8 mt-4">
               <p className="font-roxborough italic text-lg leading-snug text-gray-900">
                 &ldquo;El primer paso es siempre el más difícil.<br />Pero también el más importante.&rdquo;
               </p>

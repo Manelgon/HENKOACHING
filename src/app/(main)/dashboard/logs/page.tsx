@@ -68,7 +68,7 @@ export default async function LogsPage({ searchParams }: { searchParams: SearchP
   return (
     <div className="w-full">
       <div className="mb-10">
-        <h1 className="font-roxborough text-4xl text-gray-900 mb-2">Logs del sistema</h1>
+        <h1 className="font-roxborough text-3xl text-gray-900 mb-2">Logs del sistema</h1>
         <p className="font-raleway text-gray-500 font-light">
           Auditoría completa de todas las acciones realizadas en el proyecto.
         </p>

@@ -70,7 +70,7 @@ export default function DashboardShell({ sections, userEmail, userInitial, child
       >
         <div className="p-6 border-b border-gray-100">
           <Link href="/dashboard" className="flex items-center gap-3">
-            <Image src="/hk.png" alt="Henkoaching" width={40} height={40} />
+            <Image src="/hk.png" alt="Henkoaching" width={80} height={50} className="object-contain w-10 h-auto" />
             <span className="font-roxborough text-lg text-gray-900">Henkoaching</span>
           </Link>
         </div>
@@ -130,7 +130,7 @@ export default function DashboardShell({ sections, userEmail, userInitial, child
         {/* Top bar (mobile/tablet) */}
         <div className="sticky top-0 z-20 lg:hidden flex items-center gap-3 px-4 h-14 bg-white/90 backdrop-blur border-b border-gray-100">
           <Link href="/dashboard" className="flex items-center gap-2">
-            <Image src="/hk.png" alt="Henkoaching" width={28} height={28} />
+            <Image src="/hk.png" alt="Henkoaching" width={60} height={38} className="object-contain w-7 h-auto" />
             <span className="font-roxborough text-base text-gray-900">Henkoaching</span>
           </Link>
           <div className="flex-1" />

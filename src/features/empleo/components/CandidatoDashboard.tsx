@@ -13,11 +13,11 @@ import { useAction } from '@/shared/feedback/FeedbackContext'
 type Tab = 'solicitudes' | 'perfil' | 'cv'
 
 const ESTADO_META: Record<EstadoSolicitud, { label: string; badge: string }> = {
-  nuevo:      { label: 'Nueva',       badge: 'bg-henko-greenblue text-henko-turquoise' },
-  revisando:  { label: 'Revisando',   badge: 'bg-henko-yellow text-yellow-900' },
-  entrevista: { label: 'Entrevista',  badge: 'bg-henko-purple text-white' },
-  descartado: { label: 'Descartado',  badge: 'bg-black/5 text-gray-500' },
-  contratado: { label: 'Contratado',  badge: 'bg-henko-turquoise text-white' },
+  nuevo:      { label: 'Nueva',       badge: 'bg-henko-turquoise/15 text-henko-turquoise' },
+  revisando:  { label: 'Revisando',   badge: 'bg-amber-50 text-amber-700' },
+  entrevista: { label: 'Entrevista',  badge: 'bg-henko-turquoise text-white' },
+  descartado: { label: 'Descartado',  badge: 'bg-gray-100 text-gray-500' },
+  contratado: { label: 'Contratado',  badge: 'bg-emerald-50 text-emerald-700' },
 }
 
 const NAV: { id: Tab; label: string }[] = [
@@ -82,7 +82,7 @@ export default function CandidatoDashboard({ perfil, cv, solicitudes }: Props) {
   }
 
   return (
-    <div className="min-h-screen flex bg-[#f5f0eb] font-raleway">
+    <div className="min-h-screen flex bg-gray-50 font-raleway">
       {/* Backdrop */}
       {open && (
         <button
@@ -95,13 +95,13 @@ export default function CandidatoDashboard({ perfil, cv, solicitudes }: Props) {
 
       {/* Sidebar (drawer en móvil, sticky en desktop) */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 w-60 bg-henko-yellow flex flex-col py-8 transform transition-transform duration-300 md:translate-x-0 md:static md:inset-auto md:h-screen md:sticky md:top-0 ${
+        className={`fixed inset-y-0 left-0 z-40 w-60 bg-white border-r border-gray-100 flex flex-col py-8 transform transition-transform duration-300 md:translate-x-0 md:static md:inset-auto md:h-screen md:sticky md:top-0 ${
           open ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}
       >
         <div className="px-6 pb-7">
           <Link href="/">
-            <Image src="/henkologo.png" alt="Henkoaching" width={140} height={40} className="object-contain" />
+            <Image src="/henkologo.png" alt="Henkoaching" width={280} height={194} className="object-contain w-[140px] h-auto" />
           </Link>
         </div>
         <div className="px-3 flex-1 overflow-y-auto">
@@ -111,8 +111,8 @@ export default function CandidatoDashboard({ perfil, cv, solicitudes }: Props) {
               onClick={() => goTab(item.id)}
               className={`w-full text-left px-3.5 py-2.5 rounded-xl text-sm mb-0.5 flex items-center gap-2.5 transition-all ${
                 tab === item.id
-                  ? 'bg-black/10 text-gray-900 font-bold'
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? 'bg-henko-turquoise/10 text-henko-turquoise font-bold'
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-henko-turquoise'
               }`}
             >
               <span
@@ -122,7 +122,7 @@ export default function CandidatoDashboard({ perfil, cv, solicitudes }: Props) {
             </button>
           ))}
         </div>
-        <div className="px-3 pt-5 border-t border-black/10 mx-3">
+        <div className="px-3 pt-5 border-t border-gray-100 mx-3">
           <div className="px-3.5 py-2.5 flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-full bg-henko-turquoise flex items-center justify-center text-xs text-white font-bold">
               {iniciales}
@@ -152,9 +152,9 @@ export default function CandidatoDashboard({ perfil, cv, solicitudes }: Props) {
       {/* Columna principal */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top bar móvil */}
-        <div className="sticky top-0 z-20 md:hidden flex items-center gap-3 px-4 h-14 bg-white/90 backdrop-blur border-b border-black/5">
+        <div className="sticky top-0 z-20 md:hidden flex items-center gap-3 px-4 h-14 bg-white/90 backdrop-blur border-b border-gray-100">
           <Link href="/" className="flex items-center gap-2">
-            <Image src="/henkologo.png" alt="Henkoaching" width={120} height={32} className="object-contain" />
+            <Image src="/henkologo.png" alt="Henkoaching" width={240} height={167} className="object-contain w-[120px] h-auto" />
           </Link>
           <div className="flex-1" />
           <div className="w-8 h-8 rounded-full bg-henko-turquoise flex items-center justify-center text-xs text-white font-bold">
@@ -191,10 +191,10 @@ function TabSolicitudes({ solicitudes }: { solicitudes: SolicitudView[] }) {
   return (
     <div>
       <Eyebrow>Mi área</Eyebrow>
-      <h2 className="font-roxborough text-3xl md:text-4xl text-gray-900 mb-8">Mis solicitudes</h2>
+      <h2 className="font-roxborough text-2xl md:text-3xl text-gray-900 mb-8">Mis solicitudes</h2>
 
       {solicitudes.length === 0 ? (
-        <div className="bg-white rounded-2xl px-9 py-12 border border-black/5 max-w-xl text-center">
+        <div className="bg-white rounded-2xl px-9 py-12 border border-henko-turquoise/15 shadow-sm max-w-xl text-center">
           <p className="font-roxborough text-xl mb-2">Aún no has aplicado a ninguna oferta</p>
           <p className="text-sm text-gray-500 mb-6">Explora las ofertas disponibles y aplica con un click</p>
           <Link
@@ -211,7 +211,7 @@ function TabSolicitudes({ solicitudes }: { solicitudes: SolicitudView[] }) {
             return (
               <div
                 key={s.id}
-                className="bg-white rounded-2xl px-8 py-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4 border border-black/5"
+                className="bg-white rounded-2xl px-8 py-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4 border border-henko-turquoise/15 shadow-sm"
               >
                 <div>
                   <p className="font-roxborough text-lg mb-1">{s.ofertaTitulo}</p>
@@ -264,9 +264,9 @@ function TabPerfil({ perfil }: { perfil: PerfilView }) {
   return (
     <div>
       <Eyebrow>Mi perfil</Eyebrow>
-      <h2 className="font-roxborough text-3xl md:text-4xl text-gray-900 mb-8">Datos personales</h2>
+      <h2 className="font-roxborough text-2xl md:text-3xl text-gray-900 mb-8">Datos personales</h2>
 
-      <form action={onSubmit} className="bg-white rounded-2xl px-9 py-8 border border-black/5 max-w-xl space-y-4">
+      <form action={onSubmit} className="bg-white rounded-2xl px-9 py-8 border border-henko-turquoise/15 shadow-sm max-w-xl space-y-4">
         <Field label="NOMBRE" name="nombre" defaultValue={perfil.nombre} />
         <Field label="APELLIDOS" name="apellidos" defaultValue={perfil.apellidos} />
         <Field label="EMAIL" name="email" defaultValue={perfil.email} disabled />
@@ -293,7 +293,7 @@ function Field({ label, name, defaultValue, disabled }: { label: string; name: s
         name={name}
         defaultValue={defaultValue}
         disabled={disabled}
-        className="w-full text-sm text-gray-900 px-4 py-3 bg-henko-white rounded-xl outline-none focus:ring-2 focus:ring-henko-turquoise/30 disabled:opacity-60"
+        className="w-full text-sm text-gray-900 px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl outline-none focus:border-henko-turquoise focus:ring-2 focus:ring-henko-turquoise/20 disabled:opacity-60 transition-colors"
       />
     </div>
   )
@@ -334,10 +334,10 @@ function TabCV({ cv }: { cv: CvView }) {
   return (
     <div>
       <Eyebrow>Mi CV</Eyebrow>
-      <h2 className="font-roxborough text-3xl md:text-4xl text-gray-900 mb-8">Currículum</h2>
+      <h2 className="font-roxborough text-2xl md:text-3xl text-gray-900 mb-8">Currículum</h2>
 
-      <div className="bg-white rounded-2xl px-9 py-10 border border-black/5 max-w-md text-center">
-        <div className="w-16 h-16 rounded-full bg-henko-greenblue flex items-center justify-center mx-auto mb-4">
+      <div className="bg-white rounded-2xl px-9 py-10 border border-henko-turquoise/15 shadow-sm max-w-md text-center">
+        <div className="w-16 h-16 rounded-full bg-henko-turquoise/15 flex items-center justify-center mx-auto mb-4">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1f8f9b" strokeWidth="2">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
             <polyline points="14 2 14 8 20 8" />
