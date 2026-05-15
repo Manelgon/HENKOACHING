@@ -8,7 +8,7 @@ export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 
 export default function OpengraphImage() {
-  const logo = fs.readFileSync(path.join(process.cwd(), 'public/hk.png'))
+  const logo = fs.readFileSync(path.join(process.cwd(), 'public/henkologo.png'))
   const logoSrc = `data:image/png;base64,${logo.toString('base64')}`
 
   return new ImageResponse(
@@ -22,7 +22,7 @@ export default function OpengraphImage() {
           alignItems: 'center',
           justifyContent: 'center',
           background: '#f9f3ef',
-          padding: '80px',
+          padding: '60px',
           position: 'relative',
         }}
       >
@@ -40,23 +40,11 @@ export default function OpengraphImage() {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={logoSrc}
-          alt="HK"
-          width={420}
-          height={256}
-          style={{ objectFit: 'contain', marginBottom: '32px' }}
+          alt="Henkoaching"
+          width={620}
+          height={443}
+          style={{ objectFit: 'contain', marginBottom: '24px' }}
         />
-        <div
-          style={{
-            fontSize: 64,
-            fontWeight: 700,
-            color: '#1a1a1a',
-            letterSpacing: '-0.02em',
-            marginBottom: '16px',
-            display: 'flex',
-          }}
-        >
-          Henkoaching
-        </div>
         <div
           style={{
             fontSize: 30,
