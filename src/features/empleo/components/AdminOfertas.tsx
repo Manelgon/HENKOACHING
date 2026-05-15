@@ -12,10 +12,15 @@ type OfertaView = {
   id: string
   titulo: string
   empresa: string
+  empresa_oculta: boolean
   ubicacion: string
   salario_texto: string
+  reporta_a: string
+  contrato: string
   descripcion: string
+  funciones: string[]
   requisitos: string[]
+  competencias: string[]
   ofrecemos: string[]
   estado: 'borrador' | 'publicada' | 'pausada' | 'cerrada'
   fecha: string
@@ -30,13 +35,18 @@ type OfertaView = {
 type Draft = {
   titulo: string
   empresa: string
+  empresa_oculta: boolean
   ubicacion: string
   modalidad_id: number
   jornada_id: number
   sector_id: number
   salario_texto: string
+  reporta_a: string
+  contrato: string
   descripcion: string
+  funciones: string
   requisitos: string
+  competencias: string
   ofrecemos: string
   estado: 'borrador' | 'publicada' | 'pausada' | 'cerrada'
 }
@@ -72,13 +82,18 @@ export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas,
     setDraft({
       titulo: o.titulo,
       empresa: o.empresa,
+      empresa_oculta: o.empresa_oculta,
       ubicacion: o.ubicacion,
       modalidad_id: o.modalidad_id ?? modalidades[0]?.id ?? 0,
       jornada_id: o.jornada_id ?? jornadas[0]?.id ?? 0,
       sector_id: o.sector_id ?? sectores[0]?.id ?? 0,
       salario_texto: o.salario_texto,
+      reporta_a: o.reporta_a,
+      contrato: o.contrato,
       descripcion: o.descripcion,
+      funciones: o.funciones.join('\n'),
       requisitos: o.requisitos.join('\n'),
+      competencias: o.competencias.join('\n'),
       ofrecemos: o.ofrecemos.join('\n'),
       estado: o.estado,
     })
@@ -94,13 +109,18 @@ export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas,
     const input = {
       titulo: draft.titulo,
       empresa_nombre: draft.empresa,
+      empresa_oculta: draft.empresa_oculta,
       ubicacion: draft.ubicacion,
       modalidad_id: draft.modalidad_id,
       jornada_id: draft.jornada_id,
       sector_id: draft.sector_id,
       salario_texto: draft.salario_texto,
+      reporta_a: draft.reporta_a,
+      contrato: draft.contrato,
       descripcion: draft.descripcion,
+      funciones: draft.funciones.split('\n').map(s => s.trim()).filter(Boolean),
       requisitos: draft.requisitos.split('\n').map(s => s.trim()).filter(Boolean),
+      competencias: draft.competencias.split('\n').map(s => s.trim()).filter(Boolean),
       ofrecemos: draft.ofrecemos.split('\n').map(s => s.trim()).filter(Boolean),
       estado: draft.estado,
     }
@@ -214,13 +234,28 @@ export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas,
                   <p className="text-sm font-semibold">{o.titulo}</p>
                   <p className="text-[11px] text-gray-400">{o.fecha}</p>
                 </div>
-                <span className="text-sm text-gray-600">{o.empresa}</span>
+                <span className="text-sm text-gray-600 inline-flex items-center gap-1.5">
+                  {o.empresa}
+                  {o.empresa_oculta && (
+                    <span title="Empresa oculta en la web pública" className="text-[9px] font-bold tracking-wider text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+                      OCULTA
+                    </span>
+                  )}
+                </span>
                 <span className="text-xs text-gray-500">{o.modalidad_nombre}</span>
                 <span>{estadoBadge}</span>
                 <div className="flex gap-2.5 text-xs">
                   <button type="button" onClick={() => startEdit(o)} className="text-henko-turquoise font-semibold hover:underline">
                     Editar
                   </button>
+                  <a
+                    href={`/api/dashboard/ofertas/${o.id}/pdf`}
+                    target="_blank"
+                    rel="noopener"
+                    className="text-gray-500 font-semibold hover:text-henko-turquoise"
+                  >
+                    PDF
+                  </a>
                   <button type="button" onClick={() => toggleEstado(o)} className="text-gray-400 hover:text-gray-700">
                     {o.estado === 'publicada' ? 'Cerrar' : 'Activar'}
                   </button>
@@ -244,6 +279,14 @@ export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas,
                   <button type="button" onClick={() => startEdit(o)} className="text-henko-turquoise font-semibold hover:underline">
                     Editar
                   </button>
+                  <a
+                    href={`/api/dashboard/ofertas/${o.id}/pdf`}
+                    target="_blank"
+                    rel="noopener"
+                    className="text-gray-500 font-semibold hover:text-henko-turquoise"
+                  >
+                    PDF
+                  </a>
                   <button type="button" onClick={() => toggleEstado(o)} className="text-gray-500 hover:text-gray-900">
                     {o.estado === 'publicada' ? 'Cerrar' : 'Activar'}
                   </button>
@@ -306,13 +349,31 @@ export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas,
                 }}
                 empresas={empresas}
               />
-              <Field label="UBICACIÓN" value={draft.ubicacion} onChange={(v) => update('ubicacion', v)} placeholder="Palma, Mallorca" />
+
+              <label className="flex items-start gap-2.5 mb-4 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={draft.empresa_oculta}
+                  onChange={(e) => update('empresa_oculta', e.target.checked)}
+                  className="mt-0.5 w-4 h-4 accent-henko-turquoise"
+                />
+                <span className="text-xs text-gray-600 leading-snug">
+                  <span className="font-semibold text-gray-800">Ocultar nombre de la empresa</span> — en la web pública aparecerá como &quot;Empresa confidencial&quot;. Internamente sigue vinculada al cliente.
+                </span>
+              </label>
+
+              <Field label="UBICACIÓN" value={draft.ubicacion} onChange={(v) => update('ubicacion', v)} placeholder="Palma de Mallorca" />
               <Field label="SALARIO" value={draft.salario_texto} onChange={(v) => update('salario_texto', v)} placeholder="ej. 30.000 – 36.000 €/año" />
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
                 <SelectField label="MODALIDAD" value={draft.modalidad_id} onChange={(v) => update('modalidad_id', v)} options={modalidades} />
                 <SelectField label="JORNADA" value={draft.jornada_id} onChange={(v) => update('jornada_id', v)} options={jornadas} />
                 <SelectField label="SECTOR" value={draft.sector_id} onChange={(v) => update('sector_id', v)} options={sectores} />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                <Field label="REPORTA A" value={draft.reporta_a} onChange={(v) => update('reporta_a', v)} placeholder="ej. Responsable de Administración" />
+                <Field label="CONTRATO" value={draft.contrato} onChange={(v) => update('contrato', v)} placeholder="ej. Sustitución por maternidad" />
               </div>
 
               <div className="mb-4">
@@ -330,7 +391,7 @@ export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas,
               </div>
 
               <div className="mb-4">
-                <label className={labelClass}>DESCRIPCIÓN</label>
+                <label className={labelClass}>DESCRIPCIÓN DEL PUESTO</label>
                 <textarea
                   rows={5}
                   className={inputClass + ' resize-y leading-relaxed'}
@@ -341,22 +402,44 @@ export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas,
               </div>
 
               <div className="mb-4">
+                <label className={labelClass}>FUNCIONES PRINCIPALES (una por línea)</label>
+                <textarea
+                  rows={5}
+                  className={inputClass + ' resize-y leading-relaxed'}
+                  placeholder="Gestión de la contabilidad (asientos, conciliaciones, cierres)&#10;Presentación de impuestos y modelos oficiales&#10;..."
+                  value={draft.funciones}
+                  onChange={(e) => update('funciones', e.target.value)}
+                />
+              </div>
+
+              <div className="mb-4">
                 <label className={labelClass}>REQUISITOS (uno por línea)</label>
                 <textarea
                   rows={4}
                   className={inputClass + ' resize-y leading-relaxed'}
-                  placeholder="Experiencia mínima 3 años&#10;Inglés C1&#10;..."
+                  placeholder="FP Superior en Administración y Finanzas&#10;Manejo de A3&#10;..."
                   value={draft.requisitos}
                   onChange={(e) => update('requisitos', e.target.value)}
                 />
               </div>
 
-              <div className="mb-2">
-                <label className={labelClass}>QUÉ OFRECEMOS (uno por línea)</label>
+              <div className="mb-4">
+                <label className={labelClass}>COMPETENCIAS CLAVE (una por línea)</label>
                 <textarea
                   rows={4}
                   className={inputClass + ' resize-y leading-relaxed'}
-                  placeholder="Salario competitivo&#10;Horario flexible&#10;..."
+                  placeholder="Organización y atención al detalle&#10;Autonomía y sentido práctico&#10;..."
+                  value={draft.competencias}
+                  onChange={(e) => update('competencias', e.target.value)}
+                />
+              </div>
+
+              <div className="mb-2">
+                <label className={labelClass}>SE OFRECE (uno por línea)</label>
+                <textarea
+                  rows={4}
+                  className={inputClass + ' resize-y leading-relaxed'}
+                  placeholder="Contrato sustitución con proyección a indefinido&#10;Jornada completa en turno seguido&#10;..."
                   value={draft.ofrecemos}
                   onChange={(e) => update('ofrecemos', e.target.value)}
                 />
@@ -392,13 +475,18 @@ function emptyDraft(sectores: Catalogo[], modalidades: Catalogo[], jornadas: Cat
   return {
     titulo: '',
     empresa: '',
+    empresa_oculta: false,
     ubicacion: '',
     modalidad_id: modalidades[0]?.id ?? 0,
     jornada_id: jornadas[0]?.id ?? 0,
     sector_id: sectores[0]?.id ?? 0,
     salario_texto: '',
+    reporta_a: '',
+    contrato: '',
     descripcion: '',
+    funciones: '',
     requisitos: '',
+    competencias: '',
     ofrecemos: '',
     estado: 'publicada',
   }
