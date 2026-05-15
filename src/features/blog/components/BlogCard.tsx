@@ -12,21 +12,25 @@ export type BlogCardData = {
   categoria: { slug: string; nombre: string } | null
 }
 
-export default function BlogCard({ post, featured = false }: { post: BlogCardData; featured?: boolean }) {
+export default function BlogCard({ post, compact = false }: { post: BlogCardData; compact?: boolean }) {
   const fecha = post.fecha_publicacion
     ? new Date(post.fecha_publicacion).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })
     : ''
 
   return (
-    <article className={`group ${featured ? 'md:col-span-2' : ''}`}>
+    <article className="group">
       <Link href={`/blog/${post.slug}`} className="block">
-        <div className={`relative w-full overflow-hidden rounded-[2rem] bg-gray-100 mb-5 ${featured ? 'aspect-[16/8]' : 'aspect-[16/10]'}`}>
+        <div
+          className={`relative w-full overflow-hidden bg-gray-100 ${
+            compact ? 'rounded-[1.5rem] mb-4 aspect-[16/9]' : 'rounded-[2rem] mb-5 aspect-[16/10]'
+          }`}
+        >
           {post.imagen_portada ? (
             <Image
               src={post.imagen_portada}
               alt={post.imagen_portada_alt ?? post.titulo}
               fill
-              sizes={featured ? '(min-width: 768px) 66vw, 100vw' : '(min-width: 768px) 33vw, 100vw'}
+              sizes="(min-width: 768px) 33vw, 100vw"
               className="object-cover transition-transform duration-500 group-hover:scale-105"
             />
           ) : (
@@ -44,12 +48,20 @@ export default function BlogCard({ post, featured = false }: { post: BlogCardDat
           {fecha && <span className="text-xs text-gray-400 font-raleway">{fecha}</span>}
         </div>
 
-        <h2 className={`font-roxborough text-gray-900 group-hover:text-henko-turquoise transition-colors leading-tight mb-3 ${featured ? 'text-3xl md:text-4xl' : 'text-xl md:text-2xl'}`}>
+        <h2
+          className={`font-roxborough text-gray-900 group-hover:text-henko-turquoise transition-colors leading-tight ${
+            compact ? 'mb-2 text-lg md:text-xl' : 'mb-3 text-xl md:text-2xl'
+          }`}
+        >
           {post.titulo}
         </h2>
 
         {post.extracto && (
-          <p className="font-raleway text-gray-600 leading-relaxed line-clamp-3 mb-4">
+          <p
+            className={`font-raleway text-gray-600 leading-relaxed ${
+              compact ? 'text-sm line-clamp-2 mb-3' : 'line-clamp-3 mb-4'
+            }`}
+          >
             {post.extracto}
           </p>
         )}

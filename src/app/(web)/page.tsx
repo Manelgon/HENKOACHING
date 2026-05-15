@@ -6,6 +6,8 @@ import {
   PospuestosSVG,
   ReactivoSVG,
 } from '@/components/SymptomIllustrations'
+import { createClient } from '@/lib/supabase/server'
+import BlogCard, { type BlogCardData } from '@/features/blog/components/BlogCard'
 
 const SYMPTOMS = [
   {
@@ -68,7 +70,19 @@ const ENFOQUE_PILLS = [
   'Desde las raíces',
 ]
 
-export default function Home() {
+export const revalidate = 300
+
+export default async function Home() {
+  const supabase = await createClient()
+  const { data: latestPostsData } = await supabase
+    .from('blog_posts')
+    .select('slug, titulo, extracto, imagen_portada, imagen_portada_alt, fecha_publicacion, tiempo_lectura, categoria:blog_categorias(slug, nombre)')
+    .eq('estado', 'publicado')
+    .is('deleted_at', null)
+    .order('fecha_publicacion', { ascending: false, nullsFirst: false })
+    .limit(3)
+  const latestPosts = (latestPostsData ?? []) as unknown as BlogCardData[]
+
   return (
     <main className="overflow-hidden bg-white">
 
@@ -213,6 +227,18 @@ export default function Home() {
         </div>
       </section>
 
+      {/* QUOTE */}
+      <section className="relative py-28 md:py-32 px-6 md:px-12 bg-white border-y border-gray-100">
+        <div data-animate className="max-w-3xl mx-auto text-center relative z-10">
+          <p className="font-roxborough italic text-2xl md:text-4xl text-gray-900 leading-[1.35] mb-7">
+            &ldquo;Cuando la mariposa toma alas,<br />
+            no queda nada de la oruga&rdquo;
+          </p>
+          <div className="w-12 h-0.5 bg-henko-turquoise mx-auto mb-5" />
+          <p className="text-xs text-gray-500 tracking-[0.14em]">JENNIFER CERVERA · HENKOACHING</p>
+        </div>
+      </section>
+
       {/* PARA QUIÉN */}
       <section className="bg-gray-50 py-24 md:py-28 px-6 md:px-12">
         <div className="max-w-7xl mx-auto">
@@ -285,18 +311,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* QUOTE */}
-      <section className="relative py-28 md:py-32 px-6 md:px-12 bg-gray-50 border-y border-gray-100">
-        <div data-animate className="max-w-3xl mx-auto text-center relative z-10">
-          <p className="font-roxborough italic text-2xl md:text-4xl text-gray-900 leading-[1.35] mb-7">
-            &ldquo;Cuando la mariposa toma alas,<br />
-            no queda nada de la oruga&rdquo;
-          </p>
-          <div className="w-12 h-0.5 bg-henko-turquoise mx-auto mb-5" />
-          <p className="text-xs text-gray-500 tracking-[0.14em]">JENNIFER CERVERA · HENKOACHING</p>
-        </div>
-      </section>
-
       {/* CTA FINAL */}
       <section className="bg-white py-28 md:py-32 px-6 md:px-12 text-center">
         <div className="relative z-10 max-w-3xl mx-auto">
@@ -323,6 +337,35 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* BLOG */}
+      {latestPosts.length > 0 && (
+        <section className="bg-gray-50 py-24 md:py-28 px-6 md:px-12 border-t border-gray-100">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex flex-col md:flex-row md:justify-between md:items-end mb-14 gap-6">
+              <div>
+                <p className="font-raleway font-bold text-henko-turquoise tracking-[0.18em] uppercase text-[11px] mb-4">Blog</p>
+                <h2 data-animate className="font-roxborough text-3xl md:text-4xl text-gray-900 leading-tight">
+                  Últimas<br />
+                  <em className="italic text-henko-turquoise font-light">reflexiones</em>
+                </h2>
+              </div>
+              <Link
+                href="/blog"
+                className="inline-flex items-center gap-2 bg-transparent border-2 border-henko-turquoise text-henko-turquoise px-7 py-3 rounded-full text-sm font-semibold tracking-wide hover:bg-henko-turquoise hover:text-white transition-all duration-200 self-start md:self-auto"
+              >
+                Ver todas →
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12">
+              {latestPosts.map((p) => (
+                <BlogCard key={p.slug} post={p} compact />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
     </main>
   )

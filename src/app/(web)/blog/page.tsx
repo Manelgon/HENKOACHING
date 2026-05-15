@@ -36,7 +36,6 @@ export default async function BlogIndexPage() {
   ])
 
   const items = (posts ?? []) as unknown as BlogCardData[]
-  const [featured, ...resto] = items
 
   return (
     <main className="min-h-screen bg-white pt-24">
@@ -70,21 +69,11 @@ export default async function BlogIndexPage() {
             <p className="font-raleway text-gray-400">Vuelve pronto.</p>
           </div>
         ) : (
-          <>
-            {featured && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-16 pb-16 border-b border-gray-100">
-                <BlogCard post={featured} featured />
-              </div>
-            )}
-
-            {resto.length > 0 && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12">
-                {resto.map((p) => (
-                  <BlogCard key={p.slug} post={p} />
-                ))}
-              </div>
-            )}
-          </>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12">
+            {items.map((p) => (
+              <BlogCard key={p.slug} post={p} />
+            ))}
+          </div>
         )}
       </section>
     </main>
