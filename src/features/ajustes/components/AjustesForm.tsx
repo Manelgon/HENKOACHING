@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAction } from '@/shared/feedback/FeedbackContext'
+import { useAction, useConfirm } from '@/shared/feedback/FeedbackContext'
 import { guardarAjustes, subirImagenEmisor, quitarImagenEmisor, type AjustesInput } from '@/actions/ajustes'
 import type { CompanySettings } from '@/lib/company-settings'
 
@@ -16,6 +16,7 @@ type Props = {
 export default function AjustesForm({ settings, logoUrl, firmaUrl, headerUrl }: Props) {
   const router = useRouter()
   const runAction = useAction()
+  const confirm = useConfirm()
 
   const [datos, setDatos] = useState<AjustesInput>({
     emisor_nombre: settings.emisor_nombre,
@@ -288,6 +289,7 @@ function ImagenUploader({
   onChange: () => void
 }) {
   const runAction = useAction()
+  const confirm = useConfirm()
   const inputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
 
@@ -307,7 +309,13 @@ function ImagenUploader({
   }
 
   async function onRemove() {
-    if (!confirm(`¿Quitar ${label.toLowerCase()}?`)) return
+    const ok = await confirm({
+      title: `Quitar ${label.toLowerCase()}`,
+      description: `¿Quitar ${label.toLowerCase()} actual?`,
+      confirmLabel: 'Quitar',
+      variant: 'danger',
+    })
+    if (!ok) return
     const r = await runAction(`Quitando ${label.toLowerCase()}`, () => quitarImagenEmisor(tipo), {
       successMessage: `${label} eliminado`,
     })

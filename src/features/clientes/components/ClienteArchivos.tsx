@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAction } from '@/shared/feedback/FeedbackContext'
+import { useAction, useConfirm } from '@/shared/feedback/FeedbackContext'
 import { eliminarArchivoCliente, getArchivoSignedUrl, subirArchivoCliente } from '@/actions/clientes'
 
 type Archivo = {
@@ -30,6 +30,7 @@ export default function ClienteArchivos({
 }) {
   const router = useRouter()
   const runAction = useAction()
+  const confirm = useConfirm()
   const inputRef = useRef<HTMLInputElement>(null)
   const [tipo, setTipo] = useState('contrato')
 
@@ -64,7 +65,13 @@ export default function ClienteArchivos({
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('¿Eliminar este archivo?')) return
+    const ok = await confirm({
+      title: 'Eliminar archivo',
+      description: '¿Eliminar este archivo? Esta acción no se puede deshacer.',
+      confirmLabel: 'Eliminar',
+      variant: 'danger',
+    })
+    if (!ok) return
     const result = await runAction(
       'Eliminando archivo',
       () => eliminarArchivoCliente(id),

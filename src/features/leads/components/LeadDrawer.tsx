@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { useAction } from '@/shared/feedback/FeedbackContext'
+import { useAction, useConfirm } from '@/shared/feedback/FeedbackContext'
 import { crearNotaLead, eliminarNotaLead } from '@/actions/leads'
 import type { EstadoLead } from '@/lib/supabase/database.types'
 import { ESTADOS_LEAD, getEstadoMeta, getOrigenLabel } from './estados'
@@ -36,6 +36,7 @@ export default function LeadDrawer({
 }) {
   const router = useRouter()
   const runAction = useAction()
+  const confirm = useConfirm()
   const [notas, setNotas] = useState<Nota[]>([])
   const [nuevaNota, setNuevaNota] = useState('')
   const [loadingNotas, setLoadingNotas] = useState(true)
@@ -97,7 +98,13 @@ export default function LeadDrawer({
   }
 
   async function handleDelNota(notaId: string) {
-    if (!confirm('¿Eliminar esta nota?')) return
+    const ok = await confirm({
+      title: 'Eliminar nota',
+      description: '¿Eliminar esta nota? Esta acción no se puede deshacer.',
+      confirmLabel: 'Eliminar',
+      variant: 'danger',
+    })
+    if (!ok) return
     const result = await runAction(
       'Eliminando nota',
       () => eliminarNotaLead(notaId),

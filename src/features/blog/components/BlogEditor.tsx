@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { useAction } from '@/shared/feedback/FeedbackContext'
+import { useAction, useConfirm } from '@/shared/feedback/FeedbackContext'
 import { cambiarEstadoArticulo, eliminarArticulo, guardarArticulo } from '@/actions/blog'
 import { generarSlug } from '../lib/slug'
 import { calcularTiempoLectura } from '../lib/reading-time'
@@ -36,6 +36,7 @@ type FormState = {
 export default function BlogEditor({ post, categorias }: Props) {
   const router = useRouter()
   const runAction = useAction()
+  const confirm = useConfirm()
   const [slugManual, setSlugManual] = useState<boolean>(Boolean(post.slug && post.slug !== 'sin-titulo'))
 
   const [form, setForm] = useState<FormState>({
@@ -129,7 +130,13 @@ export default function BlogEditor({ post, categorias }: Props) {
   }
 
   async function eliminar() {
-    if (!confirm('¿Eliminar este artículo?')) return
+    const ok = await confirm({
+      title: 'Eliminar artículo',
+      description: '¿Seguro que quieres eliminar este artículo? Esta acción no se puede deshacer.',
+      confirmLabel: 'Eliminar',
+      variant: 'danger',
+    })
+    if (!ok) return
     const result = await runAction(
       'Eliminando',
       () => eliminarArticulo(post.id),

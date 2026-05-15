@@ -3,7 +3,7 @@
 import { forwardRef, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { useAction } from '@/shared/feedback/FeedbackContext'
+import { useAction, useConfirm } from '@/shared/feedback/FeedbackContext'
 import { TablePagination, usePagination } from '@/components/TablePagination'
 import { cambiarEstadoArticulo, eliminarArticulo } from '@/actions/blog'
 import type { EstadoPost, BlogPostListItem } from '../types'
@@ -24,6 +24,7 @@ type Props = {
 export default function BlogTable({ posts, categorias }: Props) {
   const router = useRouter()
   const runAction = useAction()
+  const confirm = useConfirm()
   const [tab, setTab] = useState<Tab>('borrador')
   const [filtros, setFiltros] = useState<Filtros>({ categoria: 'todas', busqueda: '' })
 
@@ -72,7 +73,13 @@ export default function BlogTable({ posts, categorias }: Props) {
   }
 
   async function eliminar(id: string) {
-    if (!confirm('¿Eliminar este artículo? Quedará archivado y oculto de la web.')) return
+    const ok = await confirm({
+      title: 'Eliminar artículo',
+      description: '¿Eliminar este artículo? Quedará archivado y oculto de la web.',
+      confirmLabel: 'Eliminar',
+      variant: 'danger',
+    })
+    if (!ok) return
     const result = await runAction(
       'Eliminando artículo',
       () => eliminarArticulo(id),

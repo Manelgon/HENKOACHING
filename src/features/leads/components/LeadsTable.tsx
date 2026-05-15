@@ -2,7 +2,7 @@
 
 import { forwardRef, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAction } from '@/shared/feedback/FeedbackContext'
+import { useAction, useConfirm } from '@/shared/feedback/FeedbackContext'
 import { TablePagination, usePagination } from '@/components/TablePagination'
 import { abrirLead, archivarLead, cambiarEstadoLead, desarchivarLead, eliminarLead } from '@/actions/leads'
 import type { EstadoLead } from '@/lib/supabase/database.types'
@@ -37,6 +37,7 @@ type Tab = EstadoLead | 'archivados'
 export default function LeadsTable({ leads }: { leads: LeadRow[] }) {
   const router = useRouter()
   const runAction = useAction()
+  const confirm = useConfirm()
   const [tab, setTab] = useState<Tab>('nuevo')
   const [filtros, setFiltros] = useState<Filtros>({ origen: 'todos', busqueda: '' })
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -175,7 +176,12 @@ export default function LeadsTable({ leads }: { leads: LeadRow[] }) {
   }
 
   async function archivar(id: string) {
-    if (!confirm('¿Archivar este lead?')) return
+    const ok = await confirm({
+      title: 'Archivar lead',
+      description: '¿Archivar este lead? Podrás recuperarlo más tarde.',
+      confirmLabel: 'Archivar',
+    })
+    if (!ok) return
     const result = await runAction(
       'Archivando lead',
       () => archivarLead(id),
@@ -197,7 +203,13 @@ export default function LeadsTable({ leads }: { leads: LeadRow[] }) {
   }
 
   async function eliminarDef(id: string) {
-    if (!confirm('¿Eliminar este lead definitivamente? Esta acción no se puede deshacer.')) return
+    const ok = await confirm({
+      title: 'Eliminar lead',
+      description: '¿Eliminar este lead definitivamente? Esta acción no se puede deshacer.',
+      confirmLabel: 'Eliminar',
+      variant: 'danger',
+    })
+    if (!ok) return
     const result = await runAction(
       'Eliminando lead',
       () => eliminarLead(id),

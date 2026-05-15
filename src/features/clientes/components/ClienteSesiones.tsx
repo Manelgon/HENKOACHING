@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAction } from '@/shared/feedback/FeedbackContext'
+import { useAction, useConfirm } from '@/shared/feedback/FeedbackContext'
 import { crearSesion, actualizarSesion, eliminarSesion } from '@/actions/clientes'
 
 type Sesion = {
@@ -25,6 +25,7 @@ export default function ClienteSesiones({
 }) {
   const router = useRouter()
   const runAction = useAction()
+  const confirm = useConfirm()
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState({ fecha: '', tipo: 'sesion', duracion: '60', notas: '' })
 
@@ -58,7 +59,13 @@ export default function ClienteSesiones({
   }
 
   async function del(id: string) {
-    if (!confirm('¿Eliminar esta sesión?')) return
+    const ok = await confirm({
+      title: 'Eliminar sesión',
+      description: '¿Eliminar esta sesión? Esta acción no se puede deshacer.',
+      confirmLabel: 'Eliminar',
+      variant: 'danger',
+    })
+    if (!ok) return
     const result = await runAction(
       'Eliminando sesión',
       () => eliminarSesion(id),

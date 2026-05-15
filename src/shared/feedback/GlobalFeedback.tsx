@@ -1,14 +1,91 @@
 'use client'
 
+import { useEffect, useRef } from 'react'
 import { useFeedback } from './FeedbackContext'
 
 export default function GlobalFeedback() {
-  const { loading, toasts, dismissToast } = useFeedback()
+  const { loading, toasts, confirmRequest, dismissToast, resolveConfirm } = useFeedback()
   const isLoading = loading.length > 0
   const currentDescription = loading[loading.length - 1]?.description
+  const confirmButtonRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    if (!confirmRequest) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') resolveConfirm(confirmRequest.id, false)
+      if (e.key === 'Enter') resolveConfirm(confirmRequest.id, true)
+    }
+    document.addEventListener('keydown', onKey)
+    confirmButtonRef.current?.focus()
+    return () => document.removeEventListener('keydown', onKey)
+  }, [confirmRequest, resolveConfirm])
 
   return (
     <>
+      {/* Confirm dialog */}
+      {confirmRequest && (
+        <div
+          className="fixed inset-0 z-[120] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-toast-in"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="confirm-title"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) resolveConfirm(confirmRequest.id, false)
+          }}
+        >
+          <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full border border-black/5 overflow-hidden">
+            <div className="px-7 pt-7 pb-5">
+              <div className="flex items-start gap-4">
+                <span className={`shrink-0 inline-flex items-center justify-center w-11 h-11 rounded-2xl ${
+                  confirmRequest.variant === 'danger'
+                    ? 'bg-red-50 text-red-600'
+                    : 'bg-henko-turquoise/10 text-henko-turquoise'
+                }`} aria-hidden>
+                  {confirmRequest.variant === 'danger' ? (
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4a2 2 0 00-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z" />
+                    </svg>
+                  ) : (
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  )}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <h2 id="confirm-title" className="font-raleway text-lg font-semibold text-gray-900">
+                    {confirmRequest.title ?? '¿Confirmar acción?'}
+                  </h2>
+                  <p className="font-raleway text-sm text-gray-600 mt-1.5 leading-relaxed">
+                    {confirmRequest.description}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="px-7 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-end gap-2.5">
+              <button
+                type="button"
+                onClick={() => resolveConfirm(confirmRequest.id, false)}
+                className="px-5 py-2.5 rounded-xl font-raleway text-sm font-semibold text-gray-700 hover:bg-white border border-transparent hover:border-gray-200 transition-colors"
+              >
+                {confirmRequest.cancelLabel ?? 'Cancelar'}
+              </button>
+              <button
+                ref={confirmButtonRef}
+                type="button"
+                onClick={() => resolveConfirm(confirmRequest.id, true)}
+                className={`px-5 py-2.5 rounded-xl font-raleway text-sm font-semibold text-white transition-colors ${
+                  confirmRequest.variant === 'danger'
+                    ? 'bg-red-600 hover:bg-red-700'
+                    : 'bg-henko-turquoise hover:bg-henko-turquoise/90'
+                }`}
+              >
+                {confirmRequest.confirmLabel ?? 'Confirmar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Loading overlay */}
       {isLoading && (
         <div

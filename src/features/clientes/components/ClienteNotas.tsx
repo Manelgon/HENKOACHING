@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAction } from '@/shared/feedback/FeedbackContext'
+import { useAction, useConfirm } from '@/shared/feedback/FeedbackContext'
 import { crearNotaCliente, eliminarNotaCliente } from '@/actions/clientes'
 
 type Nota = {
@@ -21,6 +21,7 @@ export default function ClienteNotas({
 }) {
   const router = useRouter()
   const runAction = useAction()
+  const confirm = useConfirm()
   const [nueva, setNueva] = useState('')
 
   async function add(e: React.FormEvent) {
@@ -38,7 +39,13 @@ export default function ClienteNotas({
   }
 
   async function del(notaId: string) {
-    if (!confirm('¿Eliminar esta nota?')) return
+    const ok = await confirm({
+      title: 'Eliminar nota',
+      description: '¿Eliminar esta nota? Esta acción no se puede deshacer.',
+      confirmLabel: 'Eliminar',
+      variant: 'danger',
+    })
+    if (!ok) return
     const result = await runAction(
       'Eliminando nota',
       () => eliminarNotaCliente(notaId),

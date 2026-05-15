@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { useAction } from '@/shared/feedback/FeedbackContext'
+import { useAction, useConfirm } from '@/shared/feedback/FeedbackContext'
 import { cambiarEstadoCliente, editarCliente, eliminarCliente } from '@/actions/clientes'
 import type {
   EstadoCliente,
@@ -45,6 +45,7 @@ export type Cliente = {
 export default function ClienteFicha({ cliente }: { cliente: Cliente }) {
   const router = useRouter()
   const runAction = useAction()
+  const confirm = useConfirm()
   const [editing, setEditing] = useState(false)
   const [form, setForm] = useState({
     nombre: cliente.nombre,
@@ -103,7 +104,13 @@ export default function ClienteFicha({ cliente }: { cliente: Cliente }) {
   }
 
   async function handleEliminar() {
-    if (!confirm('¿Eliminar este cliente? Esta acción no se puede deshacer.')) return
+    const ok = await confirm({
+      title: 'Eliminar cliente',
+      description: '¿Eliminar este cliente? Esta acción no se puede deshacer.',
+      confirmLabel: 'Eliminar',
+      variant: 'danger',
+    })
+    if (!ok) return
     const result = await runAction(
       'Eliminando cliente',
       () => eliminarCliente(cliente.id),

@@ -13,11 +13,27 @@ type LoadingItem = {
   description: string
 }
 
+export type ConfirmOptions = {
+  title?: string
+  description: string
+  confirmLabel?: string
+  cancelLabel?: string
+  variant?: 'default' | 'danger'
+}
+
+export type ConfirmRequest = ConfirmOptions & {
+  id: number
+  resolve: (value: boolean) => void
+}
+
 type FeedbackContextValue = {
   loading: LoadingItem[]
   toasts: Toast[]
+  confirmRequest: ConfirmRequest | null
   pushToast: (type: Toast['type'], description: string) => void
   dismissToast: (id: number) => void
+  confirm: (options: ConfirmOptions) => Promise<boolean>
+  resolveConfirm: (id: number, value: boolean) => void
   runAction: <T>(
     description: string,
     fn: () => Promise<T>,
@@ -34,8 +50,24 @@ const FeedbackContext = createContext<FeedbackContextValue | null>(null)
 export function FeedbackProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState<LoadingItem[]>([])
   const [toasts, setToasts] = useState<Toast[]>([])
+  const [confirmRequest, setConfirmRequest] = useState<ConfirmRequest | null>(null)
   const idRef = useRef(0)
   const nextId = () => ++idRef.current
+
+  const confirm = useCallback((options: ConfirmOptions) => {
+    return new Promise<boolean>((resolve) => {
+      const id = nextId()
+      setConfirmRequest({ id, resolve, ...options })
+    })
+  }, [])
+
+  const resolveConfirm = useCallback((id: number, value: boolean) => {
+    setConfirmRequest((current) => {
+      if (!current || current.id !== id) return current
+      current.resolve(value)
+      return null
+    })
+  }, [])
 
   const pushToast = useCallback((type: Toast['type'], description: string) => {
     const id = nextId()
@@ -87,8 +119,8 @@ export function FeedbackProvider({ children }: { children: React.ReactNode }) {
   )
 
   const value = useMemo<FeedbackContextValue>(
-    () => ({ loading, toasts, pushToast, dismissToast, runAction }),
-    [loading, toasts, pushToast, dismissToast, runAction],
+    () => ({ loading, toasts, confirmRequest, pushToast, dismissToast, confirm, resolveConfirm, runAction }),
+    [loading, toasts, confirmRequest, pushToast, dismissToast, confirm, resolveConfirm, runAction],
   )
 
   return <FeedbackContext.Provider value={value}>{children}</FeedbackContext.Provider>
@@ -108,6 +140,11 @@ export function useAction() {
 export function useToast() {
   const { pushToast } = useFeedback()
   return pushToast
+}
+
+export function useConfirm() {
+  const { confirm } = useFeedback()
+  return confirm
 }
 
 function defaultSuccessFromDescription(description: string): string {

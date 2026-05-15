@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useConfirm } from '@/shared/feedback/FeedbackContext'
 import { getEstadoMeta, FORMAS_PAGO, type EstadoFactura } from './estados'
 import type { FacturaRow } from '@/app/(main)/dashboard/facturas/page'
 
@@ -24,6 +25,7 @@ export default function FacturaDrawer({ factura, facturaRectificadaNumero, onClo
   const tipoColor = esAbono
     ? 'bg-red-50 text-red-600 border-red-200'
     : 'bg-orange-50 text-henko-orange border-orange-200'
+  const confirm = useConfirm()
   const [confirmDevolver, setConfirmDevolver] = useState(false)
   const [motivo, setMotivo] = useState('')
 
@@ -43,8 +45,14 @@ export default function FacturaDrawer({ factura, facturaRectificadaNumero, onClo
     onCambiarEstado('devuelta', { motivo_devolucion: motivo.trim() || null })
     onClose()
   }
-  function anular() {
-    if (!confirm('¿Anular esta factura? Quedará registrada pero marcada como anulada.')) return
+  async function anular() {
+    const ok = await confirm({
+      title: 'Anular factura',
+      description: '¿Anular esta factura? Quedará registrada pero marcada como anulada.',
+      confirmLabel: 'Anular',
+      variant: 'danger',
+    })
+    if (!ok) return
     onCambiarEstado('anulada')
     onClose()
   }

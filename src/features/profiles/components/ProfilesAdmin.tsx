@@ -12,7 +12,7 @@ import {
   eliminarProfile,
 } from '@/actions/profiles'
 import type { UserRole } from '@/lib/supabase/database.types'
-import { useAction } from '@/shared/feedback/FeedbackContext'
+import { useAction, useConfirm } from '@/shared/feedback/FeedbackContext'
 import { TablePagination, usePagination } from '@/components/TablePagination'
 
 type ProfileRow = {
@@ -46,6 +46,7 @@ function fmtDate(d: string | null) {
 export default function ProfilesAdmin({ profiles }: { profiles: ProfileRow[] }) {
   const router = useRouter()
   const runAction = useAction()
+  const confirm = useConfirm()
   const [search, setSearch] = useState('')
   const [filterRole, setFilterRole] = useState<UserRole | 'todos'>('todos')
   const [filterEstado, setFilterEstado] = useState<'todos' | 'activos' | 'desactivados' | 'sin_verificar'>('todos')
@@ -251,8 +252,14 @@ export default function ProfilesAdmin({ profiles }: { profiles: ProfileRow[] }) 
           onResetPassword={() => handle('Enviando email de recuperación', 'Email enviado', () => resetPasswordProfile(editing.id))}
           onDesactivar={() => handle('Desactivando cuenta', 'Cuenta desactivada', () => desactivarProfile(editing.id))}
           onReactivar={() => handle('Reactivando cuenta', 'Cuenta reactivada', () => reactivarProfile(editing.id))}
-          onEliminar={() => {
-            if (!confirm(`¿Eliminar permanentemente a ${editing.email}? Esta acción no se puede deshacer.`)) return
+          onEliminar={async () => {
+            const ok = await confirm({
+              title: 'Eliminar usuario',
+              description: `¿Eliminar permanentemente a ${editing.email}? Esta acción no se puede deshacer.`,
+              confirmLabel: 'Eliminar',
+              variant: 'danger',
+            })
+            if (!ok) return
             handle('Eliminando usuario', 'Usuario eliminado', () => eliminarProfile(editing.id))
             setEditing(null)
           }}

@@ -3,7 +3,7 @@
 import { forwardRef, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useAction } from '@/shared/feedback/FeedbackContext'
+import { useAction, useConfirm } from '@/shared/feedback/FeedbackContext'
 import { TablePagination, usePagination } from '@/components/TablePagination'
 import { cambiarEstadoFactura, eliminarFactura, getFacturaPdfUrl } from '@/actions/facturas'
 import { ESTADOS_FACTURA, getEstadoMeta, isVencida, type EstadoFactura } from './estados'
@@ -28,6 +28,7 @@ const TABS: Array<{ value: Tab; label: string; dot?: string }> = [
 export default function FacturasView({ facturas, clientes, serieDefault, emisorListo }: Props) {
   const router = useRouter()
   const runAction = useAction()
+  const confirm = useConfirm()
 
   const [tab, setTab] = useState<Tab>('todas')
   const [busqueda, setBusqueda] = useState('')
@@ -123,7 +124,13 @@ export default function FacturasView({ facturas, clientes, serieDefault, emisorL
   }
 
   async function eliminar(id: string, numero: string) {
-    if (!confirm(`¿Eliminar definitivamente la factura ${numero}? Solo se permite si está anulada.`)) return
+    const ok = await confirm({
+      title: 'Eliminar factura',
+      description: `¿Eliminar definitivamente la factura ${numero}? Solo se permite si está anulada.`,
+      confirmLabel: 'Eliminar',
+      variant: 'danger',
+    })
+    if (!ok) return
     const r = await runAction('Eliminando factura', () => eliminarFactura(id), { successMessage: 'Factura eliminada' })
     if (r.ok) {
       setDrawerId(null)

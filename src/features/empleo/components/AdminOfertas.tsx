@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { crearOferta, actualizarOferta, cambiarEstadoOferta, eliminarOferta } from '@/actions/ofertas'
-import { useAction } from '@/shared/feedback/FeedbackContext'
+import { useAction, useConfirm } from '@/shared/feedback/FeedbackContext'
 import { TablePagination, usePagination } from '@/components/TablePagination'
 
 type Catalogo = { id: number; nombre: string; slug: string }
@@ -54,6 +54,7 @@ const inputClass = 'w-full px-4 py-2.5 rounded-xl text-sm border-[1.5px] border-
 export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas }: Props) {
   const router = useRouter()
   const runAction = useAction()
+  const confirm = useConfirm()
   const [editando, setEditando] = useState<string | null>(null)
   const [nueva, setNueva] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -134,7 +135,13 @@ export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas 
   }
 
   const borrar = async (o: OfertaView) => {
-    if (!confirm(`¿Eliminar oferta "${o.titulo}"?`)) return
+    const ok = await confirm({
+      title: 'Eliminar oferta',
+      description: `¿Eliminar oferta "${o.titulo}"? Esta acción no se puede deshacer.`,
+      confirmLabel: 'Eliminar',
+      variant: 'danger',
+    })
+    if (!ok) return
     const result = await runAction(
       `Eliminando "${o.titulo}"`,
       () => eliminarOferta(o.id),
