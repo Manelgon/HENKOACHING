@@ -2,16 +2,18 @@
 
 import { useState } from 'react'
 import type { FormEvent } from 'react'
+import Link from 'next/link'
 import PageHeader from '@/components/PageHeader'
 import { FormError } from '@/components/FormError'
 import { crearLead } from '@/actions/leads'
 import { useAction } from '@/shared/feedback/FeedbackContext'
 
-type Errors = { nombre?: string; email?: string; mensaje?: string }
+type Errors = { nombre?: string; email?: string; mensaje?: string; privacidad?: string }
 
 export default function ContactoPage() {
   const runAction = useAction()
   const [form, setForm] = useState({ nombre: '', empresa: '', email: '', servicio: '', mensaje: '' })
+  const [aceptoPrivacidad, setAceptoPrivacidad] = useState(false)
   const [errors, setErrors] = useState<Errors>({})
   const [sent, setSent] = useState(false)
 
@@ -22,6 +24,7 @@ export default function ContactoPage() {
     if (!form.email.trim()) errs.email = 'Introduce tu email'
     else if (!form.email.includes('@')) errs.email = 'Email inválido'
     if (!form.mensaje.trim()) errs.mensaje = 'Cuéntame qué necesitas'
+    if (!aceptoPrivacidad) errs.privacidad = 'Debes aceptar la política de privacidad para enviar el mensaje'
     if (Object.keys(errs).length) {
       setErrors(errs)
       return
@@ -37,8 +40,9 @@ export default function ContactoPage() {
         asunto: form.empresa ? `Contacto de ${form.empresa}` : 'Consulta general',
         mensaje: form.mensaje,
         servicio_interes: form.servicio || undefined,
+        acepto_privacidad: aceptoPrivacidad,
       }),
-      { successMessage: 'Mensaje enviado, te respondo en menos de 24h' },
+      { successMessage: 'Mensaje enviado' },
     )
     if (result.ok) setSent(true)
   }
@@ -80,11 +84,11 @@ export default function ContactoPage() {
                 </div>
                 <h2 className="font-roxborough text-2xl md:text-3xl text-gray-900 mb-3">¡Mensaje enviado!</h2>
                 <p className="text-[15px] leading-relaxed text-gray-600">
-                  Te respondo en menos de 24h para acordar tu consulta gratuita.
+                  Gracias por escribirme. Me pondré en contacto contigo lo antes posible.
                 </p>
                 <button
                   type="button"
-                  onClick={() => { setSent(false); setForm({ nombre: '', empresa: '', email: '', servicio: '', mensaje: '' }) }}
+                  onClick={() => { setSent(false); setForm({ nombre: '', empresa: '', email: '', servicio: '', mensaje: '' }); setAceptoPrivacidad(false) }}
                   className="mt-7 inline-flex items-center gap-2 bg-henko-turquoise text-white px-7 py-3 rounded-full text-sm font-semibold hover:bg-henko-turquoise-light hover:shadow-lg transition-all"
                 >
                   Enviar otro mensaje
@@ -153,7 +157,7 @@ export default function ContactoPage() {
                   </select>
                 </div>
 
-                <div className="mb-8">
+                <div className="mb-6">
                   <label className={labelClass(!!errors.mensaje)} htmlFor="mensaje">CUÉNTAME</label>
                   <textarea
                     id="mensaje"
@@ -165,6 +169,38 @@ export default function ContactoPage() {
                     onChange={(e) => updateField('mensaje', e.target.value)}
                   />
                   <FormError msg={errors.mensaje} />
+                </div>
+
+                <div className="mb-8">
+                  <label className="flex items-start gap-3 cursor-pointer group">
+                    <input
+                      id="privacidad"
+                      name="privacidad"
+                      type="checkbox"
+                      checked={aceptoPrivacidad}
+                      onChange={(e) => {
+                        setAceptoPrivacidad(e.target.checked)
+                        if (errors.privacidad && e.target.checked) {
+                          setErrors((prev) => ({ ...prev, privacidad: undefined }))
+                        }
+                      }}
+                      className={`mt-0.5 w-4 h-4 rounded border-[1.5px] cursor-pointer accent-henko-turquoise ${
+                        errors.privacidad ? 'border-red-400' : 'border-black/20'
+                      }`}
+                    />
+                    <span className="text-[13px] leading-relaxed text-gray-700 group-hover:text-gray-900 transition-colors">
+                      He leído y acepto la{' '}
+                      <Link
+                        href="/legal#privacidad"
+                        target="_blank"
+                        className="text-henko-turquoise hover:text-henko-turquoise-light font-semibold underline underline-offset-2"
+                      >
+                        política de privacidad
+                      </Link>
+                      {' '}y el tratamiento de mis datos.
+                    </span>
+                  </label>
+                  <FormError msg={errors.privacidad} />
                 </div>
 
                 <button
@@ -180,8 +216,7 @@ export default function ContactoPage() {
           {/* Info */}
           <div className="pt-2">
             <h2 className="font-roxborough text-2xl md:text-4xl text-gray-900 mb-6 leading-tight">
-              Mallorca<br />
-              <em className="italic text-henko-turquoise font-light">te respondo en 24h</em>
+              <em className="italic text-henko-turquoise font-light">Mallorca</em>
             </h2>
             <p className="text-[15px] leading-[1.8] text-gray-600 mb-12">
               Si tienes dudas sobre si mis servicios encajan con lo que buscas, escríbeme. Prefiero que lo hablemos antes de tomar ninguna decisión.

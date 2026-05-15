@@ -16,9 +16,13 @@ export async function crearLead(input: {
   asunto?: string
   mensaje: string
   servicio_interes?: string
+  acepto_privacidad: boolean
 }) {
   if (!input.nombre.trim() || !input.email.trim() || !input.mensaje.trim()) {
     return { error: 'Faltan campos obligatorios' }
+  }
+  if (!input.acepto_privacidad) {
+    return { error: 'Debes aceptar la política de privacidad' }
   }
 
   const supabase = await createClient()
@@ -31,7 +35,9 @@ export async function crearLead(input: {
     mensaje: input.mensaje,
     servicio_interes: input.servicio_interes || null,
     origen: 'web',
-  }).select('id').single()
+    acepto_privacidad: true,
+    acepto_privacidad_at: new Date().toISOString(),
+  } as never).select('id').single()
 
   if (error) return { error: error.message }
 
@@ -40,7 +46,7 @@ export async function crearLead(input: {
     recursoTipo: 'lead',
     recursoId: nuevo?.id ?? null,
     recursoLabel: `${input.nombre} <${input.email}>`,
-    metadata: { tipo: input.tipo, origen: 'web', servicio_interes: input.servicio_interes ?? null },
+    metadata: { tipo: input.tipo, origen: 'web', servicio_interes: input.servicio_interes ?? null, acepto_privacidad: true },
     actorEmail: input.email,
   })
 

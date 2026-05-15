@@ -12,7 +12,7 @@ const raleway = Raleway({
   display: 'swap',
 })
 
-const siteUrl = 'https://henkoaching.automatizatelo.com'
+const siteUrl = 'https://henkoaching.com'
 const siteTitle = 'Henkoaching — Coaching & Mindfulness Empresarial'
 const siteDescription = 'Orden para tu empresa, tu liderazgo y tu mente. Consultoría de operaciones, reclutamiento consciente y desarrollo de liderazgo con Jennifer Cervera.'
 
@@ -33,8 +33,11 @@ export const metadata: Metadata = {
     description: siteDescription,
     images: [
       {
-        url: '/henkologo.png',
+        url: '/hk.png',
+        width: 1914,
+        height: 1168,
         alt: 'Henkoaching — Coaching & Mindfulness Empresarial',
+        type: 'image/png',
       },
     ],
   },
@@ -42,7 +45,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: siteTitle,
     description: siteDescription,
-    images: ['/henkologo.png'],
+    images: ['/hk.png'],
   },
 }
 
