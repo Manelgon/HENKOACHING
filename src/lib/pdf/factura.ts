@@ -224,10 +224,10 @@ export async function buildFacturaPdf(data: FacturaPdfData, emisor: EmisorPdf, a
     size: esRectificativa ? 13 : 14,
     color: colorTipo,
   })
-  drawText(page, `Nº ${data.numero}`, marginX + 16, bandY + bandH - 40, { font: bold, size: 11 })
-  drawText(page, `Emitida el ${fechaES(data.fechaEmision)}`, marginX + 16, bandY + 14, { font, size: 9, color: HENKO.inkSoft })
+  drawText(page, `Nº ${data.numero}`, marginX + 16, bandY + bandH - 38, { font: bold, size: 11 })
+  drawText(page, `Emitida el ${fechaES(data.fechaEmision)}`, marginX + 16, bandY + 8, { font, size: 9, color: HENKO.inkSoft })
   if (data.fechaVencimiento) {
-    drawText(page, `Vence el ${fechaES(data.fechaVencimiento)}`, marginX + 16 + 170, bandY + 14, { font, size: 9, color: HENKO.inkSoft })
+    drawText(page, `Vence el ${fechaES(data.fechaVencimiento)}`, marginX + 16 + 170, bandY + 8, { font, size: 9, color: HENKO.inkSoft })
   }
 
   // Sello de estado a la derecha de la banda
