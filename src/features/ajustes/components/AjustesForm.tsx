@@ -11,9 +11,10 @@ type Props = {
   logoUrl: string | null
   firmaUrl: string | null
   headerUrl: string | null
+  footerUrl: string | null
 }
 
-export default function AjustesForm({ settings, logoUrl, firmaUrl, headerUrl }: Props) {
+export default function AjustesForm({ settings, logoUrl, firmaUrl, headerUrl, footerUrl }: Props) {
   const router = useRouter()
   const runAction = useAction()
   const confirm = useConfirm()
@@ -158,7 +159,7 @@ export default function AjustesForm({ settings, logoUrl, firmaUrl, headerUrl }: 
       {/* IMÁGENES CORPORATIVAS */}
       <Section
         title="Imágenes corporativas"
-        description="Logo y firma se imprimen en cada PDF. La cabecera (opcional) sustituye al bloque de logo con un banner panorámico."
+        description="Logo y firma se imprimen en cada PDF. La cabecera y el pie (opcionales) son banners panorámicos arriba y abajo del documento."
       >
         <div className="space-y-6">
           <ImagenUploader
@@ -166,6 +167,14 @@ export default function AjustesForm({ settings, logoUrl, firmaUrl, headerUrl }: 
             label="Cabecera de PDFs"
             hint="Banner panorámico arriba del documento. Opcional. Recomendado 1200×200px."
             url={headerUrl}
+            wide
+            onChange={() => router.refresh()}
+          />
+          <ImagenUploader
+            tipo="footer"
+            label="Pie de documento"
+            hint="Banner panorámico abajo del documento. Opcional. Recomendado 1200×150px."
+            url={footerUrl}
             wide
             onChange={() => router.refresh()}
           />
@@ -281,7 +290,7 @@ function ImagenUploader({
   wide,
   onChange,
 }: {
-  tipo: 'logo' | 'firma' | 'header'
+  tipo: 'logo' | 'firma' | 'header' | 'footer'
   label: string
   hint: string
   url: string | null

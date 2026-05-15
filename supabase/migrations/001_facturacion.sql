@@ -46,6 +46,7 @@ create table if not exists public.company_settings (
   logo_path text,
   firma_path text,
   header_path text,
+  footer_path text,
 
   -- Defaults fiscales (configurables)
   iva_default numeric(5,2) not null default 21.00,

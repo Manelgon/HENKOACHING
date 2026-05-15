@@ -72,6 +72,7 @@ export type Assets = {
   logoBytes?: Uint8Array | null
   firmaBytes?: Uint8Array | null
   headerBytes?: Uint8Array | null
+  footerBytes?: Uint8Array | null
 }
 
 // =============================================================================
@@ -160,6 +161,7 @@ export async function buildFacturaPdf(data: FacturaPdfData, emisor: EmisorPdf, a
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold)
 
   const headerImg = await tryEmbedImage(pdf, assets.headerBytes)
+  const footerImg = await tryEmbedImage(pdf, assets.footerBytes)
   const logoImg = await tryEmbedImage(pdf, assets.logoBytes)
   const firmaImg = await tryEmbedImage(pdf, assets.firmaBytes)
 
@@ -488,29 +490,36 @@ export async function buildFacturaPdf(data: FacturaPdfData, emisor: EmisorPdf, a
   }
 
   // -------------------------------------------------------------------------
-  // 7) PIE DE PÁGINA
+  // 7) PIE DE PÁGINA (banner imagen o línea + texto)
   // -------------------------------------------------------------------------
-  page.drawLine({
-    start: { x: marginX, y: 50 },
-    end: { x: A4.w - marginX, y: 50 },
-    thickness: 0.5,
-    color: HENKO.greenblue,
-  })
-
-  if (emisor.pieDePagina) {
-    const footLines = wrap(emisor.pieDePagina, font, 8, contentW)
-    let fy = 38
-    for (const l of footLines.slice(0, 2)) {
-      const w = font.widthOfTextAtSize(l, 8)
-      drawText(page, l, A4.w / 2 - w / 2, fy, { font, size: 8, color: HENKO.inkSoft })
-      fy -= 10
-    }
+  if (footerImg) {
+    const targetW = A4.w
+    const targetH = (footerImg.height / footerImg.width) * targetW
+    const h = Math.min(targetH, 90)
+    page.drawImage(footerImg, { x: 0, y: 0, width: targetW, height: h })
   } else {
-    const tagline = `${emisor.nombre || ''}${emisor.nif ? ` · ${emisor.nif}` : ''}${emisor.web ? ` · ${emisor.web}` : ''}`
-    if (tagline.trim()) {
-      const size = 8
-      const w = font.widthOfTextAtSize(tagline, size)
-      drawText(page, tagline, A4.w / 2 - w / 2, 35, { font, size, color: HENKO.inkSoft })
+    page.drawLine({
+      start: { x: marginX, y: 50 },
+      end: { x: A4.w - marginX, y: 50 },
+      thickness: 0.5,
+      color: HENKO.greenblue,
+    })
+
+    if (emisor.pieDePagina) {
+      const footLines = wrap(emisor.pieDePagina, font, 8, contentW)
+      let fy = 38
+      for (const l of footLines.slice(0, 2)) {
+        const w = font.widthOfTextAtSize(l, 8)
+        drawText(page, l, A4.w / 2 - w / 2, fy, { font, size: 8, color: HENKO.inkSoft })
+        fy -= 10
+      }
+    } else {
+      const tagline = `${emisor.nombre || ''}${emisor.nif ? ` · ${emisor.nif}` : ''}${emisor.web ? ` · ${emisor.web}` : ''}`
+      if (tagline.trim()) {
+        const size = 8
+        const w = font.widthOfTextAtSize(tagline, size)
+        drawText(page, tagline, A4.w / 2 - w / 2, 35, { font, size, color: HENKO.inkSoft })
+      }
     }
   }
 

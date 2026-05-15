@@ -233,10 +233,11 @@ export async function regenerarPdfFactura(facturaId: string) {
     .order('orden', { ascending: true })
 
   const settings = await getCompanySettings()
-  const [logoBytes, firmaBytes, headerBytes] = await Promise.all([
+  const [logoBytes, firmaBytes, headerBytes, footerBytes] = await Promise.all([
     downloadAssetBytes(settings.logo_path),
     downloadAssetBytes(settings.firma_path),
     downloadAssetBytes(settings.header_path),
+    downloadAssetBytes(settings.footer_path),
   ])
 
   const emisor: EmisorPdf = {
@@ -279,7 +280,7 @@ export async function regenerarPdfFactura(facturaId: string) {
     tipoDocumento: f.serie === 'A' ? 'abono' : f.serie === 'R' ? 'rectificativa' : 'factura',
   }
 
-  const pdfBytes = await buildFacturaPdf(data, emisor, { logoBytes, firmaBytes, headerBytes })
+  const pdfBytes = await buildFacturaPdf(data, emisor, { logoBytes, firmaBytes, headerBytes, footerBytes })
 
   const safeName = f.numero.replace(/[^\w\-]/g, '_')
   const storagePath = `factura-${safeName}.pdf`

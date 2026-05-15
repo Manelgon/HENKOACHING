@@ -79,8 +79,8 @@ export async function subirImagenEmisor(formData: FormData) {
   const file = formData.get('file') as File | null
   const tipo = formData.get('tipo') as string | null
 
-  if (!file || !tipo || !['logo', 'firma', 'header'].includes(tipo)) {
-    return { error: 'Falta archivo o tipo (logo|firma|header)' }
+  if (!file || !tipo || !['logo', 'firma', 'header', 'footer'].includes(tipo)) {
+    return { error: 'Falta archivo o tipo (logo|firma|header|footer)' }
   }
 
   const ALLOWED = ['image/jpeg', 'image/png', 'image/webp']
@@ -109,7 +109,7 @@ export async function subirImagenEmisor(formData: FormData) {
 
   if (uploadError) return { error: uploadError.message }
 
-  const column = `${tipo}_path` as 'logo_path' | 'firma_path' | 'header_path'
+  const column = `${tipo}_path` as 'logo_path' | 'firma_path' | 'header_path' | 'footer_path'
   const { error: dbError } = await admin
     .from('company_settings' as never)
     .update({ [column]: storagePath } as never)
@@ -132,12 +132,12 @@ export async function subirImagenEmisor(formData: FormData) {
   return { ok: true, url: signed?.signedUrl ?? null, path: storagePath }
 }
 
-export async function quitarImagenEmisor(tipo: 'logo' | 'firma' | 'header') {
+export async function quitarImagenEmisor(tipo: 'logo' | 'firma' | 'header' | 'footer') {
   const auth = await requireAdmin()
   if ('error' in auth) return { error: auth.error }
 
   const admin = createAdminClient()
-  const column = `${tipo}_path` as 'logo_path' | 'firma_path' | 'header_path'
+  const column = `${tipo}_path` as 'logo_path' | 'firma_path' | 'header_path' | 'footer_path'
 
   const { data: row } = await admin
     .from('company_settings' as never)

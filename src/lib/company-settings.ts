@@ -16,6 +16,7 @@ export type CompanySettings = {
   logo_path: string | null
   firma_path: string | null
   header_path: string | null
+  footer_path: string | null
   iva_default: number
   irpf_default: number
   forma_pago_default: 'transferencia' | 'efectivo' | 'bizum' | 'tarjeta' | 'domiciliacion' | null
@@ -41,6 +42,7 @@ const DEFAULTS: CompanySettings = {
   logo_path: null,
   firma_path: null,
   header_path: null,
+  footer_path: null,
   iva_default: 21,
   irpf_default: 0,
   forma_pago_default: 'transferencia',
