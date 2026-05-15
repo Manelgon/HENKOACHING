@@ -296,7 +296,7 @@ export async function exportarMisDatos() {
       .select('id, nombre_archivo, storage_path, tamano_bytes, es_principal, created_at')
       .eq('candidato_id', user.id).is('deleted_at', null),
     supabase.from('solicitudes')
-      .select('id, estado, mensaje, created_at, updated_at, ofertas(slug, titulo, empresas(nombre))')
+      .select('id, estado, mensaje, created_at, updated_at, ofertas(slug, titulo, clientes(nombre))')
       .eq('candidato_id', user.id),
   ])
 

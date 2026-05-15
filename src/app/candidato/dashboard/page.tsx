@@ -51,7 +51,7 @@ export default async function CandidatoDashboardPage() {
           id: string
           slug: string
           titulo: string
-          empresas: { nombre: string } | null
+          clientes: { nombre: string } | null
         } | null
         return {
           id: s.id,
@@ -59,7 +59,7 @@ export default async function CandidatoDashboardPage() {
           fecha: s.created_at ? new Date(s.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) : '',
           ofertaSlug: oferta?.slug ?? '',
           ofertaTitulo: oferta?.titulo ?? '',
-          empresa: oferta?.empresas?.nombre ?? '',
+          empresa: oferta?.clientes?.nombre ?? '',
         }
       })}
     />

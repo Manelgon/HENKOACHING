@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useAction } from '@/shared/feedback/FeedbackContext'
 import { crearClienteManual } from '@/actions/clientes'
-import type { EstadoCliente, ServicioContratado, TarifaTipo } from '@/lib/supabase/database.types'
+import type { EstadoCliente, ServicioContratado, TarifaTipo, TipoCliente } from '@/lib/supabase/database.types'
 import { ESTADOS_CLIENTE, SERVICIOS, TARIFAS } from './estados'
 import { ORIGENES_LEAD } from '@/features/leads/components/estados'
 
@@ -19,6 +19,7 @@ export default function NewClienteModal({
 }) {
   const runAction = useAction()
   const [form, setForm] = useState({
+    tipo: 'particular' as TipoCliente,
     nombre: '',
     email: '',
     telefono: '',
@@ -34,7 +35,13 @@ export default function NewClienteModal({
     web_url: '',
     estado: 'activo' as EstadoCliente,
     origen: 'instagram',
+    slug: '',
+    logo_url: '',
+    descripcion: '',
+    ubicacion: '',
   })
+
+  const esEmpresa = form.tipo === 'empresa'
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
@@ -48,13 +55,15 @@ export default function NewClienteModal({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!form.nombre.trim() || !form.email.trim()) return
+    if (!form.nombre.trim()) return
+    if (!esEmpresa && !form.email.trim()) return
 
     const result = await runAction(
       'Creando cliente',
       () => crearClienteManual({
+        tipo: form.tipo,
         nombre: form.nombre,
-        email: form.email,
+        email: form.email || null,
         telefono: form.telefono || null,
         empresa: form.empresa || null,
         nif_cif: form.nif_cif || null,
@@ -68,6 +77,10 @@ export default function NewClienteModal({
         web_url: form.web_url || null,
         estado: form.estado,
         origen: form.origen,
+        slug: esEmpresa ? (form.slug || null) : null,
+        logo_url: esEmpresa ? (form.logo_url || null) : null,
+        descripcion: esEmpresa ? (form.descripcion || null) : null,
+        ubicacion: esEmpresa ? (form.ubicacion || null) : null,
       }),
       { successMessage: 'Cliente creado' },
     )
@@ -101,12 +114,37 @@ export default function NewClienteModal({
 
         {/* Body */}
         <div className="px-5 sm:px-9 py-5 sm:py-7 space-y-6">
+          <Section title="Tipo de cliente">
+            <div className="grid grid-cols-2 gap-2">
+              <TipoOption
+                active={form.tipo === 'particular'}
+                onClick={() => setForm({ ...form, tipo: 'particular' })}
+                label="Particular"
+                desc="Persona física que contrata coaching"
+              />
+              <TipoOption
+                active={form.tipo === 'empresa'}
+                onClick={() => setForm({ ...form, tipo: 'empresa' })}
+                label="Empresa"
+                desc="Empresa que contrata selección y publica ofertas"
+              />
+            </div>
+          </Section>
+
           <Section title="Datos de contacto">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Field label="NOMBRE *" value={form.nombre} onChange={(v) => setForm({ ...form, nombre: v })} required />
-              <Field label="EMAIL *" type="email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} required />
+              <Field label={esEmpresa ? 'NOMBRE COMERCIAL *' : 'NOMBRE *'} value={form.nombre} onChange={(v) => setForm({ ...form, nombre: v })} required />
+              <Field
+                label={esEmpresa ? 'EMAIL CONTACTO' : 'EMAIL *'}
+                type="email"
+                value={form.email}
+                onChange={(v) => setForm({ ...form, email: v })}
+                required={!esEmpresa}
+              />
               <Field label="TELÉFONO" type="tel" value={form.telefono} onChange={(v) => setForm({ ...form, telefono: v })} />
-              <Field label="LINKEDIN" value={form.linkedin_url} onChange={(v) => setForm({ ...form, linkedin_url: v })} placeholder="https://…" />
+              {!esEmpresa && (
+                <Field label="LINKEDIN" value={form.linkedin_url} onChange={(v) => setForm({ ...form, linkedin_url: v })} placeholder="https://…" />
+              )}
               <Select
                 label="ORIGEN"
                 value={form.origen}
@@ -116,11 +154,29 @@ export default function NewClienteModal({
             </div>
           </Section>
 
+          {esEmpresa && (
+            <Section title="Ficha pública (bolsa de empleo)">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Field label="SLUG (URL)" value={form.slug} onChange={(v) => setForm({ ...form, slug: v })} placeholder="se autogenera del nombre" />
+                <Field label="UBICACIÓN" value={form.ubicacion} onChange={(v) => setForm({ ...form, ubicacion: v })} placeholder="Palma, Mallorca" />
+                <Field label="LOGO URL" value={form.logo_url} onChange={(v) => setForm({ ...form, logo_url: v })} placeholder="https://…" />
+                <Field label="WEB" value={form.web_url} onChange={(v) => setForm({ ...form, web_url: v })} placeholder="https://…" />
+                <div className="sm:col-span-2">
+                  <Field label="DESCRIPCIÓN" value={form.descripcion} onChange={(v) => setForm({ ...form, descripcion: v })} />
+                </div>
+              </div>
+            </Section>
+          )}
+
           <Section title="Datos fiscales">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Field label="EMPRESA / RAZÓN SOCIAL" value={form.empresa} onChange={(v) => setForm({ ...form, empresa: v })} />
+              {!esEmpresa && (
+                <Field label="EMPRESA / RAZÓN SOCIAL" value={form.empresa} onChange={(v) => setForm({ ...form, empresa: v })} />
+              )}
               <Field label="NIF / CIF" value={form.nif_cif} onChange={(v) => setForm({ ...form, nif_cif: v })} />
-              <Field label="WEB" value={form.web_url} onChange={(v) => setForm({ ...form, web_url: v })} placeholder="https://…" />
+              {!esEmpresa && (
+                <Field label="WEB" value={form.web_url} onChange={(v) => setForm({ ...form, web_url: v })} placeholder="https://…" />
+              )}
               <div className="sm:col-span-2">
                 <Field label="DIRECCIÓN FISCAL" value={form.direccion_fiscal} onChange={(v) => setForm({ ...form, direccion_fiscal: v })} />
               </div>
@@ -172,6 +228,23 @@ export default function NewClienteModal({
         </div>
       </form>
     </div>
+  )
+}
+
+function TipoOption({ active, onClick, label, desc }: { active: boolean; onClick: () => void; label: string; desc: string }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`text-left rounded-xl border-[1.5px] px-4 py-3 transition-colors ${
+        active
+          ? 'border-henko-turquoise bg-henko-turquoise/5 text-henko-turquoise'
+          : 'border-black/5 bg-henko-white text-gray-700 hover:border-black/10'
+      }`}
+    >
+      <p className="font-raleway font-bold text-sm">{label}</p>
+      <p className="font-raleway text-xs text-gray-500 mt-0.5">{desc}</p>
+    </button>
   )
 }
 

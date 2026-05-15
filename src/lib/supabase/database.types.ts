@@ -7,6 +7,8 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
@@ -46,7 +48,15 @@ export type Database = {
           recurso_label?: string | null
           recurso_tipo?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       blog_categorias: {
         Row: {
@@ -79,10 +89,41 @@ export type Database = {
         Relationships: []
       }
       blog_post_tags: {
-        Row: { post_id: string; tag_id: number }
-        Insert: { post_id: string; tag_id: number }
-        Update: { post_id?: string; tag_id?: number }
-        Relationships: []
+        Row: {
+          post_id: string
+          tag_id: number
+        }
+        Insert: {
+          post_id: string
+          tag_id: number
+        }
+        Update: {
+          post_id?: string
+          tag_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_post_tags_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "blog_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "blog_post_tags_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "blog_posts_publicados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "blog_post_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "blog_tags"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       blog_posts: {
         Row: {
@@ -159,19 +200,19 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "blog_posts_autor_id_fkey"
+            columns: ["autor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "blog_posts_categoria_id_fkey"
             columns: ["categoria_id"]
             isOneToOne: false
             referencedRelation: "blog_categorias"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "blog_posts_autor_id_fkey"
-            columns: ["autor_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          }
         ]
       }
       blog_tags: {
@@ -226,7 +267,15 @@ export type Database = {
           titulo?: string
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "candidato_educacion_candidato_id_fkey"
+            columns: ["candidato_id"]
+            isOneToOne: false
+            referencedRelation: "candidato_profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       candidato_experiencias: {
         Row: {
@@ -265,7 +314,15 @@ export type Database = {
           orden?: number | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "candidato_experiencias_candidato_id_fkey"
+            columns: ["candidato_id"]
+            isOneToOne: false
+            referencedRelation: "candidato_profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       candidato_idiomas: {
         Row: {
@@ -292,7 +349,15 @@ export type Database = {
           nivel?: Database["public"]["Enums"]["nivel_idioma"]
           orden?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "candidato_idiomas_candidato_id_fkey"
+            columns: ["candidato_id"]
+            isOneToOne: false
+            referencedRelation: "candidato_profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       candidato_profiles: {
         Row: {
@@ -331,7 +396,15 @@ export type Database = {
           user_id?: string
           web_url?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "candidato_profiles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       cliente_archivos: {
         Row: {
@@ -367,7 +440,29 @@ export type Database = {
           tamano_bytes?: number | null
           tipo?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "cliente_archivos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cliente_archivos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "empresas_publicas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cliente_archivos_subido_por_fkey"
+            columns: ["subido_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       cliente_notas: {
         Row: {
@@ -394,7 +489,29 @@ export type Database = {
           id?: string
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "cliente_notas_autor_id_fkey"
+            columns: ["autor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cliente_notas_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cliente_notas_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "empresas_publicas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       cliente_sesiones: {
         Row: {
@@ -430,15 +547,31 @@ export type Database = {
           tipo?: string | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "cliente_sesiones_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cliente_sesiones_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "empresas_publicas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       clientes: {
         Row: {
           creado_por: string | null
           created_at: string | null
           deleted_at: string | null
+          descripcion: string | null
           direccion_fiscal: string | null
-          email: string
+          email: string | null
           empresa: string | null
           estado: Database["public"]["Enums"]["estado_cliente"]
           fecha_conversion: string | null
@@ -447,6 +580,7 @@ export type Database = {
           importe: number | null
           lead_id: string | null
           linkedin_url: string | null
+          logo_url: string | null
           nif_cif: string | null
           nombre: string
           origen: string | null
@@ -454,8 +588,11 @@ export type Database = {
           servicio_contratado:
             | Database["public"]["Enums"]["servicio_contratado"]
             | null
+          slug: string | null
           tarifa: Database["public"]["Enums"]["tarifa_tipo"] | null
           telefono: string | null
+          tipo: Database["public"]["Enums"]["tipo_cliente"]
+          ubicacion: string | null
           updated_at: string | null
           web_url: string | null
         }
@@ -463,8 +600,9 @@ export type Database = {
           creado_por?: string | null
           created_at?: string | null
           deleted_at?: string | null
+          descripcion?: string | null
           direccion_fiscal?: string | null
-          email: string
+          email?: string | null
           empresa?: string | null
           estado?: Database["public"]["Enums"]["estado_cliente"]
           fecha_conversion?: string | null
@@ -473,6 +611,7 @@ export type Database = {
           importe?: number | null
           lead_id?: string | null
           linkedin_url?: string | null
+          logo_url?: string | null
           nif_cif?: string | null
           nombre: string
           origen?: string | null
@@ -480,8 +619,11 @@ export type Database = {
           servicio_contratado?:
             | Database["public"]["Enums"]["servicio_contratado"]
             | null
+          slug?: string | null
           tarifa?: Database["public"]["Enums"]["tarifa_tipo"] | null
           telefono?: string | null
+          tipo?: Database["public"]["Enums"]["tipo_cliente"]
+          ubicacion?: string | null
           updated_at?: string | null
           web_url?: string | null
         }
@@ -489,8 +631,9 @@ export type Database = {
           creado_por?: string | null
           created_at?: string | null
           deleted_at?: string | null
+          descripcion?: string | null
           direccion_fiscal?: string | null
-          email?: string
+          email?: string | null
           empresa?: string | null
           estado?: Database["public"]["Enums"]["estado_cliente"]
           fecha_conversion?: string | null
@@ -499,6 +642,7 @@ export type Database = {
           importe?: number | null
           lead_id?: string | null
           linkedin_url?: string | null
+          logo_url?: string | null
           nif_cif?: string | null
           nombre?: string
           origen?: string | null
@@ -506,10 +650,109 @@ export type Database = {
           servicio_contratado?:
             | Database["public"]["Enums"]["servicio_contratado"]
             | null
+          slug?: string | null
           tarifa?: Database["public"]["Enums"]["tarifa_tipo"] | null
           telefono?: string | null
+          tipo?: Database["public"]["Enums"]["tipo_cliente"]
+          ubicacion?: string | null
           updated_at?: string | null
           web_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clientes_creado_por_fkey"
+            columns: ["creado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clientes_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      company_settings: {
+        Row: {
+          dias_vencimiento_default: number
+          emisor_ciudad: string | null
+          emisor_cp: string | null
+          emisor_direccion: string | null
+          emisor_email: string | null
+          emisor_iban: string | null
+          emisor_nif: string | null
+          emisor_nombre: string | null
+          emisor_pais: string | null
+          emisor_provincia: string | null
+          emisor_telefono: string | null
+          emisor_web: string | null
+          firma_path: string | null
+          forma_pago_default: Database["public"]["Enums"]["forma_pago"] | null
+          header_path: string | null
+          id: number
+          irpf_default: number
+          iva_default: number
+          logo_path: string | null
+          pie_pagina: string | null
+          prefijo_anio: boolean
+          proximo_numero: number
+          serie_default: string
+          updated_at: string | null
+        }
+        Insert: {
+          dias_vencimiento_default?: number
+          emisor_ciudad?: string | null
+          emisor_cp?: string | null
+          emisor_direccion?: string | null
+          emisor_email?: string | null
+          emisor_iban?: string | null
+          emisor_nif?: string | null
+          emisor_nombre?: string | null
+          emisor_pais?: string | null
+          emisor_provincia?: string | null
+          emisor_telefono?: string | null
+          emisor_web?: string | null
+          firma_path?: string | null
+          forma_pago_default?: Database["public"]["Enums"]["forma_pago"] | null
+          header_path?: string | null
+          id?: number
+          irpf_default?: number
+          iva_default?: number
+          logo_path?: string | null
+          pie_pagina?: string | null
+          prefijo_anio?: boolean
+          proximo_numero?: number
+          serie_default?: string
+          updated_at?: string | null
+        }
+        Update: {
+          dias_vencimiento_default?: number
+          emisor_ciudad?: string | null
+          emisor_cp?: string | null
+          emisor_direccion?: string | null
+          emisor_email?: string | null
+          emisor_iban?: string | null
+          emisor_nif?: string | null
+          emisor_nombre?: string | null
+          emisor_pais?: string | null
+          emisor_provincia?: string | null
+          emisor_telefono?: string | null
+          emisor_web?: string | null
+          firma_path?: string | null
+          forma_pago_default?: Database["public"]["Enums"]["forma_pago"] | null
+          header_path?: string | null
+          id?: number
+          irpf_default?: number
+          iva_default?: number
+          logo_path?: string | null
+          pie_pagina?: string | null
+          prefijo_anio?: boolean
+          proximo_numero?: number
+          serie_default?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -544,49 +787,187 @@ export type Database = {
           storage_path?: string
           tamano_bytes?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "cvs_candidato_id_fkey"
+            columns: ["candidato_id"]
+            isOneToOne: false
+            referencedRelation: "candidato_profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
-      empresas: {
+      factura_lineas: {
         Row: {
+          cantidad: number
+          concepto: string
           created_at: string | null
-          deleted_at: string | null
-          descripcion: string | null
+          descuento_porcentaje: number
+          factura_id: string
           id: string
-          logo_url: string | null
-          nombre: string
-          owner_user_id: string | null
-          slug: string
-          ubicacion: string | null
-          updated_at: string | null
-          web_url: string | null
+          orden: number
+          precio_unitario: number
+          subtotal: number
         }
         Insert: {
+          cantidad?: number
+          concepto: string
           created_at?: string | null
-          deleted_at?: string | null
-          descripcion?: string | null
+          descuento_porcentaje?: number
+          factura_id: string
           id?: string
-          logo_url?: string | null
-          nombre: string
-          owner_user_id?: string | null
-          slug: string
-          ubicacion?: string | null
-          updated_at?: string | null
-          web_url?: string | null
+          orden?: number
+          precio_unitario: number
+          subtotal: number
         }
         Update: {
+          cantidad?: number
+          concepto?: string
           created_at?: string | null
-          deleted_at?: string | null
-          descripcion?: string | null
+          descuento_porcentaje?: number
+          factura_id?: string
           id?: string
-          logo_url?: string | null
-          nombre?: string
-          owner_user_id?: string | null
-          slug?: string
-          ubicacion?: string | null
-          updated_at?: string | null
-          web_url?: string | null
+          orden?: number
+          precio_unitario?: number
+          subtotal?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "factura_lineas_factura_id_fkey"
+            columns: ["factura_id"]
+            isOneToOne: false
+            referencedRelation: "facturas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      facturas: {
+        Row: {
+          anio: number
+          base_imponible: number
+          cliente_direccion: string | null
+          cliente_email: string | null
+          cliente_id: string | null
+          cliente_nif: string | null
+          cliente_nombre: string
+          correlativo: number
+          creado_por: string | null
+          created_at: string | null
+          estado: Database["public"]["Enums"]["estado_factura"]
+          factura_rectificada_id: string | null
+          fecha_devolucion: string | null
+          fecha_emision: string
+          fecha_pago: string | null
+          fecha_vencimiento: string | null
+          forma_pago: Database["public"]["Enums"]["forma_pago"] | null
+          id: string
+          irpf_importe: number
+          irpf_porcentaje: number
+          iva_importe: number
+          iva_porcentaje: number
+          motivo_devolucion: string | null
+          motivo_rectificacion: string | null
+          notas: string | null
+          numero: string
+          pdf_path: string | null
+          serie: string
+          total: number
+          updated_at: string | null
+        }
+        Insert: {
+          anio: number
+          base_imponible?: number
+          cliente_direccion?: string | null
+          cliente_email?: string | null
+          cliente_id?: string | null
+          cliente_nif?: string | null
+          cliente_nombre: string
+          correlativo: number
+          creado_por?: string | null
+          created_at?: string | null
+          estado?: Database["public"]["Enums"]["estado_factura"]
+          factura_rectificada_id?: string | null
+          fecha_devolucion?: string | null
+          fecha_emision?: string
+          fecha_pago?: string | null
+          fecha_vencimiento?: string | null
+          forma_pago?: Database["public"]["Enums"]["forma_pago"] | null
+          id?: string
+          irpf_importe?: number
+          irpf_porcentaje?: number
+          iva_importe?: number
+          iva_porcentaje?: number
+          motivo_devolucion?: string | null
+          motivo_rectificacion?: string | null
+          notas?: string | null
+          numero: string
+          pdf_path?: string | null
+          serie?: string
+          total?: number
+          updated_at?: string | null
+        }
+        Update: {
+          anio?: number
+          base_imponible?: number
+          cliente_direccion?: string | null
+          cliente_email?: string | null
+          cliente_id?: string | null
+          cliente_nif?: string | null
+          cliente_nombre?: string
+          correlativo?: number
+          creado_por?: string | null
+          created_at?: string | null
+          estado?: Database["public"]["Enums"]["estado_factura"]
+          factura_rectificada_id?: string | null
+          fecha_devolucion?: string | null
+          fecha_emision?: string
+          fecha_pago?: string | null
+          fecha_vencimiento?: string | null
+          forma_pago?: Database["public"]["Enums"]["forma_pago"] | null
+          id?: string
+          irpf_importe?: number
+          irpf_porcentaje?: number
+          iva_importe?: number
+          iva_porcentaje?: number
+          motivo_devolucion?: string | null
+          motivo_rectificacion?: string | null
+          notas?: string | null
+          numero?: string
+          pdf_path?: string | null
+          serie?: string
+          total?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "facturas_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "facturas_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "empresas_publicas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "facturas_creado_por_fkey"
+            columns: ["creado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "facturas_factura_rectificada_id_fkey"
+            columns: ["factura_rectificada_id"]
+            isOneToOne: false
+            referencedRelation: "facturas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       jornadas: {
         Row: {
@@ -640,10 +1021,27 @@ export type Database = {
           lead_id?: string
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "lead_notas_autor_id_fkey"
+            columns: ["autor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_notas_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       leads: {
         Row: {
+          acepto_privacidad: boolean
+          acepto_privacidad_at: string | null
           archivado: boolean | null
           asunto: string | null
           creado_manualmente: boolean | null
@@ -662,6 +1060,8 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          acepto_privacidad?: boolean
+          acepto_privacidad_at?: string | null
           archivado?: boolean | null
           asunto?: string | null
           creado_manualmente?: boolean | null
@@ -680,6 +1080,8 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          acepto_privacidad?: boolean
+          acepto_privacidad_at?: string | null
           archivado?: boolean | null
           asunto?: string | null
           creado_manualmente?: boolean | null
@@ -697,7 +1099,15 @@ export type Database = {
           tipo?: Database["public"]["Enums"]["tipo_lead"]
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "leads_creado_por_fkey"
+            columns: ["creado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       modalidades: {
         Row: {
@@ -728,10 +1138,10 @@ export type Database = {
       }
       ofertas: {
         Row: {
+          cliente_id: string
           created_at: string | null
           deleted_at: string | null
           descripcion: string
-          empresa_id: string
           estado: Database["public"]["Enums"]["estado_oferta"]
           fecha_expiracion: string | null
           fecha_publicacion: string | null
@@ -751,10 +1161,10 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          cliente_id: string
           created_at?: string | null
           deleted_at?: string | null
           descripcion: string
-          empresa_id: string
           estado?: Database["public"]["Enums"]["estado_oferta"]
           fecha_expiracion?: string | null
           fecha_publicacion?: string | null
@@ -774,10 +1184,10 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          cliente_id?: string
           created_at?: string | null
           deleted_at?: string | null
           descripcion?: string
-          empresa_id?: string
           estado?: Database["public"]["Enums"]["estado_oferta"]
           fecha_expiracion?: string | null
           fecha_publicacion?: string | null
@@ -796,7 +1206,50 @@ export type Database = {
           ubicacion?: string | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "ofertas_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ofertas_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "empresas_publicas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ofertas_jornada_id_fkey"
+            columns: ["jornada_id"]
+            isOneToOne: false
+            referencedRelation: "jornadas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ofertas_modalidad_id_fkey"
+            columns: ["modalidad_id"]
+            isOneToOne: false
+            referencedRelation: "modalidades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ofertas_publicado_por_fkey"
+            columns: ["publicado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ofertas_sector_id_fkey"
+            columns: ["sector_id"]
+            isOneToOne: false
+            referencedRelation: "sectores"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -898,7 +1351,22 @@ export type Database = {
           nota?: string | null
           solicitud_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "solicitud_eventos_cambiado_por_fkey"
+            columns: ["cambiado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "solicitud_eventos_solicitud_id_fkey"
+            columns: ["solicitud_id"]
+            isOneToOne: false
+            referencedRelation: "solicitudes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       solicitud_notas: {
         Row: {
@@ -925,7 +1393,22 @@ export type Database = {
           solicitud_id?: string
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "solicitud_notas_autor_id_fkey"
+            columns: ["autor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "solicitud_notas_solicitud_id_fkey"
+            columns: ["solicitud_id"]
+            isOneToOne: false
+            referencedRelation: "solicitudes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       solicitudes: {
         Row: {
@@ -958,7 +1441,36 @@ export type Database = {
           oferta_id?: string
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "solicitudes_candidato_id_fkey"
+            columns: ["candidato_id"]
+            isOneToOne: false
+            referencedRelation: "candidato_profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "solicitudes_cv_id_fkey"
+            columns: ["cv_id"]
+            isOneToOne: false
+            referencedRelation: "cvs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "solicitudes_oferta_id_fkey"
+            columns: ["oferta_id"]
+            isOneToOne: false
+            referencedRelation: "ofertas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "solicitudes_oferta_id_fkey"
+            columns: ["oferta_id"]
+            isOneToOne: false
+            referencedRelation: "ofertas_publicadas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -983,14 +1495,102 @@ export type Database = {
           updated_at: string | null
           vistas: number | null
         }
+        Insert: {
+          autor_id?: string | null
+          categoria_id?: number | null
+          contenido?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          estado?: Database["public"]["Enums"]["estado_post"] | null
+          extracto?: string | null
+          fecha_publicacion?: string | null
+          id?: string | null
+          imagen_alt?: string | null
+          imagen_portada?: string | null
+          meta_descripcion?: string | null
+          meta_titulo?: string | null
+          slug?: string | null
+          tiempo_lectura?: number | null
+          titulo?: string | null
+          updated_at?: string | null
+          vistas?: number | null
+        }
+        Update: {
+          autor_id?: string | null
+          categoria_id?: number | null
+          contenido?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          estado?: Database["public"]["Enums"]["estado_post"] | null
+          extracto?: string | null
+          fecha_publicacion?: string | null
+          id?: string | null
+          imagen_alt?: string | null
+          imagen_portada?: string | null
+          meta_descripcion?: string | null
+          meta_titulo?: string | null
+          slug?: string | null
+          tiempo_lectura?: number | null
+          titulo?: string | null
+          updated_at?: string | null
+          vistas?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_posts_autor_id_fkey"
+            columns: ["autor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "blog_posts_categoria_id_fkey"
+            columns: ["categoria_id"]
+            isOneToOne: false
+            referencedRelation: "blog_categorias"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      empresas_publicas: {
+        Row: {
+          created_at: string | null
+          descripcion: string | null
+          id: string | null
+          logo_url: string | null
+          nombre: string | null
+          slug: string | null
+          ubicacion: string | null
+          web_url: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          descripcion?: string | null
+          id?: string | null
+          logo_url?: string | null
+          nombre?: string | null
+          slug?: string | null
+          ubicacion?: string | null
+          web_url?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          descripcion?: string | null
+          id?: string | null
+          logo_url?: string | null
+          nombre?: string | null
+          slug?: string | null
+          ubicacion?: string | null
+          web_url?: string | null
+        }
         Relationships: []
       }
       ofertas_publicadas: {
         Row: {
+          cliente_id: string | null
           created_at: string | null
           deleted_at: string | null
           descripcion: string | null
-          empresa_id: string | null
           estado: Database["public"]["Enums"]["estado_oferta"] | null
           fecha_expiracion: string | null
           fecha_publicacion: string | null
@@ -1009,22 +1609,140 @@ export type Database = {
           ubicacion: string | null
           updated_at: string | null
         }
-        Relationships: []
+        Insert: {
+          cliente_id?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          descripcion?: string | null
+          estado?: Database["public"]["Enums"]["estado_oferta"] | null
+          fecha_expiracion?: string | null
+          fecha_publicacion?: string | null
+          id?: string | null
+          jornada_id?: number | null
+          modalidad_id?: number | null
+          ofrecemos?: string[] | null
+          publicado_por?: string | null
+          requisitos?: string[] | null
+          salario_max?: number | null
+          salario_min?: number | null
+          salario_texto?: string | null
+          sector_id?: number | null
+          slug?: string | null
+          titulo?: string | null
+          ubicacion?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          cliente_id?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          descripcion?: string | null
+          estado?: Database["public"]["Enums"]["estado_oferta"] | null
+          fecha_expiracion?: string | null
+          fecha_publicacion?: string | null
+          id?: string | null
+          jornada_id?: number | null
+          modalidad_id?: number | null
+          ofrecemos?: string[] | null
+          publicado_por?: string | null
+          requisitos?: string[] | null
+          salario_max?: number | null
+          salario_min?: number | null
+          salario_texto?: string | null
+          sector_id?: number | null
+          slug?: string | null
+          titulo?: string | null
+          ubicacion?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ofertas_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ofertas_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "empresas_publicas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ofertas_jornada_id_fkey"
+            columns: ["jornada_id"]
+            isOneToOne: false
+            referencedRelation: "jornadas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ofertas_modalidad_id_fkey"
+            columns: ["modalidad_id"]
+            isOneToOne: false
+            referencedRelation: "modalidades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ofertas_publicado_por_fkey"
+            columns: ["publicado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ofertas_sector_id_fkey"
+            columns: ["sector_id"]
+            isOneToOne: false
+            referencedRelation: "sectores"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Functions: {
       calcular_tiempo_lectura: { Args: { contenido: string }; Returns: number }
       candidatos_inactivos_a_purgar: {
         Args: { meses: number }
-        Returns: { user_id: string; email: string; avatar_url: string | null }[]
+        Returns: {
+          avatar_url: string
+          email: string
+          user_id: string
+        }[]
       }
       is_admin: { Args: never; Returns: boolean }
       is_candidato: { Args: never; Returns: boolean }
       is_recruiter: { Args: never; Returns: boolean }
+      next_numero_factura:
+        | {
+            Args: never
+            Returns: {
+              anio: number
+              correlativo: number
+              numero: string
+              serie: string
+            }[]
+          }
+        | {
+            Args: { serie_input?: string }
+            Returns: {
+              anio: number
+              correlativo: number
+              numero: string
+              serie: string
+            }[]
+          }
       slugify: { Args: { "": string }; Returns: string }
     }
     Enums: {
       estado_cliente: "activo" | "pausado" | "finalizado"
+      estado_factura:
+        | "pendiente"
+        | "pagada"
+        | "vencida"
+        | "devuelta"
+        | "anulada"
       estado_lead:
         | "nuevo"
         | "pendiente"
@@ -1039,6 +1757,12 @@ export type Database = {
         | "entrevista"
         | "descartado"
         | "contratado"
+      forma_pago:
+        | "transferencia"
+        | "efectivo"
+        | "bizum"
+        | "tarjeta"
+        | "domiciliacion"
       nivel_idioma: "A1" | "A2" | "B1" | "B2" | "C1" | "C2" | "Nativo"
       servicio_contratado:
         | "operaciones"
@@ -1046,6 +1770,7 @@ export type Database = {
         | "liderazgo"
         | "integral"
       tarifa_tipo: "mensual" | "proyecto" | "sesion"
+      tipo_cliente: "particular" | "empresa"
       tipo_lead: "contacto_general" | "consulta_servicio"
       user_role: "admin" | "recruiter" | "candidato" | "empresa"
     }
@@ -1176,6 +1901,7 @@ export const Constants = {
   public: {
     Enums: {
       estado_cliente: ["activo", "pausado", "finalizado"],
+      estado_factura: ["pendiente", "pagada", "vencida", "devuelta", "anulada"],
       estado_lead: [
         "nuevo",
         "pendiente",
@@ -1192,6 +1918,13 @@ export const Constants = {
         "descartado",
         "contratado",
       ],
+      forma_pago: [
+        "transferencia",
+        "efectivo",
+        "bizum",
+        "tarjeta",
+        "domiciliacion",
+      ],
       nivel_idioma: ["A1", "A2", "B1", "B2", "C1", "C2", "Nativo"],
       servicio_contratado: [
         "operaciones",
@@ -1200,6 +1933,7 @@ export const Constants = {
         "integral",
       ],
       tarifa_tipo: ["mensual", "proyecto", "sesion"],
+      tipo_cliente: ["particular", "empresa"],
       tipo_lead: ["contacto_general", "consulta_servicio"],
       user_role: ["admin", "recruiter", "candidato", "empresa"],
     },
@@ -1216,3 +1950,4 @@ export type UserRole = Database["public"]["Enums"]["user_role"]
 export type TipoLead = Database["public"]["Enums"]["tipo_lead"]
 export type NivelIdioma = Database["public"]["Enums"]["nivel_idioma"]
 export type EstadoPost = Database["public"]["Enums"]["estado_post"]
+export type TipoCliente = Database["public"]["Enums"]["tipo_cliente"]

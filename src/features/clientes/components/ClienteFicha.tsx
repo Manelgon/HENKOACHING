@@ -9,6 +9,7 @@ import type {
   EstadoCliente,
   ServicioContratado,
   TarifaTipo,
+  TipoCliente,
 } from '@/lib/supabase/database.types'
 import {
   ESTADOS_CLIENTE,
@@ -22,8 +23,9 @@ import { getOrigenLabel, ORIGENES_LEAD } from '@/features/leads/components/estad
 
 export type Cliente = {
   id: string
+  tipo: TipoCliente
   nombre: string
-  email: string
+  email: string | null
   telefono: string | null
   empresa: string | null
   nif_cif: string | null
@@ -40,6 +42,10 @@ export type Cliente = {
   fecha_conversion: string | null
   lead_id: string | null
   created_at: string | null
+  slug: string | null
+  logo_url: string | null
+  descripcion: string | null
+  ubicacion: string | null
 }
 
 export default function ClienteFicha({ cliente }: { cliente: Cliente }) {
@@ -48,8 +54,9 @@ export default function ClienteFicha({ cliente }: { cliente: Cliente }) {
   const confirm = useConfirm()
   const [editing, setEditing] = useState(false)
   const [form, setForm] = useState({
+    tipo: cliente.tipo,
     nombre: cliente.nombre,
-    email: cliente.email,
+    email: cliente.email ?? '',
     telefono: cliente.telefono ?? '',
     empresa: cliente.empresa ?? '',
     nif_cif: cliente.nif_cif ?? '',
@@ -63,15 +70,22 @@ export default function ClienteFicha({ cliente }: { cliente: Cliente }) {
     web_url: cliente.web_url ?? '',
     estado: cliente.estado,
     origen: cliente.origen ?? '',
+    slug: cliente.slug ?? '',
+    logo_url: cliente.logo_url ?? '',
+    descripcion: cliente.descripcion ?? '',
+    ubicacion: cliente.ubicacion ?? '',
   })
+
+  const esEmpresa = form.tipo === 'empresa'
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
     const result = await runAction(
       'Guardando cambios',
       () => editarCliente(cliente.id, {
+        tipo: form.tipo,
         nombre: form.nombre,
-        email: form.email,
+        email: form.email || null,
         telefono: form.telefono || null,
         empresa: form.empresa || null,
         nif_cif: form.nif_cif || null,
@@ -85,6 +99,10 @@ export default function ClienteFicha({ cliente }: { cliente: Cliente }) {
         web_url: form.web_url || null,
         estado: form.estado,
         origen: form.origen || null,
+        slug: esEmpresa ? (form.slug || null) : null,
+        logo_url: esEmpresa ? (form.logo_url || null) : null,
+        descripcion: esEmpresa ? (form.descripcion || null) : null,
+        ubicacion: esEmpresa ? (form.ubicacion || null) : null,
       }),
       { successMessage: 'Cliente actualizado' },
     )
@@ -122,21 +140,58 @@ export default function ClienteFicha({ cliente }: { cliente: Cliente }) {
   if (editing) {
     return (
       <form onSubmit={handleSave} className="bg-white rounded-2xl border border-gray-100 p-5 md:p-6 space-y-6">
+        <Section title="Tipo">
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => setForm({ ...form, tipo: 'particular' })}
+              className={`text-left rounded-xl border-[1.5px] px-4 py-3 transition-colors ${form.tipo === 'particular' ? 'border-henko-turquoise bg-henko-turquoise/5 text-henko-turquoise' : 'border-black/5 bg-henko-white text-gray-700 hover:border-black/10'}`}
+            >
+              <p className="font-raleway font-bold text-sm">Particular</p>
+            </button>
+            <button
+              type="button"
+              onClick={() => setForm({ ...form, tipo: 'empresa' })}
+              className={`text-left rounded-xl border-[1.5px] px-4 py-3 transition-colors ${form.tipo === 'empresa' ? 'border-henko-turquoise bg-henko-turquoise/5 text-henko-turquoise' : 'border-black/5 bg-henko-white text-gray-700 hover:border-black/10'}`}
+            >
+              <p className="font-raleway font-bold text-sm">Empresa</p>
+            </button>
+          </div>
+        </Section>
+
         <Section title="Datos de contacto">
           <Grid>
-            <Input label="Nombre" value={form.nombre} onChange={(v) => setForm({ ...form, nombre: v })} required />
-            <Input label="Email" type="email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} required />
+            <Input label={esEmpresa ? 'Nombre comercial' : 'Nombre'} value={form.nombre} onChange={(v) => setForm({ ...form, nombre: v })} required />
+            <Input label="Email" type="email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} required={!esEmpresa} />
             <Input label="Teléfono" value={form.telefono} onChange={(v) => setForm({ ...form, telefono: v })} />
-            <Input label="LinkedIn" value={form.linkedin_url} onChange={(v) => setForm({ ...form, linkedin_url: v })} />
+            {!esEmpresa && (
+              <Input label="LinkedIn" value={form.linkedin_url} onChange={(v) => setForm({ ...form, linkedin_url: v })} />
+            )}
             <Select label="Origen" value={form.origen} onChange={(v) => setForm({ ...form, origen: v })} options={[{ value: '', label: 'Sin especificar' }, ...ORIGENES_LEAD]} />
           </Grid>
         </Section>
 
+        {esEmpresa && (
+          <Section title="Ficha pública (bolsa de empleo)">
+            <Grid>
+              <Input label="Slug (URL)" value={form.slug} onChange={(v) => setForm({ ...form, slug: v })} placeholder="se autogenera del nombre" />
+              <Input label="Ubicación" value={form.ubicacion} onChange={(v) => setForm({ ...form, ubicacion: v })} placeholder="Palma, Mallorca" />
+              <Input label="Logo URL" value={form.logo_url} onChange={(v) => setForm({ ...form, logo_url: v })} placeholder="https://…" />
+              <Input label="Web" value={form.web_url} onChange={(v) => setForm({ ...form, web_url: v })} placeholder="https://…" />
+              <Input label="Descripción" value={form.descripcion} onChange={(v) => setForm({ ...form, descripcion: v })} className="md:col-span-2" />
+            </Grid>
+          </Section>
+        )}
+
         <Section title="Datos fiscales">
           <Grid>
-            <Input label="Empresa" value={form.empresa} onChange={(v) => setForm({ ...form, empresa: v })} />
+            {!esEmpresa && (
+              <Input label="Empresa donde trabaja" value={form.empresa} onChange={(v) => setForm({ ...form, empresa: v })} />
+            )}
             <Input label="NIF / CIF" value={form.nif_cif} onChange={(v) => setForm({ ...form, nif_cif: v })} />
-            <Input label="Web" value={form.web_url} onChange={(v) => setForm({ ...form, web_url: v })} />
+            {!esEmpresa && (
+              <Input label="Web" value={form.web_url} onChange={(v) => setForm({ ...form, web_url: v })} />
+            )}
             <Input label="Dirección fiscal" value={form.direccion_fiscal} onChange={(v) => setForm({ ...form, direccion_fiscal: v })} className="md:col-span-2" />
           </Grid>
         </Section>
@@ -291,9 +346,9 @@ function DD({ children, className = '' }: { children: React.ReactNode; className
 }
 
 function Input({
-  label, value, onChange, type = 'text', required, className = '',
+  label, value, onChange, type = 'text', required, className = '', placeholder,
 }: {
-  label: string; value: string; onChange: (v: string) => void; type?: string; required?: boolean; className?: string
+  label: string; value: string; onChange: (v: string) => void; type?: string; required?: boolean; className?: string; placeholder?: string
 }) {
   return (
     <div className={className}>
@@ -303,6 +358,7 @@ function Input({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         required={required}
+        placeholder={placeholder}
         className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 font-raleway text-sm outline-none focus:border-henko-turquoise focus:bg-white"
       />
     </div>

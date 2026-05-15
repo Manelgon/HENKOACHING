@@ -29,25 +29,27 @@ function slugify(s: string) {
     .slice(0, 80)
 }
 
-async function ensureEmpresa(nombre: string): Promise<string> {
+async function ensureClienteEmpresa(nombre: string): Promise<string> {
   const supabase = await createClient()
   const slug = slugify(nombre)
 
   const { data: existing } = await supabase
-    .from('empresas')
+    .from('clientes')
     .select('id')
+    .eq('tipo', 'empresa')
     .eq('slug', slug)
+    .is('deleted_at', null)
     .maybeSingle()
 
   if (existing) return existing.id
 
   const { data, error } = await supabase
-    .from('empresas')
-    .insert({ slug, nombre })
+    .from('clientes')
+    .insert({ tipo: 'empresa', slug, nombre })
     .select('id')
     .single()
 
-  if (error || !data) throw new Error('No se pudo crear empresa: ' + error?.message)
+  if (error || !data) throw new Error('No se pudo crear cliente-empresa: ' + error?.message)
   return data.id
 }
 
@@ -57,13 +59,13 @@ export async function crearOferta(input: OfertaInput) {
   if (!user) return { error: 'No autenticado' }
 
   try {
-    const empresa_id = await ensureEmpresa(input.empresa_nombre)
+    const cliente_id = await ensureClienteEmpresa(input.empresa_nombre)
     const slug = `${slugify(input.titulo)}-${Date.now().toString(36)}`
 
     const { data: nueva, error } = await supabase.from('ofertas').insert({
       slug,
       titulo: input.titulo,
-      empresa_id,
+      cliente_id,
       ubicacion: input.ubicacion,
       modalidad_id: input.modalidad_id,
       jornada_id: input.jornada_id,
@@ -101,13 +103,13 @@ export async function actualizarOferta(id: string, input: OfertaInput) {
   if (!user) return { error: 'No autenticado' }
 
   try {
-    const empresa_id = await ensureEmpresa(input.empresa_nombre)
+    const cliente_id = await ensureClienteEmpresa(input.empresa_nombre)
 
     const { error } = await supabase
       .from('ofertas')
       .update({
         titulo: input.titulo,
-        empresa_id,
+        cliente_id,
         ubicacion: input.ubicacion,
         modalidad_id: input.modalidad_id,
         jornada_id: input.jornada_id,

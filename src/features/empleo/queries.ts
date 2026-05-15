@@ -32,7 +32,7 @@ export async function getOfertasPublicadas(): Promise<OfertaListing[]> {
     .from('ofertas')
     .select(`
       id, slug, titulo, ubicacion, salario_texto, fecha_publicacion, estado,
-      empresas(nombre),
+      clientes(nombre),
       sectores(nombre),
       modalidades(nombre),
       jornadas(nombre)
@@ -47,7 +47,7 @@ export async function getOfertasPublicadas(): Promise<OfertaListing[]> {
     id: o.id,
     slug: o.slug,
     titulo: o.titulo,
-    empresa: (o.empresas as unknown as { nombre: string } | null)?.nombre ?? '',
+    empresa: (o.clientes as unknown as { nombre: string } | null)?.nombre ?? '',
     ubicacion: o.ubicacion ?? '',
     modalidad: (o.modalidades as unknown as { nombre: string } | null)?.nombre ?? '',
     jornada: (o.jornadas as unknown as { nombre: string } | null)?.nombre ?? '',
@@ -66,7 +66,7 @@ export async function getOfertaPorSlug(slug: string): Promise<OfertaDetalle | nu
     .select(`
       id, slug, titulo, ubicacion, salario_texto, fecha_publicacion, estado,
       descripcion, requisitos, ofrecemos,
-      empresas(nombre),
+      clientes(nombre),
       sectores(nombre),
       modalidades(nombre),
       jornadas(nombre)
@@ -81,7 +81,7 @@ export async function getOfertaPorSlug(slug: string): Promise<OfertaDetalle | nu
     id: data.id,
     slug: data.slug,
     titulo: data.titulo,
-    empresa: (data.empresas as unknown as { nombre: string } | null)?.nombre ?? '',
+    empresa: (data.clientes as unknown as { nombre: string } | null)?.nombre ?? '',
     ubicacion: data.ubicacion ?? '',
     modalidad: (data.modalidades as unknown as { nombre: string } | null)?.nombre ?? '',
     jornada: (data.jornadas as unknown as { nombre: string } | null)?.nombre ?? '',
@@ -124,7 +124,7 @@ export async function getMisSolicitudes(userId: string) {
     .from('solicitudes')
     .select(`
       id, estado, created_at,
-      ofertas(id, slug, titulo, empresas(nombre))
+      ofertas(id, slug, titulo, clientes(nombre))
     `)
     .eq('candidato_id', userId)
     .order('created_at', { ascending: false })

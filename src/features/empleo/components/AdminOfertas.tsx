@@ -41,17 +41,20 @@ type Draft = {
   estado: 'borrador' | 'publicada' | 'pausada' | 'cerrada'
 }
 
+type EmpresaOption = { id: string; nombre: string; ubicacion: string | null }
+
 type Props = {
   ofertas: OfertaView[]
   sectores: Catalogo[]
   modalidades: Catalogo[]
   jornadas: Catalogo[]
+  empresas: EmpresaOption[]
 }
 
 const labelClass = 'text-[10px] tracking-[0.14em] text-henko-turquoise font-bold mb-1.5 block'
 const inputClass = 'w-full px-4 py-2.5 rounded-xl text-sm border-[1.5px] border-black/5 bg-henko-white outline-none focus:border-henko-turquoise transition-colors'
 
-export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas }: Props) {
+export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas, empresas }: Props) {
   const router = useRouter()
   const runAction = useAction()
   const confirm = useConfirm()
@@ -292,7 +295,17 @@ export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas 
 
             <div className="px-5 sm:px-9 py-5 sm:py-7">
               <Field label="TÍTULO DEL PUESTO" value={draft.titulo} onChange={(v) => update('titulo', v)} placeholder="ej. Responsable de Operaciones" />
-              <Field label="EMPRESA" value={draft.empresa} onChange={(v) => update('empresa', v)} placeholder="Nombre de la empresa (se crea si no existe)" />
+              <EmpresaPickerField
+                value={draft.empresa}
+                onChange={(v) => {
+                  update('empresa', v)
+                  const match = empresas.find((e) => e.nombre.toLowerCase() === v.toLowerCase())
+                  if (match && match.ubicacion && !draft.ubicacion.trim()) {
+                    update('ubicacion', match.ubicacion)
+                  }
+                }}
+                empresas={empresas}
+              />
               <Field label="UBICACIÓN" value={draft.ubicacion} onChange={(v) => update('ubicacion', v)} placeholder="Palma, Mallorca" />
               <Field label="SALARIO" value={draft.salario_texto} onChange={(v) => update('salario_texto', v)} placeholder="ej. 30.000 – 36.000 €/año" />
 
@@ -396,6 +409,47 @@ function Field({ label, value, onChange, placeholder }: { label: string; value: 
     <div className="mb-4">
       <label className={labelClass}>{label}</label>
       <input className={inputClass} placeholder={placeholder} value={value} onChange={(e) => onChange(e.target.value)} />
+    </div>
+  )
+}
+
+function EmpresaPickerField({
+  value,
+  onChange,
+  empresas,
+}: {
+  value: string
+  onChange: (v: string) => void
+  empresas: EmpresaOption[]
+}) {
+  const datalistId = 'empresas-existentes'
+  const match = empresas.find((e) => e.nombre.toLowerCase() === value.trim().toLowerCase())
+  const hint = match
+    ? `Cliente-empresa existente${match.ubicacion ? ` · ${match.ubicacion}` : ''}`
+    : value.trim()
+      ? 'Se creará un nuevo cliente-empresa con este nombre'
+      : null
+
+  return (
+    <div className="mb-4">
+      <label className={labelClass}>EMPRESA</label>
+      <input
+        className={inputClass}
+        placeholder="Empieza a escribir para buscar o crea una nueva"
+        value={value}
+        list={datalistId}
+        onChange={(e) => onChange(e.target.value)}
+      />
+      <datalist id={datalistId}>
+        {empresas.map((e) => (
+          <option key={e.id} value={e.nombre} />
+        ))}
+      </datalist>
+      {hint && (
+        <p className={`mt-1.5 text-[11px] font-raleway ${match ? 'text-henko-turquoise' : 'text-gray-500'}`}>
+          {hint}
+        </p>
+      )}
     </div>
   )
 }

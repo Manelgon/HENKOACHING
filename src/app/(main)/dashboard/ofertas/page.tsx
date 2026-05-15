@@ -10,13 +10,13 @@ export const dynamic = 'force-dynamic'
 export default async function DashboardOfertasPage() {
   const supabase = await createClient()
 
-  const [{ data: ofertas }, { data: sectores }, { data: modalidades }, { data: jornadas }] = await Promise.all([
+  const [{ data: ofertas }, { data: sectores }, { data: modalidades }, { data: jornadas }, { data: empresas }] = await Promise.all([
     supabase
       .from('ofertas')
       .select(`
         id, slug, titulo, ubicacion, salario_texto, descripcion, requisitos, ofrecemos,
-        estado, fecha_publicacion, sector_id, modalidad_id, jornada_id, empresa_id,
-        empresas(nombre),
+        estado, fecha_publicacion, sector_id, modalidad_id, jornada_id, cliente_id,
+        clientes(nombre),
         sectores(nombre),
         modalidades(nombre),
         jornadas(nombre)
@@ -26,12 +26,18 @@ export default async function DashboardOfertasPage() {
     supabase.from('sectores').select('id, nombre, slug').order('orden'),
     supabase.from('modalidades').select('id, nombre, slug').order('orden'),
     supabase.from('jornadas').select('id, nombre, slug').order('orden'),
+    supabase
+      .from('clientes')
+      .select('id, nombre, ubicacion')
+      .eq('tipo', 'empresa')
+      .is('deleted_at', null)
+      .order('nombre'),
   ])
 
   const ofertasView = (ofertas ?? []).map((o) => ({
     id: o.id,
     titulo: o.titulo,
-    empresa: (o.empresas as unknown as { nombre: string } | null)?.nombre ?? '',
+    empresa: (o.clientes as unknown as { nombre: string } | null)?.nombre ?? '',
     ubicacion: o.ubicacion ?? '',
     salario_texto: o.salario_texto ?? '',
     descripcion: o.descripcion,
@@ -54,6 +60,7 @@ export default async function DashboardOfertasPage() {
         sectores={sectores ?? []}
         modalidades={modalidades ?? []}
         jornadas={jornadas ?? []}
+        empresas={(empresas ?? []).map((e) => ({ id: e.id, nombre: e.nombre, ubicacion: e.ubicacion ?? null }))}
       />
     </div>
   )

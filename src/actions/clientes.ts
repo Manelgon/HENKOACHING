@@ -8,11 +8,13 @@ import type {
   EstadoCliente,
   ServicioContratado,
   TarifaTipo,
+  TipoCliente,
 } from '@/lib/supabase/database.types'
 
 type ClienteInput = {
+  tipo?: TipoCliente
   nombre: string
-  email: string
+  email: string | null
   telefono?: string | null
   empresa?: string | null
   nif_cif?: string | null
@@ -26,15 +28,38 @@ type ClienteInput = {
   web_url?: string | null
   estado?: EstadoCliente
   origen?: string | null
+  // Campos específicos cuando tipo='empresa' (para bolsa de empleo)
+  slug?: string | null
+  logo_url?: string | null
+  descripcion?: string | null
+  ubicacion?: string | null
+}
+
+function slugify(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80)
+}
+
+function validateClienteInput(input: ClienteInput): string | null {
+  if (!input.nombre.trim()) return 'El nombre es obligatorio'
+  const esEmpresa = input.tipo === 'empresa'
+  if (!esEmpresa && (!input.email || !input.email.trim())) {
+    return 'El email es obligatorio para clientes particulares'
+  }
+  return null
 }
 
 // =============================================================================
 // CONVERTIR LEAD → CLIENTE (mueve el lead, lo archiva y crea el cliente)
 // =============================================================================
 export async function convertirLeadACliente(leadId: string, input: ClienteInput) {
-  if (!input.nombre.trim() || !input.email.trim()) {
-    return { error: 'Nombre y email son obligatorios' }
-  }
+  const validation = validateClienteInput(input)
+  if (validation) return { error: validation }
 
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -50,12 +75,14 @@ export async function convertirLeadACliente(leadId: string, input: ClienteInput)
   if (!lead) return { error: 'Lead no encontrado' }
 
   // Crear cliente
+  const tipo = input.tipo ?? 'particular'
   const { data: cliente, error: errCli } = await supabase
     .from('clientes')
     .insert({
       lead_id: leadId,
+      tipo,
       nombre: input.nombre,
-      email: input.email,
+      email: input.email || null,
       telefono: input.telefono ?? null,
       empresa: input.empresa ?? null,
       nif_cif: input.nif_cif ?? null,
@@ -70,6 +97,10 @@ export async function convertirLeadACliente(leadId: string, input: ClienteInput)
       estado: input.estado ?? 'activo',
       origen: input.origen ?? lead.origen ?? null,
       creado_por: user.id,
+      slug: tipo === 'empresa' ? (input.slug || slugify(input.nombre)) : null,
+      logo_url: input.logo_url ?? null,
+      descripcion: input.descripcion ?? null,
+      ubicacion: input.ubicacion ?? null,
     })
     .select('id')
     .single()
@@ -105,19 +136,20 @@ export async function convertirLeadACliente(leadId: string, input: ClienteInput)
 // CREAR CLIENTE MANUALMENTE (sin lead previo)
 // =============================================================================
 export async function crearClienteManual(input: ClienteInput) {
-  if (!input.nombre.trim() || !input.email.trim()) {
-    return { error: 'Nombre y email son obligatorios' }
-  }
+  const validation = validateClienteInput(input)
+  if (validation) return { error: validation }
 
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'No autenticado' }
 
+  const tipo = input.tipo ?? 'particular'
   const { data: cliente, error } = await supabase
     .from('clientes')
     .insert({
+      tipo,
       nombre: input.nombre,
-      email: input.email,
+      email: input.email || null,
       telefono: input.telefono ?? null,
       empresa: input.empresa ?? null,
       nif_cif: input.nif_cif ?? null,
@@ -132,6 +164,10 @@ export async function crearClienteManual(input: ClienteInput) {
       estado: input.estado ?? 'activo',
       origen: input.origen ?? null,
       creado_por: user.id,
+      slug: tipo === 'empresa' ? (input.slug || slugify(input.nombre)) : null,
+      logo_url: input.logo_url ?? null,
+      descripcion: input.descripcion ?? null,
+      ubicacion: input.ubicacion ?? null,
     })
     .select('id')
     .single()
@@ -154,17 +190,18 @@ export async function crearClienteManual(input: ClienteInput) {
 // EDITAR CLIENTE
 // =============================================================================
 export async function editarCliente(id: string, input: ClienteInput) {
-  if (!input.nombre.trim() || !input.email.trim()) {
-    return { error: 'Nombre y email son obligatorios' }
-  }
+  const validation = validateClienteInput(input)
+  if (validation) return { error: validation }
 
   const supabase = await createClient()
 
+  const tipo = input.tipo ?? 'particular'
   const { error } = await supabase
     .from('clientes')
     .update({
+      tipo,
       nombre: input.nombre,
-      email: input.email,
+      email: input.email || null,
       telefono: input.telefono ?? null,
       empresa: input.empresa ?? null,
       nif_cif: input.nif_cif ?? null,
@@ -178,6 +215,10 @@ export async function editarCliente(id: string, input: ClienteInput) {
       web_url: input.web_url ?? null,
       estado: input.estado ?? 'activo',
       origen: input.origen ?? null,
+      slug: tipo === 'empresa' ? (input.slug || slugify(input.nombre)) : null,
+      logo_url: input.logo_url ?? null,
+      descripcion: input.descripcion ?? null,
+      ubicacion: input.ubicacion ?? null,
     })
     .eq('id', id)
 

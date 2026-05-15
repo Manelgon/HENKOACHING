@@ -4,14 +4,15 @@ import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { TablePagination, usePagination } from '@/components/TablePagination'
-import type { EstadoCliente, ServicioContratado } from '@/lib/supabase/database.types'
+import type { EstadoCliente, ServicioContratado, TipoCliente } from '@/lib/supabase/database.types'
 import { ESTADOS_CLIENTE, SERVICIOS, formatImporte, getEstadoClienteMeta, getServicioLabel } from './estados'
 import NewClienteModal from './NewClienteModal'
 
 export type ClienteRow = {
   id: string
+  tipo: TipoCliente
   nombre: string
-  email: string
+  email: string | null
   telefono: string | null
   empresa: string | null
   servicio_contratado: ServicioContratado | null
@@ -22,26 +23,30 @@ export type ClienteRow = {
   fecha_inicio: string | null
   fecha_conversion: string | null
   origen: string | null
+  slug: string | null
+  ubicacion: string | null
 }
 
 type Filtros = {
   estado: EstadoCliente | 'todos'
   servicio: ServicioContratado | 'todos'
+  tipo: TipoCliente | 'todos'
   busqueda: string
 }
 
 export default function ClientesTable({ clientes }: { clientes: ClienteRow[] }) {
   const router = useRouter()
-  const [filtros, setFiltros] = useState<Filtros>({ estado: 'todos', servicio: 'todos', busqueda: '' })
+  const [filtros, setFiltros] = useState<Filtros>({ estado: 'todos', servicio: 'todos', tipo: 'todos', busqueda: '' })
   const [showNew, setShowNew] = useState(false)
 
   const filtered = useMemo(() => {
     const q = filtros.busqueda.trim().toLowerCase()
     return clientes.filter((c) => {
+      if (filtros.tipo !== 'todos' && c.tipo !== filtros.tipo) return false
       if (filtros.estado !== 'todos' && c.estado !== filtros.estado) return false
       if (filtros.servicio !== 'todos' && c.servicio_contratado !== filtros.servicio) return false
       if (q) {
-        const hay = `${c.nombre} ${c.email} ${c.empresa ?? ''} ${c.telefono ?? ''}`.toLowerCase()
+        const hay = `${c.nombre} ${c.email ?? ''} ${c.empresa ?? ''} ${c.telefono ?? ''} ${c.ubicacion ?? ''}`.toLowerCase()
         if (!hay.includes(q)) return false
       }
       return true
@@ -55,7 +60,7 @@ export default function ClientesTable({ clientes }: { clientes: ClienteRow[] }) 
       {/* Toolbar */}
       <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm px-4 md:px-6 py-4 mb-6">
         <div className="flex flex-col md:flex-row md:items-center gap-3">
-          <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <input
               type="text"
               placeholder="Buscar por nombre, email, empresa…"
@@ -63,6 +68,15 @@ export default function ClientesTable({ clientes }: { clientes: ClienteRow[] }) 
               onChange={(e) => setFiltros((f) => ({ ...f, busqueda: e.target.value }))}
               className="px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 font-raleway text-sm outline-none focus:border-henko-turquoise focus:bg-white"
             />
+            <select
+              value={filtros.tipo}
+              onChange={(e) => setFiltros((f) => ({ ...f, tipo: e.target.value as TipoCliente | 'todos' }))}
+              className="px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 font-raleway text-sm outline-none focus:border-henko-turquoise focus:bg-white"
+            >
+              <option value="todos">Todos los tipos</option>
+              <option value="particular">Particulares</option>
+              <option value="empresa">Empresas</option>
+            </select>
             <select
               value={filtros.estado}
               onChange={(e) => setFiltros((f) => ({ ...f, estado: e.target.value as EstadoCliente | 'todos' }))}
@@ -114,7 +128,7 @@ export default function ClientesTable({ clientes }: { clientes: ClienteRow[] }) 
           {/* Cabecera desktop */}
           <div className="hidden md:grid grid-cols-12 gap-4 px-6 lg:px-8 py-4 border-b border-gray-100 bg-gray-50">
             <span className="col-span-3 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Nombre</span>
-            <span className="col-span-2 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Empresa</span>
+            <span className="col-span-2 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Empresa / Ubic.</span>
             <span className="col-span-2 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Servicio</span>
             <span className="col-span-2 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Importe</span>
             <span className="col-span-2 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Estado</span>
@@ -135,8 +149,17 @@ export default function ClientesTable({ clientes }: { clientes: ClienteRow[] }) 
               >
                 {/* Desktop */}
                 <div className="hidden md:grid grid-cols-12 gap-4 px-6 lg:px-8 py-4 items-center">
-                  <span className="col-span-3 font-raleway font-semibold text-gray-900 truncate">{c.nombre}</span>
-                  <span className="col-span-2 font-raleway text-sm text-gray-600 truncate">{c.empresa ?? '—'}</span>
+                  <span className="col-span-3 font-raleway font-semibold text-gray-900 truncate inline-flex items-center gap-2">
+                    {c.nombre}
+                    {c.tipo === 'empresa' && (
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-raleway font-bold uppercase tracking-wider bg-henko-turquoise/10 text-henko-turquoise">
+                        Empresa
+                      </span>
+                    )}
+                  </span>
+                  <span className="col-span-2 font-raleway text-sm text-gray-600 truncate">
+                    {c.tipo === 'empresa' ? (c.ubicacion ?? '—') : (c.empresa ?? '—')}
+                  </span>
                   <span className="col-span-2 font-raleway text-sm text-gray-600 truncate">{getServicioLabel(c.servicio_contratado)}</span>
                   <span className="col-span-2 font-raleway text-sm text-gray-700">{formatImporte(c.importe, c.tarifa)}</span>
                   <span className="col-span-2">
@@ -151,13 +174,22 @@ export default function ClientesTable({ clientes }: { clientes: ClienteRow[] }) 
                 {/* Móvil */}
                 <div className="md:hidden px-4 py-4">
                   <div className="flex items-start justify-between gap-3 mb-1">
-                    <p className="font-raleway font-semibold text-gray-900 text-sm truncate">{c.nombre}</p>
+                    <p className="font-raleway font-semibold text-gray-900 text-sm truncate inline-flex items-center gap-1.5">
+                      {c.nombre}
+                      {c.tipo === 'empresa' && (
+                        <span className="inline-flex items-center px-1 py-0.5 rounded text-[9px] font-bold uppercase bg-henko-turquoise/10 text-henko-turquoise flex-shrink-0">
+                          Empresa
+                        </span>
+                      )}
+                    </p>
                     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-raleway font-semibold flex-shrink-0 ${estado.bg} ${estado.color}`}>
                       <span className={`w-1 h-1 rounded-full ${estado.dot}`} />
                       {estado.label}
                     </span>
                   </div>
-                  {c.empresa && <p className="font-raleway text-xs text-gray-500 truncate mb-1">{c.empresa}</p>}
+                  {(c.tipo === 'empresa' ? c.ubicacion : c.empresa) && (
+                    <p className="font-raleway text-xs text-gray-500 truncate mb-1">{c.tipo === 'empresa' ? c.ubicacion : c.empresa}</p>
+                  )}
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] text-gray-400 font-raleway">{getServicioLabel(c.servicio_contratado)}</span>
                     <span className="text-[11px] text-gray-700 font-raleway font-semibold">{formatImporte(c.importe, c.tarifa)}</span>
