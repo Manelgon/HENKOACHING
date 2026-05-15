@@ -1,10 +1,13 @@
 import { createClient } from '@/lib/supabase/server'
 
+export const EMPRESA_CONFIDENCIAL = 'Empresa confidencial'
+
 export type OfertaListing = {
   id: string
   slug: string
   titulo: string
   empresa: string
+  empresaOculta: boolean
   ubicacion: string
   modalidad: string
   jornada: string
@@ -15,8 +18,12 @@ export type OfertaListing = {
 }
 
 export type OfertaDetalle = OfertaListing & {
+  reportaA: string
+  contrato: string
   descripcion: string
+  funciones: string[]
   requisitos: string[]
+  competencias: string[]
   ofrecemos: string[]
   // Datos crudos para SEO (JSON-LD JobPosting)
   fechaPublicacionISO: string | null
@@ -37,7 +44,7 @@ export async function getOfertasPublicadas(): Promise<OfertaListing[]> {
   const { data, error } = await supabase
     .from('ofertas')
     .select(`
-      id, slug, titulo, ubicacion, salario_texto, fecha_publicacion, estado,
+      id, slug, titulo, ubicacion, salario_texto, fecha_publicacion, estado, empresa_oculta,
       clientes(nombre),
       sectores(nombre),
       modalidades(nombre),
@@ -49,19 +56,24 @@ export async function getOfertasPublicadas(): Promise<OfertaListing[]> {
 
   if (error || !data) return []
 
-  return data.map((o) => ({
-    id: o.id,
-    slug: o.slug,
-    titulo: o.titulo,
-    empresa: (o.clientes as unknown as { nombre: string } | null)?.nombre ?? '',
-    ubicacion: o.ubicacion ?? '',
-    modalidad: (o.modalidades as unknown as { nombre: string } | null)?.nombre ?? '',
-    jornada: (o.jornadas as unknown as { nombre: string } | null)?.nombre ?? '',
-    sector: (o.sectores as unknown as { nombre: string } | null)?.nombre ?? '',
-    salario: o.salario_texto ?? '',
-    fecha: formatDate(o.fecha_publicacion),
-    estado: o.estado,
-  }))
+  return data.map((o) => {
+    const empresaReal = (o.clientes as unknown as { nombre: string } | null)?.nombre ?? ''
+    const oculta = !!o.empresa_oculta
+    return {
+      id: o.id,
+      slug: o.slug,
+      titulo: o.titulo,
+      empresa: oculta ? EMPRESA_CONFIDENCIAL : empresaReal,
+      empresaOculta: oculta,
+      ubicacion: o.ubicacion ?? '',
+      modalidad: (o.modalidades as unknown as { nombre: string } | null)?.nombre ?? '',
+      jornada: (o.jornadas as unknown as { nombre: string } | null)?.nombre ?? '',
+      sector: (o.sectores as unknown as { nombre: string } | null)?.nombre ?? '',
+      salario: o.salario_texto ?? '',
+      fecha: formatDate(o.fecha_publicacion),
+      estado: o.estado,
+    }
+  })
 }
 
 export async function getOfertaPorSlug(slug: string): Promise<OfertaDetalle | null> {
@@ -71,8 +83,8 @@ export async function getOfertaPorSlug(slug: string): Promise<OfertaDetalle | nu
     .from('ofertas')
     .select(`
       id, slug, titulo, ubicacion, salario_texto, salario_min, salario_max,
-      fecha_publicacion, fecha_expiracion, estado,
-      descripcion, requisitos, ofrecemos,
+      fecha_publicacion, fecha_expiracion, estado, empresa_oculta,
+      reporta_a, contrato, descripcion, funciones, requisitos, competencias, ofrecemos,
       clientes(nombre),
       sectores(nombre),
       modalidades(nombre, slug),
@@ -85,12 +97,15 @@ export async function getOfertaPorSlug(slug: string): Promise<OfertaDetalle | nu
   if (!data) return null
 
   const modalidad = data.modalidades as unknown as { nombre: string; slug: string } | null
+  const empresaReal = (data.clientes as unknown as { nombre: string } | null)?.nombre ?? ''
+  const oculta = !!data.empresa_oculta
 
   return {
     id: data.id,
     slug: data.slug,
     titulo: data.titulo,
-    empresa: (data.clientes as unknown as { nombre: string } | null)?.nombre ?? '',
+    empresa: oculta ? EMPRESA_CONFIDENCIAL : empresaReal,
+    empresaOculta: oculta,
     ubicacion: data.ubicacion ?? '',
     modalidad: modalidad?.nombre ?? '',
     modalidadSlug: modalidad?.slug ?? '',
@@ -103,8 +118,12 @@ export async function getOfertaPorSlug(slug: string): Promise<OfertaDetalle | nu
     fechaPublicacionISO: data.fecha_publicacion ?? null,
     fechaExpiracionISO: data.fecha_expiracion ?? null,
     estado: data.estado,
+    reportaA: data.reporta_a ?? '',
+    contrato: data.contrato ?? '',
     descripcion: data.descripcion,
+    funciones: data.funciones ?? [],
     requisitos: data.requisitos ?? [],
+    competencias: data.competencias ?? [],
     ofrecemos: data.ofrecemos ?? [],
   }
 }

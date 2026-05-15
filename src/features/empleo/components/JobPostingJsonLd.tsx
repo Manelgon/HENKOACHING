@@ -40,15 +40,27 @@ function buildBaseSalary(min: number | null, max: number | null) {
   }
 }
 
-// Construye un texto HTML mínimo a partir de descripcion + requisitos + ofrecemos.
+// Construye un texto HTML mínimo a partir de descripcion + funciones + requisitos + competencias + ofrecemos.
 // Google for Jobs acepta plain text o HTML simple.
 function buildDescription(o: OfertaDetalle): string {
   let html = `<p>${escape(o.descripcion)}</p>`
+  if (o.reportaA) {
+    html += `<p><strong>Reporta a:</strong> ${escape(o.reportaA)}</p>`
+  }
+  if (o.contrato) {
+    html += `<p><strong>Contrato:</strong> ${escape(o.contrato)}</p>`
+  }
+  if (o.funciones.length > 0) {
+    html += `<p><strong>Funciones principales:</strong></p><ul>${o.funciones.map((r) => `<li>${escape(r)}</li>`).join('')}</ul>`
+  }
   if (o.requisitos.length > 0) {
     html += `<p><strong>Requisitos:</strong></p><ul>${o.requisitos.map((r) => `<li>${escape(r)}</li>`).join('')}</ul>`
   }
+  if (o.competencias.length > 0) {
+    html += `<p><strong>Competencias clave:</strong></p><ul>${o.competencias.map((r) => `<li>${escape(r)}</li>`).join('')}</ul>`
+  }
   if (o.ofrecemos.length > 0) {
-    html += `<p><strong>Qué ofrecemos:</strong></p><ul>${o.ofrecemos.map((r) => `<li>${escape(r)}</li>`).join('')}</ul>`
+    html += `<p><strong>Se ofrece:</strong></p><ul>${o.ofrecemos.map((r) => `<li>${escape(r)}</li>`).join('')}</ul>`
   }
   return html
 }

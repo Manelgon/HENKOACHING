@@ -61,8 +61,39 @@ export default function OfertaDetalle({ oferta: o, yaAplicado, isCandidato, isLo
               ))}
             </div>
 
-            <h3 className="font-roxborough text-2xl text-gray-900 mb-3.5">Descripción</h3>
+            {(o.reportaA || o.contrato) && (
+              <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3 mb-10 pb-9 border-b border-black/5">
+                {o.reportaA && (
+                  <div>
+                    <dt className="text-[10px] tracking-[0.18em] text-henko-turquoise font-bold uppercase mb-1">Reporta a</dt>
+                    <dd className="text-sm text-gray-700">{o.reportaA}</dd>
+                  </div>
+                )}
+                {o.contrato && (
+                  <div>
+                    <dt className="text-[10px] tracking-[0.18em] text-henko-turquoise font-bold uppercase mb-1">Contrato</dt>
+                    <dd className="text-sm text-gray-700">{o.contrato}</dd>
+                  </div>
+                )}
+              </dl>
+            )}
+
+            <h3 className="font-roxborough text-2xl text-gray-900 mb-3.5">Descripción del puesto</h3>
             <p className="text-sm leading-[1.85] text-gray-600 mb-9 whitespace-pre-line">{o.descripcion}</p>
+
+            {o.funciones.length > 0 && (
+              <>
+                <h3 className="font-roxborough text-2xl text-gray-900 mb-3.5">Funciones principales</h3>
+                <ul className="mb-9 space-y-2.5">
+                  {o.funciones.map((r, i) => (
+                    <li key={i} className="flex gap-3 items-start">
+                      <span className="w-1.5 h-1.5 rounded-full bg-henko-turquoise flex-shrink-0 mt-2" />
+                      <span className="text-sm text-gray-600 leading-relaxed">{r}</span>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
 
             {o.requisitos.length > 0 && (
               <>
@@ -78,9 +109,23 @@ export default function OfertaDetalle({ oferta: o, yaAplicado, isCandidato, isLo
               </>
             )}
 
+            {o.competencias.length > 0 && (
+              <>
+                <h3 className="font-roxborough text-2xl text-gray-900 mb-3.5">Competencias clave</h3>
+                <ul className="mb-9 space-y-2.5">
+                  {o.competencias.map((r, i) => (
+                    <li key={i} className="flex gap-3 items-start">
+                      <span className="w-1.5 h-1.5 rounded-full bg-henko-turquoise flex-shrink-0 mt-2" />
+                      <span className="text-sm text-gray-600 leading-relaxed">{r}</span>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+
             {o.ofrecemos.length > 0 && (
               <>
-                <h3 className="font-roxborough text-2xl text-gray-900 mb-3.5">Qué ofrecemos</h3>
+                <h3 className="font-roxborough text-2xl text-gray-900 mb-3.5">Se ofrece</h3>
                 <ul className="space-y-2.5">
                   {o.ofrecemos.map((r, i) => (
                     <li key={i} className="flex gap-3 items-start">

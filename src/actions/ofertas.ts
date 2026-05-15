@@ -8,13 +8,18 @@ export type OfertaInput = {
   id?: string
   titulo: string
   empresa_nombre: string
+  empresa_oculta: boolean
   ubicacion: string
   modalidad_id: number
   jornada_id: number
   sector_id: number
   salario_texto: string
+  reporta_a: string
+  contrato: string
   descripcion: string
+  funciones?: string[]
   requisitos?: string[]
+  competencias?: string[]
   ofrecemos?: string[]
   estado: 'borrador' | 'publicada' | 'pausada' | 'cerrada'
 }
@@ -66,13 +71,18 @@ export async function crearOferta(input: OfertaInput) {
       slug,
       titulo: input.titulo,
       cliente_id,
+      empresa_oculta: input.empresa_oculta,
       ubicacion: input.ubicacion,
       modalidad_id: input.modalidad_id,
       jornada_id: input.jornada_id,
       sector_id: input.sector_id,
       salario_texto: input.salario_texto,
+      reporta_a: input.reporta_a || null,
+      contrato: input.contrato || null,
       descripcion: input.descripcion,
+      funciones: input.funciones ?? [],
       requisitos: input.requisitos ?? [],
+      competencias: input.competencias ?? [],
       ofrecemos: input.ofrecemos ?? [],
       estado: input.estado,
       fecha_publicacion: input.estado === 'publicada' ? new Date().toISOString() : null,
@@ -110,13 +120,18 @@ export async function actualizarOferta(id: string, input: OfertaInput) {
       .update({
         titulo: input.titulo,
         cliente_id,
+        empresa_oculta: input.empresa_oculta,
         ubicacion: input.ubicacion,
         modalidad_id: input.modalidad_id,
         jornada_id: input.jornada_id,
         sector_id: input.sector_id,
         salario_texto: input.salario_texto,
+        reporta_a: input.reporta_a || null,
+        contrato: input.contrato || null,
         descripcion: input.descripcion,
+        funciones: input.funciones ?? [],
         requisitos: input.requisitos ?? [],
+        competencias: input.competencias ?? [],
         ofrecemos: input.ofrecemos ?? [],
         estado: input.estado,
       })

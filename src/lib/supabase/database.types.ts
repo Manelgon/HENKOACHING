@@ -1,4 +1,4 @@
-export type Json =
+﻿export type Json =
   | string
   | number
   | boolean
@@ -690,6 +690,7 @@ export type Database = {
           emisor_telefono: string | null
           emisor_web: string | null
           firma_path: string | null
+          footer_path: string | null
           forma_pago_default: Database["public"]["Enums"]["forma_pago"] | null
           header_path: string | null
           id: number
@@ -716,6 +717,7 @@ export type Database = {
           emisor_telefono?: string | null
           emisor_web?: string | null
           firma_path?: string | null
+          footer_path?: string | null
           forma_pago_default?: Database["public"]["Enums"]["forma_pago"] | null
           header_path?: string | null
           id?: number
@@ -742,6 +744,7 @@ export type Database = {
           emisor_telefono?: string | null
           emisor_web?: string | null
           firma_path?: string | null
+          footer_path?: string | null
           forma_pago_default?: Database["public"]["Enums"]["forma_pago"] | null
           header_path?: string | null
           id?: number
@@ -1139,17 +1142,22 @@ export type Database = {
       ofertas: {
         Row: {
           cliente_id: string
+          competencias: string[]
+          contrato: string | null
           created_at: string | null
           deleted_at: string | null
           descripcion: string
+          empresa_oculta: boolean
           estado: Database["public"]["Enums"]["estado_oferta"]
           fecha_expiracion: string | null
           fecha_publicacion: string | null
+          funciones: string[]
           id: string
           jornada_id: number | null
           modalidad_id: number | null
           ofrecemos: string[] | null
           publicado_por: string | null
+          reporta_a: string | null
           requisitos: string[] | null
           salario_max: number | null
           salario_min: number | null
@@ -1162,17 +1170,22 @@ export type Database = {
         }
         Insert: {
           cliente_id: string
+          competencias?: string[]
+          contrato?: string | null
           created_at?: string | null
           deleted_at?: string | null
           descripcion: string
+          empresa_oculta?: boolean
           estado?: Database["public"]["Enums"]["estado_oferta"]
           fecha_expiracion?: string | null
           fecha_publicacion?: string | null
+          funciones?: string[]
           id?: string
           jornada_id?: number | null
           modalidad_id?: number | null
           ofrecemos?: string[] | null
           publicado_por?: string | null
+          reporta_a?: string | null
           requisitos?: string[] | null
           salario_max?: number | null
           salario_min?: number | null
@@ -1185,17 +1198,22 @@ export type Database = {
         }
         Update: {
           cliente_id?: string
+          competencias?: string[]
+          contrato?: string | null
           created_at?: string | null
           deleted_at?: string | null
           descripcion?: string
+          empresa_oculta?: boolean
           estado?: Database["public"]["Enums"]["estado_oferta"]
           fecha_expiracion?: string | null
           fecha_publicacion?: string | null
+          funciones?: string[]
           id?: string
           jornada_id?: number | null
           modalidad_id?: number | null
           ofrecemos?: string[] | null
           publicado_por?: string | null
+          reporta_a?: string | null
           requisitos?: string[] | null
           salario_max?: number | null
           salario_min?: number | null
@@ -1951,3 +1969,4 @@ export type TipoLead = Database["public"]["Enums"]["tipo_lead"]
 export type NivelIdioma = Database["public"]["Enums"]["nivel_idioma"]
 export type EstadoPost = Database["public"]["Enums"]["estado_post"]
 export type TipoCliente = Database["public"]["Enums"]["tipo_cliente"]
+
