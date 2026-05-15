@@ -1125,5 +1125,45 @@ insert into public.blog_categorias (slug, nombre, descripcion, orden) values
 on conflict (slug) do nothing;
 
 -- =============================================================================
+-- 16. RGPD: HELPERS DE RETENCIÓN
+-- =============================================================================
+
+-- Devuelve candidatos cuya última actividad (login o creación) es anterior
+-- al umbral de meses, y que no tienen solicitudes en proceso activo.
+-- Usada por el cron de retención (src/app/api/cron/retencion/route.ts).
+create or replace function public.candidatos_inactivos_a_purgar(meses integer)
+returns table (
+  user_id uuid,
+  email text,
+  avatar_url text
+)
+language sql
+security definer
+set search_path = public, auth
+as $$
+  select
+    p.id as user_id,
+    p.email,
+    p.avatar_url
+  from public.profiles p
+  join auth.users u on u.id = p.id
+  where p.role = 'candidato'
+    and p.deleted_at is null
+    and coalesce(u.last_sign_in_at, u.created_at) < now() - (meses || ' months')::interval
+    and not exists (
+      select 1
+      from public.solicitudes s
+      where s.candidato_id = p.id
+        and s.estado in ('revisando', 'entrevista')
+    )
+$$;
+
+revoke all on function public.candidatos_inactivos_a_purgar(integer) from public;
+revoke all on function public.candidatos_inactivos_a_purgar(integer) from anon;
+revoke all on function public.candidatos_inactivos_a_purgar(integer) from authenticated;
+grant execute on function public.candidatos_inactivos_a_purgar(integer) to service_role;
+
+
+-- =============================================================================
 -- FIN DEL SCHEMA
 -- =============================================================================

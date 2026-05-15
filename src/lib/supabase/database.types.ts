@@ -1014,6 +1014,10 @@ export type Database = {
     }
     Functions: {
       calcular_tiempo_lectura: { Args: { contenido: string }; Returns: number }
+      candidatos_inactivos_a_purgar: {
+        Args: { meses: number }
+        Returns: { user_id: string; email: string; avatar_url: string | null }[]
+      }
       is_admin: { Args: never; Returns: boolean }
       is_candidato: { Args: never; Returns: boolean }
       is_recruiter: { Args: never; Returns: boolean }
