@@ -18,6 +18,12 @@ export type OfertaDetalle = OfertaListing & {
   descripcion: string
   requisitos: string[]
   ofrecemos: string[]
+  // Datos crudos para SEO (JSON-LD JobPosting)
+  fechaPublicacionISO: string | null
+  fechaExpiracionISO: string | null
+  salarioMin: number | null
+  salarioMax: number | null
+  modalidadSlug: string
 }
 
 const formatDate = (iso: string | null) => {
@@ -64,11 +70,12 @@ export async function getOfertaPorSlug(slug: string): Promise<OfertaDetalle | nu
   const { data } = await supabase
     .from('ofertas')
     .select(`
-      id, slug, titulo, ubicacion, salario_texto, fecha_publicacion, estado,
+      id, slug, titulo, ubicacion, salario_texto, salario_min, salario_max,
+      fecha_publicacion, fecha_expiracion, estado,
       descripcion, requisitos, ofrecemos,
       clientes(nombre),
       sectores(nombre),
-      modalidades(nombre),
+      modalidades(nombre, slug),
       jornadas(nombre)
     `)
     .eq('slug', slug)
@@ -77,22 +84,45 @@ export async function getOfertaPorSlug(slug: string): Promise<OfertaDetalle | nu
 
   if (!data) return null
 
+  const modalidad = data.modalidades as unknown as { nombre: string; slug: string } | null
+
   return {
     id: data.id,
     slug: data.slug,
     titulo: data.titulo,
     empresa: (data.clientes as unknown as { nombre: string } | null)?.nombre ?? '',
     ubicacion: data.ubicacion ?? '',
-    modalidad: (data.modalidades as unknown as { nombre: string } | null)?.nombre ?? '',
+    modalidad: modalidad?.nombre ?? '',
+    modalidadSlug: modalidad?.slug ?? '',
     jornada: (data.jornadas as unknown as { nombre: string } | null)?.nombre ?? '',
     sector: (data.sectores as unknown as { nombre: string } | null)?.nombre ?? '',
     salario: data.salario_texto ?? '',
+    salarioMin: data.salario_min ?? null,
+    salarioMax: data.salario_max ?? null,
     fecha: formatDate(data.fecha_publicacion),
+    fechaPublicacionISO: data.fecha_publicacion ?? null,
+    fechaExpiracionISO: data.fecha_expiracion ?? null,
     estado: data.estado,
     descripcion: data.descripcion,
     requisitos: data.requisitos ?? [],
     ofrecemos: data.ofrecemos ?? [],
   }
+}
+
+export async function getOfertasSlugsPublicados(): Promise<{ slug: string; updated_at: string | null }[]> {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('ofertas')
+    .select('slug, updated_at, fecha_publicacion, fecha_expiracion')
+    .eq('estado', 'publicada')
+    .is('deleted_at', null)
+
+  if (!data) return []
+
+  const ahora = new Date()
+  return data
+    .filter((o) => !o.fecha_expiracion || new Date(o.fecha_expiracion) > ahora)
+    .map((o) => ({ slug: o.slug, updated_at: o.updated_at ?? o.fecha_publicacion ?? null }))
 }
 
 export type Catalogo = { id: number; nombre: string; slug: string }

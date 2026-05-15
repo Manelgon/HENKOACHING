@@ -1,8 +1,10 @@
 import { notFound } from 'next/navigation'
 import { Metadata } from 'next'
 import OfertaDetalle from '@/features/empleo/components/OfertaDetalle'
+import JobPostingJsonLd from '@/features/empleo/components/JobPostingJsonLd'
 import { getOfertaPorSlug, yaAplico } from '@/features/empleo/queries'
 import { createClient } from '@/lib/supabase/server'
+import { SITE_URL } from '@/features/blog/lib/site-config'
 
 type Params = Promise<{ slug: string }>
 
@@ -10,9 +12,18 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const { slug } = await params
   const oferta = await getOfertaPorSlug(slug)
   if (!oferta) return { title: 'Oferta no encontrada — Henkoaching' }
+  const description = oferta.descripcion.slice(0, 160)
+  const canonical = `${SITE_URL}/empleo/${oferta.slug}`
   return {
     title: `${oferta.titulo} — Henkoaching`,
-    description: oferta.descripcion.slice(0, 160),
+    description,
+    alternates: { canonical },
+    openGraph: {
+      type: 'article',
+      url: canonical,
+      title: `${oferta.titulo} — Henkoaching`,
+      description,
+    },
   }
 }
 
@@ -42,11 +53,14 @@ export default async function OfertaPage({ params }: { params: Params }) {
   }
 
   return (
-    <OfertaDetalle
-      oferta={oferta}
-      yaAplicado={aplicado}
-      isCandidato={isCandidato}
-      isLoggedIn={!!user}
-    />
+    <>
+      <JobPostingJsonLd oferta={oferta} />
+      <OfertaDetalle
+        oferta={oferta}
+        yaAplicado={aplicado}
+        isCandidato={isCandidato}
+        isLoggedIn={!!user}
+      />
+    </>
   )
 }

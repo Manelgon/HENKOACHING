@@ -1,13 +1,14 @@
 import type { MetadataRoute } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { SITE_URL } from '@/features/blog/lib/site-config'
+import { getOfertasSlugsPublicados } from '@/features/empleo/queries'
 
 export const revalidate = 300
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const supabase = await createClient()
 
-  const [{ data: posts }, { data: categorias }] = await Promise.all([
+  const [{ data: posts }, { data: categorias }, ofertas] = await Promise.all([
     supabase
       .from('blog_posts')
       .select('slug, updated_at, fecha_publicacion')
@@ -17,6 +18,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .from('blog_categorias')
       .select('slug')
       .eq('activo', true),
+    getOfertasSlugsPublicados(),
   ])
 
   const ahora = new Date()
@@ -26,7 +28,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/servicios`, lastModified: ahora, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${SITE_URL}/sobre-mi`, lastModified: ahora, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${SITE_URL}/contacto`, lastModified: ahora, changeFrequency: 'yearly', priority: 0.6 },
-    { url: `${SITE_URL}/empleo`, lastModified: ahora, changeFrequency: 'daily', priority: 0.7 },
+    { url: `${SITE_URL}/empleo`, lastModified: ahora, changeFrequency: 'daily', priority: 0.9 },
     { url: `${SITE_URL}/blog`, lastModified: ahora, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${SITE_URL}/legal`, lastModified: ahora, changeFrequency: 'yearly', priority: 0.3 },
   ]
@@ -45,5 +47,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }))
 
-  return [...rutasEstaticas, ...rutasCategorias, ...rutasPosts]
+  const rutasOfertas: MetadataRoute.Sitemap = ofertas.map((o) => ({
+    url: `${SITE_URL}/empleo/${o.slug}`,
+    lastModified: o.updated_at ? new Date(o.updated_at) : ahora,
+    changeFrequency: 'weekly',
+    priority: 0.8,
+  }))
+
+  return [...rutasEstaticas, ...rutasCategorias, ...rutasPosts, ...rutasOfertas]
 }

@@ -4,6 +4,7 @@ import './globals.css'
 import ScrollAnimationProvider from '@/components/ScrollAnimationProvider'
 import { FeedbackProvider } from '@/shared/feedback/FeedbackContext'
 import GlobalFeedback from '@/shared/feedback/GlobalFeedback'
+import OrganizationJsonLd from '@/components/OrganizationJsonLd'
 
 const raleway = Raleway({
   subsets: ['latin'],
@@ -46,6 +47,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es" className={raleway.variable}>
+      <head>
+        <OrganizationJsonLd />
+      </head>
       <body className="antialiased">
         <FeedbackProvider>
           <ScrollAnimationProvider>
