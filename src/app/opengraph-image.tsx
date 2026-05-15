@@ -8,7 +8,7 @@ export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 
 export default function OpengraphImage() {
-  const logo = fs.readFileSync(path.join(process.cwd(), 'public/henkologo.png'))
+  const logo = fs.readFileSync(path.join(process.cwd(), 'public/hk.png'))
   const logoSrc = `data:image/png;base64,${logo.toString('base64')}`
 
   return new ImageResponse(
@@ -18,7 +18,6 @@ export default function OpengraphImage() {
           width: '100%',
           height: '100%',
           display: 'flex',
-          flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
           background: '#f9f3ef',
@@ -41,21 +40,10 @@ export default function OpengraphImage() {
         <img
           src={logoSrc}
           alt="Henkoaching"
-          width={620}
-          height={443}
-          style={{ objectFit: 'contain', marginBottom: '24px' }}
+          width={780}
+          height={476}
+          style={{ objectFit: 'contain' }}
         />
-        <div
-          style={{
-            fontSize: 30,
-            color: '#1f8f9b',
-            fontWeight: 500,
-            letterSpacing: '0.02em',
-            display: 'flex',
-          }}
-        >
-          Coaching & Mindfulness Empresarial
-        </div>
       </div>
     ),
     { ...size },
