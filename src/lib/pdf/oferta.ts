@@ -60,13 +60,6 @@ export type OfertaAssets = {
 // =============================================================================
 // HELPERS
 // =============================================================================
-function fechaES(iso: string | null): string {
-  if (!iso) return ''
-  const d = new Date(iso)
-  if (isNaN(d.getTime())) return iso
-  return d.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })
-}
-
 function drawText(page: PDFPage, text: string, x: number, y: number, opts: { font: PDFFont; size?: number; color?: RGB }) {
   if (!text) return
   page.drawText(text, { x, y, size: opts.size ?? 10, font: opts.font, color: opts.color ?? HENKO.ink })
@@ -104,19 +97,6 @@ async function tryEmbedImage(pdf: PDFDocument, bytes: Uint8Array | null | undefi
     } catch {
       return null
     }
-  }
-}
-
-function estadoLabel(estado: OfertaPdfData['estado']): { texto: string; color: RGB } {
-  switch (estado) {
-    case 'publicada':
-      return { texto: 'PUBLICADA', color: HENKO.turquoise }
-    case 'borrador':
-      return { texto: 'BORRADOR', color: rgb(0.60, 0.55, 0.20) }
-    case 'pausada':
-      return { texto: 'PAUSADA', color: rgb(0.84, 0.45, 0.20) }
-    case 'cerrada':
-      return { texto: 'CERRADA', color: rgb(0.45, 0.45, 0.45) }
   }
 }
 
@@ -242,31 +222,11 @@ export async function buildOfertaPdf(data: OfertaPdfData, emisor: EmisorOfertaPd
   const contentW = A4.w - MARGIN_X * 2
 
   // -------------------------------------------------------------------------
-  // 1) CABECERA DE OFERTA: badge estado + título + empresa/ubicación + meta
+  // 1) CABECERA DE OFERTA: título + empresa/ubicación + meta
+  //    El estado interno (borrador/publicada/...) no se muestra: el PDF es
+  //    un documento que el admin comparte con candidatos.
   // -------------------------------------------------------------------------
-  // Badge estado
-  const estado = estadoLabel(data.estado)
-  const estadoSize = 9
-  const estadoText = data.estado === 'publicada' && data.fechaPublicacion
-    ? `${estado.texto} · ${fechaES(data.fechaPublicacion)}`
-    : estado.texto
-  const estadoW = bold.widthOfTextAtSize(estadoText, estadoSize)
-  const badgePad = 10
-  const badgeW = estadoW + badgePad * 2
-  const badgeH = 20
-  state.page.drawRectangle({
-    x: MARGIN_X,
-    y: state.cursorY - badgeH,
-    width: badgeW,
-    height: badgeH,
-    color: rgb(1, 1, 1),
-    borderColor: estado.color,
-    borderWidth: 1.2,
-  })
-  drawText(state.page, estadoText, MARGIN_X + badgePad, state.cursorY - badgeH + 6, {
-    font: bold, size: estadoSize, color: estado.color,
-  })
-  state.cursorY -= badgeH + 18
+  state.cursorY -= 8
 
   // Título (multilínea si hace falta)
   const tituloLines = wrap(data.titulo || 'Oferta de empleo', bold, 22, contentW)
