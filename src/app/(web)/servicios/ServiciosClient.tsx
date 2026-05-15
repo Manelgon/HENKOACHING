@@ -133,10 +133,10 @@ function ServiceRow({ s, i, open, toggle }: { s: Service; i: number; open: boole
       <button
         type="button"
         onClick={toggle}
-        className="w-full flex items-center justify-between px-8 md:px-12 py-10 text-left"
+        className="w-full flex items-center justify-between px-8 md:px-12 py-7 text-left"
       >
-        <div>
-          <p className="text-xs tracking-[0.14em] mb-1.5 text-henko-turquoise font-semibold">0{i + 1}</p>
+        <div className="flex items-baseline gap-4">
+          <p className="text-xs tracking-[0.14em] text-henko-turquoise font-semibold">0{i + 1}</p>
           <h3 className="font-roxborough text-xl md:text-2xl text-gray-900">{s.title}</h3>
         </div>
         <span
@@ -147,14 +147,14 @@ function ServiceRow({ s, i, open, toggle }: { s: Service; i: number; open: boole
         </span>
       </button>
       {open && (
-        <div className="px-8 md:px-12 pb-10 grid grid-cols-1 md:grid-cols-2 gap-12 border-t border-gray-100 pt-8">
+        <div className="px-8 md:px-12 pb-8 grid grid-cols-1 md:grid-cols-2 gap-8 pt-0">
           <div>
-            <p className="font-roxborough italic text-lg md:text-xl mb-4 text-henko-turquoise">{s.subtitle}</p>
-            <p className="text-sm md:text-[14.5px] leading-[1.8] text-gray-600">{s.desc}</p>
+            <p className="font-roxborough italic text-base md:text-lg mb-3 text-henko-turquoise">{s.subtitle}</p>
+            <p className="text-sm md:text-[14.5px] leading-[1.75] text-gray-600">{s.desc}</p>
           </div>
-          <ul className="list-none p-0">
+          <ul className="list-none p-0 md:pl-4">
             {s.points.map((p) => (
-              <li key={p} className="flex items-start gap-3 mb-3.5">
+              <li key={p} className="flex items-start gap-3 mb-3">
                 <span className="w-5 h-5 rounded-full bg-henko-turquoise/15 flex items-center justify-center flex-shrink-0 mt-0.5">
                   <span className="w-2 h-2 rounded-full bg-henko-turquoise" />
                 </span>
