@@ -1,4 +1,4 @@
-export const SITE_URL = 'https://henkoaching.automatizatelo.com'
+export const SITE_URL = 'https://henkoaching.com'
 export const SITE_NAME = 'Henkoaching'
 export const BLOG_AUTHOR = 'Jennifer Cervera'
 
