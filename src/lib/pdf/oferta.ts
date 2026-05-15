@@ -195,12 +195,9 @@ function addBrandedPage(ctx: PageCtx, isFirst: boolean): PageState {
   const cursorY = A4.h - topUsed
   const contentBottom = bottomUsed + BOTTOM_BEFORE_FOOTER
 
-  // Etiqueta "continúa" en páginas no iniciales
-  if (!isFirst) {
-    drawText(page, 'Continuación', MARGIN_X, cursorY, { font: ctx.bold, size: 9, color: HENKO.turquoise })
-    return { page, cursorY: cursorY - 18, contentBottom }
-  }
-
+  // Sin etiqueta de "continuación" para que las páginas siguientes
+  // arranquen limpias y la lectura sea continua.
+  void isFirst
   return { page, cursorY, contentBottom }
 }
 
@@ -263,7 +260,16 @@ export async function buildOfertaPdf(data: OfertaPdfData, emisor: EmisorOfertaPd
     { label: 'Salario', value: data.salario },
   ].filter((m) => m.value)
   if (meta.length > 0) {
-    const bandH = 44
+    const cellW = contentW / meta.length
+    // Pre-calcular el wrap (max 2 líneas) para que el alto de la banda se ajuste
+    // al contenido y el salario largo no se trunque.
+    const wrappedValues = meta.map((m) => wrap(m.value, font, 9.5, cellW - 18).slice(0, 2))
+    const maxLines = Math.max(1, ...wrappedValues.map((l) => l.length))
+    const labelGap = 16
+    const lineH = 13
+    const padBottom = 10
+    const bandH = labelGap + maxLines * lineH + padBottom
+
     state.page.drawRectangle({
       x: MARGIN_X,
       y: state.cursorY - bandH,
@@ -271,17 +277,16 @@ export async function buildOfertaPdf(data: OfertaPdfData, emisor: EmisorOfertaPd
       height: bandH,
       color: HENKO.cream,
     })
-    const cellW = contentW / meta.length
     for (let i = 0; i < meta.length; i++) {
       const cellX = MARGIN_X + cellW * i
-      drawText(state.page, meta[i].label.toUpperCase(), cellX + 12, state.cursorY - 14, {
+      drawText(state.page, meta[i].label.toUpperCase(), cellX + 12, state.cursorY - 12, {
         font: bold, size: 7.5, color: HENKO.turquoise,
       })
-      // Valor recortado por ancho
-      const valLines = wrap(meta[i].value, font, 10, cellW - 18)
-      drawText(state.page, valLines[0] ?? '', cellX + 12, state.cursorY - 30, {
-        font, size: 10, color: HENKO.ink,
-      })
+      let vy = state.cursorY - labelGap - 10
+      for (const l of wrappedValues[i]) {
+        drawText(state.page, l, cellX + 12, vy, { font, size: 9.5, color: HENKO.ink })
+        vy -= lineH
+      }
     }
     state.cursorY -= bandH + 16
   }
@@ -322,38 +327,78 @@ export async function buildOfertaPdf(data: OfertaPdfData, emisor: EmisorOfertaPd
   }
 
   // -------------------------------------------------------------------------
-  // 3) SECCIONES (descripción + listas), con salto de página automático
+  // 3) SECCIONES (descripción + listas), con pagination que evita cortes feos
   // -------------------------------------------------------------------------
+  const FONT_BODY = 10.5
+  const LINE_H = 14
+  const HEADING_H = 30           // alto reservado por el título de sección
+  const SECTION_TAIL = 8         // separación tras la sección
+  const BULLET_PAD = 2
+
+  // Capacidad útil de una página recién creada (para decidir page-break previo)
+  const freshPageCapacity = () => {
+    const ghost = addBrandedPage(ctx, false)
+    const cap = ghost.cursorY - ghost.contentBottom
+    // descartamos la página fantasma
+    ctx.pdf.removePage(ctx.pdf.getPageCount() - 1)
+    return cap
+  }
+  const PAGE_CAPACITY = freshPageCapacity()
+
+  const measureParagraph = (texto: string): number => {
+    const lines = wrap(texto, font, FONT_BODY, contentW)
+    return lines.reduce((sum, l) => sum + (l === '' ? 8 : LINE_H), 0) + SECTION_TAIL
+  }
+  const measureBulletItem = (item: string): number => {
+    const lines = wrap(item, font, FONT_BODY, contentW - 16)
+    return Math.max(lines.length, 1) * LINE_H + BULLET_PAD
+  }
+  const measureBullets = (items: string[]): number => {
+    return items.reduce((sum, it) => sum + measureBulletItem(it), 0) + 6
+  }
+
   const ensureSpace = (needed: number) => {
     if (state.cursorY - needed < state.contentBottom) {
       state = addBrandedPage(ctx, false)
     }
   }
 
+  // Decide si conviene saltar de página ANTES de empezar la sección,
+  // para que título y al menos N líneas/items queden juntos.
+  const planSection = (totalH: number, minBlockH: number) => {
+    const remaining = state.cursorY - state.contentBottom
+    if (totalH <= remaining) return                  // cabe entera aquí
+    if (totalH <= PAGE_CAPACITY) {                   // cabe en página fresca → salto
+      state = addBrandedPage(ctx, false)
+      return
+    }
+    if (minBlockH > remaining) {                     // no cabe nada decente aquí
+      state = addBrandedPage(ctx, false)
+    }
+  }
+
   const drawHeading = (titulo: string) => {
-    ensureSpace(28)
-    drawText(state.page, titulo, MARGIN_X, state.cursorY - 14, {
+    drawText(state.page, titulo, MARGIN_X, state.cursorY - 16, {
       font: bold, size: 13.5, color: HENKO.turquoise,
     })
-    // Subrayado sutil
     state.page.drawLine({
-      start: { x: MARGIN_X, y: state.cursorY - 20 },
-      end: { x: MARGIN_X + 38, y: state.cursorY - 20 },
+      start: { x: MARGIN_X, y: state.cursorY - 22 },
+      end: { x: MARGIN_X + 38, y: state.cursorY - 22 },
       thickness: 1.5,
       color: HENKO.turquoise,
     })
-    state.cursorY -= 30
+    state.cursorY -= HEADING_H
   }
 
   const drawParagraph = (texto: string) => {
-    const lines = wrap(texto, font, 10.5, contentW)
+    const lines = wrap(texto, font, FONT_BODY, contentW)
     for (const l of lines) {
-      ensureSpace(14)
+      ensureSpace(LINE_H)
       if (l === '') { state.cursorY -= 8; continue }
-      drawText(state.page, l, MARGIN_X, state.cursorY - 12, { font, size: 10.5, color: HENKO.ink })
-      state.cursorY -= 14
+      drawText(state.page, l, MARGIN_X, state.cursorY - 12, { font, size: FONT_BODY, color: HENKO.ink })
+      state.cursorY -= LINE_H
     }
-    state.cursorY -= 8
+    state.cursorY -= SECTION_TAIL
   }
 
   const drawBullets = (items: string[]) => {
@@ -361,10 +406,9 @@ export async function buildOfertaPdf(data: OfertaPdfData, emisor: EmisorOfertaPd
     const textX = MARGIN_X + 16
     const textW = contentW - 16
     for (const item of items) {
-      const lines = wrap(item, font, 10.5, textW)
-      const itemH = Math.max(lines.length, 1) * 14 + 2
+      const lines = wrap(item, font, FONT_BODY, textW)
+      const itemH = Math.max(lines.length, 1) * LINE_H + BULLET_PAD
       ensureSpace(itemH)
-      // Punto
       state.page.drawCircle({
         x: bulletX + 1,
         y: state.cursorY - 7,
@@ -373,8 +417,8 @@ export async function buildOfertaPdf(data: OfertaPdfData, emisor: EmisorOfertaPd
       })
       let ly = state.cursorY - 12
       for (const l of lines) {
-        drawText(state.page, l, textX, ly, { font, size: 10.5, color: HENKO.ink })
-        ly -= 14
+        drawText(state.page, l, textX, ly, { font, size: FONT_BODY, color: HENKO.ink })
+        ly -= LINE_H
       }
       state.cursorY -= itemH
     }
@@ -383,33 +427,28 @@ export async function buildOfertaPdf(data: OfertaPdfData, emisor: EmisorOfertaPd
 
   // Descripción
   if (data.descripcion.trim()) {
+    const total = HEADING_H + measureParagraph(data.descripcion)
+    const minBlock = HEADING_H + LINE_H * 3       // título + ~3 líneas mínimo
+    planSection(total, minBlock)
     drawHeading('Descripción del puesto')
     drawParagraph(data.descripcion)
   }
 
-  // Funciones
-  if (data.funciones.length > 0) {
-    drawHeading('Funciones principales')
-    drawBullets(data.funciones)
+  // Listas: medir total y planificar antes de dibujar
+  const renderList = (titulo: string, items: string[]) => {
+    if (items.length === 0) return
+    const total = HEADING_H + measureBullets(items)
+    // mínimo aceptable en página: título + 2 primeros items
+    const minBlock = HEADING_H + items.slice(0, 2).reduce((s, i) => s + measureBulletItem(i), 0)
+    planSection(total, minBlock)
+    drawHeading(titulo)
+    drawBullets(items)
   }
 
-  // Requisitos
-  if (data.requisitos.length > 0) {
-    drawHeading('Requisitos')
-    drawBullets(data.requisitos)
-  }
-
-  // Competencias clave
-  if (data.competencias.length > 0) {
-    drawHeading('Competencias clave')
-    drawBullets(data.competencias)
-  }
-
-  // Se ofrece
-  if (data.ofrecemos.length > 0) {
-    drawHeading('Se ofrece')
-    drawBullets(data.ofrecemos)
-  }
+  renderList('Funciones principales', data.funciones)
+  renderList('Requisitos', data.requisitos)
+  renderList('Competencias clave', data.competencias)
+  renderList('Se ofrece', data.ofrecemos)
 
   // Paginación al pie de cada página (encima del banner): "Página X / Y"
   const pages = pdf.getPages()
