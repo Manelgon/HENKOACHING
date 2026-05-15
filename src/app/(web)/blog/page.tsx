@@ -39,7 +39,7 @@ export default async function BlogIndexPage() {
   const [featured, ...resto] = items
 
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen bg-white pt-24">
       <PageHeader
         overline="Blog"
         title={<>Reflexiones, prácticas <br className="hidden md:block" />y aprendizajes</>}

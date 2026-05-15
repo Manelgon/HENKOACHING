@@ -66,7 +66,7 @@ export default async function CategoriaPage({ params }: PageProps) {
   const items = (posts ?? []) as unknown as BlogCardData[]
 
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen bg-white pt-24">
       <PageHeader
         overline={`Blog · ${categoria.nombre}`}
         title={categoria.nombre}
