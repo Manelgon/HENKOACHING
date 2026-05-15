@@ -31,21 +31,11 @@ export const metadata: Metadata = {
     siteName: 'Henkoaching',
     title: siteTitle,
     description: siteDescription,
-    images: [
-      {
-        url: '/hk.png',
-        width: 1914,
-        height: 1168,
-        alt: 'Henkoaching — Coaching & Mindfulness Empresarial',
-        type: 'image/png',
-      },
-    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: siteTitle,
     description: siteDescription,
-    images: ['/hk.png'],
   },
 }
 
