@@ -4,13 +4,13 @@ import { useEffect, useState, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { actualizarPerfilCandidato, uploadCv } from '@/actions/candidato'
+import { actualizarPerfilCandidato, uploadCv, exportarMisDatos, eliminarMiCuenta } from '@/actions/candidato'
 import { signout } from '@/actions/auth'
 import { getCvUrl } from '@/actions/solicitudes'
 import type { EstadoSolicitud } from '@/lib/supabase/database.types'
-import { useAction } from '@/shared/feedback/FeedbackContext'
+import { useAction, useConfirm } from '@/shared/feedback/FeedbackContext'
 
-type Tab = 'solicitudes' | 'perfil' | 'cv'
+type Tab = 'solicitudes' | 'perfil' | 'cv' | 'privacidad'
 
 const ESTADO_META: Record<EstadoSolicitud, { label: string; badge: string }> = {
   nuevo:      { label: 'Nueva',       badge: 'bg-henko-turquoise/15 text-henko-turquoise' },
@@ -24,6 +24,7 @@ const NAV: { id: Tab; label: string }[] = [
   { id: 'solicitudes', label: 'Mis solicitudes' },
   { id: 'perfil',      label: 'Mi perfil' },
   { id: 'cv',          label: 'Mi CV' },
+  { id: 'privacidad',  label: 'Privacidad y datos' },
 ]
 
 type SolicitudView = {
@@ -177,6 +178,7 @@ export default function CandidatoDashboard({ perfil, cv, solicitudes }: Props) {
           {tab === 'solicitudes' && <TabSolicitudes solicitudes={solicitudes} />}
           {tab === 'perfil' && <TabPerfil perfil={perfil} />}
           {tab === 'cv' && <TabCV cv={cv} />}
+          {tab === 'privacidad' && <TabPrivacidad perfil={perfil} onGoTab={setTab} />}
         </main>
       </div>
     </div>
@@ -383,6 +385,123 @@ function TabCV({ cv }: { cv: CvView }) {
           </button>
         </div>
       </div>
+    </div>
+  )
+}
+
+function TabPrivacidad({ perfil, onGoTab }: { perfil: PerfilView; onGoTab: (t: Tab) => void }) {
+  const router = useRouter()
+  const runAction = useAction()
+  const confirm = useConfirm()
+
+  async function descargarDatos() {
+    const result = await runAction(
+      'Preparando tus datos',
+      () => exportarMisDatos(),
+      { silentSuccess: true },
+    )
+    if (!result.ok) return
+
+    const fecha = new Date().toISOString().slice(0, 10)
+    const safeEmail = perfil.email.replace(/[^a-zA-Z0-9]/g, '_')
+    const blob = new Blob([JSON.stringify(result.data.data, null, 2)], {
+      type: 'application/json',
+    })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `mis-datos-${safeEmail}-${fecha}.json`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
+  async function eliminarCuenta() {
+    const ok = await confirm({
+      title: 'Eliminar mi cuenta permanentemente',
+      description:
+        'Esta acción es irreversible. Se eliminarán de forma permanente tu perfil, CV, experiencia, educación, idiomas y todas tus solicitudes a ofertas. No podrás recuperar estos datos.',
+      confirmLabel: 'Eliminar definitivamente',
+      variant: 'danger',
+    })
+    if (!ok) return
+
+    const okFinal = await confirm({
+      title: '¿Estás completamente seguro?',
+      description: 'Última confirmación antes de eliminar tu cuenta.',
+      confirmLabel: 'Sí, eliminar',
+      variant: 'danger',
+    })
+    if (!okFinal) return
+
+    const result = await runAction(
+      'Eliminando tu cuenta',
+      () => eliminarMiCuenta(),
+      { successMessage: 'Cuenta eliminada' },
+    )
+    if (result.ok) {
+      router.push('/')
+      router.refresh()
+    }
+  }
+
+  return (
+    <div className="max-w-2xl">
+      <Eyebrow>Privacidad y datos</Eyebrow>
+      <h2 className="font-roxborough text-2xl md:text-3xl text-gray-900 mb-3">Tus derechos sobre tus datos</h2>
+      <p className="text-sm text-gray-500 mb-8 leading-relaxed">
+        En cumplimiento del Reglamento General de Protección de Datos (RGPD), puedes ejercer aquí tus derechos de acceso, portabilidad y supresión.
+      </p>
+
+      <div className="bg-white rounded-2xl px-7 py-6 border border-henko-turquoise/15 shadow-sm mb-4">
+        <h3 className="font-roxborough text-lg text-gray-900 mb-1.5">Descargar mis datos</h3>
+        <p className="text-sm text-gray-500 mb-5 leading-relaxed">
+          Descarga una copia de todos los datos que tenemos sobre ti en formato JSON: perfil, experiencia, educación, idiomas, CVs y solicitudes a ofertas.
+        </p>
+        <button
+          type="button"
+          onClick={descargarDatos}
+          className="inline-flex items-center gap-2 bg-henko-turquoise text-white px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-henko-turquoise-light hover:shadow-lg transition-all"
+        >
+          Descargar mis datos (JSON)
+        </button>
+      </div>
+
+      <div className="bg-white rounded-2xl px-7 py-6 border border-henko-turquoise/15 shadow-sm mb-4">
+        <h3 className="font-roxborough text-lg text-gray-900 mb-1.5">Rectificar mis datos</h3>
+        <p className="text-sm text-gray-500 mb-5 leading-relaxed">
+          Puedes actualizar tus datos personales en cualquier momento desde la pestaña <strong>Mi perfil</strong>. Tu experiencia, educación e idiomas también son editables.
+        </p>
+        <button
+          type="button"
+          onClick={() => onGoTab('perfil')}
+          className="inline-flex items-center gap-2 bg-transparent border-2 border-henko-turquoise text-henko-turquoise px-5 py-2 rounded-full text-sm font-semibold hover:bg-henko-turquoise hover:text-white transition-all"
+        >
+          Ir a Mi perfil →
+        </button>
+      </div>
+
+      <div className="bg-red-50/50 rounded-2xl px-7 py-6 border border-red-200">
+        <h3 className="font-roxborough text-lg text-red-900 mb-1.5">Eliminar mi cuenta</h3>
+        <p className="text-sm text-red-800/80 mb-5 leading-relaxed">
+          Esto eliminará de forma <strong>permanente e irreversible</strong> tu cuenta y todos los datos asociados: perfil, CV, experiencia, educación, idiomas y todas tus solicitudes a ofertas.
+        </p>
+        <button
+          type="button"
+          onClick={eliminarCuenta}
+          className="inline-flex items-center gap-2 bg-red-600 text-white px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-red-700 hover:shadow-lg transition-all"
+        >
+          Eliminar mi cuenta
+        </button>
+      </div>
+
+      <p className="text-xs text-gray-400 mt-6 leading-relaxed">
+        Para ejercer otros derechos (oposición, limitación) o presentar una reclamación, escribe a{' '}
+        <a href="mailto:info@henkoaching.com" className="text-henko-turquoise hover:underline">info@henkoaching.com</a>
+        {' '}o consulta nuestra{' '}
+        <Link href="/legal#privacidad" target="_blank" className="text-henko-turquoise hover:underline">política de privacidad</Link>.
+      </p>
     </div>
   )
 }
