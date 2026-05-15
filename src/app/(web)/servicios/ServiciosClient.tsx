@@ -57,7 +57,7 @@ export default function ServiciosClient() {
       />
 
       {/* Acordeón de servicios */}
-      <section className="px-6 md:px-12 py-20 max-w-7xl mx-auto">
+      <section className="px-6 md:px-12 pt-10 pb-20 max-w-7xl mx-auto">
         <div className="flex flex-col gap-5">
           {SERVICES.map((s, i) => (
             <ServiceRow key={i} s={s} i={i} open={active === i} toggle={() => setActive(active === i ? null : i)} />

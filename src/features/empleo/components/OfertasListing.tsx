@@ -32,7 +32,7 @@ export default function OfertasListing({ ofertas, sectores, modalidades }: Props
         subtitle="Posiciones seleccionadas por Henkoaching para empresas en transformación."
       />
 
-      <section className="px-6 md:px-12 pt-14 max-w-7xl mx-auto">
+      <section className="px-6 md:px-12 pt-10 max-w-7xl mx-auto">
         <div className="flex flex-wrap items-center gap-3 mb-10">
           <input
             value={busqueda}

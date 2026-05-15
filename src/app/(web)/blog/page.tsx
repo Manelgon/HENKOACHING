@@ -42,13 +42,13 @@ export default async function BlogIndexPage() {
     <main className="min-h-screen bg-white pt-24">
       <PageHeader
         overline="Blog"
-        title={<>Reflexiones, prácticas <br className="hidden md:block" />y aprendizajes</>}
+        title="Reflexiones, prácticas y aprendizajes"
         subtitle="Sobre liderazgo, coaching, gestión de personas y la cultura que se construye en cada decisión."
       />
 
-      <section className="px-6 md:px-12 py-16 max-w-7xl mx-auto">
+      <section className="px-6 md:px-12 pt-10 pb-16 max-w-7xl mx-auto">
         {categorias && categorias.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-12">
+          <div className="flex flex-wrap gap-2 mb-10">
             <span className="px-4 py-2 rounded-full bg-henko-turquoise text-white font-raleway text-xs font-semibold tracking-wide uppercase">
               Todos
             </span>
@@ -65,7 +65,7 @@ export default async function BlogIndexPage() {
         )}
 
         {items.length === 0 ? (
-          <div className="text-center py-24">
+          <div className="text-center py-16">
             <p className="font-roxborough text-2xl text-gray-400 mb-2">Aún no hay artículos publicados</p>
             <p className="font-raleway text-gray-400">Vuelve pronto.</p>
           </div>

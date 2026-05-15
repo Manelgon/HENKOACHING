@@ -24,7 +24,7 @@ export default function SobreMiPage() {
       />
 
       {/* Bio */}
-      <section className="px-6 md:px-12 py-20 bg-white">
+      <section className="px-6 md:px-12 pt-10 pb-20 bg-white">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-20 items-center">
           {/* Photo placeholder */}
           <div className="relative aspect-[4/5] rounded-[3rem] overflow-hidden bg-gray-50 border border-henko-turquoise/15 flex items-center justify-center">

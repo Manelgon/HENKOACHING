@@ -10,7 +10,7 @@ type Props = {
 
 export default function PageHeader({ overline, title, subtitle }: Props) {
   return (
-    <section className="bg-white border-b border-gray-100 px-6 md:px-12 pt-16 pb-16">
+    <section className="bg-white border-b border-gray-100 px-6 md:px-12 pt-14 pb-10">
       <div className="max-w-7xl mx-auto">
         <p className="font-raleway font-bold tracking-[0.18em] uppercase text-[11px] mb-4 text-henko-turquoise">
           {overline}
@@ -19,7 +19,7 @@ export default function PageHeader({ overline, title, subtitle }: Props) {
           {title}
         </h1>
         {subtitle && (
-          <p className="text-lg leading-relaxed max-w-2xl text-gray-600">
+          <p className="text-lg leading-relaxed text-gray-600">
             {subtitle}
           </p>
         )}

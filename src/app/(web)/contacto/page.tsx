@@ -71,7 +71,7 @@ export default function ContactoPage() {
         subtitle="Primera consulta gratuita de 45 minutos. Sin compromiso."
       />
 
-      <section className="px-6 md:px-12 py-20">
+      <section className="px-6 md:px-12 pt-10 pb-20">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-20">
           {/* Form */}
           <div>
@@ -96,8 +96,6 @@ export default function ContactoPage() {
               </div>
             ) : (
               <form onSubmit={handleSubmit} noValidate>
-                <h2 className="font-roxborough text-2xl md:text-4xl text-gray-900 mb-9 leading-tight">Escríbeme</h2>
-
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                   <div>
                     <label className={labelClass(!!errors.nombre)} htmlFor="nombre">NOMBRE</label>
