@@ -117,6 +117,12 @@ export default function OfertaDetalle({ oferta: o, yaAplicado, isCandidato, isLo
                   >
                     Aplicar a esta oferta
                   </button>
+                  <p className="text-[11px] leading-relaxed text-gray-400 mt-1">
+                    Al aplicar, tu perfil y CV serán visibles para Jennifer Cervera Alzate como responsable del proceso.{' '}
+                    <Link href="/legal#privacidad" target="_blank" className="underline hover:text-henko-turquoise">
+                      Más info
+                    </Link>
+                  </p>
                 </div>
               ) : (
                 <div className="flex flex-col gap-2.5">

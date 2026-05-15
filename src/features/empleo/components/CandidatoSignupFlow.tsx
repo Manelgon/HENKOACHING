@@ -7,7 +7,7 @@ import { signupCandidato, uploadCv } from '@/actions/candidato'
 import { useAction } from '@/shared/feedback/FeedbackContext'
 import { FormError } from '@/components/FormError'
 
-type StepCuentaErrors = { nombre?: string; apellidos?: string; email?: string; password?: string }
+type StepCuentaErrors = { nombre?: string; apellidos?: string; email?: string; password?: string; privacidad?: string }
 
 type Experiencia = { empresa: string; cargo: string; desde: string; hasta: string }
 type Educacion = { centro: string; titulo: string; ano: string }
@@ -185,6 +185,7 @@ function SecondaryBtn({ children, onClick }: { children: React.ReactNode; onClic
 function StepCuenta({ form, upd, next }: { form: FormState; upd: <K extends keyof FormState>(k: K, v: FormState[K]) => void; next: () => void }) {
   const [errors, setErrors] = useState<StepCuentaErrors>({})
   const [showPassword, setShowPassword] = useState(false)
+  const [aceptoPrivacidad, setAceptoPrivacidad] = useState(false)
 
   const validar = () => {
     const errs: StepCuentaErrors = {}
@@ -194,6 +195,7 @@ function StepCuenta({ form, upd, next }: { form: FormState; upd: <K extends keyo
     else if (!form.email.includes('@')) errs.email = 'Email inválido'
     if (!form.password) errs.password = 'Introduce una contraseña'
     else if (form.password.length < 8) errs.password = 'Contraseña mínimo 8 caracteres'
+    if (!aceptoPrivacidad) errs.privacidad = 'Debes aceptar la política de privacidad para continuar'
     if (Object.keys(errs).length) {
       setErrors(errs)
       return
@@ -269,6 +271,36 @@ function StepCuenta({ form, upd, next }: { form: FormState; upd: <K extends keyo
           </button>
         </div>
         <FormError msg={errors.password} />
+      </div>
+
+      <div className="mb-6">
+        <label className="flex items-start gap-3 cursor-pointer group">
+          <input
+            type="checkbox"
+            checked={aceptoPrivacidad}
+            onChange={(e) => {
+              setAceptoPrivacidad(e.target.checked)
+              if (errors.privacidad && e.target.checked) {
+                setErrors((prev) => ({ ...prev, privacidad: undefined }))
+              }
+            }}
+            className={`mt-0.5 w-4 h-4 rounded border-[1.5px] cursor-pointer accent-henko-turquoise flex-shrink-0 ${
+              errors.privacidad ? 'border-red-400' : 'border-black/20'
+            }`}
+          />
+          <span className="text-[13px] leading-relaxed text-gray-700 group-hover:text-gray-900 transition-colors">
+            He leído y acepto la{' '}
+            <Link
+              href="/legal#privacidad"
+              target="_blank"
+              className="text-henko-turquoise hover:text-henko-turquoise-light font-semibold underline underline-offset-2"
+            >
+              política de privacidad
+            </Link>
+            {' '}y consiento el tratamiento de mis datos y de mi CV por Jennifer Cervera Alzate con la finalidad de gestionar mi candidatura en los procesos de selección publicados.
+          </span>
+        </label>
+        <FormError msg={errors.privacidad} />
       </div>
 
       <PrimaryBtn onClick={validar} full>Continuar →</PrimaryBtn>
