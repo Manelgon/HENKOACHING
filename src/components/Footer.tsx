@@ -40,9 +40,37 @@ export default function Footer() {
           <div className="md:col-span-4">
             <p className="font-raleway uppercase tracking-widest text-xs font-bold mb-4 text-gray-400">Contacto</p>
             <p className="text-gray-600 text-sm font-raleway mb-4">Basado en Mallorca, operando en todo el mundo.</p>
-            <Link href="/contacto" className="inline-flex items-center justify-center border border-gray-200 bg-gray-50 rounded-full text-gray-900 text-xs font-bold tracking-widest uppercase px-6 py-2.5 hover:bg-henko-turquoise hover:text-white transition-all duration-300">
-              Escribir ahora
-            </Link>
+            <div className="flex items-center gap-3 flex-wrap">
+              <Link href="/contacto" className="inline-flex items-center justify-center border border-gray-200 bg-gray-50 rounded-full text-gray-900 text-xs font-bold tracking-widest uppercase px-6 py-2.5 hover:bg-henko-turquoise hover:text-white transition-all duration-300">
+                Escribir ahora
+              </Link>
+              <a
+                href="https://www.instagram.com/henkoaching/"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Instagram"
+                className="inline-flex items-center justify-center w-10 h-10 rounded-full border border-gray-200 bg-gray-50 text-gray-700 hover:bg-henko-turquoise hover:text-white hover:border-henko-turquoise transition-all duration-300"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                  <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+                </svg>
+              </a>
+              <a
+                href="https://es.linkedin.com/in/jennifer-cervera-3b66a2136"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="LinkedIn"
+                className="inline-flex items-center justify-center w-10 h-10 rounded-full border border-gray-200 bg-gray-50 text-gray-700 hover:bg-henko-turquoise hover:text-white hover:border-henko-turquoise transition-all duration-300"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z" />
+                  <rect x="2" y="9" width="4" height="12" />
+                  <circle cx="4" cy="4" r="2" />
+                </svg>
+              </a>
+            </div>
           </div>
         </div>
 
