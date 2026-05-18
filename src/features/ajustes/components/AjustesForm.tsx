@@ -12,9 +12,10 @@ type Props = {
   firmaUrl: string | null
   headerUrl: string | null
   footerUrl: string | null
+  sobreMiUrl: string | null
 }
 
-export default function AjustesForm({ settings, logoUrl, firmaUrl, headerUrl, footerUrl }: Props) {
+export default function AjustesForm({ settings, logoUrl, firmaUrl, headerUrl, footerUrl, sobreMiUrl }: Props) {
   const router = useRouter()
   const runAction = useAction()
   const confirm = useConfirm()
@@ -196,6 +197,20 @@ export default function AjustesForm({ settings, logoUrl, firmaUrl, headerUrl, fo
         </div>
       </Section>
 
+      {/* IMÁGENES DE LA WEB PÚBLICA */}
+      <Section
+        title="Imágenes de la web"
+        description="Imágenes que aparecen en las páginas públicas del sitio."
+      >
+        <ImagenUploader
+          tipo="sobre_mi"
+          label="Foto Sobre mí"
+          hint="Aparece en la sección «Sobre mí» de la web. Recomendado vertical 800×1000px. PNG o JPG."
+          url={sobreMiUrl}
+          onChange={() => router.refresh()}
+        />
+      </Section>
+
       {/* OPCIONES DE LA FACTURA (global) */}
       <Section
         title="Opciones globales de la factura"
@@ -280,7 +295,7 @@ function ImagenUploader({
   wide,
   onChange,
 }: {
-  tipo: 'logo' | 'firma' | 'header' | 'footer'
+  tipo: 'logo' | 'firma' | 'header' | 'footer' | 'sobre_mi'
   label: string
   hint: string
   url: string | null

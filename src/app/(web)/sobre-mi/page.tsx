@@ -1,6 +1,9 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
 import PageHeader from '@/components/PageHeader'
+import { getCompanySettings, getSignedAssetUrl } from '@/lib/company-settings'
+
+export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
   title: 'Sobre mí — Henkoaching',
@@ -14,7 +17,10 @@ const VALORES = [
   { v: 'Raíces',      d: 'Mallorca, lo mediterráneo y la calma como base de todo.' },
 ]
 
-export default function SobreMiPage() {
+export default async function SobreMiPage() {
+  const settings = await getCompanySettings()
+  const sobreMiUrl = await getSignedAssetUrl(settings.sobre_mi_path, 60 * 60 * 24)
+
   return (
     <div className="bg-white pt-24 font-raleway">
       <PageHeader
@@ -30,30 +36,39 @@ export default function SobreMiPage() {
       {/* Bio */}
       <section className="px-6 md:px-12 pt-10 pb-20 bg-white">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-20 items-center">
-          {/* Photo placeholder */}
+          {/* Foto */}
           <div data-animate="left" className="relative aspect-[4/5] rounded-[3rem] overflow-hidden bg-gradient-to-br from-henko-turquoise/[0.08] via-white to-henko-turquoise/[0.04] border border-henko-turquoise/15 flex items-center justify-center">
-            {/* Decorative blobs */}
-            <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-              <div className="blob-1 absolute -top-12 -left-12 w-72 h-72 bg-henko-turquoise/[0.10]" />
-              <div className="blob-3 absolute -bottom-12 -right-12 w-72 h-72 bg-henko-turquoise/[0.08]" />
-            </div>
-            {/* Giant decorative mark */}
-            <span
-              aria-hidden
-              className="pointer-events-none absolute top-2 left-6 font-roxborough italic text-[10rem] leading-none text-henko-turquoise/[0.12] select-none"
-            >
-              J
-            </span>
-
-            <div className="relative z-10 text-center">
-              <div className="w-24 h-24 rounded-full bg-white shadow-sm border border-henko-turquoise/20 mx-auto mb-4 flex items-center justify-center">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#1f8f9b" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="8" r="4" />
-                  <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
-                </svg>
-              </div>
-              <p className="text-[10px] text-henko-turquoise/70 tracking-[0.22em] uppercase font-bold">foto jennifer</p>
-            </div>
+            {sobreMiUrl ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src={sobreMiUrl}
+                alt="Jennifer Cervera"
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+            ) : (
+              <>
+                {/* Decorative blobs */}
+                <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+                  <div className="blob-1 absolute -top-12 -left-12 w-72 h-72 bg-henko-turquoise/[0.10]" />
+                  <div className="blob-3 absolute -bottom-12 -right-12 w-72 h-72 bg-henko-turquoise/[0.08]" />
+                </div>
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute top-2 left-6 font-roxborough italic text-[10rem] leading-none text-henko-turquoise/[0.12] select-none"
+                >
+                  J
+                </span>
+                <div className="relative z-10 text-center">
+                  <div className="w-24 h-24 rounded-full bg-white shadow-sm border border-henko-turquoise/20 mx-auto mb-4 flex items-center justify-center">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#1f8f9b" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="8" r="4" />
+                      <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+                    </svg>
+                  </div>
+                  <p className="text-[10px] text-henko-turquoise/70 tracking-[0.22em] uppercase font-bold">foto jennifer</p>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Text */}

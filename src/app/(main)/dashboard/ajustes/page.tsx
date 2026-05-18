@@ -23,11 +23,12 @@ export default async function AjustesPage() {
   if (profile?.role !== 'admin') redirect('/dashboard')
 
   const settings = await getCompanySettings()
-  const [logoUrl, firmaUrl, headerUrl, footerUrl] = await Promise.all([
+  const [logoUrl, firmaUrl, headerUrl, footerUrl, sobreMiUrl] = await Promise.all([
     getSignedAssetUrl(settings.logo_path),
     getSignedAssetUrl(settings.firma_path),
     getSignedAssetUrl(settings.header_path),
     getSignedAssetUrl(settings.footer_path),
+    getSignedAssetUrl(settings.sobre_mi_path),
   ])
 
   return (
@@ -45,6 +46,7 @@ export default async function AjustesPage() {
         firmaUrl={firmaUrl}
         headerUrl={headerUrl}
         footerUrl={footerUrl}
+        sobreMiUrl={sobreMiUrl}
       />
     </div>
   )

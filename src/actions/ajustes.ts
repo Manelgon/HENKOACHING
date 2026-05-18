@@ -77,8 +77,8 @@ export async function subirImagenEmisor(formData: FormData) {
   const file = formData.get('file') as File | null
   const tipo = formData.get('tipo') as string | null
 
-  if (!file || !tipo || !['logo', 'firma', 'header', 'footer'].includes(tipo)) {
-    return { error: 'Falta archivo o tipo (logo|firma|header|footer)' }
+  if (!file || !tipo || !['logo', 'firma', 'header', 'footer', 'sobre_mi'].includes(tipo)) {
+    return { error: 'Falta archivo o tipo (logo|firma|header|footer|sobre_mi)' }
   }
 
   const ALLOWED = ['image/jpeg', 'image/png', 'image/webp']
@@ -107,7 +107,7 @@ export async function subirImagenEmisor(formData: FormData) {
 
   if (uploadError) return { error: uploadError.message }
 
-  const column = `${tipo}_path` as 'logo_path' | 'firma_path' | 'header_path' | 'footer_path'
+  const column = `${tipo}_path` as 'logo_path' | 'firma_path' | 'header_path' | 'footer_path' | 'sobre_mi_path'
   const { error: dbError } = await admin
     .from('company_settings' as never)
     .update({ [column]: storagePath } as never)
@@ -127,15 +127,16 @@ export async function subirImagenEmisor(formData: FormData) {
   })
 
   revalidatePath('/dashboard/ajustes')
+  if (tipo === 'sobre_mi') revalidatePath('/sobre-mi')
   return { ok: true, url: signed?.signedUrl ?? null, path: storagePath }
 }
 
-export async function quitarImagenEmisor(tipo: 'logo' | 'firma' | 'header' | 'footer') {
+export async function quitarImagenEmisor(tipo: 'logo' | 'firma' | 'header' | 'footer' | 'sobre_mi') {
   const auth = await requireAdmin()
   if ('error' in auth) return { error: auth.error }
 
   const admin = createAdminClient()
-  const column = `${tipo}_path` as 'logo_path' | 'firma_path' | 'header_path' | 'footer_path'
+  const column = `${tipo}_path` as 'logo_path' | 'firma_path' | 'header_path' | 'footer_path' | 'sobre_mi_path'
 
   const { data: row } = await admin
     .from('company_settings' as never)
@@ -161,5 +162,6 @@ export async function quitarImagenEmisor(tipo: 'logo' | 'firma' | 'header' | 'fo
   })
 
   revalidatePath('/dashboard/ajustes')
+  if (tipo === 'sobre_mi') revalidatePath('/sobre-mi')
   return { ok: true }
 }
