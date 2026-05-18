@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAction, useConfirm } from '@/shared/feedback/FeedbackContext'
 import { TablePagination, usePagination } from '@/components/TablePagination'
-import { cambiarEstadoFactura, eliminarFactura, getFacturaPdfUrl } from '@/actions/facturas'
+import { actualizarFacturaNoFiscal, cambiarEstadoFactura, eliminarFactura, getFacturaPdfUrl, getVerifactuXml } from '@/actions/facturas'
 import { ESTADOS_FACTURA, getEstadoMeta, isVencida, type EstadoFactura } from './estados'
 import NuevaFacturaModal from './NuevaFacturaModal'
 import FacturaDrawer from './FacturaDrawer'
@@ -19,6 +19,8 @@ type Props = {
 }
 
 type Tab = EstadoFactura | 'todas'
+type TipoRectificacion = 'rectificativa' | 'abono'
+type FormaPago = 'transferencia' | 'efectivo' | 'bizum' | 'tarjeta' | 'domiciliacion'
 
 const TABS: Array<{ value: Tab; label: string; dot?: string }> = [
   { value: 'todas', label: 'Todas' },
@@ -33,7 +35,7 @@ export default function FacturasView({ facturas, clientes, serieDefault, emisorL
   const [tab, setTab] = useState<Tab>('todas')
   const [busqueda, setBusqueda] = useState('')
   const [showNew, setShowNew] = useState(false)
-  const [editId, setEditId] = useState<string | null>(null)
+  const [rectificarDe, setRectificarDe] = useState<{ id: string; tipo: TipoRectificacion } | null>(null)
   const [drawerId, setDrawerId] = useState<string | null>(null)
 
   const tabsRef = useRef<HTMLDivElement>(null)
@@ -86,6 +88,7 @@ export default function FacturasView({ facturas, clientes, serieDefault, emisorL
         .map((f) => ({
           id: f.id,
           numero: f.numero,
+          cliente_id: f.cliente_id,
           cliente_nombre: f.cliente_nombre,
           total: f.total,
           fecha_emision: f.fecha_emision,
@@ -107,7 +110,6 @@ export default function FacturasView({ facturas, clientes, serieDefault, emisorL
   }, [filtered])
 
   const drawerFactura = useMemo(() => conEstadoCalculado.find((f) => f.id === drawerId) ?? null, [conEstadoCalculado, drawerId])
-  const editFactura = useMemo(() => conEstadoCalculado.find((f) => f.id === editId) ?? null, [conEstadoCalculado, editId])
 
   async function cambiarEstado(id: string, estado: EstadoFactura, extras?: Parameters<typeof cambiarEstadoFactura>[2]) {
     const r = await runAction('Actualizando factura', () => cambiarEstadoFactura(id, estado, extras), {
@@ -121,6 +123,38 @@ export default function FacturasView({ facturas, clientes, serieDefault, emisorL
     if (r.ok && r.data && 'url' in r.data && r.data.url) {
       window.open(r.data.url, '_blank')
     }
+  }
+
+  async function descargarXmlVerifactu(id: string) {
+    const r = await runAction('Generando XML Verifactu', () => getVerifactuXml(id), { silentSuccess: true })
+    if (!r.ok || !r.data || !('alta' in r.data)) return
+    const { numero, alta, anulacion } = r.data
+    if (!alta) return
+    const safeName = numero.replace(/[^\w\-]/g, '_')
+    descargarBlob(alta, `verifactu-${safeName}-alta.xml`)
+    if (anulacion) descargarBlob(anulacion, `verifactu-${safeName}-anulacion.xml`)
+  }
+
+  function descargarBlob(contenido: string, nombre: string) {
+    const blob = new Blob([contenido], { type: 'application/xml' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = nombre
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    URL.revokeObjectURL(url)
+  }
+
+  async function actualizarNoFiscal(
+    id: string,
+    input: { notas: string | null; fecha_vencimiento: string | null; forma_pago: FormaPago | null },
+  ) {
+    const r = await runAction('Guardando cambios', () => actualizarFacturaNoFiscal(id, input), {
+      successMessage: 'Factura actualizada',
+    })
+    if (r.ok) router.refresh()
   }
 
   async function eliminar(id: string, numero: string) {
@@ -327,17 +361,17 @@ export default function FacturasView({ facturas, clientes, serieDefault, emisorL
         />
       )}
 
-      {/* Modal editar */}
-      {editFactura && (
+      {/* Modal rectificativa / abono (precargado desde una factura) */}
+      {rectificarDe && (
         <NuevaFacturaModal
-          modo="editar"
-          facturaId={editFactura.id}
           clientes={clientes}
           facturasRectificables={facturasRectificables}
           serieDefault={serieDefault}
-          onClose={() => setEditId(null)}
+          rectificarFacturaId={rectificarDe.id}
+          tipoRectificacionDefault={rectificarDe.tipo}
+          onClose={() => setRectificarDe(null)}
           onCreated={() => {
-            setEditId(null)
+            setRectificarDe(null)
             router.refresh()
           }}
         />
@@ -352,10 +386,16 @@ export default function FacturasView({ facturas, clientes, serieDefault, emisorL
               ? facturas.find((f) => f.id === drawerFactura.factura_rectificada_id)?.numero ?? null
               : null
           }
+          puedeRectificarse={facturasRectificables.some((f) => f.id === drawerFactura.id)}
           onClose={() => setDrawerId(null)}
           onCambiarEstado={(estado, extras) => cambiarEstado(drawerFactura.id, estado, extras)}
           onDescargar={() => descargarPdf(drawerFactura.id)}
-          onEditar={() => { setDrawerId(null); setEditId(drawerFactura.id) }}
+          onDescargarXml={() => descargarXmlVerifactu(drawerFactura.id)}
+          onRectificar={(tipo) => {
+            setDrawerId(null)
+            setRectificarDe({ id: drawerFactura.id, tipo })
+          }}
+          onActualizarNoFiscal={(input) => actualizarNoFiscal(drawerFactura.id, input)}
           onEliminar={() => eliminar(drawerFactura.id, drawerFactura.numero)}
         />
       )}

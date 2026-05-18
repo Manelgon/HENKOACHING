@@ -136,6 +136,7 @@ export default function Legal() {
               <li><strong>CVs y datos de candidatos no seleccionados:</strong> se conservan durante un máximo de <strong>12 meses</strong> desde la última actividad del usuario en la cuenta, salvo que el interesado solicite su eliminación antes.</li>
               <li><strong>Datos de candidatos contratados:</strong> durante la relación contractual y los plazos legales aplicables (fiscal, laboral) tras su finalización.</li>
               <li><strong>Mensajes del formulario de contacto:</strong> hasta 24 meses desde el último contacto, salvo solicitud de borrado previa.</li>
+              <li><strong>Datos fiscales de facturación (clientes, facturas y registros Veri*factu):</strong> 6 años desde la emisión de la factura, conforme al Código de Comercio (art. 30) y la normativa tributaria. Durante este plazo los registros son inmutables y no pueden ser borrados ni modificados.</li>
               <li>Transcurridos estos plazos, los datos son eliminados o anonimizados de forma segura.</li>
             </ul>
 
@@ -151,6 +152,9 @@ export default function Legal() {
               <li><strong>Vercel</strong> (alojamiento web).</li>
             </ul>
             <p>No se realizan transferencias internacionales de datos fuera del Espacio Económico Europeo.</p>
+            <p>
+              <strong>Comunicación a la Agencia Tributaria (AEAT):</strong> los datos identificativos y fiscales de las facturas emitidas (nº de factura, fecha, NIF y nombre del destinatario, base imponible, IVA e importe total) se comunican a la Agencia Estatal de Administración Tributaria mediante el sistema <em>Veri*factu</em>, en cumplimiento del Real Decreto 1007/2023 y la Orden HAC/1177/2024. La base legal es el cumplimiento de una obligación legal (art. 6.1.c RGPD).
+            </p>
 
             <h3 className="text-lg font-bold text-gray-900 mt-6 mb-3">7. Decisiones automatizadas</h3>
             <p>

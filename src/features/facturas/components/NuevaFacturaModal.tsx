@@ -1,19 +1,21 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
-import { useAction } from '@/shared/feedback/FeedbackContext'
-import { crearFactura, editarFactura, obtenerFactura, type FacturaInput, type LineaInput } from '@/actions/facturas'
+import { useMemo, useState } from 'react'
+import { useAction, useFeedback } from '@/shared/feedback/FeedbackContext'
+import { crearFactura, type FacturaInput, type LineaInput } from '@/actions/facturas'
 import { FORMAS_PAGO } from './estados'
 import type { ClienteOption, FacturaRow } from '@/app/(main)/dashboard/facturas/page'
 
-export type FacturaRectificableOption = Pick<FacturaRow, 'id' | 'numero' | 'cliente_nombre' | 'total' | 'fecha_emision' | 'estado'>
+export type FacturaRectificableOption = Pick<FacturaRow, 'id' | 'numero' | 'cliente_id' | 'cliente_nombre' | 'total' | 'fecha_emision' | 'estado'>
+
+type TipoRectificacion = 'rectificativa' | 'abono'
 
 type Props = {
   clientes: ClienteOption[]
   facturasRectificables: FacturaRectificableOption[]
   serieDefault: string
-  modo?: 'crear' | 'editar'
-  facturaId?: string
+  rectificarFacturaId?: string
+  tipoRectificacionDefault?: TipoRectificacion
   onClose: () => void
   onCreated: () => void
 }
@@ -34,15 +36,33 @@ function diasDespues(iso: string, dias: number): string {
   return d.toISOString().slice(0, 10)
 }
 
-export default function NuevaFacturaModal({ clientes, facturasRectificables, serieDefault, modo = 'crear', facturaId, onClose, onCreated }: Props) {
+export default function NuevaFacturaModal({ clientes, facturasRectificables, serieDefault, rectificarFacturaId, tipoRectificacionDefault, onClose, onCreated }: Props) {
   const runAction = useAction()
+  const { pushToast } = useFeedback()
   const [saving, setSaving] = useState(false)
-  const [loading, setLoading] = useState(modo === 'editar')
 
   const hoy = useMemo(() => new Date().toISOString().slice(0, 10), [])
 
-  const [clienteId, setClienteId] = useState<string>('')
-  const [serie, setSerie] = useState<string>(serieDefault)
+  // Tipo de factura
+  type TipoFactura = 'factura' | 'rectificativa' | 'abono'
+  const tipoInicial: TipoFactura = tipoRectificacionDefault ?? 'factura'
+  const serieInicial = tipoInicial === 'rectificativa' ? 'R' : tipoInicial === 'abono' ? 'A' : serieDefault
+
+  // Auto-cliente desde la factura a rectificar (si viene precargada)
+  const clienteInicial = useMemo(() => {
+    if (!rectificarFacturaId) return ''
+    const original = facturasRectificables.find((f) => f.id === rectificarFacturaId)
+    if (!original) return ''
+    if (original.cliente_id) {
+      const byId = clientes.find((c) => c.id === original.cliente_id)
+      if (byId) return byId.id
+    }
+    const cliente = clientes.find((c) => (c.empresa || c.nombre) === original.cliente_nombre)
+    return cliente?.id ?? ''
+  }, [rectificarFacturaId, facturasRectificables, clientes])
+
+  const [clienteId, setClienteId] = useState<string>(clienteInicial)
+  const [serie, setSerie] = useState<string>(serieInicial)
   const [fechaEmision, setFechaEmision] = useState(hoy)
   const [fechaVencimiento, setFechaVencimiento] = useState<string>(diasDespues(hoy, DEFAULTS.diasVencimiento))
   const [ivaPct, setIvaPct] = useState<number>(DEFAULTS.iva)
@@ -50,67 +70,14 @@ export default function NuevaFacturaModal({ clientes, facturasRectificables, ser
   const [formaPago, setFormaPago] = useState<FormaPago>(DEFAULTS.formaPago)
   const [notas, setNotas] = useState<string>('')
 
-  // Tipo de factura
-  type TipoFactura = 'factura' | 'rectificativa' | 'abono'
-  const [tipoFactura, setTipoFactura] = useState<TipoFactura>('factura')
-  const [facturaRectificadaId, setFacturaRectificadaId] = useState<string>('')
+  const [tipoFactura, setTipoFactura] = useState<TipoFactura>(tipoInicial)
+  const [facturaRectificadaId, setFacturaRectificadaId] = useState<string>(rectificarFacturaId ?? '')
   const [motivoRectificacion, setMotivoRectificacion] = useState<string>('')
 
   const esRectificativa = tipoFactura !== 'factura'
   const [lineas, setLineas] = useState<LineaInput[]>([
     { concepto: '', cantidad: 1, precio_unitario: 0, descuento_porcentaje: 0 },
   ])
-
-  // En modo editar, cargar los datos
-  useEffect(() => {
-    if (modo !== 'editar' || !facturaId) return
-    let cancelled = false
-    ;(async () => {
-      const r = await obtenerFactura(facturaId)
-      if (cancelled || !('ok' in r) || !r.ok) {
-        setLoading(false)
-        return
-      }
-      const f = r.factura as {
-        cliente_id: string | null
-        serie: string
-        fecha_emision: string
-        fecha_vencimiento: string | null
-        iva_porcentaje: number
-        irpf_porcentaje: number
-        forma_pago: FormaPago | null
-        notas: string | null
-        factura_rectificada_id: string | null
-        motivo_rectificacion: string | null
-      }
-      setClienteId(f.cliente_id ?? '')
-      setSerie(f.serie ?? serieDefault)
-      setFechaEmision(f.fecha_emision)
-      setFechaVencimiento(f.fecha_vencimiento ?? '')
-      setIvaPct(Number(f.iva_porcentaje))
-      setIrpfPct(Number(f.irpf_porcentaje))
-      setFormaPago((f.forma_pago as FormaPago) ?? 'transferencia')
-      setNotas(f.notas ?? '')
-      if (f.factura_rectificada_id) {
-        setTipoFactura(f.serie === 'A' ? 'abono' : 'rectificativa')
-      } else {
-        setTipoFactura('factura')
-      }
-      setFacturaRectificadaId(f.factura_rectificada_id ?? '')
-      setMotivoRectificacion(f.motivo_rectificacion ?? '')
-      const lineasArr = r.lineas as Array<{ concepto: string; cantidad: number; precio_unitario: number; descuento_porcentaje: number }>
-      setLineas(
-        lineasArr.map((l) => ({
-          concepto: l.concepto,
-          cantidad: Number(l.cantidad),
-          precio_unitario: Number(l.precio_unitario),
-          descuento_porcentaje: Number(l.descuento_porcentaje),
-        })),
-      )
-      setLoading(false)
-    })()
-    return () => { cancelled = true }
-  }, [modo, facturaId])
 
   function cambiarTipo(nuevo: TipoFactura) {
     setTipoFactura(nuevo)
@@ -128,7 +95,9 @@ export default function NuevaFacturaModal({ clientes, facturasRectificables, ser
     // Auto-rellenar cliente con el de la factura original
     const original = facturasRectificables.find((f) => f.id === id)
     if (original) {
-      const clienteOriginal = clientes.find((c) => (c.empresa || c.nombre) === original.cliente_nombre)
+      const clienteOriginal =
+        (original.cliente_id ? clientes.find((c) => c.id === original.cliente_id) : null) ??
+        clientes.find((c) => (c.empresa || c.nombre) === original.cliente_nombre)
       if (clienteOriginal) setClienteId(clienteOriginal.id)
     }
   }
@@ -193,14 +162,19 @@ export default function NuevaFacturaModal({ clientes, facturasRectificables, ser
       motivo_rectificacion: esRectificativa ? (motivoRectificacion.trim() || null) : null,
     }
 
-    const r = await runAction(
-      modo === 'editar' ? 'Guardando factura' : 'Creando factura',
-      () => (modo === 'editar' && facturaId ? editarFactura(facturaId, input) : crearFactura(input)),
-      { successMessage: modo === 'editar' ? 'Factura actualizada' : 'Factura creada' },
-    )
+    const r = await runAction('Creando factura', () => crearFactura(input), {
+      successMessage: 'Factura creada',
+    })
 
     setSaving(false)
-    if (r.ok) onCreated()
+    if (r.ok) {
+      // Aviso visible: la factura se creo pero el registro Verifactu fallo.
+      // El admin debe ver esto para reintentar la firma desde el panel.
+      if (r.data?.verifactuError) {
+        pushToast('error', `Factura creada SIN registro Veri*factu: ${r.data.verifactuError}. Reintenta la firma desde la ficha de la factura.`)
+      }
+      onCreated()
+    }
   }
 
   return (
@@ -208,7 +182,7 @@ export default function NuevaFacturaModal({ clientes, facturasRectificables, ser
       <div className="bg-white w-full sm:max-w-3xl rounded-t-3xl sm:rounded-3xl shadow-xl max-h-[95dvh] flex flex-col">
         <div className="px-6 sm:px-8 py-5 border-b border-gray-100 flex items-center justify-between">
           <h2 className="font-roxborough text-xl text-gray-900">
-            {modo === 'editar' ? 'Editar factura' : 'Nueva factura'}
+            {tipoFactura === 'abono' ? 'Nuevo abono' : tipoFactura === 'rectificativa' ? 'Nueva rectificativa' : 'Nueva factura'}
           </h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -217,11 +191,6 @@ export default function NuevaFacturaModal({ clientes, facturasRectificables, ser
           </button>
         </div>
 
-        {loading ? (
-          <div className="flex-1 flex items-center justify-center p-12">
-            <span className="font-raleway text-gray-400">Cargando factura…</span>
-          </div>
-        ) : (
         <form onSubmit={onSubmit} className="flex-1 overflow-y-auto px-6 sm:px-8 py-6 space-y-6">
           {/* Cliente */}
           <Field label="Cliente" required>
@@ -249,7 +218,6 @@ export default function NuevaFacturaModal({ clientes, facturasRectificables, ser
             <div className="grid grid-cols-3 gap-2">
               <TipoButton
                 active={tipoFactura === 'factura'}
-                disabled={modo === 'editar'}
                 onClick={() => cambiarTipo('factura')}
                 serie="F"
                 label="Factura"
@@ -258,7 +226,6 @@ export default function NuevaFacturaModal({ clientes, facturasRectificables, ser
               />
               <TipoButton
                 active={tipoFactura === 'rectificativa'}
-                disabled={modo === 'editar'}
                 onClick={() => cambiarTipo('rectificativa')}
                 serie="R"
                 label="Rectificativa"
@@ -267,7 +234,6 @@ export default function NuevaFacturaModal({ clientes, facturasRectificables, ser
               />
               <TipoButton
                 active={tipoFactura === 'abono'}
-                disabled={modo === 'editar'}
                 onClick={() => cambiarTipo('abono')}
                 serie="A"
                 label="Abono"
@@ -275,9 +241,6 @@ export default function NuevaFacturaModal({ clientes, facturasRectificables, ser
                 color="coral"
               />
             </div>
-            {modo === 'editar' && esRectificativa && (
-              <p className="font-raleway text-xs text-gray-500 mt-2">El tipo no se puede cambiar en una factura ya emitida.</p>
-            )}
           </div>
 
           {/* Datos de la rectificación / abono */}
@@ -288,17 +251,14 @@ export default function NuevaFacturaModal({ clientes, facturasRectificables, ser
                   required={esRectificativa}
                   value={facturaRectificadaId}
                   onChange={(e) => onSelectFacturaRectificada(e.target.value)}
-                  disabled={modo === 'editar'}
-                  className="modal-input disabled:opacity-50"
+                  className="modal-input"
                 >
                   <option value="">Selecciona la factura original…</option>
-                  {facturasRectificables
-                    .filter((f) => f.id !== facturaId)
-                    .map((f) => (
-                      <option key={f.id} value={f.id}>
-                        {f.numero} — {f.cliente_nombre} ({moneyES(Number(f.total))})
-                      </option>
-                    ))}
+                  {facturasRectificables.map((f) => (
+                    <option key={f.id} value={f.id}>
+                      {f.numero} — {f.cliente_nombre} ({moneyES(Number(f.total))})
+                    </option>
+                  ))}
                 </select>
                 {facturasRectificables.length === 0 && (
                   <p className="text-xs text-gray-500 mt-1 font-raleway">No hay facturas para {tipoFactura === 'abono' ? 'abonar' : 'rectificar'} todavía.</p>
@@ -498,7 +458,6 @@ export default function NuevaFacturaModal({ clientes, facturasRectificables, ser
             </div>
           </div>
         </form>
-        )}
 
         <div className="px-6 sm:px-8 py-4 border-t border-gray-100 flex justify-end gap-3">
           <button
@@ -511,10 +470,10 @@ export default function NuevaFacturaModal({ clientes, facturasRectificables, ser
           <button
             type="submit"
             onClick={onSubmit}
-            disabled={saving || loading || !clienteId}
+            disabled={saving || !clienteId}
             className="px-6 py-2.5 rounded-xl bg-henko-turquoise text-white font-raleway font-semibold text-sm hover:bg-henko-turquoise-light disabled:opacity-40"
           >
-            {saving ? 'Guardando…' : modo === 'editar' ? 'Guardar cambios' : 'Emitir factura'}
+            {saving ? 'Guardando…' : tipoFactura === 'abono' ? 'Emitir abono' : tipoFactura === 'rectificativa' ? 'Emitir rectificativa' : 'Emitir factura'}
           </button>
         </div>
       </div>
@@ -540,7 +499,6 @@ export default function NuevaFacturaModal({ clientes, facturasRectificables, ser
 
 function TipoButton({
   active,
-  disabled,
   onClick,
   serie,
   label,
@@ -548,7 +506,6 @@ function TipoButton({
   color,
 }: {
   active: boolean
-  disabled?: boolean
   onClick: () => void
   serie: string
   label: string
@@ -565,8 +522,7 @@ function TipoButton({
     <button
       type="button"
       onClick={onClick}
-      disabled={disabled}
-      className={`relative rounded-2xl border-2 p-3 text-left transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+      className={`relative rounded-2xl border-2 p-3 text-left transition-all ${
         active
           ? `${palette.border} ${palette.bg}`
           : 'border-gray-200 bg-white hover:border-gray-300'

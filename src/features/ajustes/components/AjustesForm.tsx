@@ -32,7 +32,6 @@ export default function AjustesForm({ settings, logoUrl, firmaUrl, headerUrl, fo
     emisor_web: settings.emisor_web,
     emisor_iban: settings.emisor_iban,
     prefijo_anio: settings.prefijo_anio,
-    pie_pagina: settings.pie_pagina,
   })
 
   const set = <K extends keyof AjustesInput>(key: K, value: AjustesInput[K]) =>
@@ -218,15 +217,6 @@ export default function AjustesForm({ settings, logoUrl, firmaUrl, headerUrl, fo
             </p>
           </Field>
 
-          <Field label="Pie de página de la factura (opcional)">
-            <textarea
-              value={datos.pie_pagina}
-              onChange={(e) => set('pie_pagina', e.target.value)}
-              placeholder="Texto legal o de cortesía que aparece al pie de cada factura"
-              rows={2}
-              className="input"
-            />
-          </Field>
         </div>
       </Section>
 

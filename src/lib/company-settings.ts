@@ -24,7 +24,13 @@ export type CompanySettings = {
   serie_default: string
   proximo_numero: number
   prefijo_anio: boolean
-  pie_pagina: string
+  // Verifactu — bloque SistemaInformatico (productor del software)
+  verifactu_productor_nombre: string
+  verifactu_productor_nif: string
+  verifactu_sistema_nombre: string
+  verifactu_sistema_id: string
+  verifactu_version: string
+  verifactu_numero_instalacion: string
 }
 
 const DEFAULTS: CompanySettings = {
@@ -50,7 +56,12 @@ const DEFAULTS: CompanySettings = {
   serie_default: 'F',
   proximo_numero: 1,
   prefijo_anio: true,
-  pie_pagina: '',
+  verifactu_productor_nombre: '',
+  verifactu_productor_nif: '',
+  verifactu_sistema_nombre: 'Henkoaching Facturación',
+  verifactu_sistema_id: 'HK',
+  verifactu_version: '1.0',
+  verifactu_numero_instalacion: 'HK-01',
 }
 
 export async function getCompanySettings(): Promise<CompanySettings> {

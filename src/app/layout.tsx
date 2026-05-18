@@ -17,6 +17,8 @@ const siteUrl = 'https://henkoaching.com'
 const siteTitle = 'Henkoaching — Coaching & Mindfulness Empresarial'
 const siteDescription = 'Orden para tu empresa, tu liderazgo y tu mente. Consultoría de operaciones, reclutamiento consciente y desarrollo de liderazgo con Jennifer Cervera.'
 
+const googleVerification = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION?.trim()
+
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: siteTitle,
@@ -25,6 +27,7 @@ export const metadata: Metadata = {
     icon: '/hk.png',
     apple: '/hk.png',
   },
+  ...(googleVerification ? { verification: { google: googleVerification } } : {}),
   openGraph: {
     type: 'website',
     locale: 'es_ES',

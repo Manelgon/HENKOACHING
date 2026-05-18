@@ -1,11 +1,14 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { logAction } from '@/lib/audit/log-action'
 import { getCompanySettings, downloadAssetBytes } from '@/lib/company-settings'
 import { buildFacturaPdf, type FacturaPdfData, type EmisorPdf } from '@/lib/pdf/factura'
+import { registrarAlta, registrarAnulacion } from '@/lib/verifactu/registrar'
+import { generarQrPng } from '@/lib/verifactu/qr'
 
 type EstadoFactura = 'pendiente' | 'pagada' | 'vencida' | 'devuelta' | 'anulada'
 type FormaPago = 'transferencia' | 'efectivo' | 'bizum' | 'tarjeta' | 'domiciliacion'
@@ -164,7 +167,12 @@ export async function crearFactura(input: FacturaInput) {
     return { error: lineasError.message }
   }
 
-  // Generar PDF
+  // Registro Verifactu (hash encadenado). Si falla, la factura queda
+  // emitida pero sin registro; el admin verá el aviso y puede reintentar.
+  const verifactu = await registrarAlta(facturaId)
+  const verifactuError = 'error' in verifactu ? verifactu.error : null
+
+  // Generar PDF (con QR si verifactu ok)
   await regenerarPdfFactura(facturaId)
 
   await logAction({
@@ -172,11 +180,11 @@ export async function crearFactura(input: FacturaInput) {
     recursoTipo: 'factura',
     recursoId: facturaId,
     recursoLabel: numero,
-    metadata: { cliente: cliente.empresa || cliente.nombre, total },
+    metadata: { cliente: cliente.empresa || cliente.nombre, total, verifactuError },
   })
 
   revalidatePath('/dashboard/facturas')
-  return { ok: true, id: facturaId, numero }
+  return { ok: true, id: facturaId, numero, verifactuError }
 }
 
 // =============================================================================
@@ -213,6 +221,9 @@ export async function regenerarPdfFactura(facturaId: string) {
     notas: string | null
     factura_rectificada_id: string | null
     motivo_rectificacion: string | null
+    verifactu_alta_id: string | null
+    verifactu_anulacion_id: string | null
+    qr_url: string | null
   }
 
   // Si es rectificativa, leer el número de la factura original para mostrarlo
@@ -240,6 +251,26 @@ export async function regenerarPdfFactura(facturaId: string) {
     downloadAssetBytes(settings.footer_path),
   ])
 
+  // Leer registro Verifactu y generar QR si la factura está registrada
+  let verifactuData: { qrUrl: string; huella: string; anulada?: boolean } | null = null
+  let qrBytes: Uint8Array | null = null
+  if (f.verifactu_alta_id) {
+    const { data: registro } = await admin
+      .from('verifactu_registros' as never)
+      .select('huella')
+      .eq('id', f.verifactu_alta_id)
+      .maybeSingle()
+    const huella = (registro as { huella: string } | null)?.huella
+    if (huella && f.qr_url) {
+      verifactuData = { qrUrl: f.qr_url, huella, anulada: !!f.verifactu_anulacion_id }
+      try {
+        qrBytes = await generarQrPng(f.qr_url)
+      } catch {
+        qrBytes = null
+      }
+    }
+  }
+
   const emisor: EmisorPdf = {
     nombre: settings.emisor_nombre,
     nif: settings.emisor_nif,
@@ -252,7 +283,6 @@ export async function regenerarPdfFactura(facturaId: string) {
     telefono: settings.emisor_telefono,
     web: settings.emisor_web,
     iban: settings.emisor_iban,
-    pieDePagina: settings.pie_pagina,
   }
 
   const data: FacturaPdfData = {
@@ -278,9 +308,10 @@ export async function regenerarPdfFactura(facturaId: string) {
     rectificaANumero: rectificaA,
     motivoRectificacion: f.motivo_rectificacion,
     tipoDocumento: f.serie === 'A' ? 'abono' : f.serie === 'R' ? 'rectificativa' : 'factura',
+    verifactu: verifactuData,
   }
 
-  const pdfBytes = await buildFacturaPdf(data, emisor, { logoBytes, firmaBytes, headerBytes, footerBytes })
+  const pdfBytes = await buildFacturaPdf(data, emisor, { logoBytes, firmaBytes, headerBytes, footerBytes, qrBytes })
 
   const safeName = f.numero.replace(/[^\w\-]/g, '_')
   const storagePath = `factura-${safeName}.pdf`
@@ -340,6 +371,14 @@ export async function cambiarEstadoFactura(
 
   if (error) return { error: error.message }
 
+  // Registro Verifactu de anulación (encadenado). Se hace antes del PDF
+  // para que el sello refleje el estado correcto.
+  let verifactuError: string | null = null
+  if (estado === 'anulada') {
+    const anul = await registrarAnulacion(id)
+    if ('error' in anul) verifactuError = anul.error
+  }
+
   // Regenerar PDF para que el sello refleje el nuevo estado
   await regenerarPdfFactura(id)
 
@@ -348,7 +387,7 @@ export async function cambiarEstadoFactura(
     recursoTipo: 'factura',
     recursoId: id,
     recursoLabel: (previo as { numero: string } | null)?.numero ?? id,
-    metadata: { de: (previo as { estado: string } | null)?.estado, a: estado },
+    metadata: { de: (previo as { estado: string } | null)?.estado, a: estado, verifactuError },
   })
 
   revalidatePath('/dashboard/facturas')
@@ -356,79 +395,69 @@ export async function cambiarEstadoFactura(
 }
 
 // =============================================================================
-// EDITAR FACTURA
+// ACTUALIZAR CAMPOS NO FISCALES
 // =============================================================================
-export async function editarFactura(id: string, input: FacturaInput) {
+// Solo se permiten cambios que no afectan al registro tributario:
+//   · notas
+//   · fecha_vencimiento
+//   · forma_pago
+// Cualquier otro dato (cliente, líneas, importes, IVA/IRPF, fecha de emisión,
+// serie/número) es inmutable según RD 1007/2023. Para corregirlos se debe
+// emitir una factura rectificativa o un abono.
+export type FacturaNoFiscalInput = {
+  notas: string | null
+  fecha_vencimiento: string | null
+  forma_pago: FormaPago | null
+}
+
+const FacturaNoFiscalSchema = z.object({
+  notas: z.string().max(2000).nullable(),
+  fecha_vencimiento: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Fecha inválida').nullable(),
+  forma_pago: z.enum(['transferencia', 'efectivo', 'bizum', 'tarjeta', 'domiciliacion']).nullable(),
+})
+
+export async function actualizarFacturaNoFiscal(id: string, input: FacturaNoFiscalInput) {
   const auth = await requireAdmin()
   if ('error' in auth) return { error: auth.error }
 
-  if (!input.lineas.length) return { error: 'Añade al menos una línea' }
+  const parsed = FacturaNoFiscalSchema.safeParse(input)
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? 'Datos inválidos' }
+  }
 
   const admin = createAdminClient()
 
-  const { data: cliente } = await admin
-    .from('clientes')
-    .select('id, nombre, email, nif_cif, direccion_fiscal, empresa')
-    .eq('id', input.cliente_id)
+  const { data: previa } = await admin
+    .from('facturas' as never)
+    .select('numero, estado')
+    .eq('id', id)
     .maybeSingle()
 
-  if (!cliente) return { error: 'Cliente no encontrado' }
+  if (!previa) return { error: 'Factura no encontrada' }
+  const f = previa as unknown as { numero: string; estado: EstadoFactura }
 
-  const { lineasConSubtotal, base, ivaImporte, irpfImporte, total } = calcularTotales(
-    input.lineas,
-    input.iva_porcentaje,
-    input.irpf_porcentaje,
-  )
+  if (f.estado === 'anulada') {
+    return { error: 'No se puede modificar una factura anulada' }
+  }
 
-  const { error: updateError } = await admin
+  const { error } = await admin
     .from('facturas' as never)
     .update({
-      cliente_id: input.cliente_id,
-      cliente_nombre: cliente.empresa || cliente.nombre,
-      cliente_nif: cliente.nif_cif,
-      cliente_direccion: cliente.direccion_fiscal,
-      cliente_email: cliente.email,
-      fecha_emision: input.fecha_emision,
-      fecha_vencimiento: input.fecha_vencimiento,
-      iva_porcentaje: input.iva_porcentaje,
-      iva_importe: ivaImporte,
-      irpf_porcentaje: input.irpf_porcentaje,
-      irpf_importe: irpfImporte,
-      base_imponible: base,
-      total,
-      forma_pago: input.forma_pago,
-      notas: input.notas,
-      motivo_rectificacion: input.motivo_rectificacion ?? null,
+      notas: parsed.data.notas,
+      fecha_vencimiento: parsed.data.fecha_vencimiento,
+      forma_pago: parsed.data.forma_pago,
     } as never)
     .eq('id', id)
 
-  if (updateError) return { error: updateError.message }
-
-  // Reemplazar líneas
-  await admin.from('factura_lineas' as never).delete().eq('factura_id', id)
-  const { error: lineasError } = await admin
-    .from('factura_lineas' as never)
-    .insert(
-      lineasConSubtotal.map((l, idx) => ({
-        factura_id: id,
-        concepto: l.concepto,
-        cantidad: l.cantidad,
-        precio_unitario: l.precio_unitario,
-        descuento_porcentaje: l.descuento_porcentaje,
-        subtotal: l.subtotal,
-        orden: idx,
-      })) as never,
-    )
-
-  if (lineasError) return { error: lineasError.message }
+  if (error) return { error: error.message }
 
   await regenerarPdfFactura(id)
 
   await logAction({
-    accion: 'factura.editar',
+    accion: 'factura.actualizar_no_fiscal',
     recursoTipo: 'factura',
     recursoId: id,
-    metadata: { total },
+    recursoLabel: f.numero,
   })
 
   revalidatePath('/dashboard/facturas')
@@ -476,9 +505,9 @@ export async function eliminarFactura(id: string) {
 }
 
 // =============================================================================
-// OBTENER FACTURA + LÍNEAS (para modo edición)
+// OBTENER XML VERIFACTU (alta y anulación si existe)
 // =============================================================================
-export async function obtenerFactura(id: string) {
+export async function getVerifactuXml(facturaId: string) {
   const auth = await requireAdmin()
   if ('error' in auth) return { error: auth.error }
 
@@ -486,19 +515,25 @@ export async function obtenerFactura(id: string) {
 
   const { data: factura } = await admin
     .from('facturas' as never)
-    .select('id, numero, serie, cliente_id, fecha_emision, fecha_vencimiento, iva_porcentaje, irpf_porcentaje, forma_pago, notas, estado, factura_rectificada_id, motivo_rectificacion')
-    .eq('id', id)
+    .select('numero, verifactu_alta_id, verifactu_anulacion_id')
+    .eq('id', facturaId)
     .maybeSingle()
 
-  if (!factura) return { error: 'Factura no encontrada' }
+  const f = factura as { numero: string; verifactu_alta_id: string | null; verifactu_anulacion_id: string | null } | null
+  if (!f) return { error: 'Factura no encontrada' }
+  if (!f.verifactu_alta_id) return { error: 'Esta factura todavía no tiene registro Verifactu' }
 
-  const { data: lineas } = await admin
-    .from('factura_lineas' as never)
-    .select('concepto, cantidad, precio_unitario, descuento_porcentaje')
-    .eq('factura_id', id)
-    .order('orden', { ascending: true })
+  const ids = [f.verifactu_alta_id, f.verifactu_anulacion_id].filter(Boolean) as string[]
+  const { data: registros } = await admin
+    .from('verifactu_registros' as never)
+    .select('id, tipo, xml_payload')
+    .in('id', ids)
 
-  return { ok: true, factura, lineas: lineas ?? [] }
+  const rows = (registros as { id: string; tipo: 'alta' | 'anulacion'; xml_payload: string | null }[] | null) ?? []
+  const alta = rows.find((r) => r.tipo === 'alta')?.xml_payload ?? null
+  const anulacion = rows.find((r) => r.tipo === 'anulacion')?.xml_payload ?? null
+
+  return { ok: true, numero: f.numero, alta, anulacion }
 }
 
 // =============================================================================

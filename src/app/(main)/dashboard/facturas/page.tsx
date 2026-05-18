@@ -27,7 +27,7 @@ export default async function FacturasPage() {
   const [{ data: facturasRaw }, { data: clientes }] = await Promise.all([
     supabase
       .from('facturas' as never)
-      .select('id, numero, cliente_id, cliente_nombre, cliente_nif, fecha_emision, fecha_vencimiento, total, base_imponible, iva_porcentaje, iva_importe, irpf_porcentaje, irpf_importe, estado, forma_pago, created_at, factura_rectificada_id, motivo_rectificacion')
+      .select('id, numero, cliente_id, cliente_nombre, cliente_nif, fecha_emision, fecha_vencimiento, total, base_imponible, iva_porcentaje, iva_importe, irpf_porcentaje, irpf_importe, estado, forma_pago, notas, created_at, factura_rectificada_id, motivo_rectificacion')
       .order('fecha_emision', { ascending: false }),
     supabase
       .from('clientes')
@@ -73,6 +73,7 @@ export type FacturaRow = {
   irpf_importe: number
   estado: 'pendiente' | 'pagada' | 'vencida' | 'devuelta' | 'anulada'
   forma_pago: 'transferencia' | 'efectivo' | 'bizum' | 'tarjeta' | 'domiciliacion' | null
+  notas: string | null
   created_at: string | null
   factura_rectificada_id: string | null
   motivo_rectificacion: string | null

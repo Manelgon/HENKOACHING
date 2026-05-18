@@ -33,7 +33,6 @@ export type AjustesInput = {
   emisor_web: string
   emisor_iban: string
   prefijo_anio: boolean
-  pie_pagina: string
 }
 
 export async function guardarAjustes(input: AjustesInput) {
@@ -56,7 +55,6 @@ export async function guardarAjustes(input: AjustesInput) {
       emisor_web: input.emisor_web.trim(),
       emisor_iban: input.emisor_iban.trim(),
       prefijo_anio: input.prefijo_anio,
-      pie_pagina: input.pie_pagina,
     } as never)
     .eq('id', 1)
 

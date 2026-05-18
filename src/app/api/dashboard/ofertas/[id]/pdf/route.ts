@@ -81,19 +81,14 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
   }
 
   const settings = await getCompanySettings()
-  const [headerBytes, footerBytes, logoBytes] = await Promise.all([
-    downloadAssetBytes(settings.header_path),
-    downloadAssetBytes(settings.footer_path),
-    downloadAssetBytes(settings.logo_path),
-  ])
+  const logoBytes = await downloadAssetBytes(settings.logo_path)
 
   const emisor: EmisorOfertaPdf = {
     nombre: settings.emisor_nombre || 'Henkoaching',
     web: settings.emisor_web,
-    pieDePagina: settings.pie_pagina,
   }
 
-  const pdfBytes = await buildOfertaPdf(data, emisor, { headerBytes, footerBytes, logoBytes })
+  const pdfBytes = await buildOfertaPdf(data, emisor, { logoBytes })
 
   const filename = `oferta-${slugifyFilename(oferta.titulo || 'sin-titulo')}.pdf`
 

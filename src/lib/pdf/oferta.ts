@@ -17,9 +17,6 @@ const HENKO = {
 
 const A4 = { w: 595.28, h: 841.89 }
 const MARGIN_X = 48
-const HEADER_MAX_H = 110
-const FOOTER_MAX_H = 90
-const TOP_AFTER_HEADER = 30   // espacio entre cabecera y contenido
 const BOTTOM_BEFORE_FOOTER = 24
 
 // =============================================================================
@@ -48,12 +45,9 @@ export type OfertaPdfData = {
 export type EmisorOfertaPdf = {
   nombre: string
   web: string
-  pieDePagina: string
 }
 
 export type OfertaAssets = {
-  headerBytes?: Uint8Array | null
-  footerBytes?: Uint8Array | null
   logoBytes?: Uint8Array | null
 }
 
@@ -100,22 +94,13 @@ async function tryEmbedImage(pdf: PDFDocument, bytes: Uint8Array | null | undefi
   }
 }
 
-function drawTextRight(page: PDFPage, text: string, xRight: number, y: number, opts: { font: PDFFont; size?: number; color?: RGB }) {
-  if (!text) return
-  const size = opts.size ?? 10
-  const w = opts.font.widthOfTextAtSize(text, size)
-  page.drawText(text, { x: xRight - w, y, size, font: opts.font, color: opts.color ?? HENKO.ink })
-}
-
 // =============================================================================
-// PAGE FACTORY: garantiza que cada página lleva cabecera y pie
+// PAGE FACTORY: cada página arranca con el logo arriba a la izquierda
 // =============================================================================
 type PageCtx = {
   pdf: PDFDocument
   font: PDFFont
   bold: PDFFont
-  headerImg: PDFImage | null
-  footerImg: PDFImage | null
   logoImg: PDFImage | null
   emisor: EmisorOfertaPdf
 }
@@ -129,76 +114,48 @@ type PageState = {
 function addBrandedPage(ctx: PageCtx, isFirst: boolean): PageState {
   const page = ctx.pdf.addPage([A4.w, A4.h])
 
-  // -------- CABECERA --------
+  // -------- CABECERA: sólo logo arriba a la izquierda --------
   let topUsed = 50
-  if (ctx.headerImg) {
-    const targetW = A4.w
-    const targetH = (ctx.headerImg.height / ctx.headerImg.width) * targetW
-    const h = Math.min(targetH, HEADER_MAX_H)
-    page.drawImage(ctx.headerImg, { x: 0, y: A4.h - h, width: targetW, height: h })
-    topUsed = h + TOP_AFTER_HEADER
+  if (ctx.logoImg) {
+    const maxH = 80
+    const ratio = ctx.logoImg.width / ctx.logoImg.height
+    const h = maxH
+    const w = h * ratio
+    page.drawImage(ctx.logoImg, { x: MARGIN_X, y: A4.h - 36 - h, width: w, height: h })
+    topUsed = 36 + h + 14
   } else {
-    // Fallback: logo + nombre arriba (sólo si no hay banner)
-    if (ctx.logoImg) {
-      const maxH = 38
-      const ratio = ctx.logoImg.width / ctx.logoImg.height
-      const h = maxH
-      const w = h * ratio
-      page.drawImage(ctx.logoImg, { x: MARGIN_X, y: A4.h - 24 - h, width: w, height: h })
-    }
-    const nombre = ctx.emisor.nombre || 'Henkoaching'
-    const nameSize = 11
-    const nameW = ctx.bold.widthOfTextAtSize(nombre, nameSize)
-    drawText(page, nombre, A4.w - MARGIN_X - nameW, A4.h - 40, { font: ctx.bold, size: nameSize, color: HENKO.turquoise })
-    // Línea fina divisoria
-    page.drawLine({
-      start: { x: MARGIN_X, y: A4.h - 70 },
-      end: { x: A4.w - MARGIN_X, y: A4.h - 70 },
-      thickness: 0.5,
-      color: HENKO.greenblue,
-    })
-    topUsed = 90
+    // Sin logo, dejamos un margen superior limpio.
+    topUsed = 60
   }
 
-  // -------- PIE --------
-  let bottomUsed = 24
-  if (ctx.footerImg) {
-    const targetW = A4.w
-    const targetH = (ctx.footerImg.height / ctx.footerImg.width) * targetW
-    const h = Math.min(targetH, FOOTER_MAX_H)
-    page.drawImage(ctx.footerImg, { x: 0, y: 0, width: targetW, height: h })
-    bottomUsed = h
-  } else {
-    page.drawLine({
-      start: { x: MARGIN_X, y: 50 },
-      end: { x: A4.w - MARGIN_X, y: 50 },
-      thickness: 0.5,
-      color: HENKO.greenblue,
-    })
-    if (ctx.emisor.pieDePagina) {
-      const lines = wrap(ctx.emisor.pieDePagina, ctx.font, 8, A4.w - MARGIN_X * 2).slice(0, 2)
-      let fy = 38
-      for (const l of lines) {
-        const w = ctx.font.widthOfTextAtSize(l, 8)
-        drawText(page, l, A4.w / 2 - w / 2, fy, { font: ctx.font, size: 8, color: HENKO.inkSoft })
-        fy -= 10
-      }
-      bottomUsed = 50
-    } else if (ctx.emisor.web) {
-      const tagline = ctx.emisor.web
-      const w = ctx.font.widthOfTextAtSize(tagline, 8)
-      drawText(page, tagline, A4.w / 2 - w / 2, 35, { font: ctx.font, size: 8, color: HENKO.inkSoft })
-      bottomUsed = 50
-    }
-  }
+  // -------- PIE: reservamos espacio para línea + texto institucional --------
+  // El contenido del pie (firma corporativa + paginación + fecha) se pinta
+  // en una segunda pasada al final, cuando ya conocemos el total de páginas.
+  const bottomUsed = 42
 
   const cursorY = A4.h - topUsed
   const contentBottom = bottomUsed + BOTTOM_BEFORE_FOOTER
 
-  // Sin etiqueta de "continuación" para que las páginas siguientes
-  // arranquen limpias y la lectura sea continua.
   void isFirst
   return { page, cursorY, contentBottom }
+}
+
+function fechaLargaES(d: Date): string {
+  return d.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })
+}
+
+function drawTextRight(page: PDFPage, text: string, xRight: number, y: number, opts: { font: PDFFont; size?: number; color?: RGB }) {
+  if (!text) return
+  const size = opts.size ?? 10
+  const w = opts.font.widthOfTextAtSize(text, size)
+  page.drawText(text, { x: xRight - w, y, size, font: opts.font, color: opts.color ?? HENKO.ink })
+}
+
+function drawTextCenter(page: PDFPage, text: string, xCenter: number, y: number, opts: { font: PDFFont; size?: number; color?: RGB }) {
+  if (!text) return
+  const size = opts.size ?? 10
+  const w = opts.font.widthOfTextAtSize(text, size)
+  page.drawText(text, { x: xCenter - w / 2, y, size, font: opts.font, color: opts.color ?? HENKO.ink })
 }
 
 // =============================================================================
@@ -210,11 +167,9 @@ export async function buildOfertaPdf(data: OfertaPdfData, emisor: EmisorOfertaPd
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold)
   const italic = await pdf.embedFont(StandardFonts.HelveticaOblique)
 
-  const headerImg = await tryEmbedImage(pdf, assets.headerBytes)
-  const footerImg = await tryEmbedImage(pdf, assets.footerBytes)
   const logoImg = await tryEmbedImage(pdf, assets.logoBytes)
 
-  const ctx: PageCtx = { pdf, font, bold, headerImg, footerImg, logoImg, emisor }
+  const ctx: PageCtx = { pdf, font, bold, logoImg, emisor }
   let state = addBrandedPage(ctx, true)
   const contentW = A4.w - MARGIN_X * 2
 
@@ -223,7 +178,6 @@ export async function buildOfertaPdf(data: OfertaPdfData, emisor: EmisorOfertaPd
   //    El estado interno (borrador/publicada/...) no se muestra: el PDF es
   //    un documento que el admin comparte con candidatos.
   // -------------------------------------------------------------------------
-  state.cursorY -= 8
 
   // Título (multilínea si hace falta)
   const tituloLines = wrap(data.titulo || 'Oferta de empleo', bold, 22, contentW)
@@ -450,16 +404,37 @@ export async function buildOfertaPdf(data: OfertaPdfData, emisor: EmisorOfertaPd
   renderList('Competencias clave', data.competencias)
   renderList('Se ofrece', data.ofrecemos)
 
-  // Paginación al pie de cada página (encima del banner): "Página X / Y"
+  // -------------------------------------------------------------------------
+  // 4) PIE: firma corporativa (izq) + paginación (centro) + fecha (der)
+  //    Se pinta al final para conocer ya el total de páginas.
+  // -------------------------------------------------------------------------
+  const fechaDoc = fechaLargaES(new Date())
+  const firma = [emisor.nombre, emisor.web].filter(Boolean).join(' · ')
+
   const pages = pdf.getPages()
+  const FOOTER_LINE_Y = 36
+  const FOOTER_TEXT_Y = 22
   for (let i = 0; i < pages.length; i++) {
     const p = pages[i]
-    const label = `${i + 1} / ${pages.length}`
-    const size = 7.5
-    const yBase = footerImg
-      ? Math.min(FOOTER_MAX_H, (footerImg.height / footerImg.width) * A4.w) + 4
-      : 56
-    drawTextRight(p, label, A4.w - MARGIN_X, yBase, { font, size, color: HENKO.inkSoft })
+    // Línea separadora fina
+    p.drawLine({
+      start: { x: MARGIN_X, y: FOOTER_LINE_Y },
+      end: { x: A4.w - MARGIN_X, y: FOOTER_LINE_Y },
+      thickness: 0.5,
+      color: HENKO.greenblue,
+    })
+    // Izquierda: firma
+    if (firma) {
+      drawText(p, firma, MARGIN_X, FOOTER_TEXT_Y, { font, size: 8, color: HENKO.inkSoft })
+    }
+    // Centro: paginación
+    drawTextCenter(p, `Página ${i + 1} de ${pages.length}`, A4.w / 2, FOOTER_TEXT_Y, {
+      font, size: 8, color: HENKO.inkSoft,
+    })
+    // Derecha: fecha del documento
+    drawTextRight(p, fechaDoc, A4.w - MARGIN_X, FOOTER_TEXT_Y, {
+      font, size: 8, color: HENKO.inkSoft,
+    })
   }
 
   return await pdf.save()

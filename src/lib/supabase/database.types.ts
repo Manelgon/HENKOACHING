@@ -697,7 +697,6 @@ export type Database = {
           irpf_default: number
           iva_default: number
           logo_path: string | null
-          pie_pagina: string | null
           prefijo_anio: boolean
           proximo_numero: number
           serie_default: string
@@ -724,7 +723,6 @@ export type Database = {
           irpf_default?: number
           iva_default?: number
           logo_path?: string | null
-          pie_pagina?: string | null
           prefijo_anio?: boolean
           proximo_numero?: number
           serie_default?: string
@@ -751,7 +749,6 @@ export type Database = {
           irpf_default?: number
           iva_default?: number
           logo_path?: string | null
-          pie_pagina?: string | null
           prefijo_anio?: boolean
           proximo_numero?: number
           serie_default?: string

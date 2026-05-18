@@ -10,14 +10,28 @@ type FormaPago = 'transferencia' | 'efectivo' | 'bizum' | 'tarjeta' | 'domicilia
 type Props = {
   factura: FacturaRow & { estado_calc: EstadoFactura }
   facturaRectificadaNumero: string | null
+  puedeRectificarse: boolean
   onClose: () => void
   onCambiarEstado: (estado: EstadoFactura, extras?: { motivo_devolucion?: string | null; fecha_pago?: string | null; forma_pago?: FormaPago | null }) => void
   onDescargar: () => void
-  onEditar: () => void
+  onDescargarXml: () => void
+  onRectificar: (tipo: 'rectificativa' | 'abono') => void
+  onActualizarNoFiscal: (input: { notas: string | null; fecha_vencimiento: string | null; forma_pago: FormaPago | null }) => Promise<void>
   onEliminar: () => void
 }
 
-export default function FacturaDrawer({ factura, facturaRectificadaNumero, onClose, onCambiarEstado, onDescargar, onEditar, onEliminar }: Props) {
+export default function FacturaDrawer({
+  factura,
+  facturaRectificadaNumero,
+  puedeRectificarse,
+  onClose,
+  onCambiarEstado,
+  onDescargar,
+  onDescargarXml,
+  onRectificar,
+  onActualizarNoFiscal,
+  onEliminar,
+}: Props) {
   const estado = getEstadoMeta(factura.estado_calc)
   const esRectificativa = !!factura.factura_rectificada_id
   const esAbono = esRectificativa && factura.numero.startsWith('A')
@@ -28,6 +42,31 @@ export default function FacturaDrawer({ factura, facturaRectificadaNumero, onClo
   const confirm = useConfirm()
   const [confirmDevolver, setConfirmDevolver] = useState(false)
   const [motivo, setMotivo] = useState('')
+
+  // Editor inline de datos no fiscales (lo único que puede cambiar tras emitir)
+  const [editando, setEditando] = useState(false)
+  const [notasDraft, setNotasDraft] = useState(factura.notas ?? '')
+  const [vencimientoDraft, setVencimientoDraft] = useState(factura.fecha_vencimiento ?? '')
+  const [formaPagoDraft, setFormaPagoDraft] = useState<FormaPago | ''>((factura.forma_pago as FormaPago) ?? '')
+  const [guardandoNoFiscal, setGuardandoNoFiscal] = useState(false)
+
+  function abrirEditor() {
+    setNotasDraft(factura.notas ?? '')
+    setVencimientoDraft(factura.fecha_vencimiento ?? '')
+    setFormaPagoDraft((factura.forma_pago as FormaPago) ?? '')
+    setEditando(true)
+  }
+
+  async function guardarNoFiscal() {
+    setGuardandoNoFiscal(true)
+    await onActualizarNoFiscal({
+      notas: notasDraft.trim() || null,
+      fecha_vencimiento: vencimientoDraft || null,
+      forma_pago: (formaPagoDraft || null) as FormaPago | null,
+    })
+    setGuardandoNoFiscal(false)
+    setEditando(false)
+  }
 
   function marcarPagada() {
     onCambiarEstado('pagada', { fecha_pago: new Date().toISOString().slice(0, 10) })
@@ -154,6 +193,67 @@ export default function FacturaDrawer({ factura, facturaRectificadaNumero, onClo
           )}
         </div>
 
+        {/* Editor inline de campos no fiscales */}
+        {editando && factura.estado_calc !== 'anulada' && (
+          <div className="mx-6 mb-4 rounded-2xl border border-henko-greenblue/40 bg-henko-cream/60 p-4 space-y-3">
+            <p className="font-raleway text-[10px] font-bold uppercase tracking-widest text-henko-turquoise">
+              Editar datos no fiscales
+            </p>
+            <p className="font-raleway text-xs text-gray-500 leading-snug">
+              Solo se permite modificar notas, vencimiento y forma de pago. El resto requiere rectificativa.
+            </p>
+            <div>
+              <label className="font-raleway text-[10px] font-bold uppercase tracking-widest text-gray-400 block mb-1">Notas</label>
+              <textarea
+                value={notasDraft}
+                onChange={(e) => setNotasDraft(e.target.value)}
+                rows={2}
+                className="w-full px-3 py-2 rounded-lg border border-gray-200 bg-white font-raleway text-sm outline-none focus:border-henko-turquoise"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="font-raleway text-[10px] font-bold uppercase tracking-widest text-gray-400 block mb-1">Vencimiento</label>
+                <input
+                  type="date"
+                  value={vencimientoDraft}
+                  onChange={(e) => setVencimientoDraft(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 bg-white font-raleway text-sm outline-none focus:border-henko-turquoise"
+                />
+              </div>
+              <div>
+                <label className="font-raleway text-[10px] font-bold uppercase tracking-widest text-gray-400 block mb-1">Forma de pago</label>
+                <select
+                  value={formaPagoDraft}
+                  onChange={(e) => setFormaPagoDraft(e.target.value as FormaPago | '')}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 bg-white font-raleway text-sm outline-none focus:border-henko-turquoise"
+                >
+                  <option value="">—</option>
+                  {FORMAS_PAGO.map((f) => (
+                    <option key={f.value} value={f.value}>{f.label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 pt-1">
+              <button
+                onClick={() => setEditando(false)}
+                disabled={guardandoNoFiscal}
+                className="px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-xs font-raleway font-semibold text-gray-600 disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={guardarNoFiscal}
+                disabled={guardandoNoFiscal}
+                className="px-3 py-1.5 rounded-lg bg-henko-turquoise text-white text-xs font-raleway font-semibold hover:bg-henko-turquoise-light disabled:opacity-50"
+              >
+                {guardandoNoFiscal ? 'Guardando…' : 'Guardar'}
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Footer acciones */}
         <div className="px-6 py-4 border-t border-gray-100 sticky bottom-0 bg-white space-y-2">
           <button
@@ -164,6 +264,16 @@ export default function FacturaDrawer({ factura, facturaRectificadaNumero, onClo
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
             Descargar PDF
+          </button>
+
+          <button
+            onClick={onDescargarXml}
+            className="w-full px-4 py-2 rounded-xl bg-white border border-henko-turquoise/40 text-henko-turquoise font-raleway font-semibold text-xs hover:bg-henko-greenblue/10 flex items-center justify-center gap-2"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+            </svg>
+            Descargar XML Verifactu
           </button>
 
           <div className="grid grid-cols-2 gap-2">
@@ -193,11 +303,27 @@ export default function FacturaDrawer({ factura, facturaRectificadaNumero, onClo
             )}
             {factura.estado_calc !== 'anulada' && (
               <button
-                onClick={onEditar}
+                onClick={abrirEditor}
                 className="px-3 py-2 rounded-xl bg-gray-100 text-gray-700 font-raleway font-semibold text-sm hover:bg-gray-200"
               >
-                Editar
+                Editar notas/pago
               </button>
+            )}
+            {puedeRectificarse && (
+              <>
+                <button
+                  onClick={() => onRectificar('rectificativa')}
+                  className="px-3 py-2 rounded-xl bg-orange-50 text-henko-orange font-raleway font-semibold text-sm hover:bg-orange-100"
+                >
+                  Rectificar
+                </button>
+                <button
+                  onClick={() => onRectificar('abono')}
+                  className="px-3 py-2 rounded-xl bg-red-50 text-red-600 font-raleway font-semibold text-sm hover:bg-red-100"
+                >
+                  Crear abono
+                </button>
+              </>
             )}
             {factura.estado_calc !== 'anulada' && (
               <button
@@ -216,6 +342,11 @@ export default function FacturaDrawer({ factura, facturaRectificadaNumero, onClo
               </button>
             )}
           </div>
+
+          {/* Aviso inmutabilidad */}
+          <p className="font-raleway text-[10px] text-gray-400 leading-snug pt-1">
+            Las facturas emitidas son inmutables (RD 1007/2023). Para corregir importes o datos del cliente, emite una rectificativa o un abono.
+          </p>
         </div>
       </aside>
     </div>

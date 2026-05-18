@@ -1,5 +1,9 @@
 import 'server-only'
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage, type RGB } from 'pdf-lib'
+// Nota: este archivo NO importa de @/lib/verifactu/format porque ese módulo es
+// server-only y el PDF se construye a veces también server-side; los formatters
+// usados aquí (moneyES con coma decimal, fechaES localizado) son distintos del
+// formato exacto AEAT (que es punto decimal, fecha DD-MM-YYYY).
 
 // =============================================================================
 // IDENTIDAD HENKOACHING
@@ -40,7 +44,6 @@ export type EmisorPdf = {
   telefono: string
   web: string
   iban: string
-  pieDePagina: string
 }
 
 export type FacturaPdfData = {
@@ -66,6 +69,11 @@ export type FacturaPdfData = {
   rectificaANumero?: string | null
   motivoRectificacion?: string | null
   tipoDocumento?: 'factura' | 'rectificativa' | 'abono'
+  verifactu?: {
+    qrUrl: string
+    huella: string
+    anulada?: boolean
+  } | null
 }
 
 export type Assets = {
@@ -73,6 +81,7 @@ export type Assets = {
   firmaBytes?: Uint8Array | null
   headerBytes?: Uint8Array | null
   footerBytes?: Uint8Array | null
+  qrBytes?: Uint8Array | null
 }
 
 // =============================================================================
@@ -490,7 +499,46 @@ export async function buildFacturaPdf(data: FacturaPdfData, emisor: EmisorPdf, a
   }
 
   // -------------------------------------------------------------------------
-  // 7) PIE DE PÁGINA (banner imagen o línea + texto)
+  // 6.5) VERIFACTU: QR + leyenda + huella
+  // -------------------------------------------------------------------------
+  const footerH = footerImg ? Math.min((footerImg.height / footerImg.width) * A4.w, 90) : 50
+  const verifactuY = footerH + 12
+
+  if (data.verifactu) {
+    const qrImg = await tryEmbedImage(pdf, assets.qrBytes)
+    const qrSize = 62
+    if (qrImg) {
+      page.drawImage(qrImg, { x: marginX, y: verifactuY, width: qrSize, height: qrSize })
+    } else {
+      page.drawRectangle({
+        x: marginX, y: verifactuY, width: qrSize, height: qrSize,
+        borderColor: HENKO.border, borderWidth: 0.5, color: rgb(1, 1, 1),
+      })
+    }
+
+    const textX = marginX + qrSize + 10
+    const leyenda = data.verifactu.anulada
+      ? 'Factura verificable · ANULADA'
+      : 'Factura verificable · Veri*factu'
+    drawText(page, leyenda, textX, verifactuY + qrSize - 10, {
+      font: bold, size: 8.5, color: HENKO.turquoise,
+    })
+    drawText(page, 'Sistema de facturación conforme RD 1007/2023.', textX, verifactuY + qrSize - 22, {
+      font, size: 7.5, color: HENKO.inkSoft,
+    })
+    drawText(page, `Huella: ${data.verifactu.huella.slice(0, 32)}…`, textX, verifactuY + qrSize - 34, {
+      font, size: 6.5, color: HENKO.inkSoft,
+    })
+    drawText(page, data.verifactu.qrUrl, textX, verifactuY + qrSize - 46, {
+      font, size: 6.5, color: HENKO.inkSoft,
+    })
+  }
+
+  // -------------------------------------------------------------------------
+  // 7) PIE DE PÁGINA
+  //    Si hay imagen de pie configurada, se pinta el banner.
+  //    Si no, se pinta el mismo pie estructurado que las ofertas:
+  //    línea fina + firma corporativa (izq) + paginación (centro) + fecha (der).
   // -------------------------------------------------------------------------
   if (footerImg) {
     const targetW = A4.w
@@ -498,29 +546,36 @@ export async function buildFacturaPdf(data: FacturaPdfData, emisor: EmisorPdf, a
     const h = Math.min(targetH, 90)
     page.drawImage(footerImg, { x: 0, y: 0, width: targetW, height: h })
   } else {
+    const FOOTER_LINE_Y = 36
+    const FOOTER_TEXT_Y = 22
+    const footerSize = 8
+
     page.drawLine({
-      start: { x: marginX, y: 50 },
-      end: { x: A4.w - marginX, y: 50 },
+      start: { x: marginX, y: FOOTER_LINE_Y },
+      end: { x: A4.w - marginX, y: FOOTER_LINE_Y },
       thickness: 0.5,
       color: HENKO.greenblue,
     })
 
-    if (emisor.pieDePagina) {
-      const footLines = wrap(emisor.pieDePagina, font, 8, contentW)
-      let fy = 38
-      for (const l of footLines.slice(0, 2)) {
-        const w = font.widthOfTextAtSize(l, 8)
-        drawText(page, l, A4.w / 2 - w / 2, fy, { font, size: 8, color: HENKO.inkSoft })
-        fy -= 10
-      }
-    } else {
-      const tagline = `${emisor.nombre || ''}${emisor.nif ? ` · ${emisor.nif}` : ''}${emisor.web ? ` · ${emisor.web}` : ''}`
-      if (tagline.trim()) {
-        const size = 8
-        const w = font.widthOfTextAtSize(tagline, size)
-        drawText(page, tagline, A4.w / 2 - w / 2, 35, { font, size, color: HENKO.inkSoft })
-      }
+    // Izquierda: firma corporativa (incluye NIF en facturas por formalidad)
+    const firma = [emisor.nombre, emisor.nif ? `NIF ${emisor.nif}` : null, emisor.web]
+      .filter(Boolean).join(' · ')
+    if (firma) {
+      drawText(page, firma, marginX, FOOTER_TEXT_Y, { font, size: footerSize, color: HENKO.inkSoft })
     }
+
+    // Centro: paginación
+    const pageList = pdf.getPages()
+    const totalPages = pageList.length
+    const pageIdx = pageList.indexOf(page) + 1
+    const pagLabel = `Página ${pageIdx} de ${totalPages}`
+    const pagW = font.widthOfTextAtSize(pagLabel, footerSize)
+    drawText(page, pagLabel, A4.w / 2 - pagW / 2, FOOTER_TEXT_Y, { font, size: footerSize, color: HENKO.inkSoft })
+
+    // Derecha: fecha de emisión de la factura
+    drawTextRight(page, fechaES(data.fechaEmision), A4.w - marginX, FOOTER_TEXT_Y, {
+      font, size: footerSize, color: HENKO.inkSoft,
+    })
   }
 
   return await pdf.save()
