@@ -45,11 +45,53 @@ const FORMATOS = [
   { title: 'Proyecto integral',      desc: 'Acompañamiento completo a tu empresa durante 3-6 meses.', tag: 'EMPRESA' },
 ]
 
+const FAQS: { q: string; a: string }[] = [
+  {
+    q: '¿Cómo puedo liberar tiempo como CEO o fundador sin que la empresa deje de funcionar?',
+    a: 'Trabajando la consultoría de operaciones: revisar procesos, delegar con claridad y construir una estructura que no dependa de ti para sostenerse. En Henkoaching acompaño a CEOs y fundadores a salir del día a día operativo en 3-6 meses, identificando cuellos de botella reales y diseñando sistemas que liberen tu agenda sin perder control.',
+  },
+  {
+    q: '¿Qué es el reclutamiento consciente y en qué se diferencia de un proceso de selección tradicional?',
+    a: 'El reclutamiento consciente evalúa fit cultural, motivación real y valores antes que el currículum. En vez de cubrir una vacante rápido, se define con precisión el rol, el tipo de persona que encajará con tu equipo y se acompaña la incorporación. Esto reduce rotación, errores de contratación caros y conflictos internos en los primeros meses.',
+  },
+  {
+    q: '¿Cómo formar líderes que inspiren a su equipo en lugar de controlarlo?',
+    a: 'Con un programa de desarrollo de liderazgo centrado en autoconocimiento, comunicación no violenta, gestión emocional y delegación efectiva. Se trabaja en sesiones 1:1 semanales o quincenales con directivos y mandos intermedios, complementadas con talleres de equipo para alinear el estilo de liderazgo con la cultura de la empresa.',
+  },
+  {
+    q: '¿Cuánto cuesta y cuánto dura un acompañamiento de coaching empresarial?',
+    a: 'Hay tres modalidades: sesiones 1:1 (CEOs y líderes, 1 hora semanal o quincenal), talleres de equipo (grupos de hasta 15 personas, presencial o remoto) y proyecto integral (acompañamiento completo a la empresa durante 3-6 meses). El precio se ajusta al alcance tras una primera llamada gratuita de diagnóstico de 45 minutos.',
+  },
+  {
+    q: '¿Funciona el coaching en remoto o tiene que ser presencial?',
+    a: 'Funciona en ambos formatos. Las sesiones 1:1 y la mayoría de talleres se hacen en remoto por videollamada con la misma efectividad que presencial. Para proyectos integrales de transformación cultural o intervenciones en equipos con conflicto, recomiendo combinar sesiones online con jornadas presenciales puntuales.',
+  },
+  {
+    q: '¿Cuándo es el momento adecuado para contratar a un coach de operaciones y liderazgo?',
+    a: 'Cuando aparecen señales claras: el fundador es cuello de botella de todo, el equipo crece más rápido que los procesos, hay rotación frecuente, decisiones que se atascan o líderes recién promovidos sin formación. Cuanto antes se interviene, más barato y rápido es el cambio: esperar a la crisis multiplica el coste.',
+  },
+]
+
 export default function ServiciosClient() {
   const [active, setActive] = useState<number | null>(null)
+  const [openFaq, setOpenFaq] = useState<number | null>(0)
+
+  const faqJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: FAQS.map((f) => ({
+      '@type': 'Question',
+      name: f.q,
+      acceptedAnswer: { '@type': 'Answer', text: f.a },
+    })),
+  }
 
   return (
     <div className="bg-white pt-24 font-raleway">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
       <PageHeader
         overline="Servicios"
         title="Lo que ofrezco"
@@ -98,6 +140,50 @@ export default function ServiciosClient() {
                 <p className="text-sm text-gray-500 leading-relaxed">{f.desc}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="px-6 md:px-12 py-20 bg-gray-50">
+        <div className="max-w-4xl mx-auto">
+          <p className="font-raleway font-bold text-henko-turquoise tracking-[0.18em] uppercase text-[11px] mb-4">Preguntas frecuentes</p>
+          <h2 className="font-roxborough text-2xl md:text-4xl text-gray-900 mb-12 leading-tight">¿Tienes dudas antes de empezar?</h2>
+
+          <div className="flex flex-col gap-4">
+            {FAQS.map((f, i) => {
+              const open = openFaq === i
+              return (
+                <div
+                  key={f.q}
+                  className={`bg-white border rounded-[2rem] overflow-hidden transition-all duration-300 ${
+                    open
+                      ? 'border-henko-turquoise/40 shadow-[0_16px_48px_rgba(31,143,155,0.12)]'
+                      : 'border-henko-turquoise/15 shadow-sm hover:border-henko-turquoise/40 hover:shadow-md'
+                  }`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setOpenFaq(open ? null : i)}
+                    className="w-full flex items-center justify-between gap-6 px-7 md:px-10 py-6 text-left"
+                    aria-expanded={open}
+                  >
+                    <h3 className="font-roxborough text-base md:text-lg text-gray-900 leading-snug">{f.q}</h3>
+                    <span
+                      className={`text-2xl transition-transform ${open ? 'rotate-45' : ''} text-henko-turquoise flex-shrink-0`}
+                      aria-hidden
+                    >
+                      +
+                    </span>
+                  </button>
+                  {open && (
+                    <div className="px-7 md:px-10 pb-7">
+                      <p className="text-sm md:text-[14.5px] leading-[1.75] text-gray-600">{f.a}</p>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
           </div>
         </div>
       </section>
