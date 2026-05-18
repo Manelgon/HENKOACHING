@@ -102,7 +102,9 @@ export default function ServiciosClient() {
       <section className="px-6 md:px-12 pt-10 pb-20 max-w-7xl mx-auto">
         <div className="flex flex-col gap-5">
           {SERVICES.map((s, i) => (
-            <ServiceRow key={i} s={s} i={i} open={active === i} toggle={() => setActive(active === i ? null : i)} />
+            <div key={i} data-animate data-delay={i * 100}>
+              <ServiceRow s={s} i={i} open={active === i} toggle={() => setActive(active === i ? null : i)} />
+            </div>
           ))}
         </div>
       </section>
@@ -110,11 +112,11 @@ export default function ServiciosClient() {
       {/* Metodología */}
       <section className="px-6 md:px-12 py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto">
-          <p className="font-raleway font-bold text-henko-turquoise tracking-[0.18em] uppercase text-[11px] mb-4">Metodología</p>
-          <h2 className="font-roxborough text-2xl md:text-4xl text-gray-900 mb-13 leading-tight">¿Cómo trabajo?</h2>
+          <p data-animate className="font-raleway font-bold text-henko-turquoise tracking-[0.18em] uppercase text-[11px] mb-4">Metodología</p>
+          <h2 data-animate data-delay="100" className="font-roxborough text-2xl md:text-4xl text-gray-900 mb-13 leading-tight">¿Cómo trabajo?</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mt-12">
             {STEPS.map(([title, desc], i) => (
-              <div key={title} className="bg-white rounded-[2rem] px-7 py-9 border border-henko-turquoise/15 shadow-sm hover:border-henko-turquoise/40 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
+              <div key={title} data-animate="scale" data-delay={i * 100} className="bg-white rounded-[2rem] px-7 py-9 border border-henko-turquoise/15 shadow-sm hover:border-henko-turquoise/40 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
                 <p className="font-roxborough text-4xl text-henko-turquoise mb-3">0{i + 1}</p>
                 <h3 className="font-roxborough text-xl text-gray-900 mb-2.5">{title}</h3>
                 <p className="text-sm text-gray-500 leading-relaxed">{desc}</p>
@@ -127,12 +129,12 @@ export default function ServiciosClient() {
       {/* Formatos */}
       <section className="px-6 md:px-12 py-20 bg-white">
         <div className="max-w-7xl mx-auto">
-          <p className="font-raleway font-bold text-henko-turquoise tracking-[0.18em] uppercase text-[11px] mb-4">Formatos de trabajo</p>
-          <h2 className="font-roxborough text-2xl md:text-4xl text-gray-900 mb-12 leading-tight">¿Cómo nos adaptamos?</h2>
+          <p data-animate className="font-raleway font-bold text-henko-turquoise tracking-[0.18em] uppercase text-[11px] mb-4">Formatos de trabajo</p>
+          <h2 data-animate data-delay="100" className="font-roxborough text-2xl md:text-4xl text-gray-900 mb-12 leading-tight">¿Cómo nos adaptamos?</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {FORMATOS.map((f) => (
-              <div key={f.title} className="bg-white rounded-[2rem] p-9 border border-henko-turquoise/15 shadow-sm hover:border-henko-turquoise/40 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
+            {FORMATOS.map((f, i) => (
+              <div key={f.title} data-animate="scale" data-delay={i * 100} className="bg-white rounded-[2rem] p-9 border border-henko-turquoise/15 shadow-sm hover:border-henko-turquoise/40 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
                 <span className="inline-block text-[11px] tracking-wider font-bold text-henko-turquoise bg-henko-turquoise/10 px-3 py-1 rounded-full mb-5">
                   {f.tag}
                 </span>
@@ -147,8 +149,8 @@ export default function ServiciosClient() {
       {/* FAQ */}
       <section className="px-6 md:px-12 py-20 bg-gray-50">
         <div className="max-w-4xl mx-auto">
-          <p className="font-raleway font-bold text-henko-turquoise tracking-[0.18em] uppercase text-[11px] mb-4">Preguntas frecuentes</p>
-          <h2 className="font-roxborough text-2xl md:text-4xl text-gray-900 mb-12 leading-tight">¿Tienes dudas antes de empezar?</h2>
+          <p data-animate className="font-raleway font-bold text-henko-turquoise tracking-[0.18em] uppercase text-[11px] mb-4">Preguntas frecuentes</p>
+          <h2 data-animate data-delay="100" className="font-roxborough text-2xl md:text-4xl text-gray-900 mb-12 leading-tight">¿Tienes dudas antes de empezar?</h2>
 
           <div className="flex flex-col gap-4">
             {FAQS.map((f, i) => {
@@ -191,11 +193,13 @@ export default function ServiciosClient() {
       {/* CTA */}
       <section className="bg-white py-24 px-6 md:px-12 text-center">
         <div className="max-w-xl mx-auto">
-          <h2 className="font-roxborough text-2xl md:text-3xl text-gray-900 mb-4">¿Por dónde empezamos?</h2>
-          <p className="text-gray-600 mb-9 leading-relaxed">
+          <h2 data-animate className="font-roxborough text-2xl md:text-3xl text-gray-900 mb-4">¿Por dónde empezamos?</h2>
+          <p data-animate data-delay="100" className="text-gray-600 mb-9 leading-relaxed">
             Primera consulta gratuita de 45 minutos. Sin compromiso.
           </p>
           <Link
+            data-animate
+            data-delay="200"
             href="/contacto"
             className="inline-flex items-center gap-2 bg-henko-turquoise text-white px-9 py-4 rounded-full text-[15px] font-semibold hover:bg-henko-turquoise-light hover:shadow-lg hover:shadow-henko-turquoise/30 transition-all"
           >

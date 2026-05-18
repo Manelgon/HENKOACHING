@@ -74,7 +74,7 @@ export default function ContactoPage() {
       <section className="px-6 md:px-12 pt-10 pb-20">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-20">
           {/* Form */}
-          <div>
+          <div data-animate="left">
             {sent ? (
               <div className="bg-white border border-henko-turquoise/15 rounded-[2.5rem] px-12 py-16 text-center shadow-sm">
                 <div className="w-16 h-16 rounded-full bg-henko-turquoise mx-auto mb-5 flex items-center justify-center">
@@ -212,7 +212,7 @@ export default function ContactoPage() {
           </div>
 
           {/* Info */}
-          <div className="pt-2">
+          <div data-animate="right" className="pt-2">
             <h2 className="font-roxborough text-2xl md:text-4xl text-gray-900 mb-6 leading-tight">
               <em className="italic text-henko-turquoise font-light">Mallorca</em>
             </h2>
@@ -221,13 +221,25 @@ export default function ContactoPage() {
             </p>
 
             {[
-              { label: 'EMAIL', val: 'hola@henkoaching.com' },
-              { label: 'INSTAGRAM', val: '@henkoaching' },
+              { label: 'EMAIL', val: 'info@henkoaching.com', href: 'mailto:info@henkoaching.com' },
+              { label: 'INSTAGRAM', val: '@henkoaching', href: 'https://www.instagram.com/henkoaching/' },
+              { label: 'LINKEDIN', val: 'Jennifer Cervera', href: 'https://es.linkedin.com/in/jennifer-cervera-3b66a2136' },
               { label: 'UBICACIÓN', val: 'Mallorca, Illes Balears, España' },
             ].map((item) => (
               <div key={item.label} className="mb-7">
                 <p className="text-[10px] tracking-[0.16em] text-henko-turquoise font-bold mb-1">{item.label}</p>
-                <p className="text-[15px] text-gray-900">{item.val}</p>
+                {item.href ? (
+                  <a
+                    href={item.href}
+                    target={item.href.startsWith('http') ? '_blank' : undefined}
+                    rel={item.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+                    className="text-[15px] text-gray-900 hover:text-henko-turquoise transition-colors"
+                  >
+                    {item.val}
+                  </a>
+                ) : (
+                  <p className="text-[15px] text-gray-900">{item.val}</p>
+                )}
               </div>
             ))}
 

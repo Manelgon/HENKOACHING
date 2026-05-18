@@ -120,7 +120,7 @@ export default function AjustesForm({ settings, logoUrl, firmaUrl, headerUrl, fo
               type="email"
               value={datos.emisor_email}
               onChange={(e) => set('emisor_email', e.target.value)}
-              placeholder="hola@henkoaching.com"
+              placeholder="info@henkoaching.com"
               className="input"
             />
           </Field>
