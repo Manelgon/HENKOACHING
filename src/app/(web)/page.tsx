@@ -253,26 +253,32 @@ export default async function Home() {
       </section>
 
       {/* QUOTE */}
-      <section className="relative py-28 md:py-36 px-6 md:px-12 bg-henko-turquoise/[0.04] border-y border-henko-turquoise/15 overflow-hidden">
-        {/* Soft radial glow */}
+      <section className="relative py-28 md:py-36 px-6 md:px-12 border-y border-henko-turquoise/15 overflow-hidden">
+        {/* Oruga (left) */}
         <div
+          data-animate="left"
           aria-hidden
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(31,143,155,0.06)_0%,transparent_60%)]"
-        />
-
-        {/* Giant decorative quotes */}
-        <span
-          aria-hidden
-          className="pointer-events-none absolute top-4 left-4 md:top-8 md:left-12 font-roxborough italic text-[14rem] md:text-[20rem] leading-none text-henko-turquoise/[0.10] select-none"
+          className="pointer-events-none select-none absolute left-[10%] top-0 bottom-0 hidden md:flex items-center w-[30%] max-w-[420px] mt-24"
         >
-          &ldquo;
-        </span>
-        <span
+          <img
+            src="/images/hero-oruga-logo.png"
+            alt=""
+            className="w-full opacity-70 scale-x-[-1]"
+          />
+        </div>
+        {/* Mariposa (right) */}
+        <div
+          data-animate="right"
+          data-delay="200"
           aria-hidden
-          className="pointer-events-none absolute bottom-[-6rem] right-4 md:bottom-[-8rem] md:right-12 font-roxborough italic text-[14rem] md:text-[20rem] leading-none text-henko-turquoise/[0.10] select-none"
+          className="pointer-events-none select-none absolute right-[10%] top-0 bottom-0 hidden md:flex items-center w-[30%] max-w-[420px] -mt-24"
         >
-          &rdquo;
-        </span>
+          <img
+            src="/images/hero-mariposa-logo.png"
+            alt=""
+            className="w-full opacity-80"
+          />
+        </div>
 
         <div data-animate className="max-w-3xl mx-auto text-center relative z-10">
           <p className="font-roxborough italic text-2xl md:text-4xl text-gray-900 leading-[1.35] mb-7">
@@ -323,7 +329,7 @@ export default async function Home() {
             ))}
           </div>
 
-          <div className="text-center mt-12">
+          <div className="text-center mt-24">
             <Link
               href="/servicios"
               className="inline-flex items-center gap-2 bg-henko-turquoise text-white px-8 py-3.5 rounded-full text-sm font-semibold tracking-wide hover:bg-henko-turquoise-light hover:shadow-lg hover:shadow-henko-turquoise/30 transition-all duration-200"
