@@ -22,7 +22,7 @@ export default function BlogCard({ post, compact = false }: { post: BlogCardData
       <Link href={`/blog/${post.slug}`} className="block">
         <div
           className={`relative w-full overflow-hidden bg-gray-100 ${
-            compact ? 'rounded-[1.5rem] mb-4 aspect-[16/9]' : 'rounded-[2rem] mb-5 aspect-[16/10]'
+            compact ? 'rounded-[1.75rem] mb-5 aspect-[16/9]' : 'rounded-[2rem] mb-5 aspect-[16/10]'
           }`}
         >
           {post.imagen_portada ? (
@@ -31,26 +31,34 @@ export default function BlogCard({ post, compact = false }: { post: BlogCardData
               alt={post.imagen_portada_alt ?? post.titulo}
               fill
               sizes="(min-width: 768px) 33vw, 100vw"
-              className="object-cover transition-transform duration-500 group-hover:scale-105"
+              className="object-cover transition-transform duration-700 group-hover:scale-[1.04]"
             />
           ) : (
             <div className="absolute inset-0 bg-gradient-to-br from-henko-greenblue/30 to-henko-turquoise/20" />
           )}
         </div>
 
-        <div className="flex items-center gap-2 mb-3">
-          {post.categoria && (
-            <span className="text-[10px] tracking-[0.2em] uppercase font-raleway font-bold text-henko-turquoise">
+        {post.categoria && (
+          <div className="flex items-center gap-3 mb-3">
+            <span className="block w-6 h-px bg-henko-turquoise" />
+            <span className="text-[10px] tracking-[0.22em] uppercase font-raleway font-bold text-henko-turquoise">
               {post.categoria.nombre}
             </span>
-          )}
-          {post.categoria && fecha && <span className="text-gray-300">·</span>}
-          {fecha && <span className="text-xs text-gray-400 font-raleway">{fecha}</span>}
-        </div>
+            {fecha && (
+              <>
+                <span className="text-henko-turquoise/30">·</span>
+                <span className="text-[11px] text-gray-400 font-raleway">{fecha}</span>
+              </>
+            )}
+          </div>
+        )}
+        {!post.categoria && fecha && (
+          <p className="text-[11px] text-gray-400 font-raleway mb-3">{fecha}</p>
+        )}
 
         <h2
           className={`font-roxborough text-gray-900 group-hover:text-henko-turquoise transition-colors leading-tight ${
-            compact ? 'mb-2 text-lg md:text-xl' : 'mb-3 text-xl md:text-2xl'
+            compact ? 'mb-2.5 text-lg md:text-xl' : 'mb-3 text-xl md:text-2xl'
           }`}
         >
           {post.titulo}
@@ -59,16 +67,23 @@ export default function BlogCard({ post, compact = false }: { post: BlogCardData
         {post.extracto && (
           <p
             className={`font-raleway text-gray-600 leading-relaxed ${
-              compact ? 'text-sm line-clamp-2 mb-3' : 'line-clamp-3 mb-4'
+              compact ? 'text-sm line-clamp-2 mb-4' : 'line-clamp-3 mb-4'
             }`}
           >
             {post.extracto}
           </p>
         )}
 
-        {post.tiempo_lectura && (
-          <p className="font-raleway text-xs text-gray-400">{post.tiempo_lectura} min de lectura</p>
-        )}
+        <div className="flex items-center justify-between gap-3 pt-2">
+          {post.tiempo_lectura ? (
+            <p className="font-raleway text-xs text-gray-400">{post.tiempo_lectura} min de lectura</p>
+          ) : (
+            <span />
+          )}
+          <span className="text-[11px] font-bold tracking-[0.18em] uppercase text-henko-turquoise opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all duration-300">
+            Leer →
+          </span>
+        </div>
       </Link>
     </article>
   )

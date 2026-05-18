@@ -94,8 +94,13 @@ export default function ServiciosClient() {
       />
       <PageHeader
         overline="Servicios"
-        title="Lo que ofrezco"
-        subtitle="Tres áreas de transformación que se complementan para llevar tu empresa al siguiente nivel."
+        title={
+          <>
+            Tres áreas que<br />
+            <em className="italic text-henko-turquoise font-light">se complementan</em>
+          </>
+        }
+        subtitle="Operaciones, talento y liderazgo. Trabaja una sola disciplina o intégralas según la fase en la que se encuentre tu empresa."
       />
 
       {/* Acordeón de servicios */}
@@ -116,10 +121,29 @@ export default function ServiciosClient() {
           <h2 data-animate data-delay="100" className="font-roxborough text-2xl md:text-4xl text-gray-900 mb-13 leading-tight">¿Cómo trabajo?</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mt-12">
             {STEPS.map(([title, desc], i) => (
-              <div key={title} data-animate="scale" data-delay={i * 100} className="bg-white rounded-[2rem] px-7 py-9 border border-henko-turquoise/15 shadow-sm hover:border-henko-turquoise/40 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
-                <p className="font-roxborough text-4xl text-henko-turquoise mb-3">0{i + 1}</p>
-                <h3 className="font-roxborough text-xl text-gray-900 mb-2.5">{title}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed">{desc}</p>
+              <div
+                key={title}
+                data-animate="scale"
+                data-delay={i * 100}
+                className="group relative bg-white rounded-[2rem] p-8 md:p-9 border border-henko-turquoise/15 shadow-sm hover:border-henko-turquoise/40 hover:shadow-[0_16px_48px_rgba(31,143,155,0.08)] hover:-translate-y-1 transition-all duration-300 overflow-hidden min-h-[220px]"
+              >
+                {/* Watermark number */}
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute -top-4 -right-2 font-roxborough italic text-[6.5rem] leading-none text-henko-turquoise/[0.07] group-hover:text-henko-turquoise/[0.12] transition-colors duration-300 select-none"
+                >
+                  0{i + 1}
+                </span>
+
+                <div className="relative flex items-center gap-3 mb-5">
+                  <span className="block w-8 h-px bg-henko-turquoise" />
+                  <span className="text-[10px] font-bold tracking-[0.18em] uppercase text-henko-turquoise">
+                    Fase 0{i + 1}
+                  </span>
+                </div>
+
+                <h3 className="relative font-roxborough text-xl md:text-[22px] text-gray-900 mb-2.5 leading-tight">{title}</h3>
+                <p className="relative text-[14px] text-gray-500 leading-[1.7]">{desc}</p>
               </div>
             ))}
           </div>
@@ -134,12 +158,28 @@ export default function ServiciosClient() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {FORMATOS.map((f, i) => (
-              <div key={f.title} data-animate="scale" data-delay={i * 100} className="bg-white rounded-[2rem] p-9 border border-henko-turquoise/15 shadow-sm hover:border-henko-turquoise/40 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
-                <span className="inline-block text-[11px] tracking-wider font-bold text-henko-turquoise bg-henko-turquoise/10 px-3 py-1 rounded-full mb-5">
-                  {f.tag}
-                </span>
-                <h3 className="font-roxborough text-xl text-gray-900 mb-2.5">{f.title}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed">{f.desc}</p>
+              <div
+                key={f.title}
+                data-animate="scale"
+                data-delay={i * 100}
+                className="group relative bg-white rounded-[2.5rem] p-8 md:p-9 min-h-[220px] border border-henko-turquoise/15 shadow-sm hover:border-henko-turquoise/40 hover:shadow-[0_16px_48px_rgba(31,143,155,0.08)] hover:-translate-y-1 transition-all duration-300 overflow-hidden flex"
+              >
+                {/* Vertical accent bar */}
+                <span
+                  aria-hidden
+                  className="absolute top-8 bottom-8 left-0 w-px bg-gradient-to-b from-transparent via-henko-turquoise to-transparent opacity-50 group-hover:opacity-100 transition-opacity duration-300"
+                />
+
+                <div className="relative flex flex-col justify-center pl-2 w-full">
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className="block w-8 h-px bg-henko-turquoise" />
+                    <span className="text-[10px] font-bold tracking-[0.22em] uppercase text-henko-turquoise">
+                      {f.tag}
+                    </span>
+                  </div>
+                  <h3 className="font-roxborough text-xl md:text-[22px] text-gray-900 mb-2.5 leading-tight">{f.title}</h3>
+                  <p className="text-[14px] text-gray-500 leading-[1.7]">{f.desc}</p>
+                </div>
               </div>
             ))}
           </div>
@@ -191,19 +231,43 @@ export default function ServiciosClient() {
       </section>
 
       {/* CTA */}
-      <section className="bg-white py-24 px-6 md:px-12 text-center">
-        <div className="max-w-xl mx-auto">
-          <h2 data-animate className="font-roxborough text-2xl md:text-3xl text-gray-900 mb-4">¿Por dónde empezamos?</h2>
-          <p data-animate data-delay="100" className="text-gray-600 mb-9 leading-relaxed">
+      <section className="relative bg-henko-turquoise py-24 md:py-28 px-6 md:px-12 text-center overflow-hidden">
+        {/* Decorative blobs */}
+        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="blob-1 absolute -top-32 -left-32 w-[480px] h-[480px] bg-white/[0.08]" />
+          <div className="blob-2 absolute -bottom-40 -right-32 w-[520px] h-[520px] bg-white/[0.06]" />
+        </div>
+
+        {/* Giant decorative mark */}
+        <span
+          aria-hidden
+          className="pointer-events-none absolute top-4 left-1/2 -translate-x-1/2 font-roxborough italic text-[18rem] md:text-[22rem] leading-none text-white/[0.06] select-none"
+        >
+          &mdash;
+        </span>
+
+        <div className="relative z-10 max-w-2xl mx-auto">
+          <div className="flex items-center justify-center gap-3 mb-5">
+            <span className="block w-8 h-px bg-white/60" />
+            <p className="font-raleway font-bold text-white tracking-[0.22em] uppercase text-[11px]">
+              Primer paso
+            </p>
+            <span className="block w-8 h-px bg-white/60" />
+          </div>
+          <h2 data-animate className="font-roxborough text-3xl md:text-5xl text-white mb-4 leading-[1.15]">
+            ¿Por dónde<br />
+            <em className="italic font-light">empezamos?</em>
+          </h2>
+          <p data-animate data-delay="100" className="font-roxborough italic text-lg md:text-xl text-white/90 mb-10">
             Primera consulta gratuita de 45 minutos. Sin compromiso.
           </p>
           <Link
             data-animate
             data-delay="200"
             href="/contacto"
-            className="inline-flex items-center gap-2 bg-henko-turquoise text-white px-9 py-4 rounded-full text-[15px] font-semibold hover:bg-henko-turquoise-light hover:shadow-lg hover:shadow-henko-turquoise/30 transition-all"
+            className="inline-flex items-center gap-2 bg-white text-henko-turquoise px-9 py-4 rounded-full text-[15px] font-semibold tracking-wide hover:bg-gray-50 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200"
           >
-            Reserva tu consulta gratuita
+            Reserva tu consulta gratuita →
           </Link>
         </div>
       </section>
@@ -214,30 +278,45 @@ export default function ServiciosClient() {
 function ServiceRow({ s, i, open, toggle }: { s: Service; i: number; open: boolean; toggle: () => void }) {
   return (
     <div
-      className={`bg-white border rounded-[2.5rem] overflow-hidden transition-all duration-300 ${
+      className={`group relative bg-white border rounded-[2.5rem] overflow-hidden transition-all duration-300 ${
         open
           ? 'border-henko-turquoise/40 shadow-[0_16px_48px_rgba(31,143,155,0.12)]'
-          : 'border-henko-turquoise/15 shadow-sm hover:border-henko-turquoise/40 hover:shadow-md hover:-translate-y-0.5'
+          : 'border-henko-turquoise/15 shadow-sm hover:border-henko-turquoise/40 hover:shadow-[0_16px_48px_rgba(31,143,155,0.08)] hover:-translate-y-1'
       }`}
     >
+      {/* Watermark number */}
+      <span
+        aria-hidden
+        className={`pointer-events-none absolute -top-6 right-6 font-roxborough italic text-[8rem] leading-none select-none transition-colors duration-300 ${
+          open ? 'text-henko-turquoise/[0.14]' : 'text-henko-turquoise/[0.07] group-hover:text-henko-turquoise/[0.12]'
+        }`}
+      >
+        0{i + 1}
+      </span>
+
       <button
         type="button"
         onClick={toggle}
-        className="w-full flex items-center justify-between px-8 md:px-12 py-7 text-left"
+        className="relative w-full flex items-center justify-between gap-6 px-8 md:px-12 py-7 text-left"
       >
-        <div className="flex items-baseline gap-4">
-          <p className="text-xs tracking-[0.14em] text-henko-turquoise font-semibold">0{i + 1}</p>
-          <h3 className="font-roxborough text-xl md:text-2xl text-gray-900">{s.title}</h3>
+        <div className="flex items-center gap-4 min-w-0">
+          <span className={`block h-px transition-all duration-300 ${open ? 'w-12 bg-henko-turquoise' : 'w-8 bg-henko-turquoise/60'}`} />
+          <div className="min-w-0">
+            <p className="text-[10px] font-bold tracking-[0.18em] uppercase text-henko-turquoise mb-1">
+              Servicio 0{i + 1}
+            </p>
+            <h3 className="font-roxborough text-xl md:text-2xl text-gray-900 leading-tight">{s.title}</h3>
+          </div>
         </div>
         <span
-          className={`text-3xl transition-transform ${open ? 'rotate-45' : ''} text-henko-turquoise flex-shrink-0`}
+          className={`text-3xl transition-transform duration-300 ${open ? 'rotate-45' : ''} text-henko-turquoise flex-shrink-0`}
           aria-hidden
         >
           +
         </span>
       </button>
       {open && (
-        <div className="px-8 md:px-12 pb-8 grid grid-cols-1 md:grid-cols-2 gap-8 pt-0">
+        <div className="relative px-8 md:px-12 pb-8 grid grid-cols-1 md:grid-cols-2 gap-8 pt-0">
           <div>
             <p className="font-roxborough italic text-base md:text-lg mb-3 text-henko-turquoise">{s.subtitle}</p>
             <p className="text-sm md:text-[14.5px] leading-[1.75] text-gray-600">{s.desc}</p>

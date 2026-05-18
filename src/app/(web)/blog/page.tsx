@@ -41,21 +41,29 @@ export default async function BlogIndexPage() {
     <main className="min-h-screen bg-white pt-24">
       <PageHeader
         overline="Blog"
-        title="Reflexiones, prácticas y aprendizajes"
+        title={
+          <>
+            Reflexiones y <em className="italic text-henko-turquoise font-light">aprendizajes</em>
+          </>
+        }
         subtitle="Sobre liderazgo, coaching, gestión de personas y la cultura que se construye en cada decisión."
       />
 
       <section className="px-6 md:px-12 pt-10 pb-16 max-w-7xl mx-auto">
         {categorias && categorias.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-10">
-            <span className="px-4 py-2 rounded-full bg-henko-turquoise text-white font-raleway text-xs font-semibold tracking-wide uppercase">
+          <div className="flex flex-wrap items-center gap-2 mb-12">
+            <div className="flex items-center gap-3 mr-3">
+              <span className="block w-6 h-px bg-henko-turquoise" />
+              <span className="text-[10px] font-bold tracking-[0.22em] uppercase text-henko-turquoise">Filtrar</span>
+            </div>
+            <span className="px-4 py-2 rounded-full bg-henko-turquoise text-white font-raleway text-[11px] font-semibold tracking-[0.12em] uppercase shadow-sm shadow-henko-turquoise/20">
               Todos
             </span>
             {categorias.map((c) => (
               <Link
                 key={c.slug}
                 href={`/blog/categoria/${c.slug}`}
-                className="px-4 py-2 rounded-full border border-gray-200 text-gray-600 font-raleway text-xs font-semibold tracking-wide uppercase hover:bg-gray-50 hover:text-henko-turquoise transition-colors"
+                className="px-4 py-2 rounded-full border border-henko-turquoise/15 text-gray-600 font-raleway text-[11px] font-semibold tracking-[0.12em] uppercase bg-white hover:border-henko-turquoise/40 hover:text-henko-turquoise hover:-translate-y-0.5 hover:shadow-sm transition-all duration-300"
               >
                 {c.nombre}
               </Link>

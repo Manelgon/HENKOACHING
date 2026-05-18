@@ -67,35 +67,56 @@ export default function ContactoPage() {
     <div className="bg-white pt-24 font-raleway">
       <PageHeader
         overline="Contacto"
-        title="Hablemos"
-        subtitle="Primera consulta gratuita de 45 minutos. Sin compromiso."
+        title={
+          <>
+            Empecemos por <em className="italic text-henko-turquoise font-light">una conversación</em>
+          </>
+        }
+        subtitle="45 minutos. Sin compromiso. Prefiero que lo hablemos antes de tomar cualquier decisión."
       />
 
       <section className="px-6 md:px-12 pt-10 pb-20">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-20">
           {/* Form */}
-          <div data-animate="left">
+          <div data-animate="left" className="relative bg-white border border-henko-turquoise/15 rounded-[2.5rem] p-8 md:p-10 shadow-sm overflow-hidden">
+            {/* Vertical accent bar */}
+            <span
+              aria-hidden
+              className="absolute top-10 bottom-10 left-0 w-px bg-gradient-to-b from-transparent via-henko-turquoise to-transparent opacity-60"
+            />
+
             {sent ? (
-              <div className="bg-white border border-henko-turquoise/15 rounded-[2.5rem] px-12 py-16 text-center shadow-sm">
-                <div className="w-16 h-16 rounded-full bg-henko-turquoise mx-auto mb-5 flex items-center justify-center">
+              <div className="text-center py-8">
+                <div className="w-16 h-16 rounded-full bg-henko-turquoise mx-auto mb-5 flex items-center justify-center shadow-lg shadow-henko-turquoise/20">
                   <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                 </div>
-                <h2 className="font-roxborough text-2xl md:text-3xl text-gray-900 mb-3">¡Mensaje enviado!</h2>
-                <p className="text-[15px] leading-relaxed text-gray-600">
+                <div className="flex items-center justify-center gap-3 mb-3">
+                  <span className="block w-8 h-px bg-henko-turquoise" />
+                  <span className="text-[10px] font-bold tracking-[0.22em] uppercase text-henko-turquoise">Enviado</span>
+                  <span className="block w-8 h-px bg-henko-turquoise" />
+                </div>
+                <h2 className="font-roxborough text-2xl md:text-3xl text-gray-900 mb-3">
+                  ¡Mensaje <em className="italic text-henko-turquoise font-light">recibido</em>!
+                </h2>
+                <p className="text-[15px] leading-relaxed text-gray-600 max-w-sm mx-auto">
                   Gracias por escribirme. Me pondré en contacto contigo lo antes posible.
                 </p>
                 <button
                   type="button"
                   onClick={() => { setSent(false); setForm({ nombre: '', empresa: '', email: '', servicio: '', mensaje: '' }); setAceptoPrivacidad(false) }}
-                  className="mt-7 inline-flex items-center gap-2 bg-henko-turquoise text-white px-7 py-3 rounded-full text-sm font-semibold hover:bg-henko-turquoise-light hover:shadow-lg transition-all"
+                  className="mt-7 inline-flex items-center gap-2 bg-transparent border-2 border-henko-turquoise text-henko-turquoise px-7 py-3 rounded-full text-sm font-semibold hover:bg-henko-turquoise hover:text-white transition-all"
                 >
                   Enviar otro mensaje
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} noValidate>
+              <form onSubmit={handleSubmit} noValidate className="relative">
+                <div className="flex items-center gap-3 mb-6">
+                  <span className="block w-8 h-px bg-henko-turquoise" />
+                  <span className="text-[10px] font-bold tracking-[0.22em] uppercase text-henko-turquoise">Cuéntame</span>
+                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                   <div>
                     <label className={labelClass(!!errors.nombre)} htmlFor="nombre">NOMBRE</label>
@@ -213,39 +234,68 @@ export default function ContactoPage() {
 
           {/* Info */}
           <div data-animate="right" className="pt-2">
-            <h2 className="font-roxborough text-2xl md:text-4xl text-gray-900 mb-6 leading-tight">
-              <em className="italic text-henko-turquoise font-light">Mallorca</em>
+            <div className="flex items-center gap-3 mb-4">
+              <span className="block w-8 h-px bg-henko-turquoise" />
+              <span className="text-[10px] font-bold tracking-[0.22em] uppercase text-henko-turquoise">Desde Mallorca</span>
+            </div>
+            <h2 className="font-roxborough text-2xl md:text-3xl text-gray-900 mb-5 leading-tight">
+              Otras formas de <em className="italic text-henko-turquoise font-light">encontrarme</em>
             </h2>
-            <p className="text-[15px] leading-[1.8] text-gray-600 mb-12">
-              Si tienes dudas sobre si mis servicios encajan con lo que buscas, escríbeme. Prefiero que lo hablemos antes de tomar ninguna decisión.
+            <p className="text-[15px] leading-[1.8] text-gray-600 mb-10">
+              Si prefieres otro canal o solo quieres asomarte a lo que comparto, estoy en estos sitios.
             </p>
 
-            {[
-              { label: 'EMAIL', val: 'info@henkoaching.com', href: 'mailto:info@henkoaching.com' },
-              { label: 'INSTAGRAM', val: '@henkoaching', href: 'https://www.instagram.com/henkoaching/' },
-              { label: 'LINKEDIN', val: 'Jennifer Cervera', href: 'https://es.linkedin.com/in/jennifer-cervera-3b66a2136' },
-              { label: 'UBICACIÓN', val: 'Mallorca, Illes Balears, España' },
-            ].map((item) => (
-              <div key={item.label} className="mb-7">
-                <p className="text-[10px] tracking-[0.16em] text-henko-turquoise font-bold mb-1">{item.label}</p>
-                {item.href ? (
+            <div className="space-y-3 mb-8">
+              {[
+                { label: 'EMAIL', val: 'info@henkoaching.com', href: 'mailto:info@henkoaching.com' },
+                { label: 'TELÉFONO', val: '633 65 76 65', href: 'tel:+34633657665' },
+                { label: 'INSTAGRAM', val: '@henkoaching', href: 'https://www.instagram.com/henkoaching/' },
+                { label: 'LINKEDIN', val: 'Jennifer Cervera', href: 'https://es.linkedin.com/in/jennifer-cervera-3b66a2136' },
+                { label: 'UBICACIÓN', val: 'Mallorca, Illes Balears, España' },
+              ].map((item) => {
+                const inner = (
+                  <div className="relative flex items-center gap-5 pl-4">
+                    <span
+                      aria-hidden
+                      className="absolute top-2 bottom-2 left-0 w-px bg-henko-turquoise/40 group-hover:bg-henko-turquoise transition-colors duration-300"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[10px] tracking-[0.22em] text-henko-turquoise font-bold uppercase mb-0.5">{item.label}</p>
+                      <p className="text-[15px] text-gray-900 group-hover:text-henko-turquoise transition-colors truncate">{item.val}</p>
+                    </div>
+                    {item.href && (
+                      <span aria-hidden className="text-henko-turquoise opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all flex-shrink-0">→</span>
+                    )}
+                  </div>
+                )
+                return item.href ? (
                   <a
+                    key={item.label}
                     href={item.href}
                     target={item.href.startsWith('http') ? '_blank' : undefined}
                     rel={item.href.startsWith('http') ? 'noopener noreferrer' : undefined}
-                    className="text-[15px] text-gray-900 hover:text-henko-turquoise transition-colors"
+                    className="group block bg-white border border-henko-turquoise/15 rounded-2xl px-5 py-4 shadow-sm hover:border-henko-turquoise/40 hover:shadow-[0_8px_24px_rgba(31,143,155,0.08)] hover:-translate-y-0.5 transition-all duration-300"
                   >
-                    {item.val}
+                    {inner}
                   </a>
                 ) : (
-                  <p className="text-[15px] text-gray-900">{item.val}</p>
-                )}
-              </div>
-            ))}
+                  <div key={item.label} className="group block bg-white border border-henko-turquoise/15 rounded-2xl px-5 py-4 shadow-sm">
+                    {inner}
+                  </div>
+                )
+              })}
+            </div>
 
-            <div className="bg-gray-50 border border-henko-turquoise/15 rounded-[2rem] px-8 py-8 mt-4">
-              <p className="font-roxborough italic text-lg leading-snug text-gray-900">
-                &ldquo;El primer paso es siempre el más difícil.<br />Pero también el más importante.&rdquo;
+            <div className="relative bg-henko-turquoise/[0.05] border border-henko-turquoise/15 rounded-[2rem] px-8 py-8 overflow-hidden">
+              <span
+                aria-hidden
+                className="pointer-events-none absolute -top-2 -left-2 font-roxborough italic text-[8rem] leading-none text-henko-turquoise/[0.12] select-none"
+              >
+                &ldquo;
+              </span>
+              <p className="relative font-roxborough italic text-lg leading-snug text-gray-900">
+                El primer paso es siempre el más difícil.<br />
+                <span className="text-henko-turquoise">Pero también el más importante.</span>
               </p>
             </div>
           </div>

@@ -1487,6 +1487,54 @@ export type Database = {
           },
         ]
       }
+      testimonios: {
+        Row: {
+          id: string
+          texto: string
+          nombre: string
+          rol: string | null
+          sector: string | null
+          rating: number | null
+          fuente: string | null
+          fecha: string | null
+          orden: number
+          visible: boolean
+          created_at: string
+          updated_at: string
+          deleted_at: string | null
+        }
+        Insert: {
+          id?: string
+          texto: string
+          nombre: string
+          rol?: string | null
+          sector?: string | null
+          rating?: number | null
+          fuente?: string | null
+          fecha?: string | null
+          orden?: number
+          visible?: boolean
+          created_at?: string
+          updated_at?: string
+          deleted_at?: string | null
+        }
+        Update: {
+          id?: string
+          texto?: string
+          nombre?: string
+          rol?: string | null
+          sector?: string | null
+          rating?: number | null
+          fuente?: string | null
+          fecha?: string | null
+          orden?: number
+          visible?: boolean
+          created_at?: string
+          updated_at?: string
+          deleted_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       blog_posts_publicados: {
