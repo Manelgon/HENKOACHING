@@ -251,7 +251,7 @@ export default function ContactoPage() {
                 { label: 'TELÉFONO', val: '633 65 76 65', href: 'tel:+34633657665' },
                 { label: 'INSTAGRAM', val: '@henkoaching', href: 'https://www.instagram.com/henkoaching/' },
                 { label: 'LINKEDIN', val: 'Jennifer Cervera', href: 'https://es.linkedin.com/in/jennifer-cervera-3b66a2136' },
-                { label: 'UBICACIÓN', val: 'Mallorca, Illes Balears, España' },
+                { label: 'UBICACIÓN', val: 'Palma de Mallorca, Illes Balears, España' },
               ].map((item) => {
                 const inner = (
                   <div className="relative flex items-center gap-5 pl-4">

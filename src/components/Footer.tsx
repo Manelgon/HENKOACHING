@@ -48,7 +48,7 @@ export default function Footer() {
                       <circle cx="12" cy="10" r="3" />
                     </svg>
                   </span>
-                  Mallorca, Illes Balears
+                  Palma de Mallorca, Illes Balears
                 </span>
               </li>
               <li>

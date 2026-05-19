@@ -24,8 +24,8 @@ export const metadata: Metadata = {
   title: siteTitle,
   description: siteDescription,
   icons: {
-    icon: '/hk.png',
-    apple: '/hk.png',
+    icon: '/HK-google.png',
+    apple: '/HK-google.png',
   },
   ...(googleVerification ? { verification: { google: googleVerification } } : {}),
   openGraph: {
