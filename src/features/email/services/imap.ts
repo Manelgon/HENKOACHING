@@ -2,7 +2,7 @@ import 'server-only'
 import { ImapFlow } from 'imapflow'
 import sanitizeHtml from 'sanitize-html'
 import { simpleParser } from 'mailparser'
-import type { EmailMessage, EmailDetail } from '../types'
+import type { EmailMessage, EmailDetail, ImapFolder, FolderType } from '../types'
 
 type ImapCredentials = {
   host: string
@@ -10,6 +10,27 @@ type ImapCredentials = {
   encryption: 'ssl' | 'starttls' | 'none'
   user: string
   password: string
+}
+
+// Heurísticas para detectar el tipo de carpeta por nombre y atributos IMAP
+const FOLDER_PATTERNS: { type: FolderType; label: string; patterns: RegExp[] }[] = [
+  { type: 'sent',   label: 'Enviados',   patterns: [/sent/i, /enviados/i, /^Sent$/i] },
+  { type: 'drafts', label: 'Borradores', patterns: [/draft/i, /borrador/i] },
+  { type: 'spam',   label: 'Spam',       patterns: [/spam/i, /junk/i, /correo no deseado/i] },
+  { type: 'trash',  label: 'Papelera',   patterns: [/trash/i, /papelera/i, /deleted/i, /bin/i] },
+]
+
+function detectFolderType(name: string, specialUse?: string): FolderType {
+  if (specialUse) {
+    if (specialUse.includes('Sent'))   return 'sent'
+    if (specialUse.includes('Drafts')) return 'drafts'
+    if (specialUse.includes('Junk'))   return 'spam'
+    if (specialUse.includes('Trash'))  return 'trash'
+  }
+  for (const { type, patterns } of FOLDER_PATTERNS) {
+    if (patterns.some((p) => p.test(name))) return type
+  }
+  return 'inbox'
 }
 
 function buildClient(creds: ImapCredentials): ImapFlow {
@@ -24,25 +45,49 @@ function buildClient(creds: ImapCredentials): ImapFlow {
     socketTimeout: 20000,
     tls: creds.encryption !== 'none' ? { rejectUnauthorized: false } : undefined,
   })
-  // Evitar que errores de socket propaguen como uncaughtException
-  client.on('error', () => { /* manejado en connect() */ })
+  client.on('error', () => { /* evita uncaughtException */ })
   return client
 }
 
 async function safeLogout(client: ImapFlow) {
-  try { await client.logout() } catch { /* ignorar error al cerrar */ }
+  try { await client.logout() } catch { /* ignorar */ }
 }
 
-export async function listarMensajes(creds: ImapCredentials, limit = 50): Promise<EmailMessage[]> {
+export async function listarCarpetas(creds: ImapCredentials): Promise<ImapFolder[]> {
   const client = buildClient(creds)
   await client.connect()
-
-  const messages: EmailMessage[] = []
-
   try {
-    await client.mailboxOpen('INBOX')
+    const list = await client.list()
+    const seen = new Set<FolderType>()
+    const folders: ImapFolder[] = [{ path: 'INBOX', label: 'Recibidos', type: 'inbox', unread: 0 }]
+    seen.add('inbox')
 
-    const status = await client.status('INBOX', { messages: true })
+    for (const mailbox of list) {
+      if (mailbox.path === 'INBOX') continue
+      const specialUse = (mailbox as { specialUse?: string }).specialUse
+      const type = detectFolderType(mailbox.name, specialUse)
+      if (seen.has(type)) continue
+      seen.add(type)
+      const known = FOLDER_PATTERNS.find((p) => p.type === type)
+      folders.push({ path: mailbox.path, label: known?.label ?? mailbox.name, type, unread: 0 })
+    }
+
+    // Orden: Recibidos, Enviados, Borradores, Spam, Papelera
+    const ORDER: FolderType[] = ['inbox', 'sent', 'drafts', 'spam', 'trash']
+    folders.sort((a, b) => ORDER.indexOf(a.type) - ORDER.indexOf(b.type))
+    return folders
+  } finally {
+    await safeLogout(client)
+  }
+}
+
+export async function listarMensajes(creds: ImapCredentials, mailbox = 'INBOX', limit = 50): Promise<EmailMessage[]> {
+  const client = buildClient(creds)
+  await client.connect()
+  const messages: EmailMessage[] = []
+  try {
+    await client.mailboxOpen(mailbox)
+    const status = await client.status(mailbox, { messages: true })
     const total = status.messages ?? 0
     if (total === 0) return []
 
@@ -50,17 +95,12 @@ export async function listarMensajes(creds: ImapCredentials, limit = 50): Promis
     const range = `${from}:${total}`
 
     for await (const msg of client.fetch(range, {
-      uid: true,
-      flags: true,
-      envelope: true,
-      bodyStructure: false,
-      internalDate: true,
+      uid: true, flags: true, envelope: true, bodyStructure: false, internalDate: true,
     })) {
       const fromAddr = msg.envelope?.from?.[0]
       const fromStr = fromAddr
         ? `${fromAddr.name ? fromAddr.name + ' ' : ''}<${fromAddr.address}>`
         : '(desconocido)'
-
       messages.push({
         uid: msg.uid,
         from: fromStr,
@@ -70,35 +110,26 @@ export async function listarMensajes(creds: ImapCredentials, limit = 50): Promis
         snippet: '',
       })
     }
-
     messages.sort((a, b) => b.date.getTime() - a.date.getTime())
   } finally {
     await safeLogout(client)
   }
-
   return messages
 }
 
-export async function leerMensaje(creds: ImapCredentials, uid: number): Promise<EmailDetail | null> {
+export async function leerMensaje(creds: ImapCredentials, uid: number, mailbox = 'INBOX'): Promise<EmailDetail | null> {
   const client = buildClient(creds)
   await client.connect()
-
   try {
-    await client.mailboxOpen('INBOX')
-
-    // Fetch metadata without source (avoids "Connection not available" on large messages)
+    await client.mailboxOpen(mailbox)
     let msgMeta: EmailMessage | null = null
     for await (const msg of client.fetch(String(uid), {
-      uid: true,
-      flags: true,
-      envelope: true,
-      internalDate: true,
+      uid: true, flags: true, envelope: true, internalDate: true,
     }, { uid: true })) {
       const fromAddr = msg.envelope?.from?.[0]
       const fromStr = fromAddr
         ? `${fromAddr.name ? fromAddr.name + ' ' : ''}<${fromAddr.address}>`
         : '(desconocido)'
-
       msgMeta = {
         uid: msg.uid,
         from: fromStr,
@@ -108,13 +139,10 @@ export async function leerMensaje(creds: ImapCredentials, uid: number): Promise<
         snippet: '',
       }
     }
-
     if (!msgMeta) return null
 
-    // Download full message via stream and parse with mailparser
     let bodyHtml: string | null = null
     let bodyText: string | null = null
-
     const download = await client.download(String(uid), undefined, { uid: true })
     if (download) {
       const parsed = await simpleParser(download.content)
@@ -128,14 +156,10 @@ export async function leerMensaje(creds: ImapCredentials, uid: number): Promise<
           },
         })
       }
-      if (parsed.text) {
-        bodyText = parsed.text.trim()
-      }
+      if (parsed.text) bodyText = parsed.text.trim()
     }
 
-    // Marcar como leído
     await client.messageFlagsAdd(String(uid), ['\\Seen'], { uid: true })
-
     return { ...msgMeta, bodyHtml, bodyText }
   } finally {
     await safeLogout(client)

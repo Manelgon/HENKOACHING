@@ -212,7 +212,29 @@ async function getDecryptedPasswords(): Promise<{ smtp: string | null; imap: str
   }
 }
 
-export async function listarEmailsBandeja() {
+export async function listarCarpetasImap() {
+  const auth = await requireAdmin()
+  if ('error' in auth) return { error: auth.error }
+
+  const { imap, config } = await getDecryptedPasswords()
+  if (!config?.imap_host || !imap) return { error: 'Sin credenciales IMAP.' }
+
+  try {
+    const { listarCarpetas } = await import('@/features/email/services/imap')
+    const folders = await listarCarpetas({
+      host: config.imap_host as string,
+      port: (config.imap_port as number) ?? 993,
+      encryption: (config.imap_encryption as 'ssl' | 'starttls' | 'none') ?? 'ssl',
+      user: config.imap_user as string,
+      password: imap,
+    })
+    return { ok: true, folders }
+  } catch (e) {
+    return { error: `Error IMAP: ${String(e)}` }
+  }
+}
+
+export async function listarEmailsBandeja(mailbox = 'INBOX') {
   const auth = await requireAdmin()
   if ('error' in auth) return { error: auth.error }
 
@@ -230,14 +252,14 @@ export async function listarEmailsBandeja() {
       encryption: (config.imap_encryption as 'ssl' | 'starttls' | 'none') ?? 'ssl',
       user: config.imap_user as string,
       password: imap,
-    })
+    }, mailbox)
     return { ok: true, messages }
   } catch (e) {
     return { error: `Error IMAP: ${String(e)}` }
   }
 }
 
-export async function leerEmailBandeja(uid: number) {
+export async function leerEmailBandeja(uid: number, mailbox = 'INBOX') {
   const auth = await requireAdmin()
   if ('error' in auth) return { error: auth.error }
 
@@ -255,7 +277,7 @@ export async function leerEmailBandeja(uid: number) {
       encryption: (config.imap_encryption as 'ssl' | 'starttls' | 'none') ?? 'ssl',
       user: config.imap_user as string,
       password: imap,
-    }, uid)
+    }, uid, mailbox)
 
     if (!detail) return { error: 'Mensaje no encontrado' }
     return { ok: true, detail }
@@ -264,7 +286,15 @@ export async function leerEmailBandeja(uid: number) {
   }
 }
 
-export async function enviarEmail({ to, subject, body }: { to: string; subject: string; body: string }) {
+export type EnviarEmailInput = {
+  to: string
+  subject: string
+  bodyText: string
+  bodyHtml: string
+  attachments?: { name: string; mimeType: string; base64: string }[]
+}
+
+export async function enviarEmail({ to, subject, bodyText, bodyHtml, attachments = [] }: EnviarEmailInput) {
   const auth = await requireAdmin()
   if ('error' in auth) return { error: auth.error }
 
@@ -289,10 +319,16 @@ export async function enviarEmail({ to, subject, body }: { to: string; subject: 
       from: `"${fromName}" <${config.smtp_user as string}>`,
       to,
       subject,
-      text: body,
+      text: bodyText,
+      html: bodyHtml,
+      attachments: attachments.map((a) => ({
+        filename: a.name,
+        content: Buffer.from(a.base64, 'base64'),
+        contentType: a.mimeType,
+      })),
     })
 
-    await logAction({ accion: 'email.enviar', recursoTipo: 'email', recursoId: to, metadata: { subject } })
+    await logAction({ accion: 'email.enviar', recursoTipo: 'email', recursoId: to, metadata: { subject, adjuntos: attachments.length } })
     return { ok: true }
   } catch (e) {
     return { error: `Error SMTP: ${String(e)}` }
