@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, Fragment } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { signupCandidato, uploadCv, checkEmailCandidatoExiste, solicitarResetCandidato } from '@/actions/candidato'
+import { signupCandidato, uploadCvPorAdmin, checkEmailCandidatoExiste, solicitarResetCandidato } from '@/actions/candidato'
 import { useAction } from '@/shared/feedback/FeedbackContext'
 import { FormError } from '@/components/FormError'
 
@@ -163,12 +163,13 @@ export default function CandidatoSignupFlow() {
     )
     if (!signup.ok) { setSubmitting(false); return }
 
-    if (form.cv) {
+    // Subir CV usando admin client (el usuario aún no tiene sesión hasta confirmar email)
+    if (form.cv && signup.data?.userId) {
       const fd = new FormData()
       fd.append('cv', form.cv as File)
-      const cv = await runAction('Subiendo CV', () => uploadCv(fd), { successMessage: 'CV subido' })
-      if (!cv.ok) { setSubmitting(false); return }
+      await uploadCvPorAdmin(signup.data.userId, fd)
     }
+
     setDone(true)
     setSubmitting(false)
   }
@@ -177,24 +178,40 @@ export default function CandidatoSignupFlow() {
     return (
       <div className="min-h-screen bg-white font-raleway flex items-center justify-center px-6">
         <div className="max-w-md w-full text-center">
-          <div className="w-16 h-16 rounded-full bg-henko-turquoise/10 flex items-center justify-center mx-auto mb-6">
-            <svg className="w-8 h-8 text-henko-turquoise" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25H4.5a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5H4.5a2.25 2.25 0 0 0-2.25 2.25m19.5 0-9.75 6.75L2.25 6.75" />
+          {/* Icono check grande */}
+          <div className="w-20 h-20 rounded-full bg-henko-turquoise flex items-center justify-center mx-auto mb-6 shadow-lg shadow-henko-turquoise/25">
+            <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-3">¡Perfil creado con éxito!</h2>
-          <p className="text-gray-500 text-sm mb-2">
-            Te hemos enviado un email de confirmación a <span className="font-semibold text-gray-700">{form.email}</span>.
+
+          <h2 className="font-roxborough text-3xl text-gray-900 mb-3">¡Registro completado!</h2>
+          <p className="text-gray-600 text-sm mb-1">
+            Hemos enviado un email de confirmación a
           </p>
-          <p className="text-gray-400 text-sm mb-8">
-            Revisa tu bandeja de entrada (y la carpeta de spam) y confirma tu cuenta para poder acceder.
-          </p>
-          <button
-            onClick={() => router.push('/candidato/login')}
-            className="w-full bg-henko-turquoise text-white font-semibold py-3 rounded-xl hover:bg-henko-turquoise/90 transition-colors text-sm"
-          >
-            Ir al acceso de candidatos →
-          </button>
+          <p className="font-semibold text-gray-900 text-sm mb-6">{form.email}</p>
+
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl px-6 py-4 mb-8 text-left">
+            <p className="text-sm font-semibold text-amber-800 mb-1">Confirma tu cuenta para acceder</p>
+            <p className="text-xs text-amber-700 leading-relaxed">
+              Revisa tu bandeja de entrada (y la carpeta de spam). Una vez confirmado el email, podrás acceder a tu panel y completar tu perfil.
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={() => router.push('/candidato/login')}
+              className="w-full bg-henko-turquoise text-white font-semibold py-3 rounded-xl hover:bg-henko-turquoise/90 transition-colors text-sm"
+            >
+              Ir al acceso de candidatos →
+            </button>
+            <button
+              onClick={() => router.push('/')}
+              className="w-full bg-white border-2 border-gray-200 text-gray-600 font-semibold py-3 rounded-xl hover:border-gray-300 hover:text-gray-900 transition-colors text-sm"
+            >
+              ← Volver a la web
+            </button>
+          </div>
         </div>
       </div>
     )

@@ -204,6 +204,40 @@ export async function signupCandidato(input: CandidatoSignupInput) {
   return { ok: true, userId }
 }
 
+export async function uploadCvPorAdmin(userId: string, formData: FormData): Promise<{ ok?: boolean; error?: string }> {
+  const admin = createAdminClient()
+
+  const file = formData.get('cv') as File | null
+  if (!file || file.size === 0) return { error: 'Sin archivo' }
+  if (file.type !== 'application/pdf') return { error: 'Solo se permite PDF' }
+  if (file.size > 5 * 1024 * 1024) return { error: 'Máximo 5MB' }
+
+  const cvId = crypto.randomUUID()
+  const path = `${userId}/${cvId}.pdf`
+
+  const { error: uploadError } = await admin.storage
+    .from('cvs')
+    .upload(path, file, { contentType: 'application/pdf', upsert: false })
+
+  if (uploadError) return { error: uploadError.message }
+
+  const { error: insertError } = await admin.from('cvs').insert({
+    id: cvId,
+    candidato_id: userId,
+    nombre_archivo: file.name,
+    storage_path: path,
+    tamano_bytes: file.size,
+    es_principal: true,
+  })
+
+  if (insertError) {
+    await admin.storage.from('cvs').remove([path])
+    return { error: insertError.message }
+  }
+
+  return { ok: true }
+}
+
 export async function uploadCv(formData: FormData): Promise<{ error?: string; cvId?: string }> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
