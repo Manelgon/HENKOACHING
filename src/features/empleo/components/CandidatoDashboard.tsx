@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { actualizarPerfilCandidato, uploadCv, exportarMisDatos, eliminarMiCuenta, solicitarCodigoExportacion } from '@/actions/candidato'
+import { actualizarPerfilCandidato, uploadCv, exportarMisDatos, eliminarMiCuenta, solicitarCodigoExportacion, uploadAvatar } from '@/actions/candidato'
 import { createClient } from '@/lib/supabase/client'
 import { signout } from '@/actions/auth'
 import { getCvUrl } from '@/actions/solicitudes'
@@ -38,32 +38,51 @@ type SolicitudView = {
 }
 
 type PerfilView = {
-  nombre: string
-  apellidos: string
-  email: string
-  telefono: string
-  ubicacion: string
-  cargo: string
+  nombre: string; apellidos: string; email: string; telefono: string
+  ubicacion: string; cargo: string; resumen: string; linkedinUrl: string; avatarUrl: string
+}
+
+type CompletionData = {
+  hasAvatar: boolean; hasTelefono: boolean; hasUbicacion: boolean; hasCargo: boolean
+  hasResumen: boolean; hasLinkedin: boolean; hasCv: boolean
+  hasExperiencia: boolean; hasEducacion: boolean; hasIdioma: boolean; hasPreferencias: boolean
 }
 
 type CvView = {
-  id: string
-  nombre_archivo: string
-  storage_path: string
-  created_at: string | null
-  tamano_bytes: number | null
+  id: string; nombre_archivo: string; storage_path: string
+  created_at: string | null; tamano_bytes: number | null
 } | null
 
 type Props = {
   perfil: PerfilView
+  completion: CompletionData
   cv: CvView
   solicitudes: SolicitudView[]
 }
 
-export default function CandidatoDashboard({ perfil, cv, solicitudes }: Props) {
+const COMPLETION_ITEMS: { key: keyof CompletionData; label: string; weight: number; tab?: string }[] = [
+  { key: 'hasAvatar',      label: 'Foto de perfil',         weight: 10, tab: 'perfil' },
+  { key: 'hasTelefono',    label: 'Teléfono',               weight: 5,  tab: 'perfil' },
+  { key: 'hasUbicacion',   label: 'Ubicación',              weight: 5,  tab: 'perfil' },
+  { key: 'hasCargo',       label: 'Cargo objetivo',         weight: 5,  tab: 'perfil' },
+  { key: 'hasResumen',     label: 'Resumen profesional',    weight: 10, tab: 'perfil' },
+  { key: 'hasLinkedin',    label: 'LinkedIn',               weight: 5,  tab: 'perfil' },
+  { key: 'hasCv',          label: 'CV subido',              weight: 15, tab: 'cv' },
+  { key: 'hasExperiencia', label: 'Experiencia laboral',    weight: 15 },
+  { key: 'hasEducacion',   label: 'Educación',              weight: 10 },
+  { key: 'hasIdioma',      label: 'Idiomas',                weight: 10 },
+  { key: 'hasPreferencias',label: 'Preferencias laborales', weight: 10 },
+]
+
+function calcCompletion(data: CompletionData) {
+  return COMPLETION_ITEMS.reduce((acc, item) => acc + (data[item.key] ? item.weight : 0), 0)
+}
+
+export default function CandidatoDashboard({ perfil, completion, cv, solicitudes }: Props) {
   const [tab, setTab] = useState<Tab>('solicitudes')
   const [open, setOpen] = useState(false)
   const iniciales = `${perfil.nombre[0] ?? ''}${perfil.apellidos[0] ?? ''}`.toUpperCase() || 'CD'
+  const pct = calcCompletion(completion)
 
   useEffect(() => {
     if (!open) return
@@ -124,11 +143,40 @@ export default function CandidatoDashboard({ perfil, cv, solicitudes }: Props) {
             </button>
           ))}
         </div>
-        <div className="px-3 pt-5 border-t border-gray-100 mx-3">
-          <div className="px-3.5 py-2.5 flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-henko-turquoise flex items-center justify-center text-xs text-white font-bold">
-              {iniciales}
+        {/* Progreso del perfil */}
+        <div className="px-3 pb-4 mx-3">
+          <button
+            type="button"
+            onClick={() => goTab('perfil')}
+            className="w-full text-left bg-henko-turquoise/5 hover:bg-henko-turquoise/10 rounded-xl px-3.5 py-3 transition-colors"
+          >
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-[10px] font-bold text-henko-turquoise tracking-wide uppercase">Perfil completado</span>
+              <span className={`text-sm font-bold ${pct >= 80 ? 'text-emerald-600' : pct >= 50 ? 'text-amber-600' : 'text-henko-turquoise'}`}>{pct}%</span>
             </div>
+            <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all duration-500 ${pct >= 80 ? 'bg-emerald-500' : pct >= 50 ? 'bg-amber-400' : 'bg-henko-turquoise'}`}
+                style={{ width: `${pct}%` }}
+              />
+            </div>
+            {pct < 100 && (
+              <p className="text-[10px] text-gray-400 mt-1.5">
+                {COMPLETION_ITEMS.filter(i => !completion[i.key]).length} elemento{COMPLETION_ITEMS.filter(i => !completion[i.key]).length !== 1 ? 's' : ''} pendiente{COMPLETION_ITEMS.filter(i => !completion[i.key]).length !== 1 ? 's' : ''}
+              </p>
+            )}
+          </button>
+        </div>
+
+        <div className="px-3 pt-3 border-t border-gray-100 mx-3">
+          <div className="px-3.5 py-2.5 flex items-center gap-2.5">
+            {perfil.avatarUrl ? (
+              <Image src={perfil.avatarUrl} alt={perfil.nombre} width={32} height={32} className="w-8 h-8 rounded-full object-cover" />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-henko-turquoise flex items-center justify-center text-xs text-white font-bold">
+                {iniciales}
+              </div>
+            )}
             <div className="min-w-0">
               <p className="text-sm font-semibold truncate">{perfil.nombre} {perfil.apellidos}</p>
               <p className="text-[10px] text-gray-500">Candidata</p>
@@ -176,8 +224,8 @@ export default function CandidatoDashboard({ perfil, cv, solicitudes }: Props) {
         </div>
 
         <main className="flex-1 px-5 py-6 md:p-12 overflow-y-auto">
-          {tab === 'solicitudes' && <TabSolicitudes solicitudes={solicitudes} />}
-          {tab === 'perfil' && <TabPerfil perfil={perfil} />}
+          {tab === 'solicitudes' && <TabSolicitudes solicitudes={solicitudes} completion={completion} pct={pct} onGoTab={goTab} />}
+          {tab === 'perfil' && <TabPerfil perfil={perfil} completion={completion} />}
           {tab === 'cv' && <TabCV cv={cv} />}
           {tab === 'privacidad' && <TabPrivacidad perfil={perfil} onGoTab={setTab} />}
         </main>
@@ -190,11 +238,49 @@ function Eyebrow({ children }: { children: React.ReactNode }) {
   return <p className="font-raleway font-bold text-henko-turquoise tracking-[0.18em] uppercase text-[11px] mb-2">{children}</p>
 }
 
-function TabSolicitudes({ solicitudes }: { solicitudes: SolicitudView[] }) {
+function TabSolicitudes({ solicitudes, completion, pct, onGoTab }: { solicitudes: SolicitudView[]; completion: CompletionData; pct: number; onGoTab: (t: Tab) => void }) {
+  const pendientes = COMPLETION_ITEMS.filter(i => !completion[i.key])
+
   return (
     <div>
       <Eyebrow>Mi área</Eyebrow>
-      <h2 className="font-roxborough text-2xl md:text-3xl text-gray-900 mb-8">Mis solicitudes</h2>
+      <h2 className="font-roxborough text-2xl md:text-3xl text-gray-900 mb-6">Mis solicitudes</h2>
+
+      {pct < 100 && (
+        <div className="mb-8 bg-white rounded-2xl border border-henko-turquoise/20 shadow-sm p-6">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <p className="font-semibold text-gray-900 text-sm">Completa tu perfil para destacar</p>
+              <p className="text-xs text-gray-500 mt-0.5">Un perfil completo recibe más visibilidad en las ofertas</p>
+            </div>
+            <span className={`text-2xl font-bold font-roxborough ${pct >= 80 ? 'text-emerald-600' : pct >= 50 ? 'text-amber-600' : 'text-henko-turquoise'}`}>{pct}%</span>
+          </div>
+          <div className="h-2 bg-gray-100 rounded-full overflow-hidden mb-4">
+            <div className={`h-full rounded-full transition-all duration-700 ${pct >= 80 ? 'bg-emerald-500' : pct >= 50 ? 'bg-amber-400' : 'bg-henko-turquoise'}`} style={{ width: `${pct}%` }} />
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+            {COMPLETION_ITEMS.map(item => (
+              <button
+                key={item.key}
+                type="button"
+                onClick={() => item.tab && onGoTab(item.tab as Tab)}
+                className={`flex items-center gap-2 text-xs px-3 py-2 rounded-lg transition-colors ${completion[item.key] ? 'text-gray-400' : item.tab ? 'text-gray-700 hover:bg-henko-turquoise/5 hover:text-henko-turquoise cursor-pointer' : 'text-gray-400 cursor-default'}`}
+              >
+                {completion[item.key] ? (
+                  <svg className="w-4 h-4 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+                ) : (
+                  <svg className="w-4 h-4 text-gray-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><circle cx="12" cy="12" r="9" /></svg>
+                )}
+                <span className={completion[item.key] ? 'line-through' : ''}>{item.label}</span>
+                {!completion[item.key] && item.weight >= 10 && (
+                  <span className="ml-auto text-[10px] text-henko-turquoise font-bold">+{item.weight}%</span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
 
       {solicitudes.length === 0 ? (
         <div className="bg-white rounded-2xl px-9 py-12 border border-henko-turquoise/15 shadow-sm max-w-xl text-center">
@@ -251,9 +337,13 @@ function TabSolicitudes({ solicitudes }: { solicitudes: SolicitudView[] }) {
   )
 }
 
-function TabPerfil({ perfil }: { perfil: PerfilView }) {
+function TabPerfil({ perfil, completion }: { perfil: PerfilView; completion: CompletionData }) {
   const router = useRouter()
   const runAction = useAction()
+  const avatarRef = useRef<HTMLInputElement>(null)
+  const [avatarUrl, setAvatarUrl] = useState(perfil.avatarUrl)
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const iniciales = `${perfil.nombre[0] ?? ''}${perfil.apellidos[0] ?? ''}`.toUpperCase() || 'CD'
 
   async function onSubmit(formData: FormData) {
     const result = await runAction(
@@ -264,18 +354,76 @@ function TabPerfil({ perfil }: { perfil: PerfilView }) {
     if (result.ok) router.refresh()
   }
 
+  async function onAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingAvatar(true)
+    const fd = new FormData()
+    fd.append('avatar', file)
+    const result = await runAction('Subiendo foto', () => uploadAvatar(fd), { successMessage: 'Foto actualizada' })
+    if (result.ok && result.data?.url) setAvatarUrl(result.data.url)
+    setUploadingAvatar(false)
+  }
+
   return (
     <div>
       <Eyebrow>Mi perfil</Eyebrow>
       <h2 className="font-roxborough text-2xl md:text-3xl text-gray-900 mb-8">Datos personales</h2>
 
+      {/* Avatar */}
+      <div className="flex items-center gap-5 mb-8">
+        <button
+          type="button"
+          onClick={() => avatarRef.current?.click()}
+          disabled={uploadingAvatar}
+          className="relative group shrink-0"
+          aria-label="Cambiar foto de perfil"
+        >
+          {avatarUrl ? (
+            <Image src={avatarUrl} alt={perfil.nombre} width={80} height={80} className="w-20 h-20 rounded-2xl object-cover" />
+          ) : (
+            <div className="w-20 h-20 rounded-2xl bg-henko-turquoise/15 flex items-center justify-center text-henko-turquoise font-roxborough text-2xl">
+              {iniciales}
+            </div>
+          )}
+          <div className="absolute inset-0 rounded-2xl bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+            {uploadingAvatar ? (
+              <svg className="w-5 h-5 text-white animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+            ) : (
+              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" /></svg>
+            )}
+          </div>
+          <input ref={avatarRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={onAvatarChange} />
+        </button>
+        <div>
+          <p className="text-sm font-semibold text-gray-900 mb-1">Foto de perfil</p>
+          <p className="text-xs text-gray-500">JPG, PNG o WebP · Máx. 2MB</p>
+          <button type="button" onClick={() => avatarRef.current?.click()} className="text-xs text-henko-turquoise font-semibold hover:underline mt-1">
+            {avatarUrl ? 'Cambiar foto' : 'Subir foto'}
+          </button>
+        </div>
+      </div>
+
       <form action={onSubmit} className="bg-white rounded-2xl px-9 py-8 border border-henko-turquoise/15 shadow-sm max-w-xl space-y-4">
-        <Field label="NOMBRE" name="nombre" defaultValue={perfil.nombre} />
-        <Field label="APELLIDOS" name="apellidos" defaultValue={perfil.apellidos} />
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="NOMBRE" name="nombre" defaultValue={perfil.nombre} />
+          <Field label="APELLIDOS" name="apellidos" defaultValue={perfil.apellidos} />
+        </div>
         <Field label="EMAIL" name="email" defaultValue={perfil.email} disabled />
         <Field label="TELÉFONO" name="telefono" defaultValue={perfil.telefono} />
         <Field label="UBICACIÓN" name="ubicacion" defaultValue={perfil.ubicacion} />
         <Field label="CARGO OBJETIVO" name="cargo" defaultValue={perfil.cargo} />
+        <div>
+          <label className="text-[10px] tracking-[0.14em] text-henko-turquoise font-bold mb-1.5 block">RESUMEN PROFESIONAL</label>
+          <textarea
+            name="resumen"
+            defaultValue={perfil.resumen}
+            rows={3}
+            placeholder="Breve descripción sobre ti y tu perfil profesional..."
+            className="w-full text-sm text-gray-900 px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl outline-none focus:border-henko-turquoise focus:ring-2 focus:ring-henko-turquoise/20 resize-none transition-colors"
+          />
+        </div>
+        <Field label="LINKEDIN URL" name="linkedin_url" defaultValue={perfil.linkedinUrl} placeholder="https://linkedin.com/in/tu-perfil" />
 
         <button
           type="submit"
@@ -288,7 +436,7 @@ function TabPerfil({ perfil }: { perfil: PerfilView }) {
   )
 }
 
-function Field({ label, name, defaultValue, disabled }: { label: string; name: string; defaultValue: string; disabled?: boolean }) {
+function Field({ label, name, defaultValue, disabled, placeholder }: { label: string; name: string; defaultValue: string; disabled?: boolean; placeholder?: string }) {
   return (
     <div>
       <label className="text-[10px] tracking-[0.14em] text-henko-turquoise font-bold mb-1.5 block">{label}</label>
@@ -296,6 +444,7 @@ function Field({ label, name, defaultValue, disabled }: { label: string; name: s
         name={name}
         defaultValue={defaultValue}
         disabled={disabled}
+        placeholder={placeholder}
         className="w-full text-sm text-gray-900 px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl outline-none focus:border-henko-turquoise focus:ring-2 focus:ring-henko-turquoise/20 disabled:opacity-60 transition-colors"
       />
     </div>

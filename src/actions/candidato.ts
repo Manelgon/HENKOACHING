@@ -32,6 +32,64 @@ export type CandidatoSignupInput = {
 
 const NIVELES_VALIDOS: NivelIdioma[] = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'Nativo']
 
+export async function uploadAvatar(formData: FormData): Promise<{ ok?: boolean; url?: string; error?: string }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'No autenticado' }
+
+  const file = formData.get('avatar') as File | null
+  if (!file || file.size === 0) return { error: 'Sin archivo' }
+  if (!file.type.startsWith('image/')) return { error: 'Solo se permiten imágenes' }
+  if (file.size > 2 * 1024 * 1024) return { error: 'Máximo 2MB' }
+
+  const ext = file.type === 'image/png' ? 'png' : 'jpg'
+  const path = `${user.id}/avatar.${ext}`
+
+  const { error: uploadError } = await supabase.storage
+    .from('avatars')
+    .upload(path, file, { contentType: file.type, upsert: true })
+
+  if (uploadError) return { error: uploadError.message }
+
+  const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path)
+  const urlWithCache = `${publicUrl}?t=${Date.now()}`
+
+  const { error: updateError } = await supabase.from('profiles')
+    .update({ avatar_url: urlWithCache })
+    .eq('id', user.id)
+
+  if (updateError) return { error: updateError.message }
+
+  revalidatePath('/candidato/dashboard')
+  return { ok: true, url: urlWithCache }
+}
+
+export async function checkEmailCandidatoExiste(email: string): Promise<{ exists: boolean }> {
+  const admin = createAdminClient()
+  const { data } = await admin
+    .from('profiles')
+    .select('id')
+    .eq('email', email.toLowerCase().trim())
+    .eq('role', 'candidato')
+    .maybeSingle()
+  return { exists: !!data }
+}
+
+export async function solicitarResetCandidato(email: string): Promise<{ ok?: boolean; error?: string }> {
+  const supabase = await createClient()
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/candidato/update-password`,
+  })
+  if (error) return { error: error.message }
+  await logAction({
+    accion: 'auth.reset_password_solicitado',
+    recursoTipo: 'auth',
+    recursoLabel: email,
+    actorEmail: email,
+  })
+  return { ok: true }
+}
+
 export async function signupCandidato(input: CandidatoSignupInput) {
   const supabase = await createClient()
 
@@ -205,6 +263,8 @@ export async function actualizarPerfilCandidato(formData: FormData) {
   const telefono = formData.get('telefono') as string
   const ubicacion = formData.get('ubicacion') as string
   const cargo = formData.get('cargo') as string
+  const resumen = formData.get('resumen') as string | null
+  const linkedin_url = formData.get('linkedin_url') as string | null
 
   const { error: e1 } = await supabase
     .from('profiles')
@@ -215,7 +275,7 @@ export async function actualizarPerfilCandidato(formData: FormData) {
 
   const { error: e2 } = await supabase
     .from('candidato_profiles')
-    .update({ ubicacion, cargo_actual: cargo })
+    .update({ ubicacion, cargo_actual: cargo, resumen: resumen || null, linkedin_url: linkedin_url || null })
     .eq('user_id', user.id)
 
   if (e2) return { error: e2.message }
