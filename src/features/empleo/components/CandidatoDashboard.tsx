@@ -894,9 +894,6 @@ function TabTrayectoria({ experiencias: initExp, educacion: initEdu, idiomas: in
   const [acting, setActing] = useState(false)
   const isLoading = acting || refreshing
 
-  const [exps, setExps] = useState(initExp)
-  const [edus, setEdus] = useState(initEdu)
-  const [idis, setIdis] = useState(initIdi)
   const [editingExp, setEditingExp] = useState<string | null>(null)
   const [editingEdu, setEditingEdu] = useState<string | null>(null)
   const [editingIdi, setEditingIdi] = useState<string | null>(null)
@@ -918,7 +915,7 @@ function TabTrayectoria({ experiencias: initExp, educacion: initEdu, idiomas: in
     setActing(true)
     const r = await runAction('Eliminando', () => eliminarExperiencia(id), { silentSuccess: true })
     setActing(false)
-    if (r.ok) { setExps(p => p.filter(e => e.id !== id)); doRefresh() }
+    if (r.ok) doRefresh()
   }
 
   // — Educación —
@@ -933,7 +930,7 @@ function TabTrayectoria({ experiencias: initExp, educacion: initEdu, idiomas: in
     setActing(true)
     const r = await runAction('Eliminando', () => eliminarEducacion(id), { silentSuccess: true })
     setActing(false)
-    if (r.ok) { setEdus(p => p.filter(e => e.id !== id)); doRefresh() }
+    if (r.ok) doRefresh()
   }
 
   // — Idiomas —
@@ -948,7 +945,7 @@ function TabTrayectoria({ experiencias: initExp, educacion: initEdu, idiomas: in
     setActing(true)
     const r = await runAction('Eliminando', () => eliminarIdioma(id), { silentSuccess: true })
     setActing(false)
-    if (r.ok) { setIdis(p => p.filter(i => i.id !== id)); doRefresh() }
+    if (r.ok) doRefresh()
   }
 
   return (
@@ -970,12 +967,12 @@ function TabTrayectoria({ experiencias: initExp, educacion: initEdu, idiomas: in
       {/* EXPERIENCIA */}
       <Section
         title="Experiencia laboral"
-        isEmpty={exps.length === 0 && !addingExp}
+        isEmpty={initExp.length === 0 && !addingExp}
         emptyText="Aún no has añadido experiencia laboral."
         onAdd={() => { setAddingExp(true); setEditingExp(null) }}
       >
         <div className="space-y-3">
-          {exps.map((e) => editingExp === e.id ? (
+          {initExp.map((e) => editingExp === e.id ? (
             <ItemForm
               key={e.id}
               fields={[
@@ -1023,12 +1020,12 @@ function TabTrayectoria({ experiencias: initExp, educacion: initEdu, idiomas: in
       {/* EDUCACIÓN */}
       <Section
         title="Educación"
-        isEmpty={edus.length === 0 && !addingEdu}
+        isEmpty={initEdu.length === 0 && !addingEdu}
         emptyText="Aún no has añadido formación académica."
         onAdd={() => { setAddingEdu(true); setEditingEdu(null) }}
       >
         <div className="space-y-3">
-          {edus.map((e) => editingEdu === e.id ? (
+          {initEdu.map((e) => editingEdu === e.id ? (
             <ItemForm
               key={e.id}
               fields={[
@@ -1069,12 +1066,12 @@ function TabTrayectoria({ experiencias: initExp, educacion: initEdu, idiomas: in
       {/* IDIOMAS */}
       <Section
         title="Idiomas"
-        isEmpty={idis.length === 0 && !addingIdi}
+        isEmpty={initIdi.length === 0 && !addingIdi}
         emptyText="Aún no has añadido idiomas."
         onAdd={() => { setAddingIdi(true); setEditingIdi(null) }}
       >
         <div className="space-y-3">
-          {idis.map((i) => editingIdi === i.id ? (
+          {initIdi.map((i) => editingIdi === i.id ? (
             <ItemForm
               key={i.id}
               fields={[
