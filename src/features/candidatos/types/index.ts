@@ -1,7 +1,7 @@
 import type { EstadoSolicitud } from '@/lib/supabase/database.types'
 
 export type CandidatoRow = {
-  id: string           // profiles.id
+  id: string
   nombre: string | null
   apellidos: string | null
   email: string
@@ -10,7 +10,14 @@ export type CandidatoRow = {
   ubicacion: string | null
   created_at: string | null
   solicitudes_count: number
-  es_nuevo: boolean    // registrado en los últimos 7 días
+  es_nuevo: boolean
+  tipo_jornada: string | null
+  modalidad_trabajo: string | null
+  sectores_interes: string[] | null
+  tiene_cv: boolean
+  cv_storage_path: string | null
+  tiene_experiencia: boolean
+  tiene_educacion: boolean
 }
 
 export type Experiencia = {

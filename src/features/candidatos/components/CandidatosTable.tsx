@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { TablePagination, usePagination } from '@/components/TablePagination'
+import { getCvSignedUrl } from '@/actions/candidatos-admin'
 import type { CandidatoRow } from '../types'
 
 function formatDate(d: string | null) {
@@ -10,9 +11,50 @@ function formatDate(d: string | null) {
   return new Date(d).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
+function CvButton({ storagePath }: { storagePath: string }) {
+  const [loading, setLoading] = useState(false)
+
+  async function download(e: React.MouseEvent) {
+    e.preventDefault()
+    e.stopPropagation()
+    setLoading(true)
+    const r = await getCvSignedUrl(storagePath)
+    setLoading(false)
+    if (r) window.open(r, '_blank')
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={download}
+      disabled={loading}
+      title="Descargar CV"
+      className="inline-flex items-center gap-1 text-xs text-henko-turquoise hover:text-henko-turquoise-light font-semibold font-raleway disabled:opacity-50 transition-colors"
+    >
+      {loading ? (
+        <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+      ) : (
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+        </svg>
+      )}
+      CV
+    </button>
+  )
+}
+
+const JORNADAS = ['Jornada completa', 'Media jornada', 'Por horas', 'Indiferente']
+const MODALIDADES = ['Presencial', 'Híbrido', 'Remoto', 'Indiferente']
+
 export default function CandidatosTable({ candidatos }: { candidatos: CandidatoRow[] }) {
   const [busqueda, setBusqueda] = useState('')
   const [filtroSolicitudes, setFiltroSolicitudes] = useState<'todos' | 'con' | 'sin' | 'nuevos'>('todos')
+  const [filtroJornada, setFiltroJornada] = useState('')
+  const [filtroModalidad, setFiltroModalidad] = useState('')
+  const [filtroCv, setFiltroCv] = useState<'todos' | 'con' | 'sin'>('todos')
+  const [filtroExp, setFiltroExp] = useState<'todos' | 'con' | 'sin'>('todos')
+
+  const activeFilters = [filtroJornada, filtroModalidad, filtroCv !== 'todos', filtroExp !== 'todos'].filter(Boolean).length
 
   const filtered = useMemo(() => {
     const q = busqueda.trim().toLowerCase()
@@ -20,19 +62,35 @@ export default function CandidatosTable({ candidatos }: { candidatos: CandidatoR
       if (filtroSolicitudes === 'con' && c.solicitudes_count === 0) return false
       if (filtroSolicitudes === 'sin' && c.solicitudes_count > 0) return false
       if (filtroSolicitudes === 'nuevos' && !c.es_nuevo) return false
+      if (filtroJornada && c.tipo_jornada !== filtroJornada) return false
+      if (filtroModalidad && c.modalidad_trabajo !== filtroModalidad) return false
+      if (filtroCv === 'con' && !c.tiene_cv) return false
+      if (filtroCv === 'sin' && c.tiene_cv) return false
+      if (filtroExp === 'con' && !c.tiene_experiencia) return false
+      if (filtroExp === 'sin' && c.tiene_experiencia) return false
       if (q) {
-        const hay = `${c.nombre ?? ''} ${c.apellidos ?? ''} ${c.email} ${c.cargo_actual ?? ''} ${c.ubicacion ?? ''} ${c.telefono ?? ''}`.toLowerCase()
+        const sectores = (c.sectores_interes ?? []).join(' ').toLowerCase()
+        const hay = `${c.nombre ?? ''} ${c.apellidos ?? ''} ${c.email} ${c.cargo_actual ?? ''} ${c.ubicacion ?? ''} ${c.telefono ?? ''} ${sectores}`.toLowerCase()
         if (!hay.includes(q)) return false
       }
       return true
     })
-  }, [candidatos, busqueda, filtroSolicitudes])
+  }, [candidatos, busqueda, filtroSolicitudes, filtroJornada, filtroModalidad, filtroCv, filtroExp])
 
   const pagination = usePagination(filtered, 20)
 
+  function resetFiltros() {
+    setFiltroJornada('')
+    setFiltroModalidad('')
+    setFiltroCv('todos')
+    setFiltroExp('todos')
+    setFiltroSolicitudes('todos')
+    setBusqueda('')
+  }
+
   return (
-    <div className="space-y-5">
-      {/* Toolbar */}
+    <div className="space-y-4">
+      {/* Búsqueda */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -40,25 +98,59 @@ export default function CandidatosTable({ candidatos }: { candidatos: CandidatoR
           </svg>
           <input
             type="text"
-            placeholder="Buscar por nombre, email, cargo, ubicación…"
+            placeholder="Buscar por nombre, email, cargo, ubicación, sector…"
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white font-raleway text-sm outline-none focus:border-henko-turquoise transition-colors"
           />
         </div>
-        <select
-          value={filtroSolicitudes}
-          onChange={(e) => setFiltroSolicitudes(e.target.value as typeof filtroSolicitudes)}
-          className="px-4 py-2.5 rounded-xl border border-gray-200 bg-white font-raleway text-sm outline-none focus:border-henko-turquoise transition-colors"
-        >
-          <option value="todos">Todos</option>
+        <span className="self-center font-raleway text-sm text-gray-400 whitespace-nowrap">
+          {filtered.length} candidato{filtered.length !== 1 ? 's' : ''}
+        </span>
+      </div>
+
+      {/* Filtros */}
+      <div className="flex flex-wrap gap-2 items-center">
+        <select value={filtroSolicitudes} onChange={(e) => setFiltroSolicitudes(e.target.value as typeof filtroSolicitudes)}
+          className="px-3 py-2 rounded-xl border border-gray-200 bg-white font-raleway text-sm outline-none focus:border-henko-turquoise transition-colors">
+          <option value="todos">Solicitudes: todas</option>
           <option value="nuevos">Nuevos (7 días)</option>
           <option value="con">Con solicitudes</option>
           <option value="sin">Sin solicitudes</option>
         </select>
-        <span className="self-center font-raleway text-sm text-gray-400 whitespace-nowrap">
-          {filtered.length} candidato{filtered.length !== 1 ? 's' : ''}
-        </span>
+
+        <select value={filtroJornada} onChange={(e) => setFiltroJornada(e.target.value)}
+          className={`px-3 py-2 rounded-xl border font-raleway text-sm outline-none focus:border-henko-turquoise transition-colors ${filtroJornada ? 'border-henko-turquoise bg-henko-turquoise/5 text-henko-turquoise' : 'border-gray-200 bg-white'}`}>
+          <option value="">Jornada: todas</option>
+          {JORNADAS.map(j => <option key={j} value={j}>{j}</option>)}
+        </select>
+
+        <select value={filtroModalidad} onChange={(e) => setFiltroModalidad(e.target.value)}
+          className={`px-3 py-2 rounded-xl border font-raleway text-sm outline-none focus:border-henko-turquoise transition-colors ${filtroModalidad ? 'border-henko-turquoise bg-henko-turquoise/5 text-henko-turquoise' : 'border-gray-200 bg-white'}`}>
+          <option value="">Modalidad: todas</option>
+          {MODALIDADES.map(m => <option key={m} value={m}>{m}</option>)}
+        </select>
+
+        <select value={filtroCv} onChange={(e) => setFiltroCv(e.target.value as typeof filtroCv)}
+          className={`px-3 py-2 rounded-xl border font-raleway text-sm outline-none focus:border-henko-turquoise transition-colors ${filtroCv !== 'todos' ? 'border-henko-turquoise bg-henko-turquoise/5 text-henko-turquoise' : 'border-gray-200 bg-white'}`}>
+          <option value="todos">CV: todos</option>
+          <option value="con">Con CV</option>
+          <option value="sin">Sin CV</option>
+        </select>
+
+        <select value={filtroExp} onChange={(e) => setFiltroExp(e.target.value as typeof filtroExp)}
+          className={`px-3 py-2 rounded-xl border font-raleway text-sm outline-none focus:border-henko-turquoise transition-colors ${filtroExp !== 'todos' ? 'border-henko-turquoise bg-henko-turquoise/5 text-henko-turquoise' : 'border-gray-200 bg-white'}`}>
+          <option value="todos">Experiencia: todas</option>
+          <option value="con">Con experiencia</option>
+          <option value="sin">Sin experiencia</option>
+        </select>
+
+        {activeFilters > 0 && (
+          <button type="button" onClick={resetFiltros}
+            className="text-xs text-gray-400 hover:text-gray-700 font-raleway underline transition-colors">
+            Limpiar filtros
+          </button>
+        )}
       </div>
 
       {/* Tabla */}
@@ -69,25 +161,25 @@ export default function CandidatosTable({ candidatos }: { candidatos: CandidatoR
         </div>
       ) : (
         <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
-          {/* Cabecera desktop */}
-          <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-3 border-b border-gray-100 bg-gray-50/80">
+          {/* Cabecera */}
+          <div className="hidden lg:grid grid-cols-12 gap-3 px-6 py-3 border-b border-gray-100 bg-gray-50/80">
             <span className="col-span-3 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Candidato</span>
-            <span className="col-span-3 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Email</span>
-            <span className="col-span-2 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Cargo actual</span>
-            <span className="col-span-2 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Ubicación</span>
-            <span className="col-span-1 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest text-center">Solicitudes</span>
+            <span className="col-span-2 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Contacto</span>
+            <span className="col-span-2 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Cargo / Ubicación</span>
+            <span className="col-span-2 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Preferencias</span>
+            <span className="col-span-1 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest text-center">CV</span>
+            <span className="col-span-1 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest text-center">Sol.</span>
             <span className="col-span-1 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Registro</span>
           </div>
 
           {pagination.paginated.map((c) => (
-            <Link
-              key={c.id}
-              href={`/dashboard/candidatos/${c.id}`}
-              className="border-b border-gray-100 last:border-0 block hover:bg-gray-50 transition-colors"
-            >
+            <Link key={c.id} href={`/dashboard/candidatos/${c.id}`}
+              className="border-b border-gray-100 last:border-0 block hover:bg-gray-50 transition-colors">
+
               {/* Fila desktop */}
-              <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-4 items-center">
-                <div className="col-span-3 flex items-center gap-3">
+              <div className="hidden lg:grid grid-cols-12 gap-3 px-6 py-4 items-center">
+                {/* Candidato */}
+                <div className="col-span-3 flex items-center gap-3 min-w-0">
                   <div className="relative w-8 h-8 flex-shrink-0">
                     <div className="w-8 h-8 rounded-full bg-henko-turquoise/20 flex items-center justify-center text-henko-turquoise font-bold text-sm">
                       {(c.nombre?.[0] ?? c.email[0]).toUpperCase()}
@@ -96,13 +188,50 @@ export default function CandidatosTable({ candidatos }: { candidatos: CandidatoR
                       <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-green-400 border-2 border-white" />
                     )}
                   </div>
-                  <span className="font-raleway font-semibold text-gray-900 text-sm truncate">
-                    {[c.nombre, c.apellidos].filter(Boolean).join(' ') || c.email}
-                  </span>
+                  <div className="min-w-0">
+                    <p className="font-raleway font-semibold text-gray-900 text-sm truncate">
+                      {[c.nombre, c.apellidos].filter(Boolean).join(' ') || c.email}
+                    </p>
+                    <div className="flex gap-1 mt-0.5">
+                      {c.tiene_experiencia && <span className="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-raleway font-medium">Exp</span>}
+                      {c.tiene_educacion && <span className="text-[10px] bg-purple-50 text-purple-600 px-1.5 py-0.5 rounded font-raleway font-medium">Edu</span>}
+                    </div>
+                  </div>
                 </div>
-                <span className="col-span-3 font-raleway text-sm text-gray-500 truncate">{c.email}</span>
-                <span className="col-span-2 font-raleway text-sm text-gray-500 truncate">{c.cargo_actual ?? '—'}</span>
-                <span className="col-span-2 font-raleway text-sm text-gray-500 truncate">{c.ubicacion ?? '—'}</span>
+
+                {/* Contacto */}
+                <div className="col-span-2 min-w-0">
+                  <p className="font-raleway text-xs text-gray-500 truncate">{c.email}</p>
+                  {c.telefono && <p className="font-raleway text-xs text-gray-400 truncate mt-0.5">{c.telefono}</p>}
+                </div>
+
+                {/* Cargo / Ubicación */}
+                <div className="col-span-2 min-w-0">
+                  <p className="font-raleway text-xs text-gray-700 truncate">{c.cargo_actual ?? '—'}</p>
+                  {c.ubicacion && <p className="font-raleway text-xs text-gray-400 truncate mt-0.5">{c.ubicacion}</p>}
+                </div>
+
+                {/* Preferencias */}
+                <div className="col-span-2 flex flex-wrap gap-1">
+                  {c.tipo_jornada && (
+                    <span className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded font-raleway">{c.tipo_jornada}</span>
+                  )}
+                  {c.modalidad_trabajo && (
+                    <span className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded font-raleway">{c.modalidad_trabajo}</span>
+                  )}
+                  {!c.tipo_jornada && !c.modalidad_trabajo && <span className="font-raleway text-xs text-gray-300">—</span>}
+                </div>
+
+                {/* CV */}
+                <div className="col-span-1 flex justify-center" onClick={(e) => e.preventDefault()}>
+                  {c.tiene_cv && c.cv_storage_path ? (
+                    <CvButton storagePath={c.cv_storage_path} />
+                  ) : (
+                    <span className="font-raleway text-xs text-gray-300">—</span>
+                  )}
+                </div>
+
+                {/* Solicitudes */}
                 <div className="col-span-1 flex justify-center">
                   {c.solicitudes_count > 0 ? (
                     <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-henko-turquoise/10 text-henko-turquoise font-raleway font-bold text-xs">
@@ -112,14 +241,19 @@ export default function CandidatosTable({ candidatos }: { candidatos: CandidatoR
                     <span className="font-raleway text-xs text-gray-300">—</span>
                   )}
                 </div>
+
+                {/* Registro */}
                 <span className="col-span-1 font-raleway text-xs text-gray-400">{formatDate(c.created_at)}</span>
               </div>
 
               {/* Tarjeta móvil */}
-              <div className="md:hidden px-5 py-4">
+              <div className="lg:hidden px-5 py-4">
                 <div className="flex items-center gap-3 mb-1">
-                  <div className="w-8 h-8 rounded-full bg-henko-turquoise/20 flex items-center justify-center text-henko-turquoise font-bold text-sm flex-shrink-0">
-                    {(c.nombre?.[0] ?? c.email[0]).toUpperCase()}
+                  <div className="relative w-8 h-8 flex-shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-henko-turquoise/20 flex items-center justify-center text-henko-turquoise font-bold text-sm">
+                      {(c.nombre?.[0] ?? c.email[0]).toUpperCase()}
+                    </div>
+                    {c.es_nuevo && <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-green-400 border-2 border-white" />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-raleway font-semibold text-gray-900 text-sm truncate">
@@ -133,7 +267,10 @@ export default function CandidatosTable({ candidatos }: { candidatos: CandidatoR
                     </span>
                   )}
                 </div>
-                {c.cargo_actual && <p className="font-raleway text-xs text-gray-400 ml-11">{c.cargo_actual}</p>}
+                <div className="ml-11 flex flex-wrap gap-1">
+                  {c.cargo_actual && <span className="font-raleway text-xs text-gray-500">{c.cargo_actual}</span>}
+                  {c.tiene_cv && c.cv_storage_path && <CvButton storagePath={c.cv_storage_path} />}
+                </div>
               </div>
             </Link>
           ))}

@@ -29,21 +29,38 @@ export async function getCandidatos(): Promise<CandidatoRow[]> {
 
   if (!profiles) return []
 
-  const { data: candidatoProfiles } = await admin
-    .from('candidato_profiles')
-    .select('user_id, cargo_actual, ubicacion') as { data: Array<{
-      user_id: string; cargo_actual: string | null; ubicacion: string | null
-    }> | null }
+  const [
+    cpResult,
+    solResult,
+    cvsResult,
+    expResult,
+    eduResult,
+  ] = await Promise.all([
+    admin.from('candidato_profiles').select('user_id, cargo_actual, ubicacion, tipo_jornada, modalidad_trabajo, sectores_interes'),
+    admin.from('solicitudes').select('candidato_id'),
+    admin.from('cvs').select('candidato_id, storage_path').eq('es_principal', true).is('deleted_at', null),
+    admin.from('candidato_experiencias').select('candidato_id'),
+    admin.from('candidato_educacion').select('candidato_id'),
+  ])
 
-  const { data: solicitudes } = await admin
-    .from('solicitudes')
-    .select('candidato_id') as { data: Array<{ candidato_id: string }> | null }
+  type CpRow = { user_id: string; cargo_actual: string | null; ubicacion: string | null; tipo_jornada: string | null; modalidad_trabajo: string | null; sectores_interes: string[] | null }
+  type CvRow = { candidato_id: string; storage_path: string }
+  type IdRow = { candidato_id: string }
+
+  const candidatoProfiles = cpResult.data as CpRow[] | null
+  const solicitudes = solResult.data as IdRow[] | null
+  const cvs = cvsResult.data as CvRow[] | null
+  const experiencias = expResult.data as IdRow[] | null
+  const educacion = eduResult.data as IdRow[] | null
 
   const cpMap = new Map((candidatoProfiles ?? []).map((cp) => [cp.user_id, cp]))
   const countMap = new Map<string, number>()
   for (const s of solicitudes ?? []) {
     countMap.set(s.candidato_id, (countMap.get(s.candidato_id) ?? 0) + 1)
   }
+  const cvMap = new Map((cvs ?? []).map((cv) => [cv.candidato_id, cv.storage_path]))
+  const expSet = new Set((experiencias ?? []).map((e) => e.candidato_id))
+  const eduSet = new Set((educacion ?? []).map((e) => e.candidato_id))
 
   return profiles.map((p) => {
     const cp = cpMap.get(p.id)
@@ -60,6 +77,13 @@ export async function getCandidatos(): Promise<CandidatoRow[]> {
       es_nuevo: p.created_at
         ? new Date(p.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
         : false,
+      tipo_jornada: cp?.tipo_jornada ?? null,
+      modalidad_trabajo: cp?.modalidad_trabajo ?? null,
+      sectores_interes: cp?.sectores_interes ?? null,
+      tiene_cv: cvMap.has(p.id),
+      cv_storage_path: cvMap.get(p.id) ?? null,
+      tiene_experiencia: expSet.has(p.id),
+      tiene_educacion: eduSet.has(p.id),
     }
   })
 }
