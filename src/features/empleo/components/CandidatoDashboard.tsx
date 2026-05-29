@@ -18,7 +18,7 @@ import { getCvUrl } from '@/actions/solicitudes'
 import type { EstadoSolicitud } from '@/lib/supabase/database.types'
 import { useAction, useConfirm } from '@/shared/feedback/FeedbackContext'
 
-type Tab = 'solicitudes' | 'perfil' | 'trayectoria' | 'preferencias' | 'privacidad'
+type Tab = 'solicitudes' | 'perfil' | 'trayectoria' | 'preferencias'
 
 const ESTADO_META: Record<EstadoSolicitud, { label: string; badge: string }> = {
   nuevo:      { label: 'Nueva',       badge: 'bg-henko-turquoise/15 text-henko-turquoise' },
@@ -33,7 +33,6 @@ const NAV: { id: Tab; label: string }[] = [
   { id: 'perfil',       label: 'Mi perfil' },
   { id: 'trayectoria',  label: 'Trayectoria' },
   { id: 'preferencias', label: 'Preferencias' },
-  { id: 'privacidad',   label: 'Privacidad y datos' },
 ]
 
 type SolicitudView = {
@@ -258,7 +257,6 @@ export default function CandidatoDashboard({ perfil, completion, cv, solicitudes
           {tab === 'perfil'       && <TabPerfil perfil={perfil} completion={completion} cv={cv} />}
           {tab === 'trayectoria'  && <TabTrayectoria experiencias={experiencias} educacion={educacion} idiomas={idiomas} />}
           {tab === 'preferencias' && <TabPreferencias preferencias={preferencias} />}
-          {tab === 'privacidad'   && <TabPrivacidad perfil={perfil} onGoTab={setTab} />}
         </main>
       </div>
     </div>
@@ -470,6 +468,7 @@ function TabPerfil({ perfil, completion, cv }: { perfil: PerfilView; completion:
         </form>
 
         <CvInline cv={cv} />
+        <PrivacidadInline perfil={perfil} />
       </div>
     </div>
   )
@@ -1183,7 +1182,7 @@ function TabPreferencias({ preferencias }: { preferencias: PreferenciasView }) {
 
 type OtpStep = 'idle' | 'sending' | 'awaiting_code' | 'verifying'
 
-function TabPrivacidad({ perfil, onGoTab }: { perfil: PerfilView; onGoTab: (t: Tab) => void }) {
+function PrivacidadInline({ perfil }: { perfil: PerfilView }) {
   const router = useRouter()
   const runAction = useAction()
   const confirm = useConfirm()
@@ -1282,12 +1281,8 @@ function TabPrivacidad({ perfil, onGoTab }: { perfil: PerfilView; onGoTab: (t: T
   }
 
   return (
-    <div className="max-w-2xl">
-      <Eyebrow>Privacidad y datos</Eyebrow>
-      <h2 className="font-roxborough text-2xl md:text-3xl text-gray-900 mb-3">Tus derechos sobre tus datos</h2>
-      <p className="text-sm text-gray-500 mb-8 leading-relaxed">
-        En cumplimiento del Reglamento General de Protección de Datos (RGPD), puedes ejercer aquí tus derechos de acceso, portabilidad y supresión.
-      </p>
+    <div className="max-w-xl mt-6 pt-6 border-t border-gray-200">
+      <p className="text-[10px] tracking-[0.14em] text-henko-turquoise font-bold mb-4">PRIVACIDAD Y DATOS (RGPD)</p>
 
       <div className="bg-white rounded-2xl px-7 py-6 border border-henko-turquoise/15 shadow-sm mb-4">
         <h3 className="font-roxborough text-lg text-gray-900 mb-1.5">Descargar mis datos</h3>
@@ -1346,20 +1341,6 @@ function TabPrivacidad({ perfil, onGoTab }: { perfil: PerfilView; onGoTab: (t: T
             {otpError && <p className="text-sm text-red-600">{otpError}</p>}
           </div>
         )}
-      </div>
-
-      <div className="bg-white rounded-2xl px-7 py-6 border border-henko-turquoise/15 shadow-sm mb-4">
-        <h3 className="font-roxborough text-lg text-gray-900 mb-1.5">Rectificar mis datos</h3>
-        <p className="text-sm text-gray-500 mb-5 leading-relaxed">
-          Puedes actualizar tus datos personales en cualquier momento desde la pestaña <strong>Mi perfil</strong>. Tu experiencia, educación e idiomas también son editables.
-        </p>
-        <button
-          type="button"
-          onClick={() => onGoTab('perfil')}
-          className="inline-flex items-center gap-2 bg-transparent border-2 border-henko-turquoise text-henko-turquoise px-5 py-2 rounded-full text-sm font-semibold hover:bg-henko-turquoise hover:text-white transition-all"
-        >
-          Ir a Mi perfil →
-        </button>
       </div>
 
       <div className="bg-red-50/50 rounded-2xl px-7 py-6 border border-red-200">
