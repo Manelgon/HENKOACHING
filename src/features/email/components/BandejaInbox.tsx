@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect, useMemo } from 'react'
 import { listarEmailsBandeja, leerEmailBandeja } from '@/actions/email'
 import EmailDrawer from './EmailDrawer'
+import ComposeDrawer from './ComposeDrawer'
 import { useEmailStore } from '@/features/email/store/emailStore'
 import { TablePagination, usePagination } from '@/components/TablePagination'
 import type { EmailMessage, EmailDetail } from '../types'
@@ -19,6 +20,7 @@ export default function BandejaInbox({ hasImapConfig }: Props) {
   const [loadingUid, setLoadingUid] = useState<number | null>(null)
   const [busqueda, setBusqueda] = useState('')
   const [filtroLeido, setFiltroLeido] = useState<'todos' | 'no_leido' | 'leido'>('todos')
+  const [composing, setComposing] = useState(false)
   const { markAllSeen, setUnreadCount } = useEmailStore()
 
   const cargar = useCallback(async (silencioso = false) => {
@@ -161,6 +163,16 @@ export default function BandejaInbox({ hasImapConfig }: Props) {
             </svg>
           )}
           Actualizar
+        </button>
+        <button
+          type="button"
+          onClick={() => setComposing(true)}
+          className="hidden md:inline-flex mb-2 flex-shrink-0 items-center gap-2 px-5 py-2.5 rounded-xl border border-henko-turquoise text-henko-turquoise font-raleway font-semibold text-sm hover:bg-henko-turquoise/5 transition-colors"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          Redactar
         </button>
       </div>
 
@@ -316,6 +328,9 @@ export default function BandejaInbox({ hasImapConfig }: Props) {
 
       {selected && (
         <EmailDrawer email={selected} onClose={() => setSelected(null)} />
+      )}
+      {composing && (
+        <ComposeDrawer onClose={() => setComposing(false)} />
       )}
     </>
   )

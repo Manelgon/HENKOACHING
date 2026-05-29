@@ -263,3 +263,38 @@ export async function leerEmailBandeja(uid: number) {
     return { error: `Error IMAP: ${String(e)}` }
   }
 }
+
+export async function enviarEmail({ to, subject, body }: { to: string; subject: string; body: string }) {
+  const auth = await requireAdmin()
+  if ('error' in auth) return { error: auth.error }
+
+  const { smtp, config } = await getDecryptedPasswords()
+
+  if (!config?.smtp_host || !smtp) {
+    return { error: 'No hay credenciales SMTP configuradas. Ve a Configuración para añadirlas.' }
+  }
+
+  try {
+    const nodemailer = await import('nodemailer')
+    const transporter = nodemailer.createTransport({
+      host: config.smtp_host as string,
+      port: (config.smtp_port as number) ?? 587,
+      secure: (config.smtp_encryption as string) === 'ssl',
+      auth: { user: config.smtp_user as string, pass: smtp },
+      tls: { rejectUnauthorized: false },
+    })
+
+    const fromName = (config.smtp_from_name as string) || (config.smtp_user as string)
+    await transporter.sendMail({
+      from: `"${fromName}" <${config.smtp_user as string}>`,
+      to,
+      subject,
+      text: body,
+    })
+
+    await logAction({ accion: 'email.enviar', recursoTipo: 'email', recursoId: to, metadata: { subject } })
+    return { ok: true }
+  } catch (e) {
+    return { error: `Error SMTP: ${String(e)}` }
+  }
+}
