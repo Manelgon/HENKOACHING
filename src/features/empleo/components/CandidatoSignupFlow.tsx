@@ -9,26 +9,11 @@ import { FormError } from '@/components/FormError'
 
 type StepCuentaErrors = { nombre?: string; apellidos?: string; email?: string; password?: string; privacidad?: string }
 
-type Experiencia = { empresa: string; cargo: string; desde: string; hasta: string }
-type Educacion = { centro: string; titulo: string; ano: string }
-type Idioma = { idioma: string; nivel: string }
-
 type FormState = {
   nombre: string; apellidos: string; email: string; password: string
   telefonoPrefijo: string; telefono: string; ubicacion: string; cargo: string
-  tipoJornada: string; modalidad: string; tipoContrato: string
-  sectores: string[]; disponibilidad: string; pretensionSalarial: string
-  exp: Experiencia[]; edu: Educacion[]; idiomas: Idioma[]
   cv: File | null
 }
-
-const SECTORES = [
-  'Tecnología / IT','Hostelería y Turismo','Retail / Comercio','Educación y Formación',
-  'Salud y Bienestar','RRHH / Administración','Marketing y Comunicación',
-  'Finanzas y Banca','Construcción e Inmobiliaria','Logística y Transporte',
-  'Industria / Manufactura','Servicios Profesionales','Arte y Diseño',
-  'Deporte y Ocio','Alimentación','Legal / Jurídico','Otro',
-]
 
 const PREFIJOS = [
   { label: '🇪🇸 +34', value: '+34' },
@@ -59,25 +44,6 @@ const PROVINCIAS = [
   'Melilla','Murcia','Navarra','Ourense','Palencia','Las Palmas','Pontevedra',
   'Salamanca','Santa Cruz de Tenerife','Segovia','Sevilla','Soria','Tarragona',
   'Teruel','Toledo','Valencia','Valladolid','Zamora','Zaragoza','Otro',
-]
-
-const IDIOMAS_LIST = [
-  'Español','Catalán','Euskera','Gallego','Valenciano',
-  'Inglés','Francés','Alemán','Italiano','Portugués',
-  'Árabe','Chino Mandarín','Ruso','Japonés','Neerlandés',
-  'Polaco','Rumano','Sueco','Noruego','Danés','Finlandés','Otro',
-]
-
-const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
-const AÑO_ACTUAL = new Date().getFullYear()
-const AÑOS_EXP = Array.from({ length: AÑO_ACTUAL - 1959 }, (_, i) => String(AÑO_ACTUAL - i))
-const AÑOS_EDU = ['Cursando', 'No finalizado', ...Array.from({ length: AÑO_ACTUAL - 1969 }, (_, i) => String(AÑO_ACTUAL - i))]
-
-const TITULOS_EDU = [
-  'ESO','Bachillerato','Ciclo Formativo Grado Básico','Ciclo Formativo Grado Medio',
-  'Ciclo Formativo Grado Superior','Certificado de Profesionalidad','Diplomatura',
-  'Licenciatura','Ingeniería Técnica','Ingeniería Superior','Arquitectura',
-  'Grado Universitario','Doble Grado','Máster Universitario','MBA','Doctorado (PhD)','Otro',
 ]
 
 // ── Combobox buscador ────────────────────────────────────────────────────────
@@ -133,55 +99,6 @@ function ComboboxField({
   )
 }
 
-// ── Selector mes / año ───────────────────────────────────────────────────────
-const selectClass = 'flex-1 px-3 py-3 rounded-xl text-sm border-[1.5px] border-gray-200 bg-white outline-none focus:border-henko-turquoise transition-colors appearance-none text-center'
-
-function MonthYearField({ value, onChange, allowActual = false }: {
-  value: string; onChange: (v: string) => void; allowActual?: boolean
-}) {
-  const isActual = value === 'Actual'
-  const parts = (!isActual && value) ? value.split('/') : ['', '']
-  const [selMes, setSelMes] = useState(parts[0] || '')
-  const [selAño, setSelAño] = useState(parts[1] || '')
-
-  useEffect(() => {
-    if (isActual) { setSelMes(''); setSelAño('') }
-    else if (value) { const p = value.split('/'); setSelMes(p[0]||''); setSelAño(p[1]||'') }
-    else { setSelMes(''); setSelAño('') }
-  }, [value, isActual])
-
-  const handleMes = (m: string) => {
-    setSelMes(m)
-    if (m && selAño) onChange(`${m}/${selAño}`)
-  }
-  const handleAño = (a: string) => {
-    setSelAño(a)
-    if (selMes && a) onChange(`${selMes}/${a}`)
-  }
-
-  return (
-    <div>
-      <div className={`flex items-center gap-1 ${isActual ? 'opacity-40 pointer-events-none' : ''}`}>
-        <select className={selectClass} value={selMes} onChange={e => handleMes(e.target.value)} disabled={isActual}>
-          <option value="">Mes</option>
-          {MESES.map((m, i) => <option key={m} value={String(i + 1).padStart(2, '0')}>{m}</option>)}
-        </select>
-        <span className="text-gray-300 font-light text-lg shrink-0">/</span>
-        <select className={selectClass} value={selAño} onChange={e => handleAño(e.target.value)} disabled={isActual}>
-          <option value="">Año</option>
-          {AÑOS_EXP.map(a => <option key={a}>{a}</option>)}
-        </select>
-      </div>
-      {allowActual && (
-        <label className="flex items-center gap-2 mt-1.5 cursor-pointer">
-          <input type="checkbox" checked={isActual} onChange={e => onChange(e.target.checked ? 'Actual' : '')} className="w-3.5 h-3.5 accent-henko-turquoise" />
-          <span className="text-xs text-gray-500">Actualmente aquí</span>
-        </label>
-      )}
-    </div>
-  )
-}
-
 // ── Shell ────────────────────────────────────────────────────────────────────
 export default function CandidatoSignupFlow() {
   const router = useRouter()
@@ -192,11 +109,6 @@ export default function CandidatoSignupFlow() {
   const [form, setForm] = useState<FormState>({
     nombre: '', apellidos: '', email: '', password: '',
     telefonoPrefijo: '+34', telefono: '', ubicacion: '', cargo: '',
-    tipoJornada: '', modalidad: '', tipoContrato: '',
-    sectores: [], disponibilidad: '', pretensionSalarial: '',
-    exp: [{ empresa: '', cargo: '', desde: '', hasta: '' }],
-    edu: [{ centro: '', titulo: '', ano: '' }],
-    idiomas: [{ idioma: '', nivel: '' }],
     cv: null,
   })
   const fileRef = useRef<HTMLInputElement>(null)
@@ -213,9 +125,9 @@ export default function CandidatoSignupFlow() {
         email: form.email, password: form.password,
         telefono: form.telefono ? `${form.telefonoPrefijo} ${form.telefono}` : '',
         ubicacion: form.ubicacion, cargo: form.cargo,
-        tipoJornada: form.tipoJornada, modalidad: form.modalidad, tipoContrato: form.tipoContrato,
-        sectores: form.sectores, disponibilidad: form.disponibilidad, pretensionSalarial: form.pretensionSalarial,
-        experiencias: form.exp, educacion: form.edu, idiomas: form.idiomas,
+        tipoJornada: '', modalidad: '', tipoContrato: '',
+        sectores: [], disponibilidad: '', pretensionSalarial: '',
+        experiencias: [], educacion: [], idiomas: [],
       }),
       { successMessage: 'Perfil creado' },
     )
@@ -266,7 +178,7 @@ export default function CandidatoSignupFlow() {
         </Link>
 
         <div className="flex items-center gap-2 mb-10">
-          {['Cuenta', 'Datos', 'Preferencias', 'CV', 'Experiencia'].map((s, i) => (
+          {['Cuenta', 'Datos', 'CV'].map((s, i) => (
             <Fragment key={s}>
               <div className="flex items-center gap-2">
                 <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${step > i + 1 || step === i + 1 ? 'bg-henko-turquoise text-white' : 'bg-gray-200 text-gray-400'}`}>
@@ -281,9 +193,7 @@ export default function CandidatoSignupFlow() {
 
         {step === 1 && <StepCuenta form={form} upd={upd} next={() => setStep(2)} />}
         {step === 2 && <StepPerfil form={form} upd={upd} back={() => setStep(1)} next={() => setStep(3)} />}
-        {step === 3 && <StepPreferencias form={form} upd={upd} back={() => setStep(2)} next={() => setStep(4)} />}
-        {step === 4 && <StepCV form={form} upd={upd} fileRef={fileRef} back={() => setStep(3)} finish={() => setStep(5)} submitting={false} isFinal={false} />}
-        {step === 5 && <StepExperiencia form={form} upd={upd} back={() => setStep(4)} next={finalizar} submitting={submitting} isFinal />}
+        {step === 3 && <StepCV form={form} upd={upd} fileRef={fileRef} back={() => setStep(2)} finish={finalizar} submitting={submitting} isFinal />}
       </div>
     </div>
   )
@@ -443,239 +353,9 @@ function StepPerfil({ form, upd, back, next }: { form: FormState; upd: <K extend
         <input className={inputClass} type="text" placeholder="p.ej. Responsable de Operaciones" value={form.cargo} onChange={e => upd('cargo', e.target.value)} />
       </div>
 
-      <div className="mb-8">
-        <label className={labelClass + ' mb-3'}>IDIOMAS</label>
-        {form.idiomas.map((id, i) => (
-          <div key={i} className="grid grid-cols-2 gap-3 mb-2.5">
-            <ComboboxField
-              value={id.idioma}
-              onChange={v => {
-                const arr = [...form.idiomas]
-                arr[i] = { ...arr[i], idioma: v }
-                upd('idiomas', arr)
-              }}
-              options={IDIOMAS_LIST}
-              placeholder="Idioma"
-            />
-            <select
-              className={inputClass + ' appearance-none'}
-              value={id.nivel}
-              onChange={e => {
-                const arr = [...form.idiomas]
-                arr[i] = { ...arr[i], nivel: e.target.value }
-                upd('idiomas', arr)
-              }}
-            >
-              <option value="">Nivel</option>
-              {['A1','A2','B1','B2','C1','C2','Nativo'].map(n => <option key={n}>{n}</option>)}
-            </select>
-          </div>
-        ))}
-        <button type="button" onClick={() => upd('idiomas', [...form.idiomas, { idioma: '', nivel: '' }])} className="text-sm text-henko-turquoise font-semibold hover:underline">
-          + Añadir idioma
-        </button>
-      </div>
-
       <div className="flex gap-3">
         <SecondaryBtn onClick={back}>← Volver</SecondaryBtn>
         <div className="flex-1"><PrimaryBtn onClick={next} full>Continuar →</PrimaryBtn></div>
-      </div>
-    </div>
-  )
-}
-
-// ── Paso 3: Preferencias laborales ──────────────────────────────────────────
-function PillToggle({ options, value, onChange, multi = false }: {
-  options: string[]; value: string | string[]; onChange: (v: string | string[]) => void; multi?: boolean
-}) {
-  const isSelected = (opt: string) => multi ? (value as string[]).includes(opt) : value === opt
-  const toggle = (opt: string) => {
-    if (multi) {
-      const arr = value as string[]
-      onChange(arr.includes(opt) ? arr.filter(x => x !== opt) : [...arr, opt])
-    } else {
-      onChange(value === opt ? '' : opt)
-    }
-  }
-  return (
-    <div className="flex flex-wrap gap-2">
-      {options.map(opt => (
-        <button
-          key={opt}
-          type="button"
-          onClick={() => toggle(opt)}
-          className={`px-4 py-2 rounded-full text-sm font-medium border-[1.5px] transition-all ${
-            isSelected(opt)
-              ? 'bg-henko-turquoise text-white border-henko-turquoise'
-              : 'bg-white text-gray-600 border-gray-200 hover:border-henko-turquoise hover:text-henko-turquoise'
-          }`}
-        >
-          {opt}
-        </button>
-      ))}
-    </div>
-  )
-}
-
-function StepPreferencias({ form, upd, back, next }: { form: FormState; upd: <K extends keyof FormState>(k: K, v: FormState[K]) => void; back: () => void; next: () => void }) {
-  return (
-    <div>
-      <Eyebrow>Paso 3</Eyebrow>
-      <Heading>¿Qué tipo de trabajo buscas?</Heading>
-
-      <div className="mb-6">
-        <label className={labelClass}>JORNADA</label>
-        <PillToggle
-          options={['Completa', 'Parcial', 'Indiferente']}
-          value={form.tipoJornada}
-          onChange={v => upd('tipoJornada', v as string)}
-        />
-      </div>
-
-      <div className="mb-6">
-        <label className={labelClass}>MODALIDAD</label>
-        <PillToggle
-          options={['Presencial', 'Remoto', 'Híbrido', 'Indiferente']}
-          value={form.modalidad}
-          onChange={v => upd('modalidad', v as string)}
-        />
-      </div>
-
-      <div className="mb-6">
-        <label className={labelClass}>TIPO DE CONTRATO</label>
-        <PillToggle
-          options={['Indefinido', 'Temporal', 'Prácticas', 'Freelance', 'Indiferente']}
-          value={form.tipoContrato}
-          onChange={v => upd('tipoContrato', v as string)}
-        />
-      </div>
-
-      <div className="mb-6">
-        <label className={labelClass}>SECTORES DE INTERÉS <span className="text-gray-400 normal-case font-normal">(puedes elegir varios)</span></label>
-        <PillToggle
-          options={SECTORES}
-          value={form.sectores}
-          onChange={v => upd('sectores', v as string[])}
-          multi
-        />
-      </div>
-
-      <div className="grid grid-cols-2 gap-4 mb-8">
-        <div>
-          <label className={labelClass}>DISPONIBILIDAD</label>
-          <select
-            className={inputClass + ' appearance-none'}
-            value={form.disponibilidad}
-            onChange={e => upd('disponibilidad', e.target.value)}
-          >
-            <option value="">¿Cuándo puedes empezar?</option>
-            {['Inmediata', '15 días', '1 mes', '2 meses', '3 meses'].map(d => (
-              <option key={d}>{d}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className={labelClass}>PRETENSIÓN SALARIAL</label>
-          <input
-            className={inputClass}
-            placeholder="ej. 25.000 – 30.000 €/año"
-            value={form.pretensionSalarial}
-            onChange={e => upd('pretensionSalarial', e.target.value)}
-          />
-        </div>
-      </div>
-
-      <div className="flex gap-3">
-        <SecondaryBtn onClick={back}>← Volver</SecondaryBtn>
-        <div className="flex-1"><PrimaryBtn onClick={next} full>Continuar →</PrimaryBtn></div>
-      </div>
-    </div>
-  )
-}
-
-// ── Paso 5 (Experiencia) ─────────────────────────────────────────────────────
-function StepExperiencia({ form, upd, back, next, isFinal = false, submitting = false }: { form: FormState; upd: <K extends keyof FormState>(k: K, v: FormState[K]) => void; back: () => void; next: () => void; isFinal?: boolean; submitting?: boolean }) {
-  const updExp = (i: number, patch: Partial<Experiencia>) => {
-    const arr = [...form.exp]
-    arr[i] = { ...arr[i], ...patch }
-    upd('exp', arr)
-  }
-  const updEdu = (i: number, patch: Partial<Educacion>) => {
-    const arr = [...form.edu]
-    arr[i] = { ...arr[i], ...patch }
-    upd('edu', arr)
-  }
-
-  return (
-    <div>
-      <Eyebrow>Paso 5</Eyebrow>
-      <Heading>Experiencia y conocimientos</Heading>
-
-      <h3 className="font-roxborough text-xl mb-4">Experiencia laboral</h3>
-      {form.exp.map((ex, i) => (
-        <div key={i} className="bg-white border border-henko-turquoise/15 shadow-sm rounded-2xl p-5 mb-3">
-          <div className="grid grid-cols-2 gap-2.5 mb-2.5">
-            <input className={inputClass} placeholder="Empresa" value={ex.empresa} onChange={e => updExp(i, { empresa: e.target.value })} />
-            <input className={inputClass} placeholder="Cargo" value={ex.cargo} onChange={e => updExp(i, { cargo: e.target.value })} />
-          </div>
-          <div className="grid grid-cols-2 gap-2.5">
-            <div>
-              <label className={labelClass}>DESDE</label>
-              <MonthYearField value={ex.desde} onChange={v => updExp(i, { desde: v })} />
-            </div>
-            <div>
-              <label className={labelClass}>HASTA</label>
-              <MonthYearField value={ex.hasta} onChange={v => updExp(i, { hasta: v })} allowActual />
-            </div>
-          </div>
-        </div>
-      ))}
-      <button type="button" onClick={() => upd('exp', [...form.exp, { empresa: '', cargo: '', desde: '', hasta: '' }])} className="text-sm text-henko-turquoise font-semibold hover:underline mb-7">
-        + Añadir experiencia
-      </button>
-
-      <h3 className="font-roxborough text-xl mt-5 mb-4">Educación</h3>
-      {form.edu.map((ed, i) => (
-        <div key={i} className="bg-white border border-henko-turquoise/15 shadow-sm rounded-2xl p-5 mb-3">
-          <div className="mb-2.5">
-            <label className={labelClass}>CENTRO / UNIVERSIDAD</label>
-            <input className={inputClass} placeholder="Centro / Universidad" value={ed.centro} onChange={e => updEdu(i, { centro: e.target.value })} />
-          </div>
-          <div className="grid grid-cols-2 gap-2.5">
-            <div>
-              <label className={labelClass}>TÍTULO / GRADO</label>
-              <ComboboxField
-                value={ed.titulo}
-                onChange={v => updEdu(i, { titulo: v })}
-                options={TITULOS_EDU}
-                placeholder="Tipo de titulación…"
-              />
-            </div>
-            <div>
-              <label className={labelClass}>AÑO FIN</label>
-              <select
-                className={inputClass + ' appearance-none'}
-                value={ed.ano}
-                onChange={e => updEdu(i, { ano: e.target.value })}
-              >
-                <option value="">Año fin</option>
-                {AÑOS_EDU.map(a => <option key={a} value={a}>{a}</option>)}
-              </select>
-            </div>
-          </div>
-        </div>
-      ))}
-      <button type="button" onClick={() => upd('edu', [...form.edu, { centro: '', titulo: '', ano: '' }])} className="text-sm text-henko-turquoise font-semibold hover:underline mb-8 block">
-        + Añadir educación
-      </button>
-
-      <div className="flex gap-3">
-        <SecondaryBtn onClick={back}>← Volver</SecondaryBtn>
-        <div className="flex-1">
-          <PrimaryBtn onClick={next} full disabled={submitting}>
-            {isFinal ? (submitting ? 'Creando perfil...' : 'Crear perfil →') : 'Continuar →'}
-          </PrimaryBtn>
-        </div>
       </div>
     </div>
   )
