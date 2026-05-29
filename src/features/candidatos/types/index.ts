@@ -7,6 +7,7 @@ export type CandidatoRow = {
   email: string
   telefono: string | null
   cargo_actual: string | null
+  cargo_experiencia: string | null
   ubicacion: string | null
   created_at: string | null
   solicitudes_count: number

@@ -207,7 +207,7 @@ export default function CandidatosTable({ candidatos }: { candidatos: CandidatoR
 
                 {/* Cargo / Ubicación */}
                 <div className="col-span-2 min-w-0">
-                  <p className="font-raleway text-xs text-gray-700 truncate">{c.cargo_actual ?? '—'}</p>
+                  <p className="font-raleway text-xs text-gray-700 truncate">{c.cargo_experiencia ?? '—'}</p>
                   {c.ubicacion && <p className="font-raleway text-xs text-gray-400 truncate mt-0.5">{c.ubicacion}</p>}
                 </div>
 
@@ -268,7 +268,7 @@ export default function CandidatosTable({ candidatos }: { candidatos: CandidatoR
                   )}
                 </div>
                 <div className="ml-11 flex flex-wrap gap-1">
-                  {c.cargo_actual && <span className="font-raleway text-xs text-gray-500">{c.cargo_actual}</span>}
+                  {c.cargo_experiencia && <span className="font-raleway text-xs text-gray-500">{c.cargo_experiencia}</span>}
                   {c.tiene_cv && c.cv_storage_path && <CvButton storagePath={c.cv_storage_path} />}
                 </div>
               </div>
