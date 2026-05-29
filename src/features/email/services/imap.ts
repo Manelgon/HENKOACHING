@@ -72,7 +72,15 @@ export async function listarCarpetas(creds: ImapCredentials): Promise<ImapFolder
       folders.push({ path: mailbox.path, label: known?.label ?? mailbox.name, type, unread: 0 })
     }
 
-    // Orden: Recibidos, Enviados, Borradores, Spam, Papelera
+    // Traer no leídos para carpetas relevantes (inbox + spam)
+    for (const folder of folders) {
+      if (folder.type !== 'inbox' && folder.type !== 'spam') continue
+      try {
+        const status = await client.status(folder.path, { unseen: true })
+        folder.unread = status.unseen ?? 0
+      } catch { /* ignorar si falla una carpeta */ }
+    }
+
     const ORDER: FolderType[] = ['inbox', 'sent', 'drafts', 'spam', 'trash']
     folders.sort((a, b) => ORDER.indexOf(a.type) - ORDER.indexOf(b.type))
     return folders

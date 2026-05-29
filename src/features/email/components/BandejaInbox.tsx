@@ -1,16 +1,20 @@
 'use client'
 
 import { useState, useCallback, useEffect, useMemo } from 'react'
-import { listarEmailsBandeja, leerEmailBandeja, listarCarpetasImap } from '@/actions/email'
+import { listarEmailsBandeja, leerEmailBandeja, listarCarpetasImap, type EmailConfigPublic } from '@/actions/email'
 import { useAction } from '@/shared/feedback/FeedbackContext'
 import EmailDrawer from './EmailDrawer'
 import ComposeDrawer from './ComposeDrawer'
+import EmailConfigForm from './EmailConfigForm'
 import { useEmailStore } from '@/features/email/store/emailStore'
 import { TablePagination, usePagination } from '@/components/TablePagination'
 import type { EmailMessage, EmailDetail, ImapFolder, FolderType } from '../types'
 
+type ActiveView = FolderType | 'config'
+
 type Props = {
   hasImapConfig: boolean
+  emailConfig: EmailConfigPublic
 }
 
 const FOLDER_ICONS: Record<FolderType, string> = {
@@ -21,7 +25,7 @@ const FOLDER_ICONS: Record<FolderType, string> = {
   trash:  'M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16',
 }
 
-export default function BandejaInbox({ hasImapConfig }: Props) {
+export default function BandejaInbox({ hasImapConfig, emailConfig }: Props) {
   const runAction = useAction()
   const [mensajes, setMensajes] = useState<EmailMessage[] | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -30,6 +34,7 @@ export default function BandejaInbox({ hasImapConfig }: Props) {
   const [busqueda, setBusqueda] = useState('')
   const [filtroLeido, setFiltroLeido] = useState<'todos' | 'no_leido' | 'leido'>('todos')
   const [composing, setComposing] = useState(false)
+  const [activeView, setActiveView] = useState<ActiveView>('inbox')
   const [folders, setFolders] = useState<ImapFolder[]>([])
   const [activeFolder, setActiveFolder] = useState<ImapFolder>({ path: 'INBOX', label: 'Recibidos', type: 'inbox', unread: 0 })
 
@@ -108,6 +113,7 @@ export default function BandejaInbox({ hasImapConfig }: Props) {
   }
 
   function cambiarCarpeta(folder: ImapFolder) {
+    setActiveView(folder.type)
     if (folder.path === activeFolder.path) return
     setActiveFolder(folder)
     setMensajes(null)
@@ -158,7 +164,7 @@ export default function BandejaInbox({ hasImapConfig }: Props) {
               type="button"
               onClick={() => cambiarCarpeta(folder)}
               className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-raleway text-sm font-medium transition-colors text-left ${
-                activeFolder.path === folder.path
+                activeView === folder.type
                   ? 'bg-henko-turquoise/10 text-henko-turquoise font-semibold'
                   : 'text-gray-600 hover:bg-gray-100'
               }`}
@@ -167,18 +173,43 @@ export default function BandejaInbox({ hasImapConfig }: Props) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={FOLDER_ICONS[folder.type]} />
               </svg>
               <span className="flex-1 truncate">{folder.label}</span>
-              {folder.type === 'inbox' && noLeidos > 0 && (
+              {(folder.unread > 0) && (
                 <span className="text-xs bg-henko-turquoise text-white rounded-full px-1.5 py-0.5 font-bold leading-none">
-                  {noLeidos}
+                  {folder.unread}
                 </span>
               )}
             </button>
           ))}
+
+          <div className="my-2 border-t border-gray-100" />
+
+          <button
+            type="button"
+            onClick={() => setActiveView('config')}
+            className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-raleway text-sm font-medium transition-colors text-left ${
+              activeView === 'config'
+                ? 'bg-henko-turquoise/10 text-henko-turquoise font-semibold'
+                : 'text-gray-600 hover:bg-gray-100'
+            }`}
+          >
+            <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            Configuración
+          </button>
         </aside>
 
         {/* Panel principal */}
         <div className="flex-1 min-w-0">
-          {/* Tabs lectura + acciones */}
+          {/* Vista Configuración */}
+          {activeView === 'config' && (
+            <EmailConfigForm config={emailConfig} />
+          )}
+
+          {/* Vista Bandeja (cualquier carpeta) */}
+          {activeView !== 'config' && (
+          <>{/* Tabs lectura + acciones */}
           <div className="flex items-end justify-between gap-4 mb-4 border-b border-gray-200">
             <div className="flex items-center gap-1 overflow-x-auto flex-1 min-w-0">
               {/* Carpetas en móvil */}
@@ -355,6 +386,8 @@ export default function BandejaInbox({ hasImapConfig }: Props) {
                 onPageChange={pagination.setPage} onPageSizeChange={pagination.setPageSize}
               />
             </div>
+          )}
+          </>
           )}
         </div>
       </div>
