@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState, useTransition, type FormEvent } from 'react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAction, useConfirm } from '@/shared/feedback/FeedbackContext'
 import { TablePagination, usePagination } from '@/components/TablePagination'
@@ -61,7 +61,7 @@ export default function TestimoniosManager({ testimonios }: { testimonios: Testi
   const router = useRouter()
   const runAction = useAction()
   const confirm = useConfirm()
-  const [pending, startTransition] = useTransition()
+  const [saving, setSaving] = useState(false)
 
   const [tab, setTab] = useState<'all' | 'visibles' | 'ocultos'>('all')
   const [filtros, setFiltros] = useState<{ fuente: string | 'todas'; busqueda: string }>({
@@ -136,20 +136,22 @@ export default function TestimoniosManager({ testimonios }: { testimonios: Testi
     setSelectedId(null)
   }
 
-  function handleSubmit(e: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setFormError(null)
-    startTransition(async () => {
-      const result = editingId
-        ? await actualizarTestimonio(editingId, form)
-        : await crearTestimonio(form)
-      if ('error' in result) {
-        setFormError(result.error)
-        return
-      }
+    setSaving(true)
+    const result = await runAction(
+      editingId ? 'Actualizando testimonio' : 'Creando testimonio',
+      () => editingId ? actualizarTestimonio(editingId, form) : crearTestimonio(form),
+      { successMessage: editingId ? 'Testimonio actualizado' : 'Testimonio creado' },
+    )
+    setSaving(false)
+    if (result.ok) {
       resetForm()
       router.refresh()
-    })
+    } else if (result.error) {
+      setFormError(result.error)
+    }
   }
 
   async function handleDelete(id: string) {
@@ -435,7 +437,7 @@ export default function TestimoniosManager({ testimonios }: { testimonios: Testi
               <button
                 type="button"
                 onClick={() => handleDelete(selected.id)}
-                disabled={pending}
+                disabled={saving}
                 className="px-4 py-2 rounded-xl bg-red-50 text-red-600 font-raleway font-semibold text-sm hover:bg-red-100 transition-colors disabled:opacity-50"
               >
                 Eliminar
@@ -443,7 +445,7 @@ export default function TestimoniosManager({ testimonios }: { testimonios: Testi
               <button
                 type="button"
                 onClick={() => handleToggle(selected.id, selected.visible)}
-                disabled={pending}
+                disabled={saving}
                 className="px-4 py-2 rounded-xl bg-gray-100 text-gray-700 font-raleway font-semibold text-sm hover:bg-gray-200 transition-colors disabled:opacity-50"
               >
                 {selected.visible ? 'Ocultar' : 'Mostrar'}
@@ -451,7 +453,7 @@ export default function TestimoniosManager({ testimonios }: { testimonios: Testi
               <button
                 type="button"
                 onClick={() => openEdit(selected)}
-                disabled={pending}
+                disabled={saving}
                 className="px-5 py-2 rounded-xl bg-henko-turquoise text-white font-raleway font-semibold text-sm hover:bg-henko-turquoise-light transition-colors disabled:opacity-50"
               >
                 Editar
@@ -461,10 +463,10 @@ export default function TestimoniosManager({ testimonios }: { testimonios: Testi
         </div>
       )}
 
-      {/* Modal formulario */}
+      {/* Drawer formulario */}
       {showForm && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-sm"
           onClick={resetForm}
           role="dialog"
           aria-modal="true"
@@ -472,23 +474,25 @@ export default function TestimoniosManager({ testimonios }: { testimonios: Testi
           <form
             onSubmit={handleSubmit}
             onClick={(e) => e.stopPropagation()}
-            className="bg-white rounded-[2rem] max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+            className="bg-white h-full w-full max-w-2xl flex flex-col shadow-2xl"
           >
-            <div className="sticky top-0 bg-white/95 backdrop-blur border-b border-gray-100 px-6 md:px-8 py-5 flex items-center justify-between">
+            {/* Header sticky */}
+            <div className="sticky top-0 z-10 bg-white border-b border-gray-100 px-8 py-5 flex items-center justify-between">
               <h2 className="font-roxborough text-2xl text-gray-900">
                 {editingId ? 'Editar testimonio' : 'Nuevo testimonio'}
               </h2>
               <button
                 type="button"
                 onClick={resetForm}
-                className="p-2 rounded-full text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                className="w-9 h-9 rounded-full hover:bg-black/5 flex items-center justify-center text-gray-400 hover:text-gray-700 transition-colors"
                 aria-label="Cerrar"
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
             </div>
 
-            <div className="px-6 md:px-8 py-6 space-y-5">
+            {/* Body scrollable */}
+            <div className="flex-1 overflow-y-auto px-8 py-6 space-y-5">
               {formError && (
                 <div className="rounded-2xl bg-red-50 border border-red-200 px-5 py-3 text-sm text-red-800">
                   {formError}
@@ -604,7 +608,8 @@ export default function TestimoniosManager({ testimonios }: { testimonios: Testi
               </div>
             </div>
 
-            <div className="sticky bottom-0 bg-white/95 backdrop-blur border-t border-gray-100 px-6 md:px-8 py-4 flex flex-wrap items-center justify-end gap-2">
+            {/* Footer sticky */}
+            <div className="sticky bottom-0 bg-white border-t border-gray-100 px-8 py-4 flex items-center justify-end gap-2">
               <button
                 type="button"
                 onClick={resetForm}
@@ -614,10 +619,10 @@ export default function TestimoniosManager({ testimonios }: { testimonios: Testi
               </button>
               <button
                 type="submit"
-                disabled={pending}
+                disabled={saving}
                 className="px-5 py-2 rounded-xl bg-henko-turquoise text-white font-raleway font-semibold text-sm hover:bg-henko-turquoise-light disabled:opacity-50 transition-colors"
               >
-                {pending ? 'Guardando…' : editingId ? 'Actualizar' : 'Crear testimonio'}
+                {saving ? 'Guardando…' : editingId ? 'Actualizar' : 'Crear testimonio'}
               </button>
             </div>
           </form>

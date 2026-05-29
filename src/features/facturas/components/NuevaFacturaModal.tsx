@@ -178,20 +178,21 @@ export default function NuevaFacturaModal({ clientes, facturasRectificables, ser
   }
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-end sm:items-center sm:justify-center p-0 sm:p-4">
-      <div className="bg-white w-full sm:max-w-3xl rounded-t-3xl sm:rounded-3xl shadow-xl max-h-[95dvh] flex flex-col">
-        <div className="px-6 sm:px-8 py-5 border-b border-gray-100 flex items-center justify-between">
+    <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex justify-end" onClick={onClose}>
+      <div className="bg-white h-full w-full max-w-3xl flex flex-col shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        {/* Header sticky */}
+        <div className="sticky top-0 z-10 bg-white px-8 py-5 border-b border-gray-100 flex items-center justify-between">
           <h2 className="font-roxborough text-xl text-gray-900">
             {tipoFactura === 'abono' ? 'Nuevo abono' : tipoFactura === 'rectificativa' ? 'Nueva rectificativa' : 'Nueva factura'}
           </h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1">
+          <button type="button" onClick={onClose} className="w-9 h-9 rounded-full hover:bg-black/5 flex items-center justify-center text-gray-400 hover:text-gray-700 transition-colors">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
 
-        <form onSubmit={onSubmit} className="flex-1 overflow-y-auto px-6 sm:px-8 py-6 space-y-6">
+        <form onSubmit={onSubmit} className="flex-1 overflow-y-auto px-8 py-6 space-y-6">
           {/* Cliente */}
           <Field label="Cliente" required>
             <select
@@ -459,7 +460,8 @@ export default function NuevaFacturaModal({ clientes, facturasRectificables, ser
           </div>
         </form>
 
-        <div className="px-6 sm:px-8 py-4 border-t border-gray-100 flex justify-end gap-3">
+        {/* Footer sticky */}
+        <div className="sticky bottom-0 bg-white px-8 py-4 border-t border-gray-100 flex justify-end gap-3">
           <button
             type="button"
             onClick={onClose}

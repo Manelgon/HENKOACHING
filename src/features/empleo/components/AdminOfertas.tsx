@@ -313,15 +313,16 @@ export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas,
 
       {modalAbierto && (
         <div
-          className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 backdrop-blur-sm px-3 py-4 sm:px-4 sm:py-10"
+          className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-sm"
           onClick={cancel}
         >
           <div
-            className="bg-white rounded-2xl sm:rounded-3xl border border-black/5 w-full max-w-2xl shadow-2xl"
+            className="relative h-full w-full max-w-2xl bg-white flex flex-col shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between px-5 sm:px-9 pt-5 sm:pt-7 pb-4 sm:pb-5 border-b border-black/5">
-              <h2 className="font-roxborough text-xl sm:text-2xl text-gray-900">
+            {/* Header sticky */}
+            <div className="flex items-center justify-between px-8 py-5 border-b border-black/5 bg-white sticky top-0 z-10">
+              <h2 className="font-roxborough text-2xl text-gray-900">
                 {nueva ? 'Nueva oferta' : 'Editar oferta'}
               </h2>
               <button
@@ -336,7 +337,8 @@ export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas,
               </button>
             </div>
 
-            <div className="px-5 sm:px-9 py-5 sm:py-7">
+            {/* Body scrollable */}
+            <div className="flex-1 overflow-y-auto px-8 py-6">
               <Field label="TÍTULO DEL PUESTO" value={draft.titulo} onChange={(v) => update('titulo', v)} placeholder="ej. Responsable de Operaciones" />
               <EmpresaPickerField
                 value={draft.empresa}
@@ -365,13 +367,13 @@ export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas,
               <Field label="UBICACIÓN" value={draft.ubicacion} onChange={(v) => update('ubicacion', v)} placeholder="Palma de Mallorca" />
               <Field label="SALARIO" value={draft.salario_texto} onChange={(v) => update('salario_texto', v)} placeholder="ej. 30.000 – 36.000 €/año" />
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+              <div className="grid grid-cols-3 gap-3 mb-4">
                 <SelectField label="MODALIDAD" value={draft.modalidad_id} onChange={(v) => update('modalidad_id', v)} options={modalidades} />
                 <SelectField label="JORNADA" value={draft.jornada_id} onChange={(v) => update('jornada_id', v)} options={jornadas} />
                 <SelectField label="SECTOR" value={draft.sector_id} onChange={(v) => update('sector_id', v)} options={sectores} />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+              <div className="grid grid-cols-2 gap-3 mb-4">
                 <Field label="REPORTA A" value={draft.reporta_a} onChange={(v) => update('reporta_a', v)} placeholder="ej. Responsable de Administración" />
                 <Field label="CONTRATO" value={draft.contrato} onChange={(v) => update('contrato', v)} placeholder="ej. Sustitución por maternidad" />
               </div>
@@ -448,7 +450,8 @@ export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas,
               {error && <p className="text-sm text-red-500 mt-3">{error}</p>}
             </div>
 
-            <div className="flex flex-col-reverse sm:flex-row gap-3 px-5 sm:px-9 py-4 sm:py-5 border-t border-black/5">
+            {/* Footer sticky */}
+            <div className="flex gap-3 px-8 py-5 border-t border-black/5 bg-white">
               <button
                 type="button"
                 onClick={cancel}
