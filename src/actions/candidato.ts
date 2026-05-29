@@ -19,6 +19,12 @@ export type CandidatoSignupInput = {
   telefono: string
   ubicacion: string
   cargo: string
+  tipoJornada: string
+  modalidad: string
+  tipoContrato: string
+  sectores: string[]
+  disponibilidad: string
+  pretensionSalarial: string
   experiencias: ExperienciaInput[]
   educacion: EducacionInput[]
   idiomas: IdiomaInput[]
@@ -54,6 +60,12 @@ export async function signupCandidato(input: CandidatoSignupInput) {
     .update({
       ubicacion: input.ubicacion || null,
       cargo_actual: input.cargo || null,
+      tipo_jornada: input.tipoJornada || null,
+      modalidad_trabajo: input.modalidad || null,
+      tipo_contrato: input.tipoContrato || null,
+      sectores_interes: input.sectores.length > 0 ? input.sectores : null,
+      disponibilidad: input.disponibilidad || null,
+      pretension_salarial: input.pretensionSalarial || null,
     })
     .eq('user_id', userId)
 

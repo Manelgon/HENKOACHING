@@ -16,9 +16,19 @@ type Idioma = { idioma: string; nivel: string }
 type FormState = {
   nombre: string; apellidos: string; email: string; password: string
   telefonoPrefijo: string; telefono: string; ubicacion: string; cargo: string
+  tipoJornada: string; modalidad: string; tipoContrato: string
+  sectores: string[]; disponibilidad: string; pretensionSalarial: string
   exp: Experiencia[]; edu: Educacion[]; idiomas: Idioma[]
   cv: File | null
 }
+
+const SECTORES = [
+  'Tecnología / IT','Hostelería y Turismo','Retail / Comercio','Educación y Formación',
+  'Salud y Bienestar','RRHH / Administración','Marketing y Comunicación',
+  'Finanzas y Banca','Construcción e Inmobiliaria','Logística y Transporte',
+  'Industria / Manufactura','Servicios Profesionales','Arte y Diseño',
+  'Deporte y Ocio','Alimentación','Legal / Jurídico','Otro',
+]
 
 const PREFIJOS = [
   { label: '🇪🇸 +34', value: '+34' },
@@ -182,6 +192,8 @@ export default function CandidatoSignupFlow() {
   const [form, setForm] = useState<FormState>({
     nombre: '', apellidos: '', email: '', password: '',
     telefonoPrefijo: '+34', telefono: '', ubicacion: '', cargo: '',
+    tipoJornada: '', modalidad: '', tipoContrato: '',
+    sectores: [], disponibilidad: '', pretensionSalarial: '',
     exp: [{ empresa: '', cargo: '', desde: '', hasta: '' }],
     edu: [{ centro: '', titulo: '', ano: '' }],
     idiomas: [{ idioma: '', nivel: '' }],
@@ -199,7 +211,10 @@ export default function CandidatoSignupFlow() {
       () => signupCandidato({
         nombre: form.nombre, apellidos: form.apellidos,
         email: form.email, password: form.password,
-        telefono: form.telefono ? `${form.telefonoPrefijo} ${form.telefono}` : '', ubicacion: form.ubicacion, cargo: form.cargo,
+        telefono: form.telefono ? `${form.telefonoPrefijo} ${form.telefono}` : '',
+        ubicacion: form.ubicacion, cargo: form.cargo,
+        tipoJornada: form.tipoJornada, modalidad: form.modalidad, tipoContrato: form.tipoContrato,
+        sectores: form.sectores, disponibilidad: form.disponibilidad, pretensionSalarial: form.pretensionSalarial,
         experiencias: form.exp, educacion: form.edu, idiomas: form.idiomas,
       }),
       { successMessage: 'Perfil creado' },
@@ -251,7 +266,7 @@ export default function CandidatoSignupFlow() {
         </Link>
 
         <div className="flex items-center gap-2 mb-10">
-          {['Cuenta', 'Perfil', 'CV', 'Experiencia'].map((s, i) => (
+          {['Cuenta', 'Datos', 'Preferencias', 'CV', 'Experiencia'].map((s, i) => (
             <Fragment key={s}>
               <div className="flex items-center gap-2">
                 <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${step > i + 1 || step === i + 1 ? 'bg-henko-turquoise text-white' : 'bg-gray-200 text-gray-400'}`}>
@@ -266,8 +281,9 @@ export default function CandidatoSignupFlow() {
 
         {step === 1 && <StepCuenta form={form} upd={upd} next={() => setStep(2)} />}
         {step === 2 && <StepPerfil form={form} upd={upd} back={() => setStep(1)} next={() => setStep(3)} />}
-        {step === 3 && <StepCV form={form} upd={upd} fileRef={fileRef} back={() => setStep(2)} finish={() => setStep(4)} submitting={false} isFinal={false} />}
-        {step === 4 && <StepExperiencia form={form} upd={upd} back={() => setStep(3)} next={finalizar} submitting={submitting} isFinal />}
+        {step === 3 && <StepPreferencias form={form} upd={upd} back={() => setStep(2)} next={() => setStep(4)} />}
+        {step === 4 && <StepCV form={form} upd={upd} fileRef={fileRef} back={() => setStep(3)} finish={() => setStep(5)} submitting={false} isFinal={false} />}
+        {step === 5 && <StepExperiencia form={form} upd={upd} back={() => setStep(4)} next={finalizar} submitting={submitting} isFinal />}
       </div>
     </div>
   )
@@ -388,7 +404,7 @@ function StepPerfil({ form, upd, back, next }: { form: FormState; upd: <K extend
   return (
     <div>
       <Eyebrow>Paso 2</Eyebrow>
-      <Heading>Tu perfil profesional</Heading>
+      <Heading>Datos personales</Heading>
 
       <div className="mb-4">
         <label className={labelClass}>TELÉFONO</label>
@@ -468,7 +484,116 @@ function StepPerfil({ form, upd, back, next }: { form: FormState; upd: <K extend
   )
 }
 
-// ── Paso 4 (Experiencia) ─────────────────────────────────────────────────────
+// ── Paso 3: Preferencias laborales ──────────────────────────────────────────
+function PillToggle({ options, value, onChange, multi = false }: {
+  options: string[]; value: string | string[]; onChange: (v: string | string[]) => void; multi?: boolean
+}) {
+  const isSelected = (opt: string) => multi ? (value as string[]).includes(opt) : value === opt
+  const toggle = (opt: string) => {
+    if (multi) {
+      const arr = value as string[]
+      onChange(arr.includes(opt) ? arr.filter(x => x !== opt) : [...arr, opt])
+    } else {
+      onChange(value === opt ? '' : opt)
+    }
+  }
+  return (
+    <div className="flex flex-wrap gap-2">
+      {options.map(opt => (
+        <button
+          key={opt}
+          type="button"
+          onClick={() => toggle(opt)}
+          className={`px-4 py-2 rounded-full text-sm font-medium border-[1.5px] transition-all ${
+            isSelected(opt)
+              ? 'bg-henko-turquoise text-white border-henko-turquoise'
+              : 'bg-white text-gray-600 border-gray-200 hover:border-henko-turquoise hover:text-henko-turquoise'
+          }`}
+        >
+          {opt}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+function StepPreferencias({ form, upd, back, next }: { form: FormState; upd: <K extends keyof FormState>(k: K, v: FormState[K]) => void; back: () => void; next: () => void }) {
+  return (
+    <div>
+      <Eyebrow>Paso 3</Eyebrow>
+      <Heading>¿Qué tipo de trabajo buscas?</Heading>
+
+      <div className="mb-6">
+        <label className={labelClass}>JORNADA</label>
+        <PillToggle
+          options={['Completa', 'Parcial', 'Indiferente']}
+          value={form.tipoJornada}
+          onChange={v => upd('tipoJornada', v as string)}
+        />
+      </div>
+
+      <div className="mb-6">
+        <label className={labelClass}>MODALIDAD</label>
+        <PillToggle
+          options={['Presencial', 'Remoto', 'Híbrido', 'Indiferente']}
+          value={form.modalidad}
+          onChange={v => upd('modalidad', v as string)}
+        />
+      </div>
+
+      <div className="mb-6">
+        <label className={labelClass}>TIPO DE CONTRATO</label>
+        <PillToggle
+          options={['Indefinido', 'Temporal', 'Prácticas', 'Freelance', 'Indiferente']}
+          value={form.tipoContrato}
+          onChange={v => upd('tipoContrato', v as string)}
+        />
+      </div>
+
+      <div className="mb-6">
+        <label className={labelClass}>SECTORES DE INTERÉS <span className="text-gray-400 normal-case font-normal">(puedes elegir varios)</span></label>
+        <PillToggle
+          options={SECTORES}
+          value={form.sectores}
+          onChange={v => upd('sectores', v as string[])}
+          multi
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4 mb-8">
+        <div>
+          <label className={labelClass}>DISPONIBILIDAD</label>
+          <select
+            className={inputClass + ' appearance-none'}
+            value={form.disponibilidad}
+            onChange={e => upd('disponibilidad', e.target.value)}
+          >
+            <option value="">¿Cuándo puedes empezar?</option>
+            {['Inmediata', '15 días', '1 mes', '2 meses', '3 meses'].map(d => (
+              <option key={d}>{d}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className={labelClass}>PRETENSIÓN SALARIAL</label>
+          <input
+            className={inputClass}
+            placeholder="ej. 25.000 – 30.000 €/año"
+            value={form.pretensionSalarial}
+            onChange={e => upd('pretensionSalarial', e.target.value)}
+          />
+        </div>
+      </div>
+
+      <div className="flex gap-3">
+        <SecondaryBtn onClick={back}>← Volver</SecondaryBtn>
+        <div className="flex-1"><PrimaryBtn onClick={next} full>Continuar →</PrimaryBtn></div>
+      </div>
+    </div>
+  )
+}
+
+// ── Paso 5 (Experiencia) ─────────────────────────────────────────────────────
 function StepExperiencia({ form, upd, back, next, isFinal = false, submitting = false }: { form: FormState; upd: <K extends keyof FormState>(k: K, v: FormState[K]) => void; back: () => void; next: () => void; isFinal?: boolean; submitting?: boolean }) {
   const updExp = (i: number, patch: Partial<Experiencia>) => {
     const arr = [...form.exp]
@@ -483,8 +608,8 @@ function StepExperiencia({ form, upd, back, next, isFinal = false, submitting = 
 
   return (
     <div>
-      <Eyebrow>Paso 4</Eyebrow>
-      <Heading>Experiencia y educación</Heading>
+      <Eyebrow>Paso 5</Eyebrow>
+      <Heading>Experiencia y conocimientos</Heading>
 
       <h3 className="font-roxborough text-xl mb-4">Experiencia laboral</h3>
       {form.exp.map((ex, i) => (

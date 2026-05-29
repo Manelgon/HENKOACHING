@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -365,8 +365,12 @@ export type Database = {
           created_at: string | null
           disponibilidad: string | null
           linkedin_url: string | null
+          modalidad_trabajo: string | null
           pretension_salarial: string | null
           resumen: string | null
+          sectores_interes: string[] | null
+          tipo_contrato: string | null
+          tipo_jornada: string | null
           ubicacion: string | null
           updated_at: string | null
           user_id: string
@@ -377,8 +381,12 @@ export type Database = {
           created_at?: string | null
           disponibilidad?: string | null
           linkedin_url?: string | null
+          modalidad_trabajo?: string | null
           pretension_salarial?: string | null
           resumen?: string | null
+          sectores_interes?: string[] | null
+          tipo_contrato?: string | null
+          tipo_jornada?: string | null
           ubicacion?: string | null
           updated_at?: string | null
           user_id: string
@@ -389,8 +397,12 @@ export type Database = {
           created_at?: string | null
           disponibilidad?: string | null
           linkedin_url?: string | null
+          modalidad_trabajo?: string | null
           pretension_salarial?: string | null
           resumen?: string | null
+          sectores_interes?: string[] | null
+          tipo_contrato?: string | null
+          tipo_jornada?: string | null
           ubicacion?: string | null
           updated_at?: string | null
           user_id?: string
@@ -817,6 +829,144 @@ export type Database = {
             referencedColumns: ["user_id"]
           },
         ]
+      }
+      email_envios: {
+        Row: {
+          asunto: string
+          created_at: string
+          error: string | null
+          estado: string
+          html: string
+          id: string
+          intentos: number
+          metadata: Json | null
+          para: string
+          sent_at: string | null
+          tipo: string
+        }
+        Insert: {
+          asunto: string
+          created_at?: string
+          error?: string | null
+          estado?: string
+          html: string
+          id?: string
+          intentos?: number
+          metadata?: Json | null
+          para: string
+          sent_at?: string | null
+          tipo: string
+        }
+        Update: {
+          asunto?: string
+          created_at?: string
+          error?: string | null
+          estado?: string
+          html?: string
+          id?: string
+          intentos?: number
+          metadata?: Json | null
+          para?: string
+          sent_at?: string | null
+          tipo?: string
+        }
+        Relationships: []
+      }
+      email_settings: {
+        Row: {
+          id: number
+          imap_encryption: string | null
+          imap_host: string | null
+          imap_password: string | null
+          imap_port: number | null
+          imap_user: string | null
+          smtp_encryption: string | null
+          smtp_from_name: string | null
+          smtp_host: string | null
+          smtp_password: string | null
+          smtp_port: number | null
+          smtp_user: string | null
+          subject_cambio_estado: string | null
+          subject_candidatura_admin: string | null
+          subject_candidatura_candidato: string | null
+          subject_confirmation: string | null
+          subject_invite: string | null
+          subject_lead_confirmacion: string | null
+          subject_magic_link: string | null
+          subject_recovery: string | null
+          template_cambio_estado: string | null
+          template_candidatura_admin: string | null
+          template_candidatura_candidato: string | null
+          template_confirmation: string | null
+          template_invite: string | null
+          template_lead_confirmacion: string | null
+          template_magic_link: string | null
+          template_recovery: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: number
+          imap_encryption?: string | null
+          imap_host?: string | null
+          imap_password?: string | null
+          imap_port?: number | null
+          imap_user?: string | null
+          smtp_encryption?: string | null
+          smtp_from_name?: string | null
+          smtp_host?: string | null
+          smtp_password?: string | null
+          smtp_port?: number | null
+          smtp_user?: string | null
+          subject_cambio_estado?: string | null
+          subject_candidatura_admin?: string | null
+          subject_candidatura_candidato?: string | null
+          subject_confirmation?: string | null
+          subject_invite?: string | null
+          subject_lead_confirmacion?: string | null
+          subject_magic_link?: string | null
+          subject_recovery?: string | null
+          template_cambio_estado?: string | null
+          template_candidatura_admin?: string | null
+          template_candidatura_candidato?: string | null
+          template_confirmation?: string | null
+          template_invite?: string | null
+          template_lead_confirmacion?: string | null
+          template_magic_link?: string | null
+          template_recovery?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: number
+          imap_encryption?: string | null
+          imap_host?: string | null
+          imap_password?: string | null
+          imap_port?: number | null
+          imap_user?: string | null
+          smtp_encryption?: string | null
+          smtp_from_name?: string | null
+          smtp_host?: string | null
+          smtp_password?: string | null
+          smtp_port?: number | null
+          smtp_user?: string | null
+          subject_cambio_estado?: string | null
+          subject_candidatura_admin?: string | null
+          subject_candidatura_candidato?: string | null
+          subject_confirmation?: string | null
+          subject_invite?: string | null
+          subject_lead_confirmacion?: string | null
+          subject_magic_link?: string | null
+          subject_recovery?: string | null
+          template_cambio_estado?: string | null
+          template_candidatura_admin?: string | null
+          template_candidatura_candidato?: string | null
+          template_confirmation?: string | null
+          template_invite?: string | null
+          template_lead_confirmacion?: string | null
+          template_magic_link?: string | null
+          template_recovery?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       factura_lineas: {
         Row: {
@@ -1933,11 +2083,7 @@ export type Database = {
         | "vencida"
         | "devuelta"
         | "anulada"
-      estado_lead:
-        | "nuevo"
-        | "pendiente"
-        | "contactado"
-        | "descartado"
+      estado_lead: "nuevo" | "pendiente" | "contactado" | "descartado"
       estado_oferta: "borrador" | "publicada" | "pausada" | "cerrada"
       estado_post: "borrador" | "publicado" | "archivado"
       estado_solicitud:
@@ -2091,12 +2237,7 @@ export const Constants = {
     Enums: {
       estado_cliente: ["activo", "pausado", "finalizado"],
       estado_factura: ["pendiente", "pagada", "vencida", "devuelta", "anulada"],
-      estado_lead: [
-        "nuevo",
-        "pendiente",
-        "contactado",
-        "descartado",
-      ],
+      estado_lead: ["nuevo", "pendiente", "contactado", "descartado"],
       estado_oferta: ["borrador", "publicada", "pausada", "cerrada"],
       estado_post: ["borrador", "publicado", "archivado"],
       estado_solicitud: [
@@ -2139,4 +2280,3 @@ export type ServicioContratado = Database['public']['Enums']['servicio_contratad
 export type TarifaTipo = Database['public']['Enums']['tarifa_tipo']
 export type TipoCliente = Database['public']['Enums']['tipo_cliente']
 export type TipoLead = Database['public']['Enums']['tipo_lead']
-
