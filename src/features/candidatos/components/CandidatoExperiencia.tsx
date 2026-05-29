@@ -118,8 +118,9 @@ export function CandidatoIdiomas({ idiomas }: { idiomas: import('../types').Idio
   )
 }
 
-export function CandidatoPreferencias({ perfil }: { perfil: Pick<CandidatoPerfil, 'tipo_jornada' | 'modalidad_trabajo' | 'tipo_contrato' | 'sectores_interes' | 'disponibilidad' | 'pretension_salarial'> }) {
+export function CandidatoPreferencias({ perfil }: { perfil: Pick<CandidatoPerfil, 'cargo_actual' | 'tipo_jornada' | 'modalidad_trabajo' | 'tipo_contrato' | 'sectores_interes' | 'disponibilidad' | 'pretension_salarial'> }) {
   const filas = [
+    { label: 'Cargo objetivo', value: perfil.cargo_actual },
     { label: 'Jornada', value: perfil.tipo_jornada },
     { label: 'Modalidad', value: perfil.modalidad_trabajo },
     { label: 'Contrato', value: perfil.tipo_contrato },

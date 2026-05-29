@@ -5,6 +5,10 @@ export default function CandidatoHeader({ perfil }: { perfil: CandidatoPerfil })
   const nombre = [perfil.nombre, perfil.apellidos].filter(Boolean).join(' ') || perfil.email
   const inicial = (perfil.nombre?.[0] ?? perfil.email[0]).toUpperCase()
 
+  // Cargo a mostrar: empleo actual (hasta null) o el más reciente de experiencias
+  const expActual = perfil.experiencias.find(e => !e.hasta) ?? perfil.experiencias[0] ?? null
+  const cargoDisplay = expActual ? `${expActual.cargo} · ${expActual.empresa}` : null
+
   return (
     <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm p-6 md:p-8">
       <div className="flex items-start gap-5">
@@ -15,8 +19,8 @@ export default function CandidatoHeader({ perfil }: { perfil: CandidatoPerfil })
 
         <div className="flex-1 min-w-0">
           <h2 className="font-roxborough text-2xl text-gray-900 mb-0.5">{nombre}</h2>
-          {perfil.cargo_actual && (
-            <p className="font-raleway text-henko-turquoise font-medium text-sm mb-1">{perfil.cargo_actual}</p>
+          {cargoDisplay && (
+            <p className="font-raleway text-henko-turquoise font-medium text-sm mb-1">{cargoDisplay}</p>
           )}
           <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2">
             <span className="font-raleway text-sm text-gray-500 flex items-center gap-1.5">
