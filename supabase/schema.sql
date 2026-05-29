@@ -535,6 +535,10 @@ create table if not exists public.blog_posts (
   meta_titulo text,
   meta_descripcion text,
   vistas integer default 0,
+  og_image_url text,
+  keywords text[] default '{}',
+  canonical_url text,
+  imagen_portada_alt text,
   created_at timestamptz default now(),
   updated_at timestamptz default now(),
   deleted_at timestamptz

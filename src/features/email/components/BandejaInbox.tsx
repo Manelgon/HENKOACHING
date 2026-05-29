@@ -31,6 +31,7 @@ export default function BandejaInbox({ hasImapConfig }: Props) {
   const [busqueda, setBusqueda] = useState('')
   const [filtroLeido, setFiltroLeido] = useState<'todos' | 'no_leido' | 'leido'>('todos')
   const [composing, setComposing] = useState(false)
+  const [composeDefaults, setComposeDefaults] = useState<{ to?: string; subject?: string; bodyHtml?: string } | null>(null)
   const [folders, setFolders] = useState<ImapFolder[]>([])
   const [activeFolder, setActiveFolder] = useState<ImapFolder>({ path: 'INBOX', label: 'Recibidos', type: 'inbox', unread: 0 })
 
@@ -408,8 +409,28 @@ export default function BandejaInbox({ hasImapConfig }: Props) {
         </div>
       </div>
 
-      {selected && <EmailDrawer email={selected} onClose={() => setSelected(null)} />}
-      {composing && <ComposeDrawer onClose={() => setComposing(false)} />}
+      {selected && (
+        <EmailDrawer
+          email={selected}
+          onClose={() => setSelected(null)}
+          onReply={(to, subject, quotedHtml) => {
+            setSelected(null)
+            setComposeDefaults({ to, subject, bodyHtml: quotedHtml })
+          }}
+          onNewEmail={(to) => {
+            setSelected(null)
+            setComposeDefaults({ to })
+          }}
+        />
+      )}
+      {(composing || composeDefaults) && (
+        <ComposeDrawer
+          onClose={() => { setComposing(false); setComposeDefaults(null) }}
+          defaultTo={composeDefaults?.to ?? ''}
+          defaultSubject={composeDefaults?.subject ?? ''}
+          defaultBodyHtml={composeDefaults?.bodyHtml ?? ''}
+        />
+      )}
     </>
   )
 }

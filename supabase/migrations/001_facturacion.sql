@@ -108,6 +108,10 @@ create table if not exists public.facturas (
   fecha_devolucion date,
   motivo_devolucion text,
 
+  -- Rectificación
+  factura_rectificada_id uuid references public.facturas(id) on delete restrict,
+  motivo_rectificacion text,
+
   -- Otros
   notas text,
   pdf_path text,  -- storage path en bucket 'facturas'

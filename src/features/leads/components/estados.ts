@@ -12,6 +12,7 @@ export function getEstadoMeta(estado: EstadoLead) {
 }
 
 export const ORIGENES_LEAD = [
+  { value: 'panel', label: 'Panel admin (manual)' },
   { value: 'web', label: 'Formulario web' },
   { value: 'instagram', label: 'Instagram' },
   { value: 'linkedin', label: 'LinkedIn' },

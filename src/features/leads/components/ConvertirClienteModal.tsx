@@ -8,7 +8,7 @@ import { ESTADOS_CLIENTE, SERVICIOS, TARIFAS } from '@/features/clientes/compone
 import type { LeadRow } from './LeadsTable'
 
 const labelClass = 'text-[10px] tracking-[0.14em] text-henko-turquoise font-bold mb-1.5 block'
-const inputClass = 'w-full px-4 py-2.5 rounded-xl text-sm border-[1.5px] border-black/5 bg-henko-white outline-none focus:border-henko-turquoise transition-colors'
+const inputClass = 'w-full px-4 py-2.5 rounded-xl text-sm border-[1.5px] border-gray-200 bg-henko-white outline-none focus:border-henko-turquoise transition-colors'
 
 export default function ConvertirClienteModal({
   lead,

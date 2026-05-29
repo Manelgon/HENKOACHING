@@ -11,6 +11,7 @@ export type NavItem = {
   href: string
   label: string
   icon: React.ReactNode
+  badge?: number
 }
 
 export type NavSection = {
@@ -145,6 +146,11 @@ export default function DashboardShell({ sections, userEmail, userInitial, child
                           {item.href === '/dashboard/email' && failedCount > 0 && (
                             <span className="absolute -bottom-1.5 -right-1.5 min-w-[16px] h-4 px-0.5 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center leading-none">
                               {failedCount > 9 ? '9+' : failedCount}
+                            </span>
+                          )}
+                          {item.badge && item.badge > 0 && (
+                            <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-0.5 rounded-full bg-henko-turquoise text-white text-[10px] font-bold flex items-center justify-center leading-none">
+                              {item.badge > 99 ? '99+' : item.badge}
                             </span>
                           )}
                         </span>

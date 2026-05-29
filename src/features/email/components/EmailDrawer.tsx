@@ -6,9 +6,11 @@ import type { EmailDetail } from '../types'
 type Props = {
   email: EmailDetail
   onClose: () => void
+  onReply: (to: string, subject: string, quotedHtml: string) => void
+  onNewEmail: (to: string) => void
 }
 
-export default function EmailDrawer({ email, onClose }: Props) {
+export default function EmailDrawer({ email, onClose, onReply, onNewEmail }: Props) {
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === 'Escape') onClose()
@@ -28,6 +30,18 @@ export default function EmailDrawer({ email, onClose }: Props) {
   // Extraer dirección de email del campo "from" (Nombre <email@domain.com>)
   const emailMatch = email.from.match(/<(.+?)>/)
   const replyTo = emailMatch ? emailMatch[1] : email.from.trim()
+
+  // Asunto sin doble Re:
+  const replySubject = email.subject?.startsWith('Re:') ? (email.subject ?? '') : `Re: ${email.subject ?? ''}`
+
+  // HTML citado para el cuerpo de la respuesta
+  const quotedHtml = [
+    '<br><br>',
+    `<blockquote style="border-left:3px solid #e5e7eb;padding-left:14px;margin:0;color:#6b7280;">`,
+    `<p style="font-size:11px;color:#9ca3af;margin:0 0 6px;">El ${fecha}, ${email.from} escribió:</p>`,
+    email.bodyHtml ?? (email.bodyText ? `<pre style="white-space:pre-wrap;font-size:13px;">${email.bodyText}</pre>` : ''),
+    '</blockquote>',
+  ].join('')
 
   return (
     <div className="fixed inset-0 z-50 flex" onClick={onClose}>
@@ -90,24 +104,26 @@ export default function EmailDrawer({ email, onClose }: Props) {
 
           {/* Acciones */}
           <div className="border-t border-gray-100 pt-5 flex flex-wrap gap-3">
-            <a
-              href={`mailto:${replyTo}?subject=Re%3A%20${encodeURIComponent(email.subject ?? '')}`}
+            <button
+              type="button"
+              onClick={() => onReply(replyTo, replySubject, quotedHtml)}
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-henko-turquoise text-white font-raleway font-semibold text-sm hover:bg-henko-turquoise-light transition-colors"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
               </svg>
               Responder
-            </a>
-            <a
-              href={`mailto:${replyTo}`}
+            </button>
+            <button
+              type="button"
+              onClick={() => onNewEmail(replyTo)}
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-gray-200 text-gray-600 font-raleway text-sm hover:bg-gray-50 transition-colors"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
               </svg>
               Nuevo correo
-            </a>
+            </button>
           </div>
         </div>
       </div>

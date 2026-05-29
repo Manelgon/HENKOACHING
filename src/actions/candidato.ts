@@ -263,6 +263,23 @@ export async function loginCandidato(email: string, password: string) {
 // =============================================================================
 // RGPD: derecho de acceso/portabilidad (art. 15 y 20 RGPD)
 // =============================================================================
+
+// Paso 1: envía un OTP de 6 dígitos al email del usuario autenticado
+export async function solicitarCodigoExportacion() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user?.email) return { error: 'No autenticado' }
+
+  const { error } = await supabase.auth.signInWithOtp({
+    email: user.email,
+    options: { shouldCreateUser: false },
+  })
+
+  if (error) return { error: 'No se pudo enviar el código. Inténtalo de nuevo.' }
+
+  return { ok: true as const, email: user.email }
+}
+
 export async function exportarMisDatos() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()

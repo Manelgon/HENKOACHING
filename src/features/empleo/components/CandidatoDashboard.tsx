@@ -4,7 +4,8 @@ import { useEffect, useState, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { actualizarPerfilCandidato, uploadCv, exportarMisDatos, eliminarMiCuenta } from '@/actions/candidato'
+import { actualizarPerfilCandidato, uploadCv, exportarMisDatos, eliminarMiCuenta, solicitarCodigoExportacion } from '@/actions/candidato'
+import { createClient } from '@/lib/supabase/client'
 import { signout } from '@/actions/auth'
 import { getCvUrl } from '@/actions/solicitudes'
 import type { EstadoSolicitud } from '@/lib/supabase/database.types'
@@ -389,17 +390,60 @@ function TabCV({ cv }: { cv: CvView }) {
   )
 }
 
+type OtpStep = 'idle' | 'sending' | 'awaiting_code' | 'verifying'
+
 function TabPrivacidad({ perfil, onGoTab }: { perfil: PerfilView; onGoTab: (t: Tab) => void }) {
   const router = useRouter()
   const runAction = useAction()
   const confirm = useConfirm()
 
-  async function descargarDatos() {
+  const [otpStep, setOtpStep] = useState<OtpStep>('idle')
+  const [otpEmail, setOtpEmail] = useState('')
+  const [otpCode, setOtpCode] = useState('')
+  const [otpError, setOtpError] = useState('')
+
+  async function iniciarDescarga() {
+    setOtpStep('sending')
+    setOtpError('')
+    const result = await solicitarCodigoExportacion()
+    if (!result.ok) {
+      setOtpError(result.error ?? 'Error al enviar el código.')
+      setOtpStep('idle')
+      return
+    }
+    setOtpEmail(result.email)
+    setOtpCode('')
+    setOtpStep('awaiting_code')
+  }
+
+  async function verificarYDescargar() {
+    if (otpCode.length !== 6) {
+      setOtpError('Introduce el código de 6 dígitos.')
+      return
+    }
+    setOtpStep('verifying')
+    setOtpError('')
+
+    const supabase = createClient()
+    const { error: verifyError } = await supabase.auth.verifyOtp({
+      email: otpEmail,
+      token: otpCode,
+      type: 'email',
+    })
+
+    if (verifyError) {
+      setOtpError('Código incorrecto o expirado. Inténtalo de nuevo.')
+      setOtpStep('awaiting_code')
+      return
+    }
+
     const result = await runAction(
       'Preparando tus datos',
       () => exportarMisDatos(),
       { silentSuccess: true },
     )
+    setOtpStep('idle')
+    setOtpCode('')
     if (!result.ok) return
 
     const fecha = new Date().toISOString().slice(0, 10)
@@ -459,13 +503,58 @@ function TabPrivacidad({ perfil, onGoTab }: { perfil: PerfilView; onGoTab: (t: T
         <p className="text-sm text-gray-500 mb-5 leading-relaxed">
           Descarga una copia de todos los datos que tenemos sobre ti en formato JSON: perfil, experiencia, educación, idiomas, CVs y solicitudes a ofertas.
         </p>
-        <button
-          type="button"
-          onClick={descargarDatos}
-          className="inline-flex items-center gap-2 bg-henko-turquoise text-white px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-henko-turquoise-light hover:shadow-lg transition-all"
-        >
-          Descargar mis datos (JSON)
-        </button>
+
+        {otpStep === 'idle' || otpStep === 'sending' ? (
+          <button
+            type="button"
+            onClick={iniciarDescarga}
+            disabled={otpStep === 'sending'}
+            className="inline-flex items-center gap-2 bg-henko-turquoise text-white px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-henko-turquoise-light hover:shadow-lg transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {otpStep === 'sending' ? 'Enviando código…' : 'Descargar mis datos (JSON)'}
+          </button>
+        ) : (
+          <div className="space-y-3">
+            <p className="text-sm text-gray-600">
+              Por seguridad, hemos enviado un código de verificación de 6 dígitos a{' '}
+              <strong>{otpEmail}</strong>. Introdúcelo para continuar.
+            </p>
+            <div className="flex items-center gap-3">
+              <input
+                type="text"
+                inputMode="numeric"
+                maxLength={6}
+                placeholder="000000"
+                value={otpCode}
+                onChange={e => { setOtpCode(e.target.value.replace(/\D/g, '')); setOtpError('') }}
+                className="w-32 text-center text-xl font-mono tracking-widest border border-gray-300 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-henko-turquoise"
+              />
+              <button
+                type="button"
+                onClick={verificarYDescargar}
+                disabled={otpStep === 'verifying'}
+                className="inline-flex items-center gap-2 bg-henko-turquoise text-white px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-henko-turquoise-light hover:shadow-lg transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {otpStep === 'verifying' ? 'Verificando…' : 'Verificar y descargar'}
+              </button>
+              <button
+                type="button"
+                onClick={() => { setOtpStep('idle'); setOtpCode(''); setOtpError('') }}
+                className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                Cancelar
+              </button>
+            </div>
+            <button
+              type="button"
+              onClick={iniciarDescarga}
+              className="text-xs text-henko-turquoise hover:underline"
+            >
+              ¿No recibiste el código? Reenviar
+            </button>
+            {otpError && <p className="text-sm text-red-600">{otpError}</p>}
+          </div>
+        )}
       </div>
 
       <div className="bg-white rounded-2xl px-7 py-6 border border-henko-turquoise/15 shadow-sm mb-4">

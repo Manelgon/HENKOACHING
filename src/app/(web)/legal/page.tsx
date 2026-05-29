@@ -148,8 +148,16 @@ export default function Legal() {
               Para prestar el servicio, utilizamos los siguientes encargados del tratamiento, todos ellos con garantías de cumplimiento del RGPD:
             </p>
             <ul className="list-disc list-inside space-y-2 ml-2">
-              <li><strong>Supabase</strong> (alojamiento de base de datos y archivos, región UE — Irlanda).</li>
-              <li><strong>Vercel</strong> (alojamiento web).</li>
+              <li>
+                <strong>Supabase</strong> (alojamiento de base de datos y archivos, región UE — Irlanda).{" "}
+                <a href="https://supabase.com/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-700">Política de privacidad</a>{" "}·{" "}
+                <a href="https://supabase.com/dpa" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-700">Acuerdo de tratamiento de datos (DPA)</a>
+              </li>
+              <li>
+                <strong>Vercel</strong> (alojamiento web).{" "}
+                <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-700">Política de privacidad</a>{" "}·{" "}
+                <a href="https://vercel.com/legal/dpa" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-700">Acuerdo de tratamiento de datos (DPA)</a>
+              </li>
             </ul>
             <p>No se realizan transferencias internacionales de datos fuera del Espacio Económico Europeo.</p>
             <p>

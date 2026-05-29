@@ -27,7 +27,7 @@ type FormState = {
   cv: File | null
 }
 
-const inputClass = 'w-full px-4 py-3 rounded-xl text-sm border-[1.5px] border-black/10 bg-white outline-none focus:border-henko-turquoise transition-colors'
+const inputClass = 'w-full px-4 py-3 rounded-xl text-sm border-[1.5px] border-gray-200 bg-white outline-none focus:border-henko-turquoise transition-colors'
 const labelClass = 'text-[11px] tracking-[0.12em] font-bold text-henko-turquoise mb-1.5 block'
 
 export default function CandidatoSignupFlow() {
