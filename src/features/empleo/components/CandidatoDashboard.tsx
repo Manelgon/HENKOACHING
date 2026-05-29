@@ -435,40 +435,87 @@ function TabPerfil({ perfil, completion, cv }: { perfil: PerfilView; completion:
         </div>
       </div>
 
-      <form action={onSubmit} className="bg-white rounded-2xl px-9 py-8 border border-henko-turquoise/15 shadow-sm max-w-xl space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <Field label="NOMBRE" name="nombre" defaultValue={perfil.nombre} />
-          <Field label="APELLIDOS" name="apellidos" defaultValue={perfil.apellidos} />
-        </div>
-        <Field label="EMAIL" name="email" defaultValue={perfil.email} disabled />
-        <Field label="TELÉFONO" name="telefono" defaultValue={perfil.telefono} />
-        <Field label="PROVINCIA / UBICACIÓN" name="ubicacion" defaultValue={perfil.ubicacion} />
-        <div className="grid grid-cols-2 gap-4">
-          <Field label="LOCALIDAD" name="localidad" defaultValue={perfil.localidad} />
-          <Field label="CÓDIGO POSTAL" name="cp" defaultValue={perfil.cp} />
-        </div>
-        <Field label="CARGO OBJETIVO" name="cargo" defaultValue={perfil.cargo} />
-        <div>
-          <label className="text-[10px] tracking-[0.14em] text-henko-turquoise font-bold mb-1.5 block">RESUMEN PROFESIONAL</label>
-          <textarea
-            name="resumen"
-            defaultValue={perfil.resumen}
-            rows={3}
-            placeholder="Breve descripción sobre ti y tu perfil profesional..."
-            className="w-full text-sm text-gray-900 px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl outline-none focus:border-henko-turquoise focus:ring-2 focus:ring-henko-turquoise/20 resize-none transition-colors"
-          />
-        </div>
-        <Field label="LINKEDIN URL" name="linkedin_url" defaultValue={perfil.linkedinUrl} placeholder="https://linkedin.com/in/tu-perfil" />
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
+        <form action={onSubmit} className="bg-white rounded-2xl px-9 py-8 border border-henko-turquoise/15 shadow-sm space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <Field label="NOMBRE" name="nombre" defaultValue={perfil.nombre} />
+            <Field label="APELLIDOS" name="apellidos" defaultValue={perfil.apellidos} />
+          </div>
+          <Field label="EMAIL" name="email" defaultValue={perfil.email} disabled />
+          <TelefonoField value={perfil.telefono} />
+          <Field label="PROVINCIA / UBICACIÓN" name="ubicacion" defaultValue={perfil.ubicacion} />
+          <div className="grid grid-cols-2 gap-4">
+            <Field label="LOCALIDAD" name="localidad" defaultValue={perfil.localidad} />
+            <Field label="CÓDIGO POSTAL" name="cp" defaultValue={perfil.cp} />
+          </div>
+          <Field label="CARGO OBJETIVO" name="cargo" defaultValue={perfil.cargo} />
+          <div>
+            <label className="text-[10px] tracking-[0.14em] text-henko-turquoise font-bold mb-1.5 block">RESUMEN PROFESIONAL</label>
+            <textarea
+              name="resumen"
+              defaultValue={perfil.resumen}
+              rows={3}
+              placeholder="Breve descripción sobre ti y tu perfil profesional..."
+              className="w-full text-sm text-gray-900 px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl outline-none focus:border-henko-turquoise focus:ring-2 focus:ring-henko-turquoise/20 resize-none transition-colors"
+            />
+          </div>
+          <Field label="LINKEDIN URL" name="linkedin_url" defaultValue={perfil.linkedinUrl} placeholder="https://linkedin.com/in/tu-perfil" />
 
-        <button
-          type="submit"
-          className="mt-2 inline-flex items-center gap-2 bg-henko-turquoise text-white px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-henko-turquoise-light hover:shadow-lg transition-all"
+          <button
+            type="submit"
+            className="mt-2 inline-flex items-center gap-2 bg-henko-turquoise text-white px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-henko-turquoise-light hover:shadow-lg transition-all"
+          >
+            Guardar cambios
+          </button>
+        </form>
+
+        <CvInline cv={cv} />
+      </div>
+    </div>
+  )
+}
+
+const PREFIJOS_TEL = [
+  { label: '🇪🇸 +34', value: '+34' },
+  { label: '🇫🇷 +33', value: '+33' },
+  { label: '🇩🇪 +49', value: '+49' },
+  { label: '🇮🇹 +39', value: '+39' },
+  { label: '🇵🇹 +351', value: '+351' },
+  { label: '🇬🇧 +44', value: '+44' },
+  { label: '🇺🇸 +1', value: '+1' },
+  { label: '🇦🇷 +54', value: '+54' },
+  { label: '🇲🇽 +52', value: '+52' },
+]
+
+function parseTelefono(val: string): { prefijo: string; numero: string } {
+  if (!val) return { prefijo: '+34', numero: '' }
+  const match = val.match(/^(\+\d{1,3})\s*(.*)$/)
+  if (match) return { prefijo: match[1], numero: match[2] }
+  return { prefijo: '+34', numero: val }
+}
+
+function TelefonoField({ value }: { value: string }) {
+  const { prefijo, numero } = parseTelefono(value)
+  const inputClass = 'w-full text-sm text-gray-900 px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl outline-none focus:border-henko-turquoise focus:ring-2 focus:ring-henko-turquoise/20 transition-colors'
+  return (
+    <div>
+      <label className="text-[10px] tracking-[0.14em] text-henko-turquoise font-bold mb-1.5 block">TELÉFONO</label>
+      <div className="flex gap-2">
+        <select
+          name="telefono_prefijo"
+          defaultValue={prefijo}
+          className="px-3 py-3 rounded-xl text-sm border border-gray-100 bg-gray-50 outline-none focus:border-henko-turquoise transition-colors shrink-0"
         >
-          Guardar cambios
-        </button>
-      </form>
-
-      <CvInline cv={cv} />
+          {PREFIJOS_TEL.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
+        </select>
+        <input
+          name="telefono_numero"
+          type="tel"
+          defaultValue={numero}
+          placeholder="600 000 000"
+          className={inputClass}
+        />
+      </div>
     </div>
   )
 }
@@ -562,14 +609,118 @@ function CvInline({ cv }: { cv: CvView }) {
 
 const NIVELES = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'Nativo']
 
+const CARGOS_LIST = [
+  'Director/a General','Director/a de Operaciones','Director/a de RRHH',
+  'Director/a Comercial','Director/a de Marketing','Director/a Financiero/a',
+  'Responsable de Operaciones','Responsable de RRHH','Responsable Comercial',
+  'Responsable de Marketing','Responsable de Logística','Responsable de Producción',
+  'Jefe/a de Equipo','Coordinador/a','Project Manager','Account Manager',
+  'Técnico/a de RRHH','Técnico/a Comercial','Administrativo/a','Auxiliar Administrativo/a',
+  'Recepcionista','Atención al Cliente','Comercial','Asesor/a Comercial',
+  'Dependiente/a','Encargado/a de Tienda','Responsable de Tienda',
+  'Cocinero/a','Jefe/a de Cocina','Camarero/a','Barista','Recepcionista de Hotel',
+  'Diseñador/a Gráfico/a','Desarrollador/a Web','Analista de Datos',
+  'Community Manager','Especialista en Marketing Digital','SEO/SEM',
+  'Enfermero/a','Auxiliar de Enfermería','Fisioterapeuta','Psicólogo/a',
+  'Maestro/a','Educador/a','Monitor/a','Formador/a','Otro',
+]
+
+const TITULOS_LIST = [
+  'Bachillerato','Ciclo Formativo Grado Medio','Ciclo Formativo Grado Superior',
+  'Grado Universitario','Diplomatura','Licenciatura','Máster','Doctorado (PhD)',
+  'Certificado de Profesionalidad','Formación Profesional','Bootcamp / Formación intensiva',
+  'Curso de especialización','Otro',
+]
+
+const IDIOMAS_LIST = [
+  'Español','Inglés','Francés','Alemán','Italiano','Portugués','Chino (Mandarín)',
+  'Árabe','Ruso','Japonés','Coreano','Catalán','Euskera','Gallego','Valenciano',
+  'Neerlandés','Polaco','Rumano','Ucraniano','Turco','Otro',
+]
+
+function ComboboxInput({ name, defaultValue, options, placeholder }: {
+  name: string; defaultValue?: string; options: string[]; placeholder?: string
+}) {
+  const [val, setVal] = useState(defaultValue ?? '')
+  const [open, setOpen] = useState(false)
+  const [dropUp, setDropUp] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+  const filtered = val.length
+    ? options.filter(o => o.toLowerCase().includes(val.toLowerCase())).slice(0, 10)
+    : options.slice(0, 10)
+
+  useEffect(() => {
+    const handle = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handle)
+    return () => document.removeEventListener('mousedown', handle)
+  }, [])
+
+  function handleOpen() {
+    if (inputRef.current) {
+      const rect = inputRef.current.getBoundingClientRect()
+      setDropUp(window.innerHeight - rect.bottom < 240)
+    }
+    setOpen(true)
+  }
+
+  const inputBase = 'w-full text-sm text-gray-900 px-3 py-2.5 pr-8 bg-white border border-gray-200 rounded-xl outline-none focus:border-henko-turquoise focus:ring-2 focus:ring-henko-turquoise/20 transition-colors'
+
+  return (
+    <div ref={ref} className="relative" style={{ isolation: 'isolate' }}>
+      <input
+        ref={inputRef}
+        className={inputBase}
+        value={val}
+        placeholder={placeholder ?? ''}
+        onChange={e => { setVal(e.target.value); handleOpen() }}
+        onFocus={handleOpen}
+        onKeyDown={e => { if (e.key === 'Escape') setOpen(false) }}
+        autoComplete="off"
+      />
+      <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+      </svg>
+      {open && filtered.length > 0 && (
+        <ul className={`absolute left-0 right-0 bg-white border border-gray-200 rounded-xl shadow-xl max-h-52 overflow-auto ${dropUp ? 'bottom-full mb-1' : 'top-full mt-1'}`} style={{ zIndex: 9999 }}>
+          {filtered.map(opt => (
+            <li key={opt} className="px-4 py-2.5 text-sm cursor-pointer hover:bg-henko-turquoise/5 hover:text-henko-turquoise transition-colors"
+              onMouseDown={e => { e.preventDefault(); setVal(opt); setOpen(false) }}>
+              {opt}
+            </li>
+          ))}
+        </ul>
+      )}
+      <input type="hidden" name={name} value={val} />
+    </div>
+  )
+}
+
+function YearPicker({ name, defaultValue }: { name: string; defaultValue?: string }) {
+  return (
+    <select
+      name={name}
+      defaultValue={defaultValue ?? ''}
+      className="w-full text-sm text-gray-900 px-3 py-2.5 bg-white border border-gray-200 rounded-xl outline-none focus:border-henko-turquoise focus:ring-2 focus:ring-henko-turquoise/20"
+    >
+      <option value="">Año</option>
+      {AÑOS.map(a => <option key={a} value={a}>{a}</option>)}
+    </select>
+  )
+}
+
 type ItemField = {
   name: string
   label: string
   type?: string
   options?: string[]
+  comboboxOptions?: string[]
   defaultValue?: string
   required?: boolean
   optional?: boolean
+  fullWidth?: boolean
 }
 
 const MESES = [
@@ -649,12 +800,16 @@ function ItemForm({ fields, onSave, onCancel }: {
           const hasError = !!errors[f.name]
           const borderClass = hasError ? 'border-red-400 focus:border-red-400' : 'border-gray-200 focus:border-henko-turquoise'
           return (
-            <div key={f.name} className={f.type === 'textarea' ? 'sm:col-span-2' : ''}>
+            <div key={f.name} className={(f.type === 'textarea' || f.fullWidth) ? 'sm:col-span-2' : ''}>
               <label className="text-[10px] tracking-[0.12em] text-henko-turquoise font-bold mb-1 block">
                 {f.label}{f.required && <span className="text-red-400 ml-0.5">*</span>}
               </label>
               {f.type === 'monthyear' ? (
                 <MonthYearPicker name={f.name} defaultValue={f.defaultValue} allowEmpty={f.optional} />
+              ) : f.type === 'year' ? (
+                <YearPicker name={f.name} defaultValue={f.defaultValue} />
+              ) : f.type === 'combobox' ? (
+                <ComboboxInput name={f.name} defaultValue={f.defaultValue} options={f.comboboxOptions ?? []} placeholder={f.label} />
               ) : f.options ? (
                 <select
                   name={f.name}
@@ -803,8 +958,8 @@ function TabTrayectoria({ experiencias: initExp, educacion: initEdu, idiomas: in
             <ItemForm
               key={e.id}
               fields={[
-                { name: 'empresa', label: 'EMPRESA', defaultValue: e.empresa, required: true },
-                { name: 'cargo', label: 'CARGO', defaultValue: e.cargo, required: true },
+                { name: 'empresa', label: 'EMPRESA', defaultValue: e.empresa, required: true, fullWidth: true },
+                { name: 'cargo', label: 'CARGO', type: 'combobox', comboboxOptions: CARGOS_LIST, defaultValue: e.cargo, required: true, fullWidth: true },
                 { name: 'desde', label: 'DESDE', type: 'monthyear', defaultValue: e.desde ?? '' },
                 { name: 'hasta', label: 'HASTA', type: 'monthyear', optional: true, defaultValue: e.hasta ?? '' },
                 { name: 'descripcion', label: 'DESCRIPCIÓN (opcional)', type: 'textarea', defaultValue: e.descripcion ?? '' },
@@ -831,8 +986,8 @@ function TabTrayectoria({ experiencias: initExp, educacion: initEdu, idiomas: in
           {addingExp && (
             <ItemForm
               fields={[
-                { name: 'empresa', label: 'EMPRESA', required: true },
-                { name: 'cargo', label: 'CARGO', required: true },
+                { name: 'empresa', label: 'EMPRESA', required: true, fullWidth: true },
+                { name: 'cargo', label: 'CARGO', type: 'combobox', comboboxOptions: CARGOS_LIST, required: true, fullWidth: true },
                 { name: 'desde', label: 'DESDE', type: 'monthyear' },
                 { name: 'hasta', label: 'HASTA', type: 'monthyear', optional: true },
                 { name: 'descripcion', label: 'DESCRIPCIÓN (opcional)', type: 'textarea' },
@@ -856,9 +1011,9 @@ function TabTrayectoria({ experiencias: initExp, educacion: initEdu, idiomas: in
             <ItemForm
               key={e.id}
               fields={[
-                { name: 'centro', label: 'CENTRO / UNIVERSIDAD', defaultValue: e.centro, required: true },
-                { name: 'titulo', label: 'TÍTULO / GRADO', defaultValue: e.titulo, required: true },
-                { name: 'ano_fin', label: 'AÑO DE FIN', defaultValue: e.ano_fin ?? '' },
+                { name: 'centro', label: 'CENTRO / UNIVERSIDAD', defaultValue: e.centro, required: true, fullWidth: true },
+                { name: 'titulo', label: 'TÍTULO / GRADO', type: 'combobox', comboboxOptions: TITULOS_LIST, defaultValue: e.titulo, required: true },
+                { name: 'ano_fin', label: 'AÑO DE FIN', type: 'year', defaultValue: e.ano_fin ?? '' },
               ]}
               onSave={(fd) => saveEdu(fd, e.id)}
               onCancel={() => setEditingEdu(null)}
@@ -879,9 +1034,9 @@ function TabTrayectoria({ experiencias: initExp, educacion: initEdu, idiomas: in
           {addingEdu && (
             <ItemForm
               fields={[
-                { name: 'centro', label: 'CENTRO / UNIVERSIDAD', required: true },
-                { name: 'titulo', label: 'TÍTULO / GRADO', required: true },
-                { name: 'ano_fin', label: 'AÑO DE FIN' },
+                { name: 'centro', label: 'CENTRO / UNIVERSIDAD', required: true, fullWidth: true },
+                { name: 'titulo', label: 'TÍTULO / GRADO', type: 'combobox', comboboxOptions: TITULOS_LIST, required: true },
+                { name: 'ano_fin', label: 'AÑO DE FIN', type: 'year' },
               ]}
               onSave={(fd) => saveEdu(fd)}
               onCancel={() => setAddingEdu(false)}
@@ -902,7 +1057,7 @@ function TabTrayectoria({ experiencias: initExp, educacion: initEdu, idiomas: in
             <ItemForm
               key={i.id}
               fields={[
-                { name: 'idioma', label: 'IDIOMA', defaultValue: i.idioma, required: true },
+                { name: 'idioma', label: 'IDIOMA', type: 'combobox', comboboxOptions: IDIOMAS_LIST, defaultValue: i.idioma, required: true },
                 { name: 'nivel', label: 'NIVEL', options: NIVELES, defaultValue: i.nivel, required: true },
               ]}
               onSave={(fd) => saveIdi(fd, i.id)}
@@ -923,7 +1078,7 @@ function TabTrayectoria({ experiencias: initExp, educacion: initEdu, idiomas: in
           {addingIdi && (
             <ItemForm
               fields={[
-                { name: 'idioma', label: 'IDIOMA (ej: Inglés)', required: true },
+                { name: 'idioma', label: 'IDIOMA', type: 'combobox', comboboxOptions: IDIOMAS_LIST, required: true },
                 { name: 'nivel', label: 'NIVEL', options: NIVELES, required: true },
               ]}
               onSave={(fd) => saveIdi(fd)}
