@@ -16,7 +16,7 @@ export default function BandejaInbox({ hasImapConfig }: Props) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [selected, setSelected] = useState<EmailDetail | null>(null)
-  const [loadingDetail, setLoadingDetail] = useState(false)
+  const [loadingUid, setLoadingUid] = useState<number | null>(null)
   const [busqueda, setBusqueda] = useState('')
   const [filtroLeido, setFiltroLeido] = useState<'todos' | 'no_leido' | 'leido'>('todos')
   const { markAllSeen, setUnreadCount } = useEmailStore()
@@ -24,14 +24,19 @@ export default function BandejaInbox({ hasImapConfig }: Props) {
   const cargar = useCallback(async (silencioso = false) => {
     if (!silencioso) setLoading(true)
     setError(null)
-    const r = await listarEmailsBandeja()
-    if (!silencioso) setLoading(false)
-    if ('error' in r) {
-      setError(r.error ?? 'Error desconocido')
-    } else {
-      setMensajes(r.messages)
-      const unread = r.messages.filter((m) => !m.seen).length
-      setUnreadCount(unread)
+    try {
+      const r = await listarEmailsBandeja()
+      if ('error' in r) {
+        setError(r.error ?? 'Error desconocido')
+      } else {
+        setMensajes(r.messages)
+        const unread = r.messages.filter((m) => !m.seen).length
+        setUnreadCount(unread)
+      }
+    } catch (e) {
+      setError(`Error al cargar: ${String(e)}`)
+    } finally {
+      if (!silencioso) setLoading(false)
     }
   }, [setUnreadCount])
 
@@ -68,16 +73,22 @@ export default function BandejaInbox({ hasImapConfig }: Props) {
   const pagination = usePagination(filtered, 20)
 
   async function abrirEmail(uid: number) {
-    setLoadingDetail(true)
-    const r = await leerEmailBandeja(uid)
-    setLoadingDetail(false)
-    if ('error' in r) {
-      setError(r.error ?? 'Error desconocido')
-    } else {
-      setSelected(r.detail)
-      setMensajes((prev) =>
-        prev ? prev.map((m) => (m.uid === uid ? { ...m, seen: true } : m)) : prev
-      )
+    setLoadingUid(uid)
+    setError(null)
+    try {
+      const r = await leerEmailBandeja(uid)
+      if ('error' in r) {
+        setError(r.error ?? 'Error al abrir el correo')
+      } else {
+        setSelected(r.detail)
+        setMensajes((prev) =>
+          prev ? prev.map((m) => (m.uid === uid ? { ...m, seen: true } : m)) : prev
+        )
+      }
+    } catch (e) {
+      setError(`Error al abrir el correo: ${String(e)}`)
+    } finally {
+      setLoadingUid(null)
     }
   }
 
@@ -163,7 +174,6 @@ export default function BandejaInbox({ hasImapConfig }: Props) {
             onChange={(e) => setBusqueda(e.target.value)}
             className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 font-raleway text-sm outline-none focus:border-henko-turquoise focus:bg-white transition-colors"
           />
-          {/* Actualizar en móvil */}
           <button
             type="button"
             onClick={() => cargar()}
@@ -178,10 +188,14 @@ export default function BandejaInbox({ hasImapConfig }: Props) {
         </div>
       </div>
 
-      {/* Error */}
+      {/* Error visible */}
       {error && (
-        <div className="bg-red-50 border border-red-100 rounded-2xl px-5 py-4 mb-6">
-          <p className="font-raleway text-sm text-red-600">{error}</p>
+        <div className="bg-red-50 border border-red-100 rounded-2xl px-5 py-4 mb-6 flex items-start gap-3">
+          <svg className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+          </svg>
+          <p className="font-raleway text-sm text-red-600 flex-1">{error}</p>
+          <button type="button" onClick={() => setError(null)} className="text-red-300 hover:text-red-500">✕</button>
         </div>
       )}
 
@@ -221,48 +235,71 @@ export default function BandejaInbox({ hasImapConfig }: Props) {
             <span className="col-span-2 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Fecha</span>
           </div>
 
-          {pagination.paginated.map((msg) => (
-            <div
-              key={msg.uid}
-              className={`border-b border-gray-100 last:border-0 ${!msg.seen ? 'bg-henko-greenblue/10' : ''}`}
-            >
-              {/* Fila desktop */}
-              <button
-                type="button"
-                onClick={() => abrirEmail(msg.uid)}
-                disabled={loadingDetail}
-                className="hidden md:grid w-full text-left grid-cols-12 gap-4 px-6 lg:px-8 py-4 items-center cursor-pointer hover:bg-gray-50 transition-colors"
+          {pagination.paginated.map((msg) => {
+            const isLoading = loadingUid === msg.uid
+            return (
+              <div
+                key={msg.uid}
+                className={`border-b border-gray-100 last:border-0 ${!msg.seen ? 'bg-henko-greenblue/10' : ''}`}
               >
-                <span className="col-span-4 font-raleway font-semibold text-gray-900 truncate flex items-center gap-2">
-                  {!msg.seen && <span className="inline-block w-2 h-2 rounded-full bg-henko-turquoise flex-shrink-0" />}
-                  <span className="truncate">{msg.from}</span>
-                </span>
-                <span className={`col-span-6 font-raleway text-sm truncate ${!msg.seen ? 'font-medium text-gray-800' : 'text-gray-500'}`}>
-                  {msg.subject}
-                </span>
-                <span className="col-span-2 font-raleway text-xs text-gray-400">{formatDate(msg.date)}</span>
-              </button>
-
-              {/* Tarjeta móvil */}
-              <button
-                type="button"
-                onClick={() => abrirEmail(msg.uid)}
-                disabled={loadingDetail}
-                className="md:hidden w-full text-left px-4 py-4 hover:bg-gray-50 transition-colors"
-              >
-                <div className="flex items-start justify-between gap-3 mb-1">
-                  <p className="font-raleway font-semibold text-gray-900 text-sm flex items-center min-w-0 truncate">
-                    {!msg.seen && <span className="inline-block w-2 h-2 rounded-full bg-henko-turquoise mr-2 flex-shrink-0" />}
+                {/* Fila desktop */}
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => loadingUid === null && abrirEmail(msg.uid)}
+                  onKeyDown={(e) => e.key === 'Enter' && loadingUid === null && abrirEmail(msg.uid)}
+                  className={`hidden md:grid grid-cols-12 gap-4 px-6 lg:px-8 py-4 items-center transition-colors ${
+                    isLoading ? 'opacity-60 cursor-wait' : 'cursor-pointer hover:bg-gray-50'
+                  }`}
+                >
+                  <span className="col-span-4 font-raleway font-semibold text-gray-900 truncate flex items-center gap-2">
+                    {isLoading ? (
+                      <svg className="w-4 h-4 animate-spin text-henko-turquoise flex-shrink-0" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                    ) : !msg.seen ? (
+                      <span className="w-2 h-2 rounded-full bg-henko-turquoise flex-shrink-0" />
+                    ) : null}
                     <span className="truncate">{msg.from}</span>
-                  </p>
-                  <span className="font-raleway text-xs text-gray-400 flex-shrink-0">{formatDate(msg.date)}</span>
+                  </span>
+                  <span className={`col-span-6 font-raleway text-sm truncate ${!msg.seen ? 'font-medium text-gray-800' : 'text-gray-500'}`}>
+                    {msg.subject}
+                  </span>
+                  <span className="col-span-2 font-raleway text-xs text-gray-400">{formatDate(msg.date)}</span>
                 </div>
-                <p className={`font-raleway text-xs truncate ${!msg.seen ? 'font-medium text-gray-700' : 'text-gray-500'}`}>
-                  {msg.subject}
-                </p>
-              </button>
-            </div>
-          ))}
+
+                {/* Tarjeta móvil */}
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => loadingUid === null && abrirEmail(msg.uid)}
+                  onKeyDown={(e) => e.key === 'Enter' && loadingUid === null && abrirEmail(msg.uid)}
+                  className={`md:hidden px-4 py-4 transition-colors ${
+                    isLoading ? 'opacity-60 cursor-wait' : 'cursor-pointer hover:bg-gray-50'
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-3 mb-1">
+                    <p className="font-raleway font-semibold text-gray-900 text-sm flex items-center min-w-0 truncate">
+                      {isLoading ? (
+                        <svg className="w-3 h-3 animate-spin text-henko-turquoise mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                        </svg>
+                      ) : !msg.seen ? (
+                        <span className="w-2 h-2 rounded-full bg-henko-turquoise mr-2 flex-shrink-0" />
+                      ) : null}
+                      <span className="truncate">{msg.from}</span>
+                    </p>
+                    <span className="font-raleway text-xs text-gray-400 flex-shrink-0">{formatDate(msg.date)}</span>
+                  </div>
+                  <p className={`font-raleway text-xs truncate ${!msg.seen ? 'font-medium text-gray-700' : 'text-gray-500'}`}>
+                    {msg.subject}
+                  </p>
+                </div>
+              </div>
+            )
+          })}
 
           <TablePagination
             page={pagination.page}

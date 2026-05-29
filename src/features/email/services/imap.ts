@@ -1,6 +1,7 @@
 import 'server-only'
 import { ImapFlow } from 'imapflow'
 import sanitizeHtml from 'sanitize-html'
+import { simpleParser } from 'mailparser'
 import type { EmailMessage, EmailDetail } from '../types'
 
 type ImapCredentials = {
@@ -85,16 +86,13 @@ export async function leerMensaje(creds: ImapCredentials, uid: number): Promise<
   try {
     await client.mailboxOpen('INBOX')
 
-    let bodyHtml: string | null = null
-    let bodyText: string | null = null
+    // Fetch metadata without source (avoids "Connection not available" on large messages)
     let msgMeta: EmailMessage | null = null
-
-    for await (const msg of client.fetch(`${uid}`, {
+    for await (const msg of client.fetch(String(uid), {
       uid: true,
       flags: true,
       envelope: true,
       internalDate: true,
-      source: true,
     }, { uid: true })) {
       const fromAddr = msg.envelope?.from?.[0]
       const fromStr = fromAddr
@@ -109,33 +107,35 @@ export async function leerMensaje(creds: ImapCredentials, uid: number): Promise<
         seen: msg.flags?.has('\\Seen') ?? false,
         snippet: '',
       }
-
-      // Parsear el source para extraer HTML/texto
-      if (msg.source) {
-        const raw = msg.source.toString('utf8')
-        const htmlMatch = raw.match(/Content-Type: text\/html[^]*?\r\n\r\n([\s\S]*?)(?:\r\n--|\r\n\r\n--|$)/i)
-        const textMatch = raw.match(/Content-Type: text\/plain[^]*?\r\n\r\n([\s\S]*?)(?:\r\n--|\r\n\r\n--|$)/i)
-
-        if (htmlMatch?.[1]) {
-          bodyHtml = sanitizeHtml(htmlMatch[1], {
-            allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6']),
-            allowedAttributes: {
-              ...sanitizeHtml.defaults.allowedAttributes,
-              img: ['src', 'alt', 'width', 'height'],
-              '*': ['style', 'class'],
-            },
-          })
-        }
-        if (textMatch?.[1]) {
-          bodyText = textMatch[1].trim()
-        }
-      }
-
-      // Marcar como leído
-      await client.messageFlagsAdd(`${uid}`, ['\\Seen'], { uid: true })
     }
 
     if (!msgMeta) return null
+
+    // Download full message via stream and parse with mailparser
+    let bodyHtml: string | null = null
+    let bodyText: string | null = null
+
+    const download = await client.download(String(uid), undefined, { uid: true })
+    if (download) {
+      const parsed = await simpleParser(download.content)
+      if (parsed.html) {
+        bodyHtml = sanitizeHtml(parsed.html, {
+          allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6']),
+          allowedAttributes: {
+            ...sanitizeHtml.defaults.allowedAttributes,
+            img: ['src', 'alt', 'width', 'height'],
+            '*': ['style', 'class'],
+          },
+        })
+      }
+      if (parsed.text) {
+        bodyText = parsed.text.trim()
+      }
+    }
+
+    // Marcar como leído
+    await client.messageFlagsAdd(String(uid), ['\\Seen'], { uid: true })
+
     return { ...msgMeta, bodyHtml, bodyText }
   } finally {
     await safeLogout(client)
