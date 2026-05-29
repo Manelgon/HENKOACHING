@@ -9,7 +9,6 @@ type Props = {
 }
 
 export default function EmailDrawer({ email, onClose }: Props) {
-  // Cerrar con Escape
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === 'Escape') onClose()
@@ -18,63 +17,109 @@ export default function EmailDrawer({ email, onClose }: Props) {
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
 
+  const fecha = new Date(email.date).toLocaleString('es-ES', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+
+  // Extraer dirección de email del campo "from" (Nombre <email@domain.com>)
+  const emailMatch = email.from.match(/<(.+?)>/)
+  const replyTo = emailMatch ? emailMatch[1] : email.from.trim()
+
   return (
-    <>
+    <div className="fixed inset-0 z-50 flex" onClick={onClose}>
       {/* Overlay */}
-      <div
-        className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40"
-        onClick={onClose}
-        aria-hidden
-      />
+      <div className="flex-1 bg-black/40" />
 
       {/* Panel */}
-      <div className="fixed inset-y-0 right-0 w-full max-w-2xl bg-white shadow-2xl z-50 flex flex-col">
-        {/* Header */}
-        <div className="flex items-start justify-between gap-4 px-6 py-5 border-b border-gray-100">
-          <div className="flex-1 min-w-0">
-            <h3 className="font-roxborough text-lg text-gray-900 leading-tight">{email.subject}</h3>
-            <p className="font-raleway text-sm text-gray-500 mt-1 truncate">{email.from}</p>
-            <p className="font-raleway text-xs text-gray-400 mt-0.5">
-              {new Date(email.date).toLocaleString('es-ES', {
-                day: '2-digit',
-                month: 'long',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
-            </p>
+      <div
+        className="w-full max-w-xl bg-white h-full overflow-y-auto shadow-2xl flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header sticky */}
+        <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-5 flex items-start justify-between gap-4 z-10">
+          <div className="min-w-0">
+            <p className="font-roxborough text-xl text-gray-900 leading-tight">{email.subject || '(Sin asunto)'}</p>
+            <p className="font-raleway text-sm text-gray-500 mt-0.5 truncate">{email.from}</p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="flex-shrink-0 w-9 h-9 rounded-xl border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors"
+            className="w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-700 flex-shrink-0"
             aria-label="Cerrar"
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            ✕
           </button>
         </div>
 
-        {/* Cuerpo */}
-        <div className="flex-1 overflow-y-auto px-6 py-5">
-          {email.bodyHtml ? (
-            <div
-              className="prose prose-sm max-w-none font-raleway"
-              // El HTML ya está sanitizado en el servidor con sanitize-html
-              dangerouslySetInnerHTML={{ __html: email.bodyHtml }}
-            />
-          ) : email.bodyText ? (
-            <pre className="font-raleway text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
-              {email.bodyText}
-            </pre>
-          ) : (
-            <p className="font-raleway text-sm text-gray-400 text-center py-8">
-              Este mensaje no tiene cuerpo de texto.
-            </p>
-          )}
+        <div className="px-6 py-6 space-y-6">
+          {/* Metadatos */}
+          <div className="bg-gray-50 rounded-2xl p-5 space-y-2.5 font-raleway text-sm">
+            <MetaField label="De">
+              <a href={`mailto:${replyTo}`} className="text-henko-turquoise hover:underline break-all">
+                {email.from}
+              </a>
+            </MetaField>
+            <MetaField label="Fecha">{fecha}</MetaField>
+            <MetaField label="Asunto">{email.subject || '(Sin asunto)'}</MetaField>
+          </div>
+
+          {/* Cuerpo */}
+          <div>
+            <p className="font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Mensaje</p>
+            <div className="bg-white border border-gray-100 rounded-2xl px-5 py-5 overflow-x-auto">
+              {email.bodyHtml ? (
+                <div
+                  className="prose prose-sm max-w-none font-raleway [&_a]:text-henko-turquoise [&_a]:no-underline hover:[&_a]:underline"
+                  dangerouslySetInnerHTML={{ __html: email.bodyHtml }}
+                />
+              ) : email.bodyText ? (
+                <pre className="font-raleway text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
+                  {email.bodyText}
+                </pre>
+              ) : (
+                <p className="font-raleway text-sm text-gray-400 text-center py-6">
+                  Este mensaje no tiene cuerpo de texto.
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Acciones */}
+          <div className="border-t border-gray-100 pt-5 flex flex-wrap gap-3">
+            <a
+              href={`mailto:${replyTo}?subject=Re%3A%20${encodeURIComponent(email.subject ?? '')}`}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-henko-turquoise text-white font-raleway font-semibold text-sm hover:bg-henko-turquoise-light transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+              </svg>
+              Responder
+            </a>
+            <a
+              href={`mailto:${replyTo}`}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-gray-200 text-gray-600 font-raleway text-sm hover:bg-gray-50 transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+              Nuevo correo
+            </a>
+          </div>
         </div>
       </div>
-    </>
+    </div>
+  )
+}
+
+function MetaField({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex items-baseline gap-2">
+      <span className="text-xs text-gray-400 uppercase tracking-wider font-bold w-16 flex-shrink-0">{label}</span>
+      <span className="text-gray-700">{children}</span>
+    </div>
   )
 }
