@@ -1,6 +1,6 @@
-import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import BlogTable from '@/features/blog/components/BlogTable'
+import NuevoArticuloBtn from '@/features/blog/components/NuevoArticuloBtn'
 
 export const metadata = {
   title: 'Blog — Henkoaching',
@@ -33,12 +33,7 @@ export default async function BlogAdminPage() {
             Escribe, guarda en borrador y publica artículos cuando quieras. Cada uno se optimiza para SEO.
           </p>
         </div>
-        <Link
-          href="/dashboard/blog/nuevo"
-          className="inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-henko-turquoise text-white font-raleway font-semibold text-sm hover:bg-henko-turquoise-light transition-colors whitespace-nowrap"
-        >
-          + Nuevo artículo
-        </Link>
+        <NuevoArticuloBtn />
       </div>
 
       <BlogTable
