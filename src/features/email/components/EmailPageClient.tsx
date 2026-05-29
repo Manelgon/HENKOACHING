@@ -27,7 +27,7 @@ export default function EmailPageClient({ config }: Props) {
       </div>
 
       {tab === 'bandeja' && (
-        <BandejaInbox hasImapConfig={!!(config.imap_host && config.hasImapPassword)} emailConfig={config} />
+        <BandejaInbox hasImapConfig={!!(config.imap_host && config.hasImapPassword)} />
       )}
       {tab === 'config' && <EmailConfigForm config={config} />}
     </div>
