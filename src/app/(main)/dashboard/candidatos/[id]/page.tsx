@@ -28,7 +28,7 @@ export default async function CandidatoPerfilPage({ params }: Props) {
   const nombre = [perfil.nombre, perfil.apellidos].filter(Boolean).join(' ') || perfil.email
 
   return (
-    <div className="w-full max-w-6xl">
+    <div className="w-full">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 mb-6 font-raleway text-sm">
         <Link href="/dashboard/candidatos" className="text-gray-400 hover:text-henko-turquoise transition-colors">
