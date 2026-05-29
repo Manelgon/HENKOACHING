@@ -28,7 +28,7 @@ export default async function CandidatoPerfilPage({ params }: Props) {
   const nombre = [perfil.nombre, perfil.apellidos].filter(Boolean).join(' ') || perfil.email
 
   return (
-    <div className="w-full max-w-4xl">
+    <div className="w-full max-w-6xl">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 mb-6 font-raleway text-sm">
         <Link href="/dashboard/candidatos" className="text-gray-400 hover:text-henko-turquoise transition-colors">
@@ -38,14 +38,24 @@ export default async function CandidatoPerfilPage({ params }: Props) {
         <span className="text-gray-700 font-medium truncate">{nombre}</span>
       </div>
 
-      <div className="space-y-5">
-        <CandidatoHeader perfil={perfil} />
-        <CandidatoSolicitudes solicitudes={perfil.solicitudes} candidatoId={id} />
-        <CandidatoExperiencia experiencias={perfil.experiencias} />
-        <CandidatoEducacion educacion={perfil.educacion} />
-        <CandidatoIdiomas idiomas={perfil.idiomas} />
-        <CandidatoPreferencias perfil={perfil} />
-        {perfil.cvs.length > 0 && <CandidatoCVs cvs={perfil.cvs} />}
+      {/* Header full width */}
+      <CandidatoHeader perfil={perfil} />
+
+      {/* Dos columnas */}
+      <div className="mt-5 grid grid-cols-1 xl:grid-cols-2 gap-5 items-start">
+        {/* Columna izquierda: experiencia, educación, idiomas */}
+        <div className="space-y-5">
+          <CandidatoExperiencia experiencias={perfil.experiencias} />
+          <CandidatoEducacion educacion={perfil.educacion} />
+          <CandidatoIdiomas idiomas={perfil.idiomas} />
+        </div>
+
+        {/* Columna derecha: CV, preferencias, solicitudes */}
+        <div className="space-y-5">
+          {perfil.cvs.length > 0 && <CandidatoCVs cvs={perfil.cvs} />}
+          <CandidatoPreferencias perfil={perfil} />
+          <CandidatoSolicitudes solicitudes={perfil.solicitudes} candidatoId={id} />
+        </div>
       </div>
     </div>
   )
