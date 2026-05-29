@@ -18,11 +18,15 @@ function buildClient(creds: ImapCredentials): ImapFlow {
     secure: creds.encryption === 'ssl',
     auth: { user: creds.user, pass: creds.password },
     logger: false,
-    connectionTimeout: 10000,
-    greetingTimeout: 5000,
-    socketTimeout: 15000,
+    connectionTimeout: 20000,
+    greetingTimeout: 10000,
+    socketTimeout: 30000,
     tls: creds.encryption !== 'none' ? { rejectUnauthorized: false } : undefined,
   })
+}
+
+async function safeLogout(client: ImapFlow) {
+  try { await client.logout() } catch { /* ignorar error al cerrar */ }
 }
 
 export async function listarMensajes(creds: ImapCredentials, limit = 50): Promise<EmailMessage[]> {
@@ -34,7 +38,6 @@ export async function listarMensajes(creds: ImapCredentials, limit = 50): Promis
   try {
     await client.mailboxOpen('INBOX')
 
-    // Obtener los últimos N mensajes
     const status = await client.status('INBOX', { messages: true })
     const total = status.messages ?? 0
     if (total === 0) return []
@@ -64,10 +67,9 @@ export async function listarMensajes(creds: ImapCredentials, limit = 50): Promis
       })
     }
 
-    // Ordenar más recientes primero
     messages.sort((a, b) => b.date.getTime() - a.date.getTime())
   } finally {
-    await client.logout()
+    await safeLogout(client)
   }
 
   return messages
@@ -133,6 +135,6 @@ export async function leerMensaje(creds: ImapCredentials, uid: number): Promise<
     if (!msgMeta) return null
     return { ...msgMeta, bodyHtml, bodyText }
   } finally {
-    await client.logout()
+    await safeLogout(client)
   }
 }

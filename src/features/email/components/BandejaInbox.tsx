@@ -45,7 +45,7 @@ export default function BandejaInbox({ hasImapConfig }: Props) {
     if (!hasImapConfig) return
     const interval = setInterval(() => {
       if (document.visibilityState === 'visible') cargar(true)
-    }, 60_000)
+    }, 120_000)
     return () => clearInterval(interval)
   }, [hasImapConfig, cargar])
 

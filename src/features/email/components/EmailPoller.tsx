@@ -60,7 +60,7 @@ export default function EmailPoller({ hasImapConfig }: Props) {
     poll()
     const interval = setInterval(() => {
       if (document.visibilityState === 'visible') poll()
-    }, 60_000)
+    }, 120_000)
 
     return () => clearInterval(interval)
   // eslint-disable-next-line react-hooks/exhaustive-deps
