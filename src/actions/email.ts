@@ -658,10 +658,11 @@ export async function reintentarEmail(id: string): Promise<{ ok: true } | { erro
   if (!registro) return { error: 'Registro no encontrado' }
 
   // Marcar como pendiente e incrementar intentos
-  await admin
+  const { error: pendienteError } = await admin
     .from('email_envios' as never)
     .update({ estado: 'pendiente', error: null, intentos: registro.intentos + 1 } as never)
     .eq('id', id)
+  if (pendienteError) return { error: 'Error actualizando estado: ' + (pendienteError as { message: string }).message }
 
   // Leer credenciales SMTP
   const { data: settings } = await admin
@@ -703,10 +704,11 @@ export async function reintentarEmail(id: string): Promise<{ ok: true } | { erro
       html: registro.html,
     })
 
-    await admin
+    const { error: enviadoError } = await admin
       .from('email_envios' as never)
       .update({ estado: 'enviado', sent_at: new Date().toISOString() } as never)
       .eq('id', id)
+    if (enviadoError) console.error('Error marcando email como enviado:', (enviadoError as { message: string }).message)
 
     await logAction({
       accion: 'email.transaccional.reintento_ok',

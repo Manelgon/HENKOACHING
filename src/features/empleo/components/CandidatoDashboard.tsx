@@ -562,54 +562,87 @@ function CvInline({ cv }: { cv: CvView }) {
 
 const NIVELES = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'Nativo']
 
+type ItemField = {
+  name: string
+  label: string
+  type?: string
+  options?: string[]
+  defaultValue?: string
+  required?: boolean
+}
+
 function ItemForm({ fields, onSave, onCancel }: {
-  fields: { name: string; label: string; type?: string; options?: string[]; defaultValue?: string }[]
+  fields: ItemField[]
   onSave: (fd: FormData) => Promise<void>
   onCancel: () => void
 }) {
   const [saving, setSaving] = useState(false)
+  const [errors, setErrors] = useState<Record<string, string>>({})
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
+    const fd = new FormData(e.currentTarget)
+
+    const newErrors: Record<string, string> = {}
+    for (const f of fields) {
+      if (f.required && !(fd.get(f.name) as string)?.trim()) {
+        newErrors[f.name] = `${f.label.replace(' *', '')} es obligatorio`
+      }
+    }
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors)
+      return
+    }
+
+    setErrors({})
     setSaving(true)
-    await onSave(new FormData(e.currentTarget))
+    await onSave(fd)
     setSaving(false)
   }
+
+  const inputBase = 'w-full text-sm text-gray-900 px-3 py-2.5 bg-white border rounded-xl outline-none focus:ring-2 focus:ring-henko-turquoise/20 transition-colors'
 
   return (
     <form onSubmit={handleSubmit} className="bg-gray-50 rounded-xl p-4 space-y-3 border border-henko-turquoise/20">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {fields.map((f) => (
-          <div key={f.name} className={f.type === 'textarea' ? 'sm:col-span-2' : ''}>
-            <label className="text-[10px] tracking-[0.12em] text-henko-turquoise font-bold mb-1 block">{f.label}</label>
-            {f.options ? (
-              <select
-                name={f.name}
-                defaultValue={f.defaultValue ?? ''}
-                className="w-full text-sm text-gray-900 px-3 py-2.5 bg-white border border-gray-200 rounded-xl outline-none focus:border-henko-turquoise focus:ring-2 focus:ring-henko-turquoise/20"
-              >
-                <option value="">— Seleccionar —</option>
-                {f.options.map((o) => <option key={o} value={o}>{o}</option>)}
-              </select>
-            ) : f.type === 'textarea' ? (
-              <textarea
-                name={f.name}
-                defaultValue={f.defaultValue ?? ''}
-                rows={2}
-                placeholder={f.label}
-                className="w-full text-sm text-gray-900 px-3 py-2.5 bg-white border border-gray-200 rounded-xl outline-none focus:border-henko-turquoise focus:ring-2 focus:ring-henko-turquoise/20 resize-none"
-              />
-            ) : (
-              <input
-                name={f.name}
-                type={f.type ?? 'text'}
-                defaultValue={f.defaultValue ?? ''}
-                placeholder={f.label}
-                className="w-full text-sm text-gray-900 px-3 py-2.5 bg-white border border-gray-200 rounded-xl outline-none focus:border-henko-turquoise focus:ring-2 focus:ring-henko-turquoise/20"
-              />
-            )}
-          </div>
-        ))}
+        {fields.map((f) => {
+          const hasError = !!errors[f.name]
+          const borderClass = hasError ? 'border-red-400 focus:border-red-400' : 'border-gray-200 focus:border-henko-turquoise'
+          return (
+            <div key={f.name} className={f.type === 'textarea' ? 'sm:col-span-2' : ''}>
+              <label className="text-[10px] tracking-[0.12em] text-henko-turquoise font-bold mb-1 block">
+                {f.label}{f.required && <span className="text-red-400 ml-0.5">*</span>}
+              </label>
+              {f.options ? (
+                <select
+                  name={f.name}
+                  defaultValue={f.defaultValue ?? ''}
+                  className={`${inputBase} ${borderClass}`}
+                >
+                  <option value="">— Seleccionar —</option>
+                  {f.options.map((o) => <option key={o} value={o}>{o}</option>)}
+                </select>
+              ) : f.type === 'textarea' ? (
+                <textarea
+                  name={f.name}
+                  defaultValue={f.defaultValue ?? ''}
+                  rows={2}
+                  placeholder={f.label}
+                  className={`${inputBase} ${borderClass} resize-none`}
+                />
+              ) : (
+                <input
+                  name={f.name}
+                  type={f.type ?? 'text'}
+                  defaultValue={f.defaultValue ?? ''}
+                  placeholder={f.label}
+                  className={`${inputBase} ${borderClass}`}
+                />
+              )}
+              {hasError && <p className="text-[11px] text-red-500 mt-1">{errors[f.name]}</p>}
+            </div>
+          )
+        })}
       </div>
       <div className="flex items-center gap-2 pt-1">
         <button
@@ -728,8 +761,8 @@ function TabTrayectoria({ experiencias: initExp, educacion: initEdu, idiomas: in
             <ItemForm
               key={e.id}
               fields={[
-                { name: 'empresa', label: 'EMPRESA', defaultValue: e.empresa },
-                { name: 'cargo', label: 'CARGO', defaultValue: e.cargo },
+                { name: 'empresa', label: 'EMPRESA', defaultValue: e.empresa, required: true },
+                { name: 'cargo', label: 'CARGO', defaultValue: e.cargo, required: true },
                 { name: 'desde', label: 'DESDE (ej: 2020-01)', type: 'text', defaultValue: e.desde ?? '' },
                 { name: 'hasta', label: 'HASTA (en blanco = actual)', type: 'text', defaultValue: e.hasta ?? '' },
                 { name: 'descripcion', label: 'DESCRIPCIÓN (opcional)', type: 'textarea', defaultValue: e.descripcion ?? '' },
@@ -756,8 +789,8 @@ function TabTrayectoria({ experiencias: initExp, educacion: initEdu, idiomas: in
           {addingExp && (
             <ItemForm
               fields={[
-                { name: 'empresa', label: 'EMPRESA' },
-                { name: 'cargo', label: 'CARGO' },
+                { name: 'empresa', label: 'EMPRESA', required: true },
+                { name: 'cargo', label: 'CARGO', required: true },
                 { name: 'desde', label: 'DESDE (ej: 2020-01)', type: 'text' },
                 { name: 'hasta', label: 'HASTA (en blanco = actual)', type: 'text' },
                 { name: 'descripcion', label: 'DESCRIPCIÓN (opcional)', type: 'textarea' },
@@ -781,8 +814,8 @@ function TabTrayectoria({ experiencias: initExp, educacion: initEdu, idiomas: in
             <ItemForm
               key={e.id}
               fields={[
-                { name: 'centro', label: 'CENTRO / UNIVERSIDAD', defaultValue: e.centro },
-                { name: 'titulo', label: 'TÍTULO / GRADO', defaultValue: e.titulo },
+                { name: 'centro', label: 'CENTRO / UNIVERSIDAD', defaultValue: e.centro, required: true },
+                { name: 'titulo', label: 'TÍTULO / GRADO', defaultValue: e.titulo, required: true },
                 { name: 'ano_fin', label: 'AÑO DE FIN', defaultValue: e.ano_fin ?? '' },
               ]}
               onSave={(fd) => saveEdu(fd, e.id)}
@@ -804,8 +837,8 @@ function TabTrayectoria({ experiencias: initExp, educacion: initEdu, idiomas: in
           {addingEdu && (
             <ItemForm
               fields={[
-                { name: 'centro', label: 'CENTRO / UNIVERSIDAD' },
-                { name: 'titulo', label: 'TÍTULO / GRADO' },
+                { name: 'centro', label: 'CENTRO / UNIVERSIDAD', required: true },
+                { name: 'titulo', label: 'TÍTULO / GRADO', required: true },
                 { name: 'ano_fin', label: 'AÑO DE FIN' },
               ]}
               onSave={(fd) => saveEdu(fd)}
@@ -827,8 +860,8 @@ function TabTrayectoria({ experiencias: initExp, educacion: initEdu, idiomas: in
             <ItemForm
               key={i.id}
               fields={[
-                { name: 'idioma', label: 'IDIOMA', defaultValue: i.idioma },
-                { name: 'nivel', label: 'NIVEL', options: NIVELES, defaultValue: i.nivel },
+                { name: 'idioma', label: 'IDIOMA', defaultValue: i.idioma, required: true },
+                { name: 'nivel', label: 'NIVEL', options: NIVELES, defaultValue: i.nivel, required: true },
               ]}
               onSave={(fd) => saveIdi(fd, i.id)}
               onCancel={() => setEditingIdi(null)}
@@ -848,8 +881,8 @@ function TabTrayectoria({ experiencias: initExp, educacion: initEdu, idiomas: in
           {addingIdi && (
             <ItemForm
               fields={[
-                { name: 'idioma', label: 'IDIOMA (ej: Inglés)' },
-                { name: 'nivel', label: 'NIVEL', options: NIVELES },
+                { name: 'idioma', label: 'IDIOMA (ej: Inglés)', required: true },
+                { name: 'nivel', label: 'NIVEL', options: NIVELES, required: true },
               ]}
               onSave={(fd) => saveIdi(fd)}
               onCancel={() => setAddingIdi(false)}

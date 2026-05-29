@@ -163,7 +163,8 @@ export async function crearFactura(input: FacturaInput) {
 
   if (lineasError) {
     // Rollback factura
-    await admin.from('facturas' as never).delete().eq('id', facturaId)
+    const { error: rollbackError } = await admin.from('facturas' as never).delete().eq('id', facturaId)
+    if (rollbackError) console.error('Rollback factura fallido:', (rollbackError as { message: string }).message)
     return { error: lineasError.message }
   }
 

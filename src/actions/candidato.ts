@@ -140,16 +140,19 @@ export async function signupCandidato(input: CandidatoSignupInput) {
 
   // 3. Actualizar telefono en profiles (admin para evitar RLS en sesión no confirmada)
   if (input.telefono) {
-    await admin
+    const { error: telefonoError } = await admin
       .from('profiles')
       .update({ telefono: input.telefono })
       .eq('id', userId)
+    if (telefonoError) {
+      return { error: 'Error guardando teléfono: ' + telefonoError.message }
+    }
   }
 
-  // 4. Insertar experiencias
+  // 4. Insertar experiencias (admin: sin sesión confirmada durante signup)
   const experienciasValidas = input.experiencias.filter((e) => e.empresa.trim() && e.cargo.trim())
   if (experienciasValidas.length > 0) {
-    await supabase.from('candidato_experiencias').insert(
+    const { error: expError } = await admin.from('candidato_experiencias').insert(
       experienciasValidas.map((e, i) => ({
         candidato_id: userId,
         empresa: e.empresa,
@@ -159,12 +162,13 @@ export async function signupCandidato(input: CandidatoSignupInput) {
         orden: i,
       })),
     )
+    if (expError) return { error: 'Error guardando experiencias: ' + expError.message }
   }
 
   // 5. Insertar educación
   const educacionValida = input.educacion.filter((e) => e.centro.trim() && e.titulo.trim())
   if (educacionValida.length > 0) {
-    await supabase.from('candidato_educacion').insert(
+    const { error: eduError } = await admin.from('candidato_educacion').insert(
       educacionValida.map((e, i) => ({
         candidato_id: userId,
         centro: e.centro,
@@ -173,6 +177,7 @@ export async function signupCandidato(input: CandidatoSignupInput) {
         orden: i,
       })),
     )
+    if (eduError) return { error: 'Error guardando educación: ' + eduError.message }
   }
 
   // 6. Insertar idiomas
@@ -180,7 +185,7 @@ export async function signupCandidato(input: CandidatoSignupInput) {
     (i) => i.idioma.trim() && NIVELES_VALIDOS.includes(i.nivel as NivelIdioma),
   )
   if (idiomasValidos.length > 0) {
-    await supabase.from('candidato_idiomas').insert(
+    const { error: idiomaError } = await admin.from('candidato_idiomas').insert(
       idiomasValidos.map((i, idx) => ({
         candidato_id: userId,
         idioma: i.idioma,
@@ -188,6 +193,7 @@ export async function signupCandidato(input: CandidatoSignupInput) {
         orden: idx,
       })),
     )
+    if (idiomaError) return { error: 'Error guardando idiomas: ' + idiomaError.message }
   }
 
   await logAction({
@@ -262,11 +268,12 @@ export async function uploadCv(formData: FormData): Promise<{ error?: string; cv
   if (uploadError) return { error: 'Error subiendo: ' + uploadError.message }
 
   // Marcar como principal y desmarcar los anteriores
-  await supabase
+  const { error: desmarcaError } = await supabase
     .from('cvs')
     .update({ es_principal: false })
     .eq('candidato_id', user.id)
     .eq('es_principal', true)
+  if (desmarcaError) return { error: 'Error actualizando CV principal: ' + desmarcaError.message }
 
   const { error: insertError } = await supabase.from('cvs').insert({
     id: cvId,
@@ -540,10 +547,15 @@ export async function crearExperiencia(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'No autenticado' }
 
+  const empresa = (formData.get('empresa') as string)?.trim()
+  const cargo = (formData.get('cargo') as string)?.trim()
+  if (!empresa) return { error: 'La empresa es obligatoria' }
+  if (!cargo) return { error: 'El cargo es obligatorio' }
+
   const { error } = await supabase.from('candidato_experiencias').insert({
     candidato_id: user.id,
-    empresa: (formData.get('empresa') as string).trim(),
-    cargo: (formData.get('cargo') as string).trim(),
+    empresa,
+    cargo,
     desde: (formData.get('desde') as string) || null,
     hasta: (formData.get('hasta') as string) || null,
     descripcion: (formData.get('descripcion') as string) || null,
@@ -560,10 +572,15 @@ export async function actualizarExperiencia(id: string, formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'No autenticado' }
 
+  const empresa = (formData.get('empresa') as string)?.trim()
+  const cargo = (formData.get('cargo') as string)?.trim()
+  if (!empresa) return { error: 'La empresa es obligatoria' }
+  if (!cargo) return { error: 'El cargo es obligatorio' }
+
   const { error } = await supabase.from('candidato_experiencias')
     .update({
-      empresa: (formData.get('empresa') as string).trim(),
-      cargo: (formData.get('cargo') as string).trim(),
+      empresa,
+      cargo,
       desde: (formData.get('desde') as string) || null,
       hasta: (formData.get('hasta') as string) || null,
       descripcion: (formData.get('descripcion') as string) || null,
@@ -600,10 +617,15 @@ export async function crearEducacion(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'No autenticado' }
 
+  const centro = (formData.get('centro') as string)?.trim()
+  const titulo = (formData.get('titulo') as string)?.trim()
+  if (!centro) return { error: 'El centro es obligatorio' }
+  if (!titulo) return { error: 'El título es obligatorio' }
+
   const { error } = await supabase.from('candidato_educacion').insert({
     candidato_id: user.id,
-    centro: (formData.get('centro') as string).trim(),
-    titulo: (formData.get('titulo') as string).trim(),
+    centro,
+    titulo,
     ano_fin: (formData.get('ano_fin') as string) || null,
     orden: 0,
   })
@@ -618,10 +640,15 @@ export async function actualizarEducacion(id: string, formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'No autenticado' }
 
+  const centro = (formData.get('centro') as string)?.trim()
+  const titulo = (formData.get('titulo') as string)?.trim()
+  if (!centro) return { error: 'El centro es obligatorio' }
+  if (!titulo) return { error: 'El título es obligatorio' }
+
   const { error } = await supabase.from('candidato_educacion')
     .update({
-      centro: (formData.get('centro') as string).trim(),
-      titulo: (formData.get('titulo') as string).trim(),
+      centro,
+      titulo,
       ano_fin: (formData.get('ano_fin') as string) || null,
     })
     .eq('id', id)
@@ -656,12 +683,14 @@ export async function crearIdioma(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'No autenticado' }
 
+  const idioma = (formData.get('idioma') as string)?.trim()
   const nivel = formData.get('nivel') as string
-  if (!NIVELES_VALIDOS.includes(nivel as NivelIdioma)) return { error: 'Nivel inválido' }
+  if (!idioma) return { error: 'El idioma es obligatorio' }
+  if (!NIVELES_VALIDOS.includes(nivel as NivelIdioma)) return { error: 'Selecciona un nivel válido' }
 
   const { error } = await supabase.from('candidato_idiomas').insert({
     candidato_id: user.id,
-    idioma: (formData.get('idioma') as string).trim(),
+    idioma,
     nivel: nivel as NivelIdioma,
     orden: 0,
   })
@@ -676,12 +705,14 @@ export async function actualizarIdioma(id: string, formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'No autenticado' }
 
+  const idioma = (formData.get('idioma') as string)?.trim()
   const nivel = formData.get('nivel') as string
-  if (!NIVELES_VALIDOS.includes(nivel as NivelIdioma)) return { error: 'Nivel inválido' }
+  if (!idioma) return { error: 'El idioma es obligatorio' }
+  if (!NIVELES_VALIDOS.includes(nivel as NivelIdioma)) return { error: 'Selecciona un nivel válido' }
 
   const { error } = await supabase.from('candidato_idiomas')
     .update({
-      idioma: (formData.get('idioma') as string).trim(),
+      idioma,
       nivel: nivel as NivelIdioma,
     })
     .eq('id', id)

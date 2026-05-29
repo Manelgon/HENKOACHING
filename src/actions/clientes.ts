@@ -115,7 +115,8 @@ export async function convertirLeadACliente(leadId: string, input: ClienteInput)
 
   if (errLead) {
     // Rollback: borrar cliente recién creado
-    await supabase.from('clientes').delete().eq('id', cliente!.id)
+    const { error: rollbackError } = await supabase.from('clientes').delete().eq('id', cliente!.id)
+    if (rollbackError) console.error('Rollback cliente fallido:', rollbackError.message)
     return { error: errLead.message }
   }
 
@@ -513,7 +514,8 @@ export async function eliminarArchivoCliente(archivoId: string) {
   if (!archivo) return { error: 'Archivo no encontrado' }
 
   const admin = createAdminClient()
-  await admin.storage.from('cliente-archivos').remove([archivo.storage_path])
+  const { error: storageError } = await admin.storage.from('cliente-archivos').remove([archivo.storage_path])
+  if (storageError) console.error('Error borrando archivo de storage:', storageError.message)
 
   const { error } = await supabase
     .from('cliente_archivos')
