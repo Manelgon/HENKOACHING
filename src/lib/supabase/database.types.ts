@@ -700,7 +700,14 @@ export type Database = {
           prefijo_anio: boolean
           proximo_numero: number
           serie_default: string
+          sobre_mi_path: string | null
           updated_at: string | null
+          verifactu_numero_instalacion: string | null
+          verifactu_productor_nif: string | null
+          verifactu_productor_nombre: string | null
+          verifactu_sistema_id: string | null
+          verifactu_sistema_nombre: string | null
+          verifactu_version: string | null
         }
         Insert: {
           dias_vencimiento_default?: number
@@ -726,7 +733,14 @@ export type Database = {
           prefijo_anio?: boolean
           proximo_numero?: number
           serie_default?: string
+          sobre_mi_path?: string | null
           updated_at?: string | null
+          verifactu_numero_instalacion?: string | null
+          verifactu_productor_nif?: string | null
+          verifactu_productor_nombre?: string | null
+          verifactu_sistema_id?: string | null
+          verifactu_sistema_nombre?: string | null
+          verifactu_version?: string | null
         }
         Update: {
           dias_vencimiento_default?: number
@@ -752,7 +766,14 @@ export type Database = {
           prefijo_anio?: boolean
           proximo_numero?: number
           serie_default?: string
+          sobre_mi_path?: string | null
           updated_at?: string | null
+          verifactu_numero_instalacion?: string | null
+          verifactu_productor_nif?: string | null
+          verifactu_productor_nombre?: string | null
+          verifactu_sistema_id?: string | null
+          verifactu_sistema_nombre?: string | null
+          verifactu_version?: string | null
         }
         Relationships: []
       }
@@ -870,9 +891,12 @@ export type Database = {
           notas: string | null
           numero: string
           pdf_path: string | null
+          qr_url: string | null
           serie: string
           total: number
           updated_at: string | null
+          verifactu_alta_id: string | null
+          verifactu_anulacion_id: string | null
         }
         Insert: {
           anio: number
@@ -902,9 +926,12 @@ export type Database = {
           notas?: string | null
           numero: string
           pdf_path?: string | null
+          qr_url?: string | null
           serie?: string
           total?: number
           updated_at?: string | null
+          verifactu_alta_id?: string | null
+          verifactu_anulacion_id?: string | null
         }
         Update: {
           anio?: number
@@ -934,9 +961,12 @@ export type Database = {
           notas?: string | null
           numero?: string
           pdf_path?: string | null
+          qr_url?: string | null
           serie?: string
           total?: number
           updated_at?: string | null
+          verifactu_alta_id?: string | null
+          verifactu_anulacion_id?: string | null
         }
         Relationships: [
           {
@@ -965,6 +995,20 @@ export type Database = {
             columns: ["factura_rectificada_id"]
             isOneToOne: false
             referencedRelation: "facturas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "facturas_verifactu_alta_id_fkey"
+            columns: ["verifactu_alta_id"]
+            isOneToOne: false
+            referencedRelation: "verifactu_registros"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "facturas_verifactu_anulacion_id_fkey"
+            columns: ["verifactu_anulacion_id"]
+            isOneToOne: false
+            referencedRelation: "verifactu_registros"
             referencedColumns: ["id"]
           },
         ]
@@ -1489,51 +1533,134 @@ export type Database = {
       }
       testimonios: {
         Row: {
+          created_at: string
+          deleted_at: string | null
+          fecha: string | null
+          fuente: string | null
           id: string
-          texto: string
           nombre: string
+          orden: number
+          rating: number | null
           rol: string | null
           sector: string | null
-          rating: number | null
-          fuente: string | null
-          fecha: string | null
-          orden: number
-          visible: boolean
-          created_at: string
+          texto: string
           updated_at: string
-          deleted_at: string | null
+          visible: boolean
         }
         Insert: {
+          created_at?: string
+          deleted_at?: string | null
+          fecha?: string | null
+          fuente?: string | null
           id?: string
-          texto: string
           nombre: string
+          orden?: number
+          rating?: number | null
           rol?: string | null
           sector?: string | null
-          rating?: number | null
-          fuente?: string | null
-          fecha?: string | null
-          orden?: number
-          visible?: boolean
-          created_at?: string
+          texto: string
           updated_at?: string
-          deleted_at?: string | null
+          visible?: boolean
         }
         Update: {
+          created_at?: string
+          deleted_at?: string | null
+          fecha?: string | null
+          fuente?: string | null
           id?: string
-          texto?: string
           nombre?: string
+          orden?: number
+          rating?: number | null
           rol?: string | null
           sector?: string | null
-          rating?: number | null
-          fuente?: string | null
-          fecha?: string | null
-          orden?: number
-          visible?: boolean
-          created_at?: string
+          texto?: string
           updated_at?: string
-          deleted_at?: string | null
+          visible?: boolean
         }
         Relationships: []
+      }
+      verifactu_registros: {
+        Row: {
+          created_at: string
+          csv_aeat: string | null
+          cuota_total: number
+          enviado_at: string | null
+          estado_envio: string
+          factura_id: string
+          fecha_emision: string
+          fecha_hora_generacion: string
+          hash_factura: string
+          huella: string
+          huella_anterior: string | null
+          id: string
+          importe_total: number
+          intentos: number
+          nif_emisor: string
+          num_registro: number
+          numero_factura: string
+          respuesta_aeat: Json | null
+          tipo: string
+          tipo_factura_aeat: string
+          ultimo_error: string | null
+          xml_payload: string | null
+        }
+        Insert: {
+          created_at?: string
+          csv_aeat?: string | null
+          cuota_total: number
+          enviado_at?: string | null
+          estado_envio?: string
+          factura_id: string
+          fecha_emision: string
+          fecha_hora_generacion: string
+          hash_factura: string
+          huella: string
+          huella_anterior?: string | null
+          id?: string
+          importe_total: number
+          intentos?: number
+          nif_emisor: string
+          num_registro?: never
+          numero_factura: string
+          respuesta_aeat?: Json | null
+          tipo: string
+          tipo_factura_aeat: string
+          ultimo_error?: string | null
+          xml_payload?: string | null
+        }
+        Update: {
+          created_at?: string
+          csv_aeat?: string | null
+          cuota_total?: number
+          enviado_at?: string | null
+          estado_envio?: string
+          factura_id?: string
+          fecha_emision?: string
+          fecha_hora_generacion?: string
+          hash_factura?: string
+          huella?: string
+          huella_anterior?: string | null
+          id?: string
+          importe_total?: number
+          intentos?: number
+          nif_emisor?: string
+          num_registro?: never
+          numero_factura?: string
+          respuesta_aeat?: Json | null
+          tipo?: string
+          tipo_factura_aeat?: string
+          ultimo_error?: string | null
+          xml_payload?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "verifactu_registros_factura_id_fkey"
+            columns: ["factura_id"]
+            isOneToOne: false
+            referencedRelation: "facturas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -2003,15 +2130,15 @@ export const Constants = {
   },
 } as const
 
-export type EstadoSolicitud = Database["public"]["Enums"]["estado_solicitud"]
-export type EstadoOferta = Database["public"]["Enums"]["estado_oferta"]
-export type EstadoLead = Database["public"]["Enums"]["estado_lead"]
-export type EstadoCliente = Database["public"]["Enums"]["estado_cliente"]
-export type ServicioContratado = Database["public"]["Enums"]["servicio_contratado"]
-export type TarifaTipo = Database["public"]["Enums"]["tarifa_tipo"]
-export type UserRole = Database["public"]["Enums"]["user_role"]
-export type TipoLead = Database["public"]["Enums"]["tipo_lead"]
-export type NivelIdioma = Database["public"]["Enums"]["nivel_idioma"]
-export type EstadoPost = Database["public"]["Enums"]["estado_post"]
-export type TipoCliente = Database["public"]["Enums"]["tipo_cliente"]
+// Aliases de compatibilidad con el código existente
+export type NivelIdioma = Database['public']['Enums']['nivel_idioma']
+export type EstadoCliente = Database['public']['Enums']['estado_cliente']
+export type EstadoLead = Database['public']['Enums']['estado_lead']
+export type UserRole = Database['public']['Enums']['user_role']
+export type EstadoSolicitud = Database['public']['Enums']['estado_solicitud']
+export type EstadoPost = Database['public']['Enums']['estado_post']
+export type ServicioContratado = Database['public']['Enums']['servicio_contratado']
+export type TarifaTipo = Database['public']['Enums']['tarifa_tipo']
+export type TipoCliente = Database['public']['Enums']['tipo_cliente']
+export type TipoLead = Database['public']['Enums']['tipo_lead']
 
