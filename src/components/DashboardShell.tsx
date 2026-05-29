@@ -29,6 +29,7 @@ export default function DashboardShell({ sections, userEmail, userInitial, child
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
   const unreadCount = useEmailStore((s) => s.unreadCount)
+  const failedCount = useEmailStore((s) => s.failedCount)
 
   const isActive = (href: string) => {
     if (href === '/dashboard') return pathname === '/dashboard'
@@ -139,6 +140,11 @@ export default function DashboardShell({ sections, userEmail, userInitial, child
                           {item.href === '/dashboard/email' && unreadCount > 0 && (
                             <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-0.5 rounded-full bg-henko-turquoise text-white text-[10px] font-bold flex items-center justify-center leading-none">
                               {unreadCount > 99 ? '99+' : unreadCount}
+                            </span>
+                          )}
+                          {item.href === '/dashboard/email' && failedCount > 0 && (
+                            <span className="absolute -bottom-1.5 -right-1.5 min-w-[16px] h-4 px-0.5 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center leading-none">
+                              {failedCount > 9 ? '9+' : failedCount}
                             </span>
                           )}
                         </span>

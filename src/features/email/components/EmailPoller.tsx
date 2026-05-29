@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { listarEmailsBandeja } from '@/actions/email'
+import { listarEmailsBandeja, contarEmailsFallidos } from '@/actions/email'
 import { useEmailStore } from '@/features/email/store/emailStore'
 
 type Props = {
@@ -9,13 +9,23 @@ type Props = {
 }
 
 export default function EmailPoller({ hasImapConfig }: Props) {
-  const { lastSeenUids, setLastSeenUids, setUnreadCount } = useEmailStore()
+  const { lastSeenUids, setLastSeenUids, setUnreadCount, setFailedCount } = useEmailStore()
   const isFirstLoad = useRef(true)
   const lastSeenRef = useRef(lastSeenUids)
 
   useEffect(() => {
     lastSeenRef.current = lastSeenUids
   }, [lastSeenUids])
+
+  // Polling de fallos: independiente de IMAP, siempre activo
+  useEffect(() => {
+    contarEmailsFallidos().then(setFailedCount).catch(() => {})
+    const interval = setInterval(() => {
+      contarEmailsFallidos().then(setFailedCount).catch(() => {})
+    }, 120_000)
+    return () => clearInterval(interval)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     if (!hasImapConfig) return

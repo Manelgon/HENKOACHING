@@ -504,3 +504,125 @@ export async function enviarEmail({ to, subject, bodyText, bodyHtml, attachments
     return { error: `Error SMTP: ${String(e)}` }
   }
 }
+
+// =============================================================================
+// Emails transaccionales: fallos y reintento
+// =============================================================================
+
+export type EmailFallido = {
+  id: string
+  para: string
+  asunto: string
+  tipo: string | null
+  error: string | null
+  intentos: number
+  created_at: string
+}
+
+export async function listarEmailsFallidos(): Promise<EmailFallido[]> {
+  const admin = createAdminClient()
+  const { data } = await admin
+    .from('email_envios' as never)
+    .select('id, para, asunto, tipo, error, intentos, created_at')
+    .eq('estado', 'error')
+    .order('created_at', { ascending: false })
+    .limit(100) as { data: EmailFallido[] | null }
+  return data ?? []
+}
+
+export async function contarEmailsFallidos(): Promise<number> {
+  const admin = createAdminClient()
+  const { count } = await admin
+    .from('email_envios' as never)
+    .select('*', { count: 'exact', head: true })
+    .eq('estado', 'error')
+    .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()) as { count: number | null }
+  return count ?? 0
+}
+
+export async function reintentarEmail(id: string): Promise<{ ok: true } | { error: string }> {
+  const auth = await requireAdmin()
+  if ('error' in auth) return { error: auth.error as string }
+
+  const admin = createAdminClient()
+
+  const { data: registro } = await admin
+    .from('email_envios' as never)
+    .select('para, asunto, html, intentos')
+    .eq('id', id)
+    .single() as { data: { para: string; asunto: string; html: string; intentos: number } | null }
+
+  if (!registro) return { error: 'Registro no encontrado' }
+
+  // Marcar como pendiente e incrementar intentos
+  await admin
+    .from('email_envios' as never)
+    .update({ estado: 'pendiente', error: null, intentos: registro.intentos + 1 } as never)
+    .eq('id', id)
+
+  // Leer credenciales SMTP
+  const { data: settings } = await admin
+    .from('email_settings' as never)
+    .select('*')
+    .eq('id', 1)
+    .maybeSingle() as { data: Record<string, unknown> | null }
+
+  if (!settings?.smtp_host || !settings?.smtp_password) {
+    const msg = 'SMTP no configurado'
+    await admin.from('email_envios' as never).update({ estado: 'error', error: msg } as never).eq('id', id)
+    return { error: msg }
+  }
+
+  let smtpPass: string
+  try {
+    smtpPass = decryptText(settings.smtp_password as string)
+  } catch {
+    const msg = 'No se pudo descifrar la contraseña SMTP'
+    await admin.from('email_envios' as never).update({ estado: 'error', error: msg } as never).eq('id', id)
+    return { error: msg }
+  }
+
+  try {
+    const nodemailer = await import('nodemailer')
+    const transporter = nodemailer.createTransport({
+      host: settings.smtp_host as string,
+      port: (settings.smtp_port as number) ?? 465,
+      secure: (settings.smtp_encryption as string) === 'ssl',
+      auth: { user: settings.smtp_user as string, pass: smtpPass },
+      tls: { rejectUnauthorized: false },
+    })
+
+    const fromName = (settings.smtp_from_name as string) || (settings.smtp_user as string)
+    await transporter.sendMail({
+      from: `"${fromName}" <${settings.smtp_user as string}>`,
+      to: registro.para,
+      subject: registro.asunto,
+      html: registro.html,
+    })
+
+    await admin
+      .from('email_envios' as never)
+      .update({ estado: 'enviado', sent_at: new Date().toISOString() } as never)
+      .eq('id', id)
+
+    await logAction({
+      accion: 'email.transaccional.reintento_ok',
+      recursoTipo: 'email_envios',
+      recursoId: id,
+      recursoLabel: registro.para,
+    })
+
+    return { ok: true }
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e)
+    await admin.from('email_envios' as never).update({ estado: 'error', error: msg } as never).eq('id', id)
+    await logAction({
+      accion: 'email.transaccional.reintento_error',
+      recursoTipo: 'email_envios',
+      recursoId: id,
+      recursoLabel: registro.para,
+      metadata: { error: msg },
+    })
+    return { error: msg }
+  }
+}
