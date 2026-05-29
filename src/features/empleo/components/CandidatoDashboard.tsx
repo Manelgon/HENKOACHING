@@ -569,6 +569,46 @@ type ItemField = {
   options?: string[]
   defaultValue?: string
   required?: boolean
+  optional?: boolean
+}
+
+const MESES = [
+  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
+]
+const AÑOS = Array.from({ length: new Date().getFullYear() - 1969 }, (_, i) => String(new Date().getFullYear() - i))
+
+function MonthYearPicker({ name, defaultValue, allowEmpty }: { name: string; defaultValue?: string; allowEmpty?: boolean }) {
+  const [mes, setMes] = useState(() => defaultValue ? defaultValue.split('-')[1] ?? '' : '')
+  const [anio, setAnio] = useState(() => defaultValue ? defaultValue.split('-')[0] ?? '' : '')
+  const value = mes && anio ? `${anio}-${mes}` : ''
+
+  return (
+    <div>
+      <div className="flex gap-2">
+        <select
+          value={mes}
+          onChange={(e) => setMes(e.target.value)}
+          className="flex-1 text-sm text-gray-900 px-3 py-2.5 bg-white border border-gray-200 rounded-xl outline-none focus:border-henko-turquoise focus:ring-2 focus:ring-henko-turquoise/20"
+        >
+          <option value="">Mes</option>
+          {MESES.map((m, i) => (
+            <option key={m} value={String(i + 1).padStart(2, '0')}>{m}</option>
+          ))}
+        </select>
+        <select
+          value={anio}
+          onChange={(e) => setAnio(e.target.value)}
+          className="flex-1 text-sm text-gray-900 px-3 py-2.5 bg-white border border-gray-200 rounded-xl outline-none focus:border-henko-turquoise focus:ring-2 focus:ring-henko-turquoise/20"
+        >
+          <option value="">Año</option>
+          {AÑOS.map((a) => <option key={a} value={a}>{a}</option>)}
+        </select>
+      </div>
+      {allowEmpty && <p className="text-[10px] text-gray-400 mt-1">Deja en blanco si es tu trabajo actual</p>}
+      <input type="hidden" name={name} value={value} />
+    </div>
+  )
 }
 
 function ItemForm({ fields, onSave, onCancel }: {
@@ -613,7 +653,9 @@ function ItemForm({ fields, onSave, onCancel }: {
               <label className="text-[10px] tracking-[0.12em] text-henko-turquoise font-bold mb-1 block">
                 {f.label}{f.required && <span className="text-red-400 ml-0.5">*</span>}
               </label>
-              {f.options ? (
+              {f.type === 'monthyear' ? (
+                <MonthYearPicker name={f.name} defaultValue={f.defaultValue} allowEmpty={f.optional} />
+              ) : f.options ? (
                 <select
                   name={f.name}
                   defaultValue={f.defaultValue ?? ''}
@@ -763,8 +805,8 @@ function TabTrayectoria({ experiencias: initExp, educacion: initEdu, idiomas: in
               fields={[
                 { name: 'empresa', label: 'EMPRESA', defaultValue: e.empresa, required: true },
                 { name: 'cargo', label: 'CARGO', defaultValue: e.cargo, required: true },
-                { name: 'desde', label: 'DESDE (ej: 2020-01)', type: 'text', defaultValue: e.desde ?? '' },
-                { name: 'hasta', label: 'HASTA (en blanco = actual)', type: 'text', defaultValue: e.hasta ?? '' },
+                { name: 'desde', label: 'DESDE', type: 'monthyear', defaultValue: e.desde ?? '' },
+                { name: 'hasta', label: 'HASTA', type: 'monthyear', optional: true, defaultValue: e.hasta ?? '' },
                 { name: 'descripcion', label: 'DESCRIPCIÓN (opcional)', type: 'textarea', defaultValue: e.descripcion ?? '' },
               ]}
               onSave={(fd) => saveExp(fd, e.id)}
@@ -791,8 +833,8 @@ function TabTrayectoria({ experiencias: initExp, educacion: initEdu, idiomas: in
               fields={[
                 { name: 'empresa', label: 'EMPRESA', required: true },
                 { name: 'cargo', label: 'CARGO', required: true },
-                { name: 'desde', label: 'DESDE (ej: 2020-01)', type: 'text' },
-                { name: 'hasta', label: 'HASTA (en blanco = actual)', type: 'text' },
+                { name: 'desde', label: 'DESDE', type: 'monthyear' },
+                { name: 'hasta', label: 'HASTA', type: 'monthyear', optional: true },
                 { name: 'descripcion', label: 'DESCRIPCIÓN (opcional)', type: 'textarea' },
               ]}
               onSave={(fd) => saveExp(fd)}
