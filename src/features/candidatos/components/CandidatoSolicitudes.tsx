@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAction } from '@/shared/feedback/FeedbackContext'
@@ -45,22 +45,32 @@ export default function CandidatoSolicitudes({ solicitudes, candidatoId }: { sol
 function SolicitudRow({ s, candidatoId }: { s: SolicitudCandidato; candidatoId: string }) {
   const router = useRouter()
   const runAction = useAction()
-  const badge = getBadge(s.estado)
-  const [estado, setEstado] = useState<EstadoSolicitud>(s.estado)
+  const [acting, setActing] = useState(false)
+  const [refreshing, startRefresh] = useTransition()
+  const isLoading = acting || refreshing
+
+  // Valor optimista local solo para rollback en caso de error
+  const [optimisticEstado, setOptimisticEstado] = useState<EstadoSolicitud | null>(null)
+  const estadoActual = optimisticEstado ?? s.estado
+  const badge = getBadge(estadoActual)
 
   async function onChange(e: React.ChangeEvent<HTMLSelectElement>) {
     const nuevo = e.target.value as EstadoSolicitud
-    const prev = estado
-    setEstado(nuevo)
+    const prev = s.estado
+    setOptimisticEstado(nuevo)
+    setActing(true)
     const r = await runAction('Actualizando estado', () => cambiarEstadoSolicitud(s.id, nuevo), { silentSuccess: true })
-    if (!r.ok) setEstado(prev)
-    else router.refresh()
+    setActing(false)
+    if (!r.ok) {
+      setOptimisticEstado(prev)
+    } else {
+      setOptimisticEstado(null) // dejar que el prop actualizado tome el control
+      startRefresh(() => router.refresh())
+    }
   }
 
-  const currentBadge = getBadge(estado)
-
   return (
-    <div className="flex items-start gap-4 p-4 rounded-2xl bg-gray-50 hover:bg-gray-100/80 transition-colors">
+    <div className={`flex items-start gap-4 p-4 rounded-2xl bg-gray-50 hover:bg-gray-100/80 transition-colors relative ${isLoading ? 'opacity-60 pointer-events-none' : ''}`}>
       <div className="flex-1 min-w-0">
         <Link
           href={`/dashboard/ofertas/${s.oferta_id}`}
@@ -79,13 +89,14 @@ function SolicitudRow({ s, candidatoId }: { s: SolicitudCandidato; candidatoId: 
       </div>
 
       <div className="flex items-center gap-2 flex-shrink-0">
-        <span className={`font-raleway text-xs font-semibold px-2.5 py-1 rounded-full ${currentBadge.color}`}>
-          {currentBadge.label}
+        <span className={`font-raleway text-xs font-semibold px-2.5 py-1 rounded-full ${badge.color}`}>
+          {badge.label}
         </span>
         <select
-          value={estado}
+          value={estadoActual}
           onChange={onChange}
-          className="font-raleway text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white text-gray-600 outline-none focus:border-henko-turquoise transition-colors"
+          disabled={isLoading}
+          className="font-raleway text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white text-gray-600 outline-none focus:border-henko-turquoise transition-colors disabled:opacity-50"
         >
           {ESTADOS.map((e) => (
             <option key={e.value} value={e.value}>{e.label}</option>
