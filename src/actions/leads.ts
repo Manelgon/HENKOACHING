@@ -2,7 +2,10 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { logAction } from '@/lib/audit/log-action'
+import { sendTransactional } from '@/lib/email/send'
+import { templateLeadConfirmacion } from '@/lib/email/templates/lead'
 import type { EstadoLead, TipoLead } from '@/lib/supabase/database.types'
 
 // =============================================================================
@@ -49,6 +52,44 @@ export async function crearLead(input: {
     metadata: { tipo: input.tipo, origen: 'web', servicio_interes: input.servicio_interes ?? null, acepto_privacidad: true },
     actorEmail: input.email,
   })
+
+  // Fire-and-forget: email de confirmación al lead
+  ;(async () => {
+    try {
+      const admin = createAdminClient()
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://henkoaching.com'
+
+      const { data: tmpl } = await admin
+        .from('email_settings' as never)
+        .select('subject_lead_confirmacion, template_lead_confirmacion')
+        .eq('id', 1)
+        .maybeSingle() as { data: Record<string, string | null> | null }
+
+      const vars: Record<string, string> = {
+        nombre: input.nombre,
+        asunto: input.asunto ?? '',
+        servicio: input.servicio_interes ?? '',
+      }
+
+      const subject = tmpl?.subject_lead_confirmacion
+        ? Object.entries(vars).reduce((t, [k, v]) => t.replaceAll(`{{${k}}}`, v), tmpl.subject_lead_confirmacion)
+        : 'Hemos recibido tu mensaje · HenKoaching'
+
+      const html = tmpl?.template_lead_confirmacion
+        ? Object.entries(vars).reduce((t, [k, v]) => t.replaceAll(`{{${k}}}`, v), tmpl.template_lead_confirmacion)
+        : templateLeadConfirmacion({ nombre: input.nombre, asunto: input.asunto ?? '', servicio: input.servicio_interes ?? '', siteUrl })
+
+      await sendTransactional({
+        to: input.email,
+        subject,
+        html,
+        tipo: 'lead.confirmacion',
+        metadata: { lead_id: nuevo?.id, nombre: input.nombre },
+      })
+    } catch (e) {
+      console.error('[email] hook crearLead:', e)
+    }
+  })()
 
   return { ok: true }
 }

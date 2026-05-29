@@ -6,6 +6,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { logAction } from '@/lib/audit/log-action'
 import { encryptText, decryptText } from '@/lib/crypto/encrypt'
 import { templateCandidaturaCandidato, templateCandidaturaAdmin } from '@/lib/email/templates/candidatura'
+import { templateLeadConfirmacion } from '@/lib/email/templates/lead'
 
 async function requireAdmin() {
   const supabase = await createClient()
@@ -48,6 +49,8 @@ export type EmailConfigInput = {
   template_candidatura_admin: string
   subject_cambio_estado: string
   template_cambio_estado: string
+  subject_lead_confirmacion: string
+  template_lead_confirmacion: string
 }
 
 export type EmailConfigPublic = {
@@ -76,6 +79,8 @@ export type EmailConfigPublic = {
   template_candidatura_admin: string
   subject_cambio_estado: string
   template_cambio_estado: string
+  subject_lead_confirmacion: string
+  template_lead_confirmacion: string
 }
 
 // ── Defaults para templates transaccionales del portal de empleo ──────────────
@@ -85,6 +90,7 @@ const SITE_URL_DEFAULT = 'https://henkoaching.com'
 const DEFAULT_SUBJECT_CANDIDATURA_CANDIDATO = 'Tu candidatura ha sido recibida — {{ofertaTitulo}}'
 const DEFAULT_SUBJECT_CANDIDATURA_ADMIN = 'Nueva candidatura — {{candidatoNombre}}'
 const DEFAULT_SUBJECT_CAMBIO_ESTADO = 'Actualización de tu candidatura — {{ofertaTitulo}}'
+const DEFAULT_SUBJECT_LEAD_CONFIRMACION = 'Hemos recibido tu mensaje · HenKoaching'
 
 const DEFAULT_TEMPLATE_CANDIDATURA_CANDIDATO = templateCandidaturaCandidato({
   candidatoNombre: '{{candidatoNombre}}',
@@ -136,6 +142,13 @@ const DEFAULT_TEMPLATE_CAMBIO_ESTADO = `<!DOCTYPE html>
   </table>
 </body>
 </html>`
+
+const DEFAULT_TEMPLATE_LEAD_CONFIRMACION = templateLeadConfirmacion({
+  nombre: '{{nombre}}',
+  asunto: '{{asunto}}',
+  servicio: '{{servicio}}',
+  siteUrl: SITE_URL_DEFAULT,
+})
 
 // ──────────────────────────────────────────────────────────────────────────────
 
@@ -367,6 +380,8 @@ export async function getEmailConfig(): Promise<EmailConfigPublic> {
     template_candidatura_admin: (data?.template_candidatura_admin as string | null) ?? DEFAULT_TEMPLATE_CANDIDATURA_ADMIN,
     subject_cambio_estado: (data?.subject_cambio_estado as string | null) ?? DEFAULT_SUBJECT_CAMBIO_ESTADO,
     template_cambio_estado: (data?.template_cambio_estado as string | null) ?? DEFAULT_TEMPLATE_CAMBIO_ESTADO,
+    subject_lead_confirmacion: (data?.subject_lead_confirmacion as string | null) ?? DEFAULT_SUBJECT_LEAD_CONFIRMACION,
+    template_lead_confirmacion: (data?.template_lead_confirmacion as string | null) ?? DEFAULT_TEMPLATE_LEAD_CONFIRMACION,
   }
 }
 
@@ -410,6 +425,8 @@ export async function guardarEmailConfig(input: EmailConfigInput) {
     template_candidatura_admin: input.template_candidatura_admin.trim() || null,
     subject_cambio_estado: input.subject_cambio_estado.trim() || null,
     template_cambio_estado: input.template_cambio_estado.trim() || null,
+    subject_lead_confirmacion: input.subject_lead_confirmacion.trim() || null,
+    template_lead_confirmacion: input.template_lead_confirmacion.trim() || null,
     updated_at: new Date().toISOString(),
   }
 

@@ -1937,7 +1937,6 @@ export type Database = {
         | "nuevo"
         | "pendiente"
         | "contactado"
-        | "en_conversacion"
         | "descartado"
       estado_oferta: "borrador" | "publicada" | "pausada" | "cerrada"
       estado_post: "borrador" | "publicado" | "archivado"
@@ -2096,7 +2095,6 @@ export const Constants = {
         "nuevo",
         "pendiente",
         "contactado",
-        "en_conversacion",
         "descartado",
       ],
       estado_oferta: ["borrador", "publicada", "pausada", "cerrada"],

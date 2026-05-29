@@ -4,7 +4,6 @@ export const ESTADOS_LEAD: { value: EstadoLead; label: string; color: string; bg
   { value: 'nuevo', label: 'Nuevo', color: 'text-henko-turquoise', bg: 'bg-henko-turquoise/10', dot: 'bg-henko-turquoise' },
   { value: 'pendiente', label: 'Pendiente', color: 'text-henko-orange', bg: 'bg-henko-orange/10', dot: 'bg-henko-orange' },
   { value: 'contactado', label: 'Contactado', color: 'text-henko-purple', bg: 'bg-henko-purple/10', dot: 'bg-henko-purple' },
-  { value: 'en_conversacion', label: 'En conversación', color: 'text-henko-coral', bg: 'bg-henko-coral/10', dot: 'bg-henko-coral' },
   { value: 'descartado', label: 'Descartado', color: 'text-gray-500', bg: 'bg-gray-100', dot: 'bg-gray-400' },
 ]
 

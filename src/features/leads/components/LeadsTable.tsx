@@ -62,7 +62,6 @@ export default function LeadsTable({ leads }: { leads: LeadRow[] }) {
       nuevo: 0,
       pendiente: 0,
       contactado: 0,
-      en_conversacion: 0,
       descartado: 0,
       archivados: 0,
     }

@@ -59,6 +59,8 @@ export default function EmailConfigForm({ config }: Props) {
     template_candidatura_admin: config.template_candidatura_admin,
     subject_cambio_estado: config.subject_cambio_estado,
     template_cambio_estado: config.template_cambio_estado,
+    subject_lead_confirmacion: config.subject_lead_confirmacion,
+    template_lead_confirmacion: config.template_lead_confirmacion,
   })
 
   const set = <K extends keyof EmailConfigInput>(key: K, value: EmailConfigInput[K]) =>
@@ -303,7 +305,7 @@ export default function EmailConfigForm({ config }: Props) {
           <div className="p-4 bg-teal-50 rounded-xl border border-teal-100">
             <p className="font-raleway text-xs text-teal-800 font-semibold mb-2">Variables disponibles — Emails del portal de empleo</p>
             <div className="flex flex-wrap gap-2 mb-3">
-              {['{{candidatoNombre}}', '{{ofertaTitulo}}', '{{empresaNombre}}', '{{candidatoEmail}}', '{{perfilUrl}}', '{{estadoLabel}}'].map((v) => (
+              {['{{nombre}}', '{{asunto}}', '{{servicio}}', '{{candidatoNombre}}', '{{ofertaTitulo}}', '{{empresaNombre}}', '{{candidatoEmail}}', '{{perfilUrl}}', '{{estadoLabel}}'].map((v) => (
                 <code key={v} className="bg-teal-100 text-teal-900 font-mono text-xs px-2 py-1 rounded-md">{v}</code>
               ))}
             </div>
@@ -313,6 +315,48 @@ export default function EmailConfigForm({ config }: Props) {
           </div>
 
           <div className="space-y-3">
+            <TemplateAccordion
+              title="Confirmación de formulario de contacto"
+              description="Se envía automáticamente cuando alguien rellena el formulario de contacto en la web."
+            >
+              <div className="space-y-4">
+                <Field label="Asunto del email">
+                  <input
+                    type="text"
+                    value={datos.subject_lead_confirmacion}
+                    onChange={(e) => set('subject_lead_confirmacion', e.target.value)}
+                    placeholder="Hemos recibido tu mensaje · HenKoaching"
+                    className="input"
+                  />
+                </Field>
+                <Field label="HTML del template">
+                  <textarea
+                    value={datos.template_lead_confirmacion}
+                    onChange={(e) => set('template_lead_confirmacion', e.target.value)}
+                    rows={20}
+                    placeholder="Vacío = usar template por defecto"
+                    className="input font-mono text-xs resize-y"
+                    spellCheck={false}
+                  />
+                </Field>
+                {datos.template_lead_confirmacion && (
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => openPreviewTransaccional(datos.template_lead_confirmacion, {
+                        nombre: 'Laura García',
+                        asunto: 'Consulta sobre coaching ejecutivo',
+                        servicio: 'Coaching individual',
+                      })}
+                      className="px-4 py-2 rounded-xl border border-gray-200 bg-white font-raleway text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      Ver preview
+                    </button>
+                  </div>
+                )}
+              </div>
+            </TemplateAccordion>
+
             <TemplateAccordion
               title="Confirmación de candidatura al candidato"
               description="Se envía al candidato cuando aplica a una oferta de empleo."
