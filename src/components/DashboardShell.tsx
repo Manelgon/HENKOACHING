@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, isValidElement, cloneElement } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -96,7 +96,7 @@ export default function DashboardShell({ sections, userEmail, userInitial, child
                     }`}
                   >
                     <span className={`relative w-5 h-5 ${active ? 'text-henko-turquoise' : 'text-gray-400 group-hover:text-henko-turquoise transition-colors'}`}>
-                      {item.icon}
+                      {isValidElement(item.icon) ? cloneElement(item.icon as React.ReactElement, { key: `icon-${item.href}` }) : item.icon}
                       {item.href === '/dashboard/email' && unreadCount > 0 && (
                         <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-0.5 rounded-full bg-henko-turquoise text-white text-[10px] font-bold flex items-center justify-center leading-none">
                           {unreadCount > 99 ? '99+' : unreadCount}
