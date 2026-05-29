@@ -25,11 +25,11 @@ export default async function EmailConfigPage() {
   const config = await getEmailConfig()
 
   return (
-    <div className="w-full max-w-4xl">
+    <div className="w-full">
       <div className="mb-8 md:mb-10">
         <h1 className="font-roxborough text-2xl md:text-3xl text-gray-900 mb-2">Configuración de Email</h1>
         <p className="font-raleway text-gray-500 font-light">
-          Configura el servidor SMTP para envío y IMAP para lectura de la bandeja de entrada.
+          Configura el servidor SMTP/IMAP y personaliza los templates de los emails de autenticación.
         </p>
       </div>
       <EmailConfigForm config={config} />

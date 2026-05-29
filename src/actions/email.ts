@@ -33,6 +33,14 @@ export type EmailConfigInput = {
   imap_user: string
   imap_password: string   // vacío = no cambiar la actual
   imap_encryption: 'ssl' | 'starttls' | 'none'
+  subject_confirmation: string
+  subject_recovery: string
+  subject_invite: string
+  subject_magic_link: string
+  template_confirmation: string
+  template_recovery: string
+  template_invite: string
+  template_magic_link: string
 }
 
 export type EmailConfigPublic = {
@@ -47,7 +55,145 @@ export type EmailConfigPublic = {
   imap_user: string | null
   imap_encryption: string
   hasImapPassword: boolean
+  subject_confirmation: string
+  subject_recovery: string
+  subject_invite: string
+  subject_magic_link: string
+  template_confirmation: string
+  template_recovery: string
+  template_invite: string
+  template_magic_link: string
 }
+
+const DEFAULT_TEMPLATE_CONFIRMATION = `<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Confirma tu cuenta</title></head>
+<body style="margin:0;padding:0;background:#f0ece6;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0ece6;padding:48px 16px;">
+    <tr><td align="center">
+      <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;max-width:560px;width:100%;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+        <tr>
+          <td style="padding:36px 48px 28px;border-bottom:1px solid #ede9e4;text-align:center;">
+            <img src="{{ .SiteURL }}/henkologo.png" width="180" alt="HenKoaching" style="display:block;margin:0 auto;max-width:180px;">
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:40px 48px;">
+            <h1 style="margin:0 0 16px;font-family:Georgia,serif;font-size:26px;font-weight:700;color:#1a1a1a;line-height:1.3;">Bienvenida,<br>confirma tu cuenta</h1>
+            <p style="margin:0 0 8px;font-family:Arial,sans-serif;font-size:14px;color:#777;line-height:1.6;">Has creado una cuenta con el email:</p>
+            <p style="margin:0 0 28px;font-family:Arial,sans-serif;font-size:14px;color:#1f8f9b;font-weight:600;">{{ .Email }}</p>
+            <p style="margin:0 0 32px;font-family:Arial,sans-serif;font-size:15px;color:#444;line-height:1.7;">Haz clic en el botón para confirmar tu cuenta y acceder a tu área personal de HenKoaching.</p>
+            <a href="{{ .ConfirmationURL }}" style="display:inline-block;background:#1f8f9b;color:#ffffff;font-family:Arial,sans-serif;font-size:14px;font-weight:700;text-decoration:none;padding:14px 32px;border-radius:8px;letter-spacing:0.3px;">Confirmar mi cuenta</a>
+            <p style="margin:32px 0 0;font-family:Arial,sans-serif;font-size:12px;color:#aaa;line-height:1.6;">Si no creaste esta cuenta, puedes ignorar este email.<br>El enlace expira en 24 horas.</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:20px 48px;border-top:1px solid #ede9e4;background:#faf8f5;">
+            <p style="margin:0;font-family:Arial,sans-serif;font-size:11px;color:#aaa;line-height:1.6;text-align:center;">HenKoaching · Jennifer Cervera · <a href="{{ .SiteURL }}" style="color:#1f8f9b;text-decoration:none;">henkoaching.com</a></p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`
+
+const DEFAULT_TEMPLATE_RECOVERY = `<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Recupera tu contraseña</title></head>
+<body style="margin:0;padding:0;background:#f0ece6;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0ece6;padding:48px 16px;">
+    <tr><td align="center">
+      <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;max-width:560px;width:100%;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+        <tr>
+          <td style="padding:36px 48px 28px;border-bottom:1px solid #ede9e4;text-align:center;">
+            <img src="{{ .SiteURL }}/henkologo.png" width="180" alt="HenKoaching" style="display:block;margin:0 auto;max-width:180px;">
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:40px 48px;">
+            <h1 style="margin:0 0 16px;font-family:Georgia,serif;font-size:26px;font-weight:700;color:#1a1a1a;line-height:1.3;">Recupera tu<br>contraseña</h1>
+            <p style="margin:0 0 32px;font-family:Arial,sans-serif;font-size:15px;color:#444;line-height:1.7;">Recibimos una solicitud para restablecer la contraseña de tu cuenta. Haz clic en el botón para crear una nueva contraseña.</p>
+            <a href="{{ .ConfirmationURL }}" style="display:inline-block;background:#1f8f9b;color:#ffffff;font-family:Arial,sans-serif;font-size:14px;font-weight:700;text-decoration:none;padding:14px 32px;border-radius:8px;letter-spacing:0.3px;">Restablecer contraseña</a>
+            <p style="margin:32px 0 0;font-family:Arial,sans-serif;font-size:12px;color:#aaa;line-height:1.6;">Si no solicitaste este cambio, puedes ignorar este email.<br>El enlace expira en 1 hora.</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:20px 48px;border-top:1px solid #ede9e4;background:#faf8f5;">
+            <p style="margin:0;font-family:Arial,sans-serif;font-size:11px;color:#aaa;line-height:1.6;text-align:center;">HenKoaching · Jennifer Cervera · <a href="{{ .SiteURL }}" style="color:#1f8f9b;text-decoration:none;">henkoaching.com</a></p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`
+
+const DEFAULT_TEMPLATE_INVITE = `<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Invitación a HenKoaching</title></head>
+<body style="margin:0;padding:0;background:#f0ece6;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0ece6;padding:48px 16px;">
+    <tr><td align="center">
+      <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;max-width:560px;width:100%;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+        <tr>
+          <td style="padding:36px 48px 28px;border-bottom:1px solid #ede9e4;text-align:center;">
+            <img src="{{ .SiteURL }}/henkologo.png" width="180" alt="HenKoaching" style="display:block;margin:0 auto;max-width:180px;">
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:40px 48px;">
+            <h1 style="margin:0 0 16px;font-family:Georgia,serif;font-size:26px;font-weight:700;color:#1a1a1a;line-height:1.3;">Tienes una<br>invitación</h1>
+            <p style="margin:0 0 8px;font-family:Arial,sans-serif;font-size:14px;color:#777;line-height:1.6;">Has sido invitada a unirte a HenKoaching con el email:</p>
+            <p style="margin:0 0 28px;font-family:Arial,sans-serif;font-size:14px;color:#1f8f9b;font-weight:600;">{{ .Email }}</p>
+            <p style="margin:0 0 32px;font-family:Arial,sans-serif;font-size:15px;color:#444;line-height:1.7;">Acepta la invitación para crear tu cuenta y acceder a tu área personal.</p>
+            <a href="{{ .ConfirmationURL }}" style="display:inline-block;background:#1f8f9b;color:#ffffff;font-family:Arial,sans-serif;font-size:14px;font-weight:700;text-decoration:none;padding:14px 32px;border-radius:8px;letter-spacing:0.3px;">Aceptar invitación</a>
+            <p style="margin:32px 0 0;font-family:Arial,sans-serif;font-size:12px;color:#aaa;line-height:1.6;">Si no esperabas esta invitación, puedes ignorar este email.<br>El enlace expira en 24 horas.</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:20px 48px;border-top:1px solid #ede9e4;background:#faf8f5;">
+            <p style="margin:0;font-family:Arial,sans-serif;font-size:11px;color:#aaa;line-height:1.6;text-align:center;">HenKoaching · Jennifer Cervera · <a href="{{ .SiteURL }}" style="color:#1f8f9b;text-decoration:none;">henkoaching.com</a></p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`
+
+const DEFAULT_TEMPLATE_MAGIC_LINK = `<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Tu enlace de acceso</title></head>
+<body style="margin:0;padding:0;background:#f0ece6;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0ece6;padding:48px 16px;">
+    <tr><td align="center">
+      <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;max-width:560px;width:100%;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+        <tr>
+          <td style="padding:36px 48px 28px;border-bottom:1px solid #ede9e4;text-align:center;">
+            <img src="{{ .SiteURL }}/henkologo.png" width="180" alt="HenKoaching" style="display:block;margin:0 auto;max-width:180px;">
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:40px 48px;">
+            <h1 style="margin:0 0 16px;font-family:Georgia,serif;font-size:26px;font-weight:700;color:#1a1a1a;line-height:1.3;">Tu enlace<br>de acceso</h1>
+            <p style="margin:0 0 8px;font-family:Arial,sans-serif;font-size:14px;color:#777;line-height:1.6;">Solicitaste acceder a HenKoaching con:</p>
+            <p style="margin:0 0 28px;font-family:Arial,sans-serif;font-size:14px;color:#1f8f9b;font-weight:600;">{{ .Email }}</p>
+            <p style="margin:0 0 32px;font-family:Arial,sans-serif;font-size:15px;color:#444;line-height:1.7;">Haz clic en el botón para iniciar sesión directamente, sin necesidad de contraseña.</p>
+            <a href="{{ .ConfirmationURL }}" style="display:inline-block;background:#1f8f9b;color:#ffffff;font-family:Arial,sans-serif;font-size:14px;font-weight:700;text-decoration:none;padding:14px 32px;border-radius:8px;letter-spacing:0.3px;">Iniciar sesión</a>
+            <p style="margin:32px 0 0;font-family:Arial,sans-serif;font-size:12px;color:#aaa;line-height:1.6;">Si no solicitaste este enlace, puedes ignorar este email.<br>El enlace expira en 1 hora y solo puede usarse una vez.</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:20px 48px;border-top:1px solid #ede9e4;background:#faf8f5;">
+            <p style="margin:0;font-family:Arial,sans-serif;font-size:11px;color:#aaa;line-height:1.6;text-align:center;">HenKoaching · Jennifer Cervera · <a href="{{ .SiteURL }}" style="color:#1f8f9b;text-decoration:none;">henkoaching.com</a></p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`
 
 async function fetchSupabaseSmtpConfig(): Promise<Partial<EmailConfigPublic>> {
   const token = process.env.SUPABASE_ACCESS_TOKEN
@@ -83,6 +229,14 @@ async function updateSupabaseSmtpConfig(input: EmailConfigInput, password: strin
     smtp_port: input.smtp_port,
     smtp_user: input.smtp_user,
     smtp_sender_name: input.smtp_from_name,
+    mailer_subjects_confirmation: input.subject_confirmation,
+    mailer_subjects_recovery: input.subject_recovery,
+    mailer_subjects_invite: input.subject_invite,
+    mailer_subjects_magic_link: input.subject_magic_link,
+    mailer_templates_confirmation_content: input.template_confirmation,
+    mailer_templates_recovery_content: input.template_recovery,
+    mailer_templates_invite_content: input.template_invite,
+    mailer_templates_magic_link_content: input.template_magic_link,
   }
   if (password) body.smtp_pass = password
 
@@ -125,6 +279,14 @@ export async function getEmailConfig(): Promise<EmailConfigPublic> {
     imap_user: (data?.imap_user as string | null) ?? null,
     imap_encryption: (data?.imap_encryption as string | null) ?? 'ssl',
     hasImapPassword: !!(data?.imap_password),
+    subject_confirmation: (data?.subject_confirmation as string | null) ?? 'Confirma tu cuenta en HenKoaching',
+    subject_recovery: (data?.subject_recovery as string | null) ?? 'Recupera tu contraseña de HenKoaching',
+    subject_invite: (data?.subject_invite as string | null) ?? 'Te invitan a unirse a HenKoaching',
+    subject_magic_link: (data?.subject_magic_link as string | null) ?? 'Tu enlace de acceso a HenKoaching',
+    template_confirmation: (data?.template_confirmation as string | null) ?? DEFAULT_TEMPLATE_CONFIRMATION,
+    template_recovery: (data?.template_recovery as string | null) ?? DEFAULT_TEMPLATE_RECOVERY,
+    template_invite: (data?.template_invite as string | null) ?? DEFAULT_TEMPLATE_INVITE,
+    template_magic_link: (data?.template_magic_link as string | null) ?? DEFAULT_TEMPLATE_MAGIC_LINK,
   }
 }
 
@@ -154,6 +316,14 @@ export async function guardarEmailConfig(input: EmailConfigInput) {
     imap_port: input.imap_port,
     imap_user: input.imap_user.trim() || null,
     imap_encryption: input.imap_encryption,
+    subject_confirmation: input.subject_confirmation.trim() || 'Confirma tu cuenta en HenKoaching',
+    subject_recovery: input.subject_recovery.trim() || 'Recupera tu contraseña de HenKoaching',
+    subject_invite: input.subject_invite.trim() || 'Te invitan a unirse a HenKoaching',
+    subject_magic_link: input.subject_magic_link.trim() || 'Tu enlace de acceso a HenKoaching',
+    template_confirmation: input.template_confirmation || DEFAULT_TEMPLATE_CONFIRMATION,
+    template_recovery: input.template_recovery || DEFAULT_TEMPLATE_RECOVERY,
+    template_invite: input.template_invite || DEFAULT_TEMPLATE_INVITE,
+    template_magic_link: input.template_magic_link || DEFAULT_TEMPLATE_MAGIC_LINK,
     updated_at: new Date().toISOString(),
   }
 
