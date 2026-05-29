@@ -12,17 +12,20 @@ type ImapCredentials = {
 }
 
 function buildClient(creds: ImapCredentials): ImapFlow {
-  return new ImapFlow({
+  const client = new ImapFlow({
     host: creds.host,
     port: creds.port,
     secure: creds.encryption === 'ssl',
     auth: { user: creds.user, pass: creds.password },
     logger: false,
-    connectionTimeout: 20000,
-    greetingTimeout: 10000,
-    socketTimeout: 30000,
+    connectionTimeout: 15000,
+    greetingTimeout: 8000,
+    socketTimeout: 20000,
     tls: creds.encryption !== 'none' ? { rejectUnauthorized: false } : undefined,
   })
+  // Evitar que errores de socket propaguen como uncaughtException
+  client.on('error', () => { /* manejado en connect() */ })
+  return client
 }
 
 async function safeLogout(client: ImapFlow) {
