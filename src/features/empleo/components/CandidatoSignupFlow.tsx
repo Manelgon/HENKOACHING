@@ -67,7 +67,9 @@ function ComboboxField({
   value, onChange, options, placeholder, className = '',
 }: { value: string; onChange: (v: string) => void; options: string[]; placeholder: string; className?: string }) {
   const [open, setOpen] = useState(false)
+  const [dropUp, setDropUp] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
   const filtered = value.length
     ? options.filter(o => o.toLowerCase().includes(value.toLowerCase())).slice(0, 10)
     : options.slice(0, 10)
@@ -80,15 +82,24 @@ function ComboboxField({
     return () => document.removeEventListener('mousedown', handle)
   }, [])
 
+  const handleOpen = () => {
+    if (inputRef.current) {
+      const rect = inputRef.current.getBoundingClientRect()
+      setDropUp(window.innerHeight - rect.bottom < 240)
+    }
+    setOpen(true)
+  }
+
   return (
     <div ref={ref} className={`relative ${className}`} style={{ isolation: 'isolate' }}>
       <div className="relative">
         <input
+          ref={inputRef}
           className={inputClass + ' pr-8'}
           value={value}
           placeholder={placeholder}
-          onChange={e => { onChange(e.target.value); setOpen(true) }}
-          onFocus={() => setOpen(true)}
+          onChange={e => { onChange(e.target.value); handleOpen() }}
+          onFocus={handleOpen}
           onKeyDown={e => { if (e.key === 'Escape') setOpen(false) }}
           autoComplete="off"
         />
@@ -97,7 +108,10 @@ function ComboboxField({
         </svg>
       </div>
       {open && (
-        <ul className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-xl max-h-52 overflow-auto" style={{ zIndex: 9999 }}>
+        <ul
+          className={`absolute left-0 right-0 bg-white border border-gray-200 rounded-xl shadow-xl max-h-52 overflow-auto ${dropUp ? 'bottom-full mb-1' : 'top-full mt-1'}`}
+          style={{ zIndex: 9999 }}
+        >
           {filtered.length > 0 ? filtered.map(opt => (
             <li
               key={opt}
