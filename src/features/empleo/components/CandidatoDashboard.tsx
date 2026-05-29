@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useTransition } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
@@ -888,6 +888,9 @@ function TabTrayectoria({ experiencias: initExp, educacion: initEdu, idiomas: in
 }) {
   const router = useRouter()
   const runAction = useAction()
+  const [refreshing, startRefresh] = useTransition()
+  const [acting, setActing] = useState(false)
+  const isLoading = acting || refreshing
 
   const [exps, setExps] = useState(initExp)
   const [edus, setEdus] = useState(initEdu)
@@ -899,49 +902,66 @@ function TabTrayectoria({ experiencias: initExp, educacion: initEdu, idiomas: in
   const [addingEdu, setAddingEdu] = useState(false)
   const [addingIdi, setAddingIdi] = useState(false)
 
-  const refresh = () => router.refresh()
+  const doRefresh = () => startRefresh(() => router.refresh())
 
   // — Experiencia —
   async function saveExp(fd: FormData, id?: string) {
-    const action = id
-      ? () => actualizarExperiencia(id, fd)
-      : () => crearExperiencia(fd)
-    const r = await runAction('Guardando experiencia', action, { successMessage: 'Guardado' })
-    if (r.ok) { setEditingExp(null); setAddingExp(false); refresh() }
+    setActing(true)
+    const action = id ? () => actualizarExperiencia(id, fd) : () => crearExperiencia(fd)
+    const r = await runAction('Guardando experiencia', action, { silentSuccess: true })
+    setActing(false)
+    if (r.ok) { setEditingExp(null); setAddingExp(false); doRefresh() }
   }
   async function deleteExp(id: string) {
-    const r = await runAction('Eliminando', () => eliminarExperiencia(id), { successMessage: 'Eliminado' })
-    if (r.ok) { setExps(p => p.filter(e => e.id !== id)); refresh() }
+    setActing(true)
+    const r = await runAction('Eliminando', () => eliminarExperiencia(id), { silentSuccess: true })
+    setActing(false)
+    if (r.ok) { setExps(p => p.filter(e => e.id !== id)); doRefresh() }
   }
 
   // — Educación —
   async function saveEdu(fd: FormData, id?: string) {
-    const action = id
-      ? () => actualizarEducacion(id, fd)
-      : () => crearEducacion(fd)
-    const r = await runAction('Guardando educación', action, { successMessage: 'Guardado' })
-    if (r.ok) { setEditingEdu(null); setAddingEdu(false); refresh() }
+    setActing(true)
+    const action = id ? () => actualizarEducacion(id, fd) : () => crearEducacion(fd)
+    const r = await runAction('Guardando educación', action, { silentSuccess: true })
+    setActing(false)
+    if (r.ok) { setEditingEdu(null); setAddingEdu(false); doRefresh() }
   }
   async function deleteEdu(id: string) {
-    const r = await runAction('Eliminando', () => eliminarEducacion(id), { successMessage: 'Eliminado' })
-    if (r.ok) { setEdus(p => p.filter(e => e.id !== id)); refresh() }
+    setActing(true)
+    const r = await runAction('Eliminando', () => eliminarEducacion(id), { silentSuccess: true })
+    setActing(false)
+    if (r.ok) { setEdus(p => p.filter(e => e.id !== id)); doRefresh() }
   }
 
   // — Idiomas —
   async function saveIdi(fd: FormData, id?: string) {
-    const action = id
-      ? () => actualizarIdioma(id, fd)
-      : () => crearIdioma(fd)
-    const r = await runAction('Guardando idioma', action, { successMessage: 'Guardado' })
-    if (r.ok) { setEditingIdi(null); setAddingIdi(false); refresh() }
+    setActing(true)
+    const action = id ? () => actualizarIdioma(id, fd) : () => crearIdioma(fd)
+    const r = await runAction('Guardando idioma', action, { silentSuccess: true })
+    setActing(false)
+    if (r.ok) { setEditingIdi(null); setAddingIdi(false); doRefresh() }
   }
   async function deleteIdi(id: string) {
-    const r = await runAction('Eliminando', () => eliminarIdioma(id), { successMessage: 'Eliminado' })
-    if (r.ok) { setIdis(p => p.filter(i => i.id !== id)); refresh() }
+    setActing(true)
+    const r = await runAction('Eliminando', () => eliminarIdioma(id), { silentSuccess: true })
+    setActing(false)
+    if (r.ok) { setIdis(p => p.filter(i => i.id !== id)); doRefresh() }
   }
 
   return (
-    <div>
+    <div className="relative">
+      {isLoading && (
+        <div className="absolute inset-0 z-10 bg-white/70 backdrop-blur-[2px] rounded-2xl flex items-center justify-center">
+          <div className="flex items-center gap-2.5 bg-white shadow-lg rounded-full px-5 py-2.5 border border-henko-turquoise/20">
+            <svg className="w-4 h-4 text-henko-turquoise animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+            <span className="text-xs font-semibold text-henko-turquoise">Guardando…</span>
+          </div>
+        </div>
+      )}
       <Eyebrow>Mi trayectoria</Eyebrow>
       <h2 className="font-roxborough text-2xl md:text-3xl text-gray-900 mb-8">Experiencia, educación e idiomas</h2>
 
