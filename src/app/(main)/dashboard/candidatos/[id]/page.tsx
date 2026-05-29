@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { getCandidatoPerfil } from '@/actions/candidatos-admin'
 import CandidatoHeader from '@/features/candidatos/components/CandidatoHeader'
-import { CandidatoExperiencia, CandidatoEducacion, CandidatoIdiomas } from '@/features/candidatos/components/CandidatoExperiencia'
+import { CandidatoExperiencia, CandidatoEducacion, CandidatoIdiomas, CandidatoPreferencias } from '@/features/candidatos/components/CandidatoExperiencia'
 import CandidatoCVs from '@/features/candidatos/components/CandidatoCVs'
 import CandidatoSolicitudes from '@/features/candidatos/components/CandidatoSolicitudes'
 
@@ -41,9 +41,10 @@ export default async function CandidatoPerfilPage({ params }: Props) {
       <div className="space-y-5">
         <CandidatoHeader perfil={perfil} />
         <CandidatoSolicitudes solicitudes={perfil.solicitudes} candidatoId={id} />
-        {perfil.experiencias.length > 0 && <CandidatoExperiencia experiencias={perfil.experiencias} />}
-        {perfil.educacion.length > 0 && <CandidatoEducacion educacion={perfil.educacion} />}
-        {perfil.idiomas.length > 0 && <CandidatoIdiomas idiomas={perfil.idiomas} />}
+        <CandidatoExperiencia experiencias={perfil.experiencias} />
+        <CandidatoEducacion educacion={perfil.educacion} />
+        <CandidatoIdiomas idiomas={perfil.idiomas} />
+        <CandidatoPreferencias perfil={perfil} />
         {perfil.cvs.length > 0 && <CandidatoCVs cvs={perfil.cvs} />}
       </div>
     </div>

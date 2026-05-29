@@ -91,7 +91,7 @@ export async function getCandidatoPerfil(userId: string): Promise<CandidatoPerfi
   if (!profile) return null
 
   type ProfileRow = { id: string; nombre: string | null; apellidos: string | null; email: string; telefono: string | null }
-  type CpRow = { cargo_actual: string | null; ubicacion: string | null; resumen: string | null; linkedin_url: string | null; web_url: string | null; disponibilidad: string | null; pretension_salarial: string | null }
+  type CpRow = { cargo_actual: string | null; ubicacion: string | null; localidad: string | null; cp: string | null; resumen: string | null; linkedin_url: string | null; web_url: string | null; disponibilidad: string | null; pretension_salarial: string | null; tipo_jornada: string | null; modalidad_trabajo: string | null; tipo_contrato: string | null; sectores_interes: string[] | null }
   type ExpRow = { id: string; empresa: string; cargo: string; desde: string | null; hasta: string | null; descripcion: string | null }
   type EduRow = { id: string; centro: string; titulo: string; ano_fin: string | null }
   type IdiomaRow = { id: string; idioma: string; nivel: string }
@@ -109,11 +109,17 @@ export async function getCandidatoPerfil(userId: string): Promise<CandidatoPerfi
     telefono: p.telefono,
     cargo_actual: c?.cargo_actual ?? null,
     ubicacion: c?.ubicacion ?? null,
+    localidad: c?.localidad ?? null,
+    cp: c?.cp ?? null,
     resumen: c?.resumen ?? null,
     linkedin_url: c?.linkedin_url ?? null,
     web_url: c?.web_url ?? null,
     disponibilidad: c?.disponibilidad ?? null,
     pretension_salarial: c?.pretension_salarial ?? null,
+    tipo_jornada: c?.tipo_jornada ?? null,
+    modalidad_trabajo: c?.modalidad_trabajo ?? null,
+    tipo_contrato: c?.tipo_contrato ?? null,
+    sectores_interes: c?.sectores_interes ?? null,
     experiencias: ((experiencias ?? []) as unknown as ExpRow[]).map((e) => ({
       id: e.id, empresa: e.empresa, cargo: e.cargo, desde: e.desde, hasta: e.hasta, descripcion: e.descripcion,
     })),

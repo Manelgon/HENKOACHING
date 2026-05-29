@@ -59,11 +59,17 @@ export type CandidatoPerfil = {
   telefono: string | null
   cargo_actual: string | null
   ubicacion: string | null
+  localidad: string | null
+  cp: string | null
   resumen: string | null
   linkedin_url: string | null
   web_url: string | null
   disponibilidad: string | null
   pretension_salarial: string | null
+  tipo_jornada: string | null
+  modalidad_trabajo: string | null
+  tipo_contrato: string | null
+  sectores_interes: string[] | null
   experiencias: Experiencia[]
   educacion: Educacion[]
   idiomas: Idioma[]
