@@ -43,17 +43,17 @@ export default async function CandidatoPerfilPage({ params }: Props) {
 
       {/* Dos columnas */}
       <div className="mt-5 grid grid-cols-1 xl:grid-cols-2 gap-5 items-start">
-        {/* Columna izquierda: experiencia, educación, idiomas */}
+        {/* Columna izquierda: experiencia, educación, idiomas, preferencias */}
         <div className="space-y-5">
           <CandidatoExperiencia experiencias={perfil.experiencias} />
           <CandidatoEducacion educacion={perfil.educacion} />
           <CandidatoIdiomas idiomas={perfil.idiomas} />
+          <CandidatoPreferencias perfil={perfil} />
         </div>
 
-        {/* Columna derecha: CV, preferencias, solicitudes */}
+        {/* Columna derecha: CV, solicitudes */}
         <div className="space-y-5">
           {perfil.cvs.length > 0 && <CandidatoCVs cvs={perfil.cvs} />}
-          <CandidatoPreferencias perfil={perfil} />
           <CandidatoSolicitudes solicitudes={perfil.solicitudes} candidatoId={id} />
         </div>
       </div>
