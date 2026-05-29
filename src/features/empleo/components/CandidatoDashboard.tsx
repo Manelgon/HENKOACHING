@@ -434,7 +434,7 @@ function TabPerfil({ perfil, completion, cv }: { perfil: PerfilView; completion:
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
-        <form action={onSubmit} className="bg-white rounded-2xl px-9 py-8 border border-henko-turquoise/15 shadow-sm space-y-4">
+        <form action={onSubmit} className="bg-white rounded-2xl px-9 py-8 border border-henko-turquoise/15 shadow-sm space-y-4 xl:row-span-2">
           <div className="grid grid-cols-2 gap-4">
             <Field label="NOMBRE" name="nombre" defaultValue={perfil.nombre} />
             <Field label="APELLIDOS" name="apellidos" defaultValue={perfil.apellidos} />
@@ -467,8 +467,10 @@ function TabPerfil({ perfil, completion, cv }: { perfil: PerfilView; completion:
           </button>
         </form>
 
-        <CvInline cv={cv} />
-        <PrivacidadInline perfil={perfil} />
+        <div className="flex flex-col gap-5">
+          <CvInline cv={cv} />
+          <PrivacidadInline perfil={perfil} />
+        </div>
       </div>
     </div>
   )
@@ -1301,7 +1303,7 @@ function PrivacidadInline({ perfil }: { perfil: PerfilView }) {
   }
 
   return (
-    <div className="max-w-xl mt-6 pt-6 border-t border-gray-200">
+    <div>
       <p className="text-[10px] tracking-[0.14em] text-henko-turquoise font-bold mb-4">PRIVACIDAD Y DATOS (RGPD)</p>
 
       <div className="bg-white rounded-2xl px-7 py-6 border border-henko-turquoise/15 shadow-sm mb-4">
