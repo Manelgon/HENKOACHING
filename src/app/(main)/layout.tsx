@@ -175,13 +175,15 @@ export default async function MainLayout({ children }: { children: React.ReactNo
   const hasImapConfig = !!(emailConfig?.imap_host && emailConfig?.hasImapPassword)
 
   return (
-    <DashboardShell
-      sections={sections}
-      userEmail={user.email ?? ''}
-      userInitial={userInitial}
-    >
+    <>
       {isAdmin && <EmailPoller hasImapConfig={hasImapConfig} />}
-      {children}
-    </DashboardShell>
+      <DashboardShell
+        sections={sections}
+        userEmail={user.email ?? ''}
+        userInitial={userInitial}
+      >
+        {children}
+      </DashboardShell>
+    </>
   )
 }
