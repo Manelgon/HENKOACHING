@@ -39,14 +39,14 @@ export async function getCandidatos(): Promise<CandidatoRow[]> {
     admin.from('candidato_profiles').select('user_id, cargo_actual, ubicacion, tipo_jornada, modalidad_trabajo, sectores_interes'),
     admin.from('solicitudes').select('candidato_id'),
     admin.from('cvs').select('candidato_id, storage_path').eq('es_principal', true).is('deleted_at', null),
-    admin.from('candidato_experiencias').select('candidato_id, cargo, hasta').order('desde', { ascending: false }),
+    admin.from('candidato_experiencias').select('candidato_id, cargo, empresa, hasta').order('desde', { ascending: false }),
     admin.from('candidato_educacion').select('candidato_id'),
   ])
 
   type CpRow = { user_id: string; cargo_actual: string | null; ubicacion: string | null; tipo_jornada: string | null; modalidad_trabajo: string | null; sectores_interes: string[] | null }
   type CvRow = { candidato_id: string; storage_path: string }
   type IdRow = { candidato_id: string }
-  type ExpRow = { candidato_id: string; cargo: string; hasta: string | null }
+  type ExpRow = { candidato_id: string; cargo: string; empresa: string; hasta: string | null }
 
   const candidatoProfiles = cpResult.data as CpRow[] | null
   const solicitudes = solResult.data as IdRow[] | null
@@ -69,11 +69,11 @@ export async function getCandidatos(): Promise<CandidatoRow[]> {
     arr.push(e)
     expByCandidate.set(e.candidato_id, arr)
   }
-  function getCargoExp(candidatoId: string): string | null {
+  function getCargoExp(candidatoId: string): { cargo: string; empresa: string; actual: boolean } | null {
     const exps = expByCandidate.get(candidatoId) ?? []
     if (exps.length === 0) return null
-    const actual = exps.find(e => !e.hasta)
-    return (actual ?? exps[0]).cargo
+    const exp = exps.find(e => !e.hasta) ?? exps[0]
+    return { cargo: exp.cargo, empresa: exp.empresa, actual: !exp.hasta }
   }
   const expSet = new Set(expByCandidate.keys())
 
@@ -86,7 +86,9 @@ export async function getCandidatos(): Promise<CandidatoRow[]> {
       email: p.email,
       telefono: p.telefono,
       cargo_actual: cp?.cargo_actual ?? null,
-      cargo_experiencia: getCargoExp(p.id),
+      cargo_experiencia: getCargoExp(p.id)?.cargo ?? null,
+      empresa_experiencia: getCargoExp(p.id)?.empresa ?? null,
+      exp_es_actual: getCargoExp(p.id)?.actual ?? false,
       ubicacion: cp?.ubicacion ?? null,
       created_at: p.created_at,
       solicitudes_count: countMap.get(p.id) ?? 0,

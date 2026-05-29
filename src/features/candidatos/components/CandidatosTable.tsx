@@ -207,7 +207,15 @@ export default function CandidatosTable({ candidatos }: { candidatos: CandidatoR
 
                 {/* Cargo / Ubicación */}
                 <div className="col-span-2 min-w-0">
-                  <p className="font-raleway text-xs text-gray-700 truncate">{c.cargo_experiencia ?? '—'}</p>
+                  {c.cargo_experiencia ? (
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <p className="font-raleway text-xs text-gray-700 truncate">{c.cargo_experiencia}</p>
+                      {c.exp_es_actual && <span className="text-[10px] bg-green-50 text-green-600 px-1.5 py-0.5 rounded font-raleway font-medium shrink-0">Actual</span>}
+                    </div>
+                  ) : (
+                    <p className="font-raleway text-xs text-gray-300">—</p>
+                  )}
+                  {c.empresa_experiencia && <p className="font-raleway text-xs text-gray-400 truncate mt-0.5">{c.empresa_experiencia}</p>}
                   {c.ubicacion && <p className="font-raleway text-xs text-gray-400 truncate mt-0.5">{c.ubicacion}</p>}
                 </div>
 
