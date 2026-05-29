@@ -362,9 +362,11 @@ export type Database = {
       candidato_profiles: {
         Row: {
           cargo_actual: string | null
+          cp: string | null
           created_at: string | null
           disponibilidad: string | null
           linkedin_url: string | null
+          localidad: string | null
           modalidad_trabajo: string | null
           pretension_salarial: string | null
           resumen: string | null
@@ -378,9 +380,11 @@ export type Database = {
         }
         Insert: {
           cargo_actual?: string | null
+          cp?: string | null
           created_at?: string | null
           disponibilidad?: string | null
           linkedin_url?: string | null
+          localidad?: string | null
           modalidad_trabajo?: string | null
           pretension_salarial?: string | null
           resumen?: string | null
@@ -394,9 +398,11 @@ export type Database = {
         }
         Update: {
           cargo_actual?: string | null
+          cp?: string | null
           created_at?: string | null
           disponibilidad?: string | null
           linkedin_url?: string | null
+          localidad?: string | null
           modalidad_trabajo?: string | null
           pretension_salarial?: string | null
           resumen?: string | null

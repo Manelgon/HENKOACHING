@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, Fragment } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { signupCandidato, uploadCv } from '@/actions/candidato'
+import { signupCandidato, uploadCv, checkEmailCandidatoExiste, solicitarResetCandidato } from '@/actions/candidato'
 import { useAction } from '@/shared/feedback/FeedbackContext'
 import { FormError } from '@/components/FormError'
 
@@ -11,9 +11,25 @@ type StepCuentaErrors = { nombre?: string; apellidos?: string; email?: string; p
 
 type FormState = {
   nombre: string; apellidos: string; email: string; password: string
-  telefonoPrefijo: string; telefono: string; ubicacion: string; cargo: string
+  telefonoPrefijo: string; telefono: string; ubicacion: string; localidad: string; cp: string; cargo: string
   cv: File | null
 }
+
+const CARGOS = [
+  'Director/a General','Director/a de Operaciones','Director/a de RRHH',
+  'Director/a Comercial','Director/a de Marketing','Director/a Financiero/a',
+  'Responsable de Operaciones','Responsable de RRHH','Responsable Comercial',
+  'Responsable de Marketing','Responsable de Logística','Responsable de Producción',
+  'Jefe/a de Equipo','Coordinador/a','Project Manager','Account Manager',
+  'Técnico/a de RRHH','Técnico/a Comercial','Administrativo/a','Auxiliar Administrativo/a',
+  'Recepcionista','Atención al Cliente','Comercial','Asesor/a Comercial',
+  'Dependiente/a','Encargado/a de Tienda','Responsable de Tienda',
+  'Cocinero/a','Jefe/a de Cocina','Camarero/a','Barista','Recepcionista de Hotel',
+  'Diseñador/a Gráfico/a','Desarrollador/a Web','Analista de Datos',
+  'Community Manager','Especialista en Marketing Digital','SEO/SEM',
+  'Enfermero/a','Auxiliar de Enfermería','Fisioterapeuta','Psicólogo/a',
+  'Maestro/a','Educador/a','Monitor/a','Formador/a','Otro',
+]
 
 const PREFIJOS = [
   { label: '🇪🇸 +34', value: '+34' },
@@ -108,7 +124,7 @@ export default function CandidatoSignupFlow() {
   const [done, setDone] = useState(false)
   const [form, setForm] = useState<FormState>({
     nombre: '', apellidos: '', email: '', password: '',
-    telefonoPrefijo: '+34', telefono: '', ubicacion: '', cargo: '',
+    telefonoPrefijo: '+34', telefono: '', ubicacion: '', localidad: '', cp: '', cargo: '',
     cv: null,
   })
   const fileRef = useRef<HTMLInputElement>(null)
@@ -124,7 +140,7 @@ export default function CandidatoSignupFlow() {
         nombre: form.nombre, apellidos: form.apellidos,
         email: form.email, password: form.password,
         telefono: form.telefono ? `${form.telefonoPrefijo} ${form.telefono}` : '',
-        ubicacion: form.ubicacion, cargo: form.cargo,
+        ubicacion: form.ubicacion, localidad: form.localidad, cp: form.cp, cargo: form.cargo,
         tipoJornada: '', modalidad: '', tipoContrato: '',
         sectores: [], disponibilidad: '', pretensionSalarial: '',
         experiencias: [], educacion: [], idiomas: [],
@@ -225,11 +241,16 @@ function SecondaryBtn({ children, onClick }: { children: React.ReactNode; onClic
 
 // ── Paso 1 ───────────────────────────────────────────────────────────────────
 function StepCuenta({ form, upd, next }: { form: FormState; upd: <K extends keyof FormState>(k: K, v: FormState[K]) => void; next: () => void }) {
+  const router = useRouter()
   const [errors, setErrors] = useState<StepCuentaErrors>({})
   const [showPassword, setShowPassword] = useState(false)
   const [aceptoPrivacidad, setAceptoPrivacidad] = useState(false)
+  const [checking, setChecking] = useState(false)
+  const [emailRegistrado, setEmailRegistrado] = useState(false)
+  const [sendingReset, setSendingReset] = useState(false)
+  const [resetSent, setResetSent] = useState(false)
 
-  const validar = () => {
+  const validar = async () => {
     const errs: StepCuentaErrors = {}
     if (!form.nombre.trim()) errs.nombre = 'Introduce tu nombre'
     if (!form.apellidos.trim()) errs.apellidos = 'Introduce tus apellidos'
@@ -239,8 +260,22 @@ function StepCuenta({ form, upd, next }: { form: FormState; upd: <K extends keyo
     else if (form.password.length < 8) errs.password = 'Contraseña mínimo 8 caracteres'
     if (!aceptoPrivacidad) errs.privacidad = 'Debes aceptar la política de privacidad para continuar'
     if (Object.keys(errs).length) { setErrors(errs); return }
+
+    setChecking(true)
+    const { exists } = await checkEmailCandidatoExiste(form.email)
+    setChecking(false)
+
+    if (exists) { setEmailRegistrado(true); return }
+
     setErrors({})
     next()
+  }
+
+  const handleReset = async () => {
+    setSendingReset(true)
+    await solicitarResetCandidato(form.email)
+    setSendingReset(false)
+    setResetSent(true)
   }
 
   const fieldClass = (hasError: boolean) =>
@@ -304,7 +339,53 @@ function StepCuenta({ form, upd, next }: { form: FormState; upd: <K extends keyo
         <FormError msg={errors.privacidad} />
       </div>
 
-      <PrimaryBtn onClick={validar} full>Continuar →</PrimaryBtn>
+      {emailRegistrado && (
+        <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-5">
+          <div className="flex items-start gap-3 mb-4">
+            <svg className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+            </svg>
+            <div>
+              <p className="text-sm font-semibold text-amber-800 mb-1">Este correo ya está registrado como candidato</p>
+              <p className="text-xs text-amber-700">Si ya tienes cuenta, accede con tu email y contraseña.</p>
+            </div>
+          </div>
+          <div className="flex flex-col gap-2">
+            <button
+              type="button"
+              onClick={() => router.push('/candidato/login')}
+              className="w-full bg-henko-turquoise text-white text-sm font-semibold py-2.5 rounded-xl hover:bg-henko-turquoise/90 transition-colors"
+            >
+              Ir al acceso de candidatos →
+            </button>
+            {!resetSent ? (
+              <button
+                type="button"
+                onClick={handleReset}
+                disabled={sendingReset}
+                className="w-full text-sm text-amber-700 hover:text-amber-900 py-2 underline underline-offset-2 disabled:opacity-50 transition-colors"
+              >
+                {sendingReset ? 'Enviando...' : '¿Olvidaste tu contraseña? Enviar email de recuperación'}
+              </button>
+            ) : (
+              <p className="text-center text-xs text-amber-700 py-2">
+                ✓ Email enviado a <span className="font-semibold">{form.email}</span>. Revisa tu bandeja de entrada.
+              </p>
+            )}
+            <button
+              type="button"
+              onClick={() => { setEmailRegistrado(false); setResetSent(false) }}
+              className="text-xs text-gray-400 hover:text-gray-600 text-center py-1 transition-colors"
+            >
+              ← Usar otro correo
+            </button>
+          </div>
+        </div>
+      )}
+
+      <PrimaryBtn onClick={validar} full disabled={checking}>
+        {checking ? 'Verificando...' : 'Continuar →'}
+      </PrimaryBtn>
     </div>
   )
 }
@@ -324,33 +405,31 @@ function StepPerfil({ form, upd, back, next }: { form: FormState; upd: <K extend
             value={form.telefonoPrefijo}
             onChange={e => upd('telefonoPrefijo', e.target.value)}
           >
-            {PREFIJOS.map(p => (
-              <option key={p.value} value={p.value}>{p.label}</option>
-            ))}
+            {PREFIJOS.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
           </select>
-          <input
-            className={inputClass}
-            type="tel"
-            placeholder="600 000 000"
-            value={form.telefono}
-            onChange={e => upd('telefono', e.target.value)}
-          />
+          <input className={inputClass} type="tel" placeholder="600 000 000" value={form.telefono} onChange={e => upd('telefono', e.target.value)} />
         </div>
       </div>
 
       <div className="mb-4">
-        <label className={labelClass}>UBICACIÓN</label>
-        <ComboboxField
-          value={form.ubicacion}
-          onChange={v => upd('ubicacion', v)}
-          options={PROVINCIAS}
-          placeholder="Busca tu provincia…"
-        />
+        <label className={labelClass}>PROVINCIA</label>
+        <ComboboxField value={form.ubicacion} onChange={v => upd('ubicacion', v)} options={PROVINCIAS} placeholder="Busca tu provincia…" />
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 mb-4">
+        <div>
+          <label className={labelClass}>LOCALIDAD</label>
+          <input className={inputClass} placeholder="Ciudad o municipio" value={form.localidad} onChange={e => upd('localidad', e.target.value)} />
+        </div>
+        <div>
+          <label className={labelClass}>CÓDIGO POSTAL</label>
+          <input className={inputClass} placeholder="08001" maxLength={5} value={form.cp} onChange={e => upd('cp', e.target.value.replace(/\D/g, '').slice(0, 5))} />
+        </div>
       </div>
 
       <div className="mb-6">
         <label className={labelClass}>CARGO ACTUAL / OBJETIVO</label>
-        <input className={inputClass} type="text" placeholder="p.ej. Responsable de Operaciones" value={form.cargo} onChange={e => upd('cargo', e.target.value)} />
+        <ComboboxField value={form.cargo} onChange={v => upd('cargo', v)} options={CARGOS} placeholder="p.ej. Responsable de Operaciones" />
       </div>
 
       <div className="flex gap-3">

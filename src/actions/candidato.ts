@@ -18,6 +18,8 @@ export type CandidatoSignupInput = {
   password: string
   telefono: string
   ubicacion: string
+  localidad: string
+  cp: string
   cargo: string
   tipoJornada: string
   modalidad: string
@@ -117,6 +119,8 @@ export async function signupCandidato(input: CandidatoSignupInput) {
     .from('candidato_profiles')
     .update({
       ubicacion: input.ubicacion || null,
+      localidad: input.localidad || null,
+      cp: input.cp || null,
       cargo_actual: input.cargo || null,
       tipo_jornada: input.tipoJornada || null,
       modalidad_trabajo: input.modalidad || null,
