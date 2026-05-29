@@ -16,17 +16,29 @@ export default function BandejaInbox({ hasImapConfig }: Props) {
   const [selected, setSelected] = useState<EmailDetail | null>(null)
   const [loadingDetail, setLoadingDetail] = useState(false)
 
-  const cargar = useCallback(async () => {
-    setLoading(true)
+  const cargar = useCallback(async (silencioso = false) => {
+    if (!silencioso) setLoading(true)
     setError(null)
     const r = await listarEmailsBandeja()
-    setLoading(false)
+    if (!silencioso) setLoading(false)
     if ('error' in r) {
       setError(r.error ?? 'Error desconocido')
     } else {
       setMensajes(r.messages)
     }
   }, [])
+
+  // Cargar al montar
+  useEffect(() => { cargar() }, [cargar])
+
+  // Auto-refresco cada 60s mientras la página está visible
+  useEffect(() => {
+    if (!hasImapConfig) return
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') cargar(true)
+    }, 60_000)
+    return () => clearInterval(interval)
+  }, [hasImapConfig, cargar])
 
   async function abrirEmail(uid: number) {
     setLoadingDetail(true)
@@ -81,7 +93,7 @@ export default function BandejaInbox({ hasImapConfig }: Props) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
             )}
-            {mensajes === null ? 'Cargar emails' : 'Actualizar'}
+            Actualizar
           </button>
         </div>
 
@@ -94,7 +106,7 @@ export default function BandejaInbox({ hasImapConfig }: Props) {
 
         {mensajes === null && !loading && !error && (
           <div className="px-6 py-12 text-center">
-            <p className="font-raleway text-gray-400 text-sm">Pulsa «Cargar emails» para ver la bandeja de entrada.</p>
+            <p className="font-raleway text-gray-400 text-sm">Conectando…</p>
           </div>
         )}
 
