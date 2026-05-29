@@ -10,6 +10,7 @@ export type CandidatoRow = {
   ubicacion: string | null
   created_at: string | null
   solicitudes_count: number
+  es_nuevo: boolean    // registrado en los últimos 7 días
 }
 
 export type Experiencia = {

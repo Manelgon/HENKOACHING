@@ -12,13 +12,14 @@ function formatDate(d: string | null) {
 
 export default function CandidatosTable({ candidatos }: { candidatos: CandidatoRow[] }) {
   const [busqueda, setBusqueda] = useState('')
-  const [filtroSolicitudes, setFiltroSolicitudes] = useState<'todos' | 'con' | 'sin'>('todos')
+  const [filtroSolicitudes, setFiltroSolicitudes] = useState<'todos' | 'con' | 'sin' | 'nuevos'>('todos')
 
   const filtered = useMemo(() => {
     const q = busqueda.trim().toLowerCase()
     return candidatos.filter((c) => {
       if (filtroSolicitudes === 'con' && c.solicitudes_count === 0) return false
       if (filtroSolicitudes === 'sin' && c.solicitudes_count > 0) return false
+      if (filtroSolicitudes === 'nuevos' && !c.es_nuevo) return false
       if (q) {
         const hay = `${c.nombre ?? ''} ${c.apellidos ?? ''} ${c.email} ${c.cargo_actual ?? ''} ${c.ubicacion ?? ''} ${c.telefono ?? ''}`.toLowerCase()
         if (!hay.includes(q)) return false
@@ -50,7 +51,8 @@ export default function CandidatosTable({ candidatos }: { candidatos: CandidatoR
           onChange={(e) => setFiltroSolicitudes(e.target.value as typeof filtroSolicitudes)}
           className="px-4 py-2.5 rounded-xl border border-gray-200 bg-white font-raleway text-sm outline-none focus:border-henko-turquoise transition-colors"
         >
-          <option value="todos">Todas las solicitudes</option>
+          <option value="todos">Todos</option>
+          <option value="nuevos">Nuevos (7 días)</option>
           <option value="con">Con solicitudes</option>
           <option value="sin">Sin solicitudes</option>
         </select>
@@ -86,8 +88,13 @@ export default function CandidatosTable({ candidatos }: { candidatos: CandidatoR
               {/* Fila desktop */}
               <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-4 items-center">
                 <div className="col-span-3 flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-henko-turquoise/20 flex items-center justify-center text-henko-turquoise font-bold text-sm flex-shrink-0">
-                    {(c.nombre?.[0] ?? c.email[0]).toUpperCase()}
+                  <div className="relative w-8 h-8 flex-shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-henko-turquoise/20 flex items-center justify-center text-henko-turquoise font-bold text-sm">
+                      {(c.nombre?.[0] ?? c.email[0]).toUpperCase()}
+                    </div>
+                    {c.es_nuevo && (
+                      <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-green-400 border-2 border-white" />
+                    )}
                   </div>
                   <span className="font-raleway font-semibold text-gray-900 text-sm truncate">
                     {[c.nombre, c.apellidos].filter(Boolean).join(' ') || c.email}

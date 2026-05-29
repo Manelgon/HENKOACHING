@@ -57,6 +57,9 @@ export async function getCandidatos(): Promise<CandidatoRow[]> {
       ubicacion: cp?.ubicacion ?? null,
       created_at: p.created_at,
       solicitudes_count: countMap.get(p.id) ?? 0,
+      es_nuevo: p.created_at
+        ? new Date(p.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+        : false,
     }
   })
 }
