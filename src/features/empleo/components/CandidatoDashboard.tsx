@@ -18,7 +18,7 @@ import { getCvUrl } from '@/actions/solicitudes'
 import type { EstadoSolicitud } from '@/lib/supabase/database.types'
 import { useAction, useConfirm } from '@/shared/feedback/FeedbackContext'
 
-type Tab = 'solicitudes' | 'perfil' | 'trayectoria' | 'preferencias' | 'cv' | 'privacidad'
+type Tab = 'solicitudes' | 'perfil' | 'trayectoria' | 'preferencias' | 'privacidad'
 
 const ESTADO_META: Record<EstadoSolicitud, { label: string; badge: string }> = {
   nuevo:      { label: 'Nueva',       badge: 'bg-henko-turquoise/15 text-henko-turquoise' },
@@ -33,7 +33,6 @@ const NAV: { id: Tab; label: string }[] = [
   { id: 'perfil',       label: 'Mi perfil' },
   { id: 'trayectoria',  label: 'Trayectoria' },
   { id: 'preferencias', label: 'Preferencias' },
-  { id: 'cv',           label: 'Mi CV' },
   { id: 'privacidad',   label: 'Privacidad y datos' },
 ]
 
@@ -98,7 +97,7 @@ const COMPLETION_ITEMS: { key: keyof CompletionData; label: string; weight: numb
   { key: 'hasCargo',       label: 'Cargo objetivo',         weight: 5,  tab: 'perfil' },
   { key: 'hasResumen',     label: 'Resumen profesional',    weight: 10, tab: 'perfil' },
   { key: 'hasLinkedin',    label: 'LinkedIn',               weight: 5,  tab: 'perfil' },
-  { key: 'hasCv',          label: 'CV subido',              weight: 15, tab: 'cv' },
+  { key: 'hasCv',          label: 'CV subido',              weight: 15, tab: 'perfil' },
   { key: 'hasExperiencia', label: 'Experiencia laboral',    weight: 15, tab: 'trayectoria' },
   { key: 'hasEducacion',   label: 'Educación',              weight: 10, tab: 'trayectoria' },
   { key: 'hasIdioma',      label: 'Idiomas',                weight: 10, tab: 'trayectoria' },
@@ -256,10 +255,9 @@ export default function CandidatoDashboard({ perfil, completion, cv, solicitudes
 
         <main className="flex-1 px-5 py-6 md:p-12 overflow-y-auto">
           {tab === 'solicitudes'  && <TabSolicitudes solicitudes={solicitudes} completion={completion} pct={pct} onGoTab={goTab} />}
-          {tab === 'perfil'       && <TabPerfil perfil={perfil} completion={completion} />}
+          {tab === 'perfil'       && <TabPerfil perfil={perfil} completion={completion} cv={cv} />}
           {tab === 'trayectoria'  && <TabTrayectoria experiencias={experiencias} educacion={educacion} idiomas={idiomas} />}
           {tab === 'preferencias' && <TabPreferencias preferencias={preferencias} />}
-          {tab === 'cv'           && <TabCV cv={cv} />}
           {tab === 'privacidad'   && <TabPrivacidad perfil={perfil} onGoTab={setTab} />}
         </main>
       </div>
@@ -370,7 +368,7 @@ function TabSolicitudes({ solicitudes, completion, pct, onGoTab }: { solicitudes
   )
 }
 
-function TabPerfil({ perfil, completion }: { perfil: PerfilView; completion: CompletionData }) {
+function TabPerfil({ perfil, completion, cv }: { perfil: PerfilView; completion: CompletionData; cv: CvView }) {
   const router = useRouter()
   const runAction = useAction()
   const avatarRef = useRef<HTMLInputElement>(null)
@@ -469,6 +467,8 @@ function TabPerfil({ perfil, completion }: { perfil: PerfilView; completion: Com
           Guardar cambios
         </button>
       </form>
+
+      <CvInline cv={cv} />
     </div>
   )
 }
@@ -488,7 +488,7 @@ function Field({ label, name, defaultValue, disabled, placeholder }: { label: st
   )
 }
 
-function TabCV({ cv }: { cv: CvView }) {
+function CvInline({ cv }: { cv: CvView }) {
   const router = useRouter()
   const runAction = useAction()
   const fileRef = useRef<HTMLInputElement>(null)
@@ -498,21 +498,13 @@ function TabCV({ cv }: { cv: CvView }) {
     if (!file) return
     const fd = new FormData()
     fd.append('cv', file)
-    const result = await runAction(
-      'Subiendo CV',
-      () => uploadCv(fd),
-      { successMessage: 'CV actualizado' },
-    )
+    const result = await runAction('Subiendo CV', () => uploadCv(fd), { successMessage: 'CV actualizado' })
     if (result.ok) router.refresh()
   }
 
   async function descargar() {
     if (!cv) return
-    const result = await runAction(
-      'Generando enlace del CV',
-      () => getCvUrl(cv.storage_path),
-      { silentSuccess: true },
-    )
+    const result = await runAction('Generando enlace', () => getCvUrl(cv.storage_path), { silentSuccess: true })
     if (result.ok && result.data.url) window.open(result.data.url, '_blank')
   }
 
@@ -521,44 +513,31 @@ function TabCV({ cv }: { cv: CvView }) {
     : ''
 
   return (
-    <div>
-      <Eyebrow>Mi CV</Eyebrow>
-      <h2 className="font-roxborough text-2xl md:text-3xl text-gray-900 mb-8">Currículum</h2>
-
-      <div className="bg-white rounded-2xl px-9 py-10 border border-henko-turquoise/15 shadow-sm max-w-md text-center">
-        <div className="w-16 h-16 rounded-full bg-henko-turquoise/15 flex items-center justify-center mx-auto mb-4">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1f8f9b" strokeWidth="2">
+    <div className="bg-white rounded-2xl px-9 py-7 border border-henko-turquoise/15 shadow-sm max-w-xl mt-5">
+      <p className="text-[10px] tracking-[0.14em] text-henko-turquoise font-bold mb-4">CURRÍCULUM VITAE</p>
+      <div className="flex items-center gap-4">
+        <div className="w-10 h-10 rounded-xl bg-henko-turquoise/10 flex items-center justify-center shrink-0">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1f8f9b" strokeWidth="2">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
             <polyline points="14 2 14 8 20 8" />
           </svg>
         </div>
-
-        {cv ? (
-          <>
-            <p className="font-roxborough text-xl mb-1.5">{cv.nombre_archivo}</p>
-            <p className="text-xs text-gray-400 mb-6">Subido el {fechaSubida}</p>
-          </>
-        ) : (
-          <>
-            <p className="font-roxborough text-xl mb-1.5">Sin CV subido</p>
-            <p className="text-xs text-gray-400 mb-6">Sube tu currículum en PDF para aplicar a ofertas</p>
-          </>
-        )}
-
-        <input
-          ref={fileRef}
-          type="file"
-          accept=".pdf"
-          className="hidden"
-          onChange={onUpload}
-        />
-
-        <div className="flex flex-col gap-2.5 items-center">
+        <div className="flex-1 min-w-0">
+          {cv ? (
+            <>
+              <p className="text-sm font-semibold text-gray-900 truncate">{cv.nombre_archivo}</p>
+              <p className="text-xs text-gray-400">Subido el {fechaSubida}</p>
+            </>
+          ) : (
+            <p className="text-sm text-gray-400 italic">Sin CV subido — sube tu PDF para aplicar a ofertas</p>
+          )}
+        </div>
+        <div className="flex gap-2 shrink-0">
           {cv && (
             <button
               type="button"
               onClick={descargar}
-              className="inline-flex items-center gap-2 bg-transparent border-2 border-henko-turquoise text-henko-turquoise px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-henko-turquoise hover:text-white transition-all"
+              className="text-xs border border-henko-turquoise text-henko-turquoise px-4 py-2 rounded-full font-semibold hover:bg-henko-turquoise hover:text-white transition-all"
             >
               Descargar
             </button>
@@ -566,12 +545,13 @@ function TabCV({ cv }: { cv: CvView }) {
           <button
             type="button"
             onClick={() => fileRef.current?.click()}
-            className="inline-flex items-center gap-2 bg-henko-turquoise text-white px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-henko-turquoise-light hover:shadow-lg transition-all"
+            className="text-xs bg-henko-turquoise text-white px-4 py-2 rounded-full font-semibold hover:bg-henko-turquoise-light transition-all"
           >
-            {cv ? 'Actualizar CV' : 'Subir CV'}
+            {cv ? 'Actualizar' : 'Subir CV'}
           </button>
         </div>
       </div>
+      <input ref={fileRef} type="file" accept=".pdf" className="hidden" onChange={onUpload} />
     </div>
   )
 }
