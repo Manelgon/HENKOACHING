@@ -308,7 +308,9 @@ export async function actualizarPerfilCandidato(formData: FormData) {
 
   const nombre = formData.get('nombre') as string
   const apellidos = formData.get('apellidos') as string
-  const telefono = formData.get('telefono') as string
+  const telefonoPrefijo = (formData.get('telefono_prefijo') as string) || '+34'
+  const telefonoNumero = ((formData.get('telefono_numero') as string) || '').trim()
+  const telefono = telefonoNumero ? `${telefonoPrefijo} ${telefonoNumero}` : ''
   const ubicacion = formData.get('ubicacion') as string
   const localidad = formData.get('localidad') as string | null
   const cp = formData.get('cp') as string | null
