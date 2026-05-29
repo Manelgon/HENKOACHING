@@ -83,6 +83,7 @@ export default async function CandidatoDashboardPage() {
         id: i.id, idioma: i.idioma, nivel: i.nivel,
       }))}
       preferencias={{
+        cargo: candProfile?.cargo_actual ?? '',
         tipoJornada: candProfile?.tipo_jornada ?? '',
         modalidad: candProfile?.modalidad_trabajo ?? '',
         tipoContrato: candProfile?.tipo_contrato ?? '',

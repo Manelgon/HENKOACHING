@@ -753,6 +753,7 @@ export async function actualizarPreferencias(formData: FormData) {
 
   const { error } = await supabase.from('candidato_profiles')
     .update({
+      cargo_actual: (formData.get('cargo') as string) || null,
       tipo_jornada: (formData.get('tipo_jornada') as string) || null,
       modalidad_trabajo: (formData.get('modalidad_trabajo') as string) || null,
       tipo_contrato: (formData.get('tipo_contrato') as string) || null,

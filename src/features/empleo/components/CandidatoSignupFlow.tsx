@@ -12,6 +12,7 @@ type StepCuentaErrors = { nombre?: string; apellidos?: string; email?: string; p
 type FormState = {
   nombre: string; apellidos: string; email: string; password: string
   telefonoPrefijo: string; telefono: string; ubicacion: string; localidad: string; cp: string; cargo: string
+  sectores: string[]
   cv: File | null
 }
 
@@ -139,6 +140,7 @@ export default function CandidatoSignupFlow() {
   const [form, setForm] = useState<FormState>({
     nombre: '', apellidos: '', email: '', password: '',
     telefonoPrefijo: '+34', telefono: '', ubicacion: '', localidad: '', cp: '', cargo: '',
+    sectores: [],
     cv: null,
   })
   const fileRef = useRef<HTMLInputElement>(null)
@@ -461,6 +463,27 @@ function StepPerfil({ form, upd, back, next }: { form: FormState; upd: <K extend
       <div className="mb-6">
         <label className={labelClass}>CARGO ACTUAL / OBJETIVO</label>
         <ComboboxField value={form.cargo} onChange={v => upd('cargo', v)} options={CARGOS} placeholder="p.ej. Responsable de Operaciones" />
+      </div>
+
+      <div className="mb-6">
+        <label className={labelClass}>SECTORES DE INTERÉS <span className="text-gray-400 font-normal normal-case">(opcional)</span></label>
+        <div className="flex flex-wrap gap-2 mt-1">
+          {['Recursos Humanos', 'Administración', 'Comercial / Ventas', 'Marketing', 'Tecnología',
+            'Finanzas', 'Legal', 'Operaciones', 'Logística', 'Atención al cliente',
+            'Educación / Formación', 'Salud', 'Diseño / Creatividad', 'Comunicación', 'Otro'].map((s) => {
+            const sel = form.sectores.includes(s)
+            return (
+              <button
+                key={s}
+                type="button"
+                onClick={() => upd('sectores', sel ? form.sectores.filter(x => x !== s) : [...form.sectores, s])}
+                className={`text-xs px-3 py-1.5 rounded-full border font-medium transition-all ${sel ? 'bg-henko-turquoise text-white border-henko-turquoise' : 'bg-transparent text-gray-600 border-gray-200 hover:border-henko-turquoise hover:text-henko-turquoise'}`}
+              >
+                {s}
+              </button>
+            )
+          })}
+        </div>
       </div>
 
       <div className="flex gap-3">
