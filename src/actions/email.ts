@@ -161,7 +161,7 @@ const DEFAULT_TEMPLATE_CONFIRMATION = `<!DOCTYPE html>
       <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;max-width:560px;width:100%;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
         <tr>
           <td style="padding:36px 48px 28px;border-bottom:1px solid #ede9e4;text-align:center;">
-            <img src="{{ .SiteURL }}/henkologo.png" width="180" alt="HenKoaching" style="display:block;margin:0 auto;max-width:180px;">
+            <img src="https://henkoaching.com/henkologo.png" width="180" alt="HenKoaching" style="display:block;margin:0 auto;max-width:180px;">
           </td>
         </tr>
         <tr>

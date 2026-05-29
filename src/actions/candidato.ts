@@ -100,6 +100,7 @@ export async function signupCandidato(input: CandidatoSignupInput) {
     email: input.email,
     password: input.password,
     options: {
+      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/candidato/login`,
       data: {
         nombre: input.nombre,
         apellidos: input.apellidos,
