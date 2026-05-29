@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { logAction } from '@/lib/audit/log-action'
 import { encryptText, decryptText } from '@/lib/crypto/encrypt'
+import { templateCandidaturaCandidato, templateCandidaturaAdmin } from '@/lib/email/templates/candidatura'
 
 async function requireAdmin() {
   const supabase = await createClient()
@@ -41,6 +42,12 @@ export type EmailConfigInput = {
   template_recovery: string
   template_invite: string
   template_magic_link: string
+  subject_candidatura_candidato: string
+  template_candidatura_candidato: string
+  subject_candidatura_admin: string
+  template_candidatura_admin: string
+  subject_cambio_estado: string
+  template_cambio_estado: string
 }
 
 export type EmailConfigPublic = {
@@ -63,7 +70,74 @@ export type EmailConfigPublic = {
   template_recovery: string
   template_invite: string
   template_magic_link: string
+  subject_candidatura_candidato: string
+  template_candidatura_candidato: string
+  subject_candidatura_admin: string
+  template_candidatura_admin: string
+  subject_cambio_estado: string
+  template_cambio_estado: string
 }
+
+// ── Defaults para templates transaccionales del portal de empleo ──────────────
+
+const SITE_URL_DEFAULT = 'https://henkoaching.com'
+
+const DEFAULT_SUBJECT_CANDIDATURA_CANDIDATO = 'Tu candidatura ha sido recibida — {{ofertaTitulo}}'
+const DEFAULT_SUBJECT_CANDIDATURA_ADMIN = 'Nueva candidatura — {{candidatoNombre}}'
+const DEFAULT_SUBJECT_CAMBIO_ESTADO = 'Actualización de tu candidatura — {{ofertaTitulo}}'
+
+const DEFAULT_TEMPLATE_CANDIDATURA_CANDIDATO = templateCandidaturaCandidato({
+  candidatoNombre: '{{candidatoNombre}}',
+  ofertaTitulo: '{{ofertaTitulo}}',
+  empresaNombre: '{{empresaNombre}}',
+  siteUrl: SITE_URL_DEFAULT,
+})
+
+const DEFAULT_TEMPLATE_CANDIDATURA_ADMIN = templateCandidaturaAdmin({
+  candidatoNombre: '{{candidatoNombre}}',
+  candidatoEmail: '{{candidatoEmail}}',
+  ofertaTitulo: '{{ofertaTitulo}}',
+  perfilUrl: '{{perfilUrl}}',
+  siteUrl: SITE_URL_DEFAULT,
+})
+
+const DEFAULT_TEMPLATE_CAMBIO_ESTADO = `<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f0ece6;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0ece6;padding:48px 16px;">
+    <tr><td align="center">
+      <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;max-width:560px;width:100%;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+        <tr>
+          <td style="padding:36px 48px 28px;border-bottom:1px solid #ede9e4;text-align:center;">
+            <img src="${SITE_URL_DEFAULT}/henkologo.png" width="180" alt="HenKoaching" style="display:block;margin:0 auto;max-width:180px;">
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:40px 48px;">
+            <div style="display:inline-block;background:#1f8f9b1a;color:#1f8f9b;font-family:Arial,sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:4px 10px;border-radius:4px;margin:0 0 20px;">{{estadoLabel}}</div>
+            <h1 style="margin:0 0 16px;font-family:Georgia,serif;font-size:26px;font-weight:700;color:#1a1a1a;line-height:1.3;">Actualización de<br>tu candidatura</h1>
+            <p style="margin:0 0 20px;font-family:Arial,sans-serif;font-size:15px;color:#444;line-height:1.7;">Hola {{candidatoNombre}},</p>
+            <div style="background:#f8f9fa;border-left:3px solid #1f8f9b;border-radius:0 8px 8px 0;padding:16px 20px;margin:0 0 24px;">
+              <p style="margin:0 0 8px;font-family:Arial,sans-serif;font-size:12px;color:#999;text-transform:uppercase;letter-spacing:1px;">Oferta</p>
+              <p style="margin:0;font-family:Arial,sans-serif;font-size:15px;color:#1a1a1a;font-weight:600;">{{ofertaTitulo}}</p>
+            </div>
+            <p style="margin:0 0 24px;font-family:Arial,sans-serif;font-size:15px;color:#444;line-height:1.7;">Hemos actualizado el estado de tu candidatura. Puedes consultar todos los detalles en tu área personal.</p>
+            <p style="margin:0;font-family:Arial,sans-serif;font-size:13px;color:#aaa;line-height:1.6;">Si tienes alguna pregunta, no dudes en contactarnos.</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:20px 48px;border-top:1px solid #ede9e4;background:#faf8f5;">
+            <p style="margin:0;font-family:Arial,sans-serif;font-size:11px;color:#aaa;line-height:1.6;text-align:center;">HenKoaching · Jennifer Cervera · <a href="${SITE_URL_DEFAULT}" style="color:#1f8f9b;text-decoration:none;">henkoaching.com</a></p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`
+
+// ──────────────────────────────────────────────────────────────────────────────
 
 const DEFAULT_TEMPLATE_CONFIRMATION = `<!DOCTYPE html>
 <html lang="es">
@@ -287,6 +361,12 @@ export async function getEmailConfig(): Promise<EmailConfigPublic> {
     template_recovery: (data?.template_recovery as string | null) ?? DEFAULT_TEMPLATE_RECOVERY,
     template_invite: (data?.template_invite as string | null) ?? DEFAULT_TEMPLATE_INVITE,
     template_magic_link: (data?.template_magic_link as string | null) ?? DEFAULT_TEMPLATE_MAGIC_LINK,
+    subject_candidatura_candidato: (data?.subject_candidatura_candidato as string | null) ?? DEFAULT_SUBJECT_CANDIDATURA_CANDIDATO,
+    template_candidatura_candidato: (data?.template_candidatura_candidato as string | null) ?? DEFAULT_TEMPLATE_CANDIDATURA_CANDIDATO,
+    subject_candidatura_admin: (data?.subject_candidatura_admin as string | null) ?? DEFAULT_SUBJECT_CANDIDATURA_ADMIN,
+    template_candidatura_admin: (data?.template_candidatura_admin as string | null) ?? DEFAULT_TEMPLATE_CANDIDATURA_ADMIN,
+    subject_cambio_estado: (data?.subject_cambio_estado as string | null) ?? DEFAULT_SUBJECT_CAMBIO_ESTADO,
+    template_cambio_estado: (data?.template_cambio_estado as string | null) ?? DEFAULT_TEMPLATE_CAMBIO_ESTADO,
   }
 }
 
@@ -324,6 +404,12 @@ export async function guardarEmailConfig(input: EmailConfigInput) {
     template_recovery: input.template_recovery || DEFAULT_TEMPLATE_RECOVERY,
     template_invite: input.template_invite || DEFAULT_TEMPLATE_INVITE,
     template_magic_link: input.template_magic_link || DEFAULT_TEMPLATE_MAGIC_LINK,
+    subject_candidatura_candidato: input.subject_candidatura_candidato.trim() || null,
+    template_candidatura_candidato: input.template_candidatura_candidato.trim() || null,
+    subject_candidatura_admin: input.subject_candidatura_admin.trim() || null,
+    template_candidatura_admin: input.template_candidatura_admin.trim() || null,
+    subject_cambio_estado: input.subject_cambio_estado.trim() || null,
+    template_cambio_estado: input.template_cambio_estado.trim() || null,
     updated_at: new Date().toISOString(),
   }
 

@@ -11,6 +11,17 @@ import type { EstadoSolicitud } from '@/lib/supabase/database.types'
 
 const ESTADOS_CON_EMAIL: EstadoSolicitud[] = ['revisando', 'entrevista', 'contratado', 'descartado']
 
+const ESTADO_LABEL: Record<string, string> = {
+  revisando: 'En revisión',
+  entrevista: 'Entrevista',
+  contratado: 'Seleccionado',
+  descartado: 'Proceso cerrado',
+}
+
+function interpolate(template: string, vars: Record<string, string>): string {
+  return Object.entries(vars).reduce((t, [k, v]) => t.replaceAll(`{{${k}}}`, v), template)
+}
+
 export async function aplicarAOferta(ofertaId: string, mensaje?: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -69,9 +80,12 @@ export async function aplicarAOferta(ofertaId: string, mensaje?: string) {
       const admin = createAdminClient()
       const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://henkoaching.com'
 
-      const [{ data: perfil }, { data: oferta }] = await Promise.all([
+      const [{ data: perfil }, { data: oferta }, { data: tmpl }] = await Promise.all([
         admin.from('profiles').select('email, nombre, apellidos').eq('id', user.id).single(),
         admin.from('ofertas').select('titulo, empresa_oculta, clientes(nombre)').eq('id', ofertaId).single(),
+        admin.from('email_settings' as never).select(
+          'subject_candidatura_candidato, template_candidatura_candidato, subject_candidatura_admin, template_candidatura_admin'
+        ).eq('id', 1).maybeSingle() as unknown as Promise<{ data: Record<string, string | null> | null }>,
       ])
 
       const nombreCandidato = [perfil?.nombre, perfil?.apellidos].filter(Boolean).join(' ') || 'Candidato'
@@ -79,35 +93,27 @@ export async function aplicarAOferta(ofertaId: string, mensaje?: string) {
       const nombreEmpresa = oferta?.empresa_oculta ? 'empresa confidencial' : (clienteData?.nombre ?? '')
 
       if (perfil?.email) {
-        await sendTransactional({
-          to: perfil.email,
-          subject: `Tu candidatura ha sido recibida — ${oferta?.titulo ?? ''}`,
-          html: templateCandidaturaCandidato({
-            candidatoNombre: nombreCandidato,
-            ofertaTitulo: oferta?.titulo ?? '',
-            empresaNombre: nombreEmpresa,
-            siteUrl,
-          }),
-          tipo: 'candidatura.candidato',
-          metadata: { solicitud_id: nueva?.id, oferta_id: ofertaId, candidato_id: user.id },
-        })
+        const vars = { candidatoNombre: nombreCandidato, ofertaTitulo: oferta?.titulo ?? '', empresaNombre: nombreEmpresa }
+        const subject = tmpl?.subject_candidatura_candidato
+          ? interpolate(tmpl.subject_candidatura_candidato, vars)
+          : `Tu candidatura ha sido recibida — ${oferta?.titulo ?? ''}`
+        const html = tmpl?.template_candidatura_candidato
+          ? interpolate(tmpl.template_candidatura_candidato, vars)
+          : templateCandidaturaCandidato({ ...vars, siteUrl })
+        await sendTransactional({ to: perfil.email, subject, html, tipo: 'candidatura.candidato', metadata: { solicitud_id: nueva?.id, oferta_id: ofertaId, candidato_id: user.id } })
       }
 
       const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL
       if (adminEmail && perfil?.email) {
-        await sendTransactional({
-          to: adminEmail,
-          subject: `Nueva candidatura — ${nombreCandidato}`,
-          html: templateCandidaturaAdmin({
-            candidatoNombre: nombreCandidato,
-            candidatoEmail: perfil.email,
-            ofertaTitulo: oferta?.titulo ?? '',
-            perfilUrl: `${siteUrl}/dashboard/candidatos/${user.id}`,
-            siteUrl,
-          }),
-          tipo: 'candidatura.admin',
-          metadata: { solicitud_id: nueva?.id, oferta_id: ofertaId, candidato_id: user.id },
-        })
+        const perfilUrl = `${siteUrl}/dashboard/candidatos/${user.id}`
+        const vars = { candidatoNombre: nombreCandidato, candidatoEmail: perfil.email, ofertaTitulo: oferta?.titulo ?? '', perfilUrl }
+        const subject = tmpl?.subject_candidatura_admin
+          ? interpolate(tmpl.subject_candidatura_admin, vars)
+          : `Nueva candidatura — ${nombreCandidato}`
+        const html = tmpl?.template_candidatura_admin
+          ? interpolate(tmpl.template_candidatura_admin, vars)
+          : templateCandidaturaAdmin({ ...vars, siteUrl })
+        await sendTransactional({ to: adminEmail, subject, html, tipo: 'candidatura.admin', metadata: { solicitud_id: nueva?.id, oferta_id: ofertaId, candidato_id: user.id } })
       }
     } catch (e) {
       console.error('[email] hook aplicarAOferta:', e)
@@ -152,26 +158,33 @@ export async function cambiarEstadoSolicitud(solicitudId: string, estado: Estado
         const admin = createAdminClient()
         const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://henkoaching.com'
 
-        const [{ data: perfil }, { data: oferta }] = await Promise.all([
+        const [{ data: perfil }, { data: oferta }, { data: tmpl }] = await Promise.all([
           admin.from('profiles').select('email, nombre, apellidos').eq('id', candidatoId).single(),
           ofertaId
             ? admin.from('ofertas').select('titulo').eq('id', ofertaId).single()
             : Promise.resolve({ data: null }),
+          admin.from('email_settings' as never).select(
+            'subject_cambio_estado, template_cambio_estado'
+          ).eq('id', 1).maybeSingle() as unknown as Promise<{ data: Record<string, string | null> | null }>,
         ])
 
         if (!perfil?.email) return
 
         const nombreCandidato = [perfil.nombre, perfil.apellidos].filter(Boolean).join(' ') || 'Candidato'
+        const estadoLabel = ESTADO_LABEL[estado] ?? estado
+
+        const vars = { candidatoNombre: nombreCandidato, ofertaTitulo: oferta?.titulo ?? '', estadoLabel }
+        const subject = tmpl?.subject_cambio_estado
+          ? interpolate(tmpl.subject_cambio_estado, vars)
+          : `Actualización de tu candidatura — ${oferta?.titulo ?? ''}`
+        const html = tmpl?.template_cambio_estado
+          ? interpolate(tmpl.template_cambio_estado, vars)
+          : templateEstadoSolicitud({ candidatoNombre: nombreCandidato, ofertaTitulo: oferta?.titulo ?? '', estado, siteUrl })
 
         await sendTransactional({
           to: perfil.email,
-          subject: `Actualización de tu candidatura — ${oferta?.titulo ?? ''}`,
-          html: templateEstadoSolicitud({
-            candidatoNombre: nombreCandidato,
-            ofertaTitulo: oferta?.titulo ?? '',
-            estado,
-            siteUrl,
-          }),
+          subject,
+          html,
           tipo: 'cambio_estado',
           metadata: { solicitud_id: solicitudId, candidato_id: candidatoId, estado },
         })

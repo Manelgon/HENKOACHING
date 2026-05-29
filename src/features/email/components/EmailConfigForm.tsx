@@ -25,6 +25,14 @@ export default function EmailConfigForm({ config }: Props) {
     setPreviewHtml(rendered)
   }
 
+  function openPreviewTransaccional(html: string, vars: Record<string, string>) {
+    const rendered = Object.entries(vars).reduce(
+      (t, [k, v]) => t.replaceAll(`{{${k}}}`, v),
+      html,
+    )
+    setPreviewHtml(rendered)
+  }
+
   const [datos, setDatos] = useState<EmailConfigInput>({
     smtp_host: config.smtp_host ?? '',
     smtp_port: config.smtp_port,
@@ -45,6 +53,12 @@ export default function EmailConfigForm({ config }: Props) {
     template_recovery: config.template_recovery,
     template_invite: config.template_invite,
     template_magic_link: config.template_magic_link,
+    subject_candidatura_candidato: config.subject_candidatura_candidato,
+    template_candidatura_candidato: config.template_candidatura_candidato,
+    subject_candidatura_admin: config.subject_candidatura_admin,
+    template_candidatura_admin: config.template_candidatura_admin,
+    subject_cambio_estado: config.subject_cambio_estado,
+    template_cambio_estado: config.template_cambio_estado,
   })
 
   const set = <K extends keyof EmailConfigInput>(key: K, value: EmailConfigInput[K]) =>
@@ -214,9 +228,9 @@ export default function EmailConfigForm({ config }: Props) {
       {/* ── TAB: TEMPLATES ── */}
       {activeTab === 'templates' && (
         <div className="space-y-8">
-          {/* Variables help */}
+          {/* Variables help - Auth */}
           <div className="p-4 bg-amber-50 rounded-xl border border-amber-100">
-            <p className="font-raleway text-xs text-amber-800 font-semibold mb-2">Variables disponibles en los templates</p>
+            <p className="font-raleway text-xs text-amber-800 font-semibold mb-2">Variables disponibles — Templates de autenticación (Supabase)</p>
             <div className="flex flex-wrap gap-2">
               {['{{ .ConfirmationURL }}', '{{ .Email }}', '{{ .SiteURL }}'].map((v) => (
                 <code key={v} className="bg-amber-100 text-amber-900 font-mono text-xs px-2 py-1 rounded-md">{v}</code>
@@ -227,145 +241,205 @@ export default function EmailConfigForm({ config }: Props) {
             </p>
           </div>
 
-          {/* Email de confirmación */}
-          <Section
-            title="Email de confirmación de cuenta"
-            description="Se envía cuando un usuario se registra. Debe incluir {{ .ConfirmationURL }} para que pueda confirmar su cuenta."
-          >
-            <div className="space-y-4">
-              <Field label="Asunto del email">
-                <input
-                  type="text"
-                  value={datos.subject_confirmation}
-                  onChange={(e) => set('subject_confirmation', e.target.value)}
-                  className="input"
-                />
-              </Field>
-              <Field label="HTML del template">
-                <textarea
-                  value={datos.template_confirmation}
-                  onChange={(e) => set('template_confirmation', e.target.value)}
-                  rows={20}
-                  className="input font-mono text-xs resize-y"
-                  spellCheck={false}
-                />
-              </Field>
-              <div className="flex justify-end">
-                <button
-                  type="button"
-                  onClick={() => openPreview(datos.template_confirmation)}
-                  className="px-4 py-2 rounded-xl border border-gray-200 bg-white font-raleway text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                >
-                  Ver preview
-                </button>
+          <div className="space-y-3">
+            <TemplateAccordion title="Email de confirmación de cuenta" description="Se envía cuando un usuario se registra.">
+              <div className="space-y-4">
+                <Field label="Asunto del email">
+                  <input type="text" value={datos.subject_confirmation} onChange={(e) => set('subject_confirmation', e.target.value)} className="input" />
+                </Field>
+                <Field label="HTML del template">
+                  <textarea value={datos.template_confirmation} onChange={(e) => set('template_confirmation', e.target.value)} rows={20} className="input font-mono text-xs resize-y" spellCheck={false} />
+                </Field>
+                <div className="flex justify-end">
+                  <button type="button" onClick={() => openPreview(datos.template_confirmation)} className="px-4 py-2 rounded-xl border border-gray-200 bg-white font-raleway text-sm text-gray-700 hover:bg-gray-50 transition-colors">Ver preview</button>
+                </div>
               </div>
-            </div>
-          </Section>
+            </TemplateAccordion>
 
-          {/* Email de recuperación */}
-          <Section
-            title="Email de recuperación de contraseña"
-            description="Se envía cuando un usuario solicita restablecer su contraseña. Debe incluir {{ .ConfirmationURL }}."
-          >
-            <div className="space-y-4">
-              <Field label="Asunto del email">
-                <input
-                  type="text"
-                  value={datos.subject_recovery}
-                  onChange={(e) => set('subject_recovery', e.target.value)}
-                  className="input"
-                />
-              </Field>
-              <Field label="HTML del template">
-                <textarea
-                  value={datos.template_recovery}
-                  onChange={(e) => set('template_recovery', e.target.value)}
-                  rows={20}
-                  className="input font-mono text-xs resize-y"
-                  spellCheck={false}
-                />
-              </Field>
-              <div className="flex justify-end">
-                <button
-                  type="button"
-                  onClick={() => openPreview(datos.template_recovery)}
-                  className="px-4 py-2 rounded-xl border border-gray-200 bg-white font-raleway text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                >
-                  Ver preview
-                </button>
+            <TemplateAccordion title="Email de recuperación de contraseña" description="Se envía cuando un usuario solicita restablecer su contraseña.">
+              <div className="space-y-4">
+                <Field label="Asunto del email">
+                  <input type="text" value={datos.subject_recovery} onChange={(e) => set('subject_recovery', e.target.value)} className="input" />
+                </Field>
+                <Field label="HTML del template">
+                  <textarea value={datos.template_recovery} onChange={(e) => set('template_recovery', e.target.value)} rows={20} className="input font-mono text-xs resize-y" spellCheck={false} />
+                </Field>
+                <div className="flex justify-end">
+                  <button type="button" onClick={() => openPreview(datos.template_recovery)} className="px-4 py-2 rounded-xl border border-gray-200 bg-white font-raleway text-sm text-gray-700 hover:bg-gray-50 transition-colors">Ver preview</button>
+                </div>
               </div>
-            </div>
-          </Section>
+            </TemplateAccordion>
 
-          {/* Email de invitación */}
-          <Section
-            title="Email de invitación"
-            description="Se envía cuando se invita a un usuario nuevo. Debe incluir {{ .ConfirmationURL }} y {{ .Email }}."
-          >
-            <div className="space-y-4">
-              <Field label="Asunto del email">
-                <input
-                  type="text"
-                  value={datos.subject_invite}
-                  onChange={(e) => set('subject_invite', e.target.value)}
-                  className="input"
-                />
-              </Field>
-              <Field label="HTML del template">
-                <textarea
-                  value={datos.template_invite}
-                  onChange={(e) => set('template_invite', e.target.value)}
-                  rows={20}
-                  className="input font-mono text-xs resize-y"
-                  spellCheck={false}
-                />
-              </Field>
-              <div className="flex justify-end">
-                <button
-                  type="button"
-                  onClick={() => openPreview(datos.template_invite)}
-                  className="px-4 py-2 rounded-xl border border-gray-200 bg-white font-raleway text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                >
-                  Ver preview
-                </button>
+            <TemplateAccordion title="Email de invitación" description="Se envía cuando se invita a un usuario nuevo.">
+              <div className="space-y-4">
+                <Field label="Asunto del email">
+                  <input type="text" value={datos.subject_invite} onChange={(e) => set('subject_invite', e.target.value)} className="input" />
+                </Field>
+                <Field label="HTML del template">
+                  <textarea value={datos.template_invite} onChange={(e) => set('template_invite', e.target.value)} rows={20} className="input font-mono text-xs resize-y" spellCheck={false} />
+                </Field>
+                <div className="flex justify-end">
+                  <button type="button" onClick={() => openPreview(datos.template_invite)} className="px-4 py-2 rounded-xl border border-gray-200 bg-white font-raleway text-sm text-gray-700 hover:bg-gray-50 transition-colors">Ver preview</button>
+                </div>
               </div>
-            </div>
-          </Section>
+            </TemplateAccordion>
 
-          {/* Email de magic link */}
-          <Section
-            title="Email de magic link"
-            description="Se envía cuando un usuario solicita acceder sin contraseña. Debe incluir {{ .ConfirmationURL }}."
-          >
-            <div className="space-y-4">
-              <Field label="Asunto del email">
-                <input
-                  type="text"
-                  value={datos.subject_magic_link}
-                  onChange={(e) => set('subject_magic_link', e.target.value)}
-                  className="input"
-                />
-              </Field>
-              <Field label="HTML del template">
-                <textarea
-                  value={datos.template_magic_link}
-                  onChange={(e) => set('template_magic_link', e.target.value)}
-                  rows={20}
-                  className="input font-mono text-xs resize-y"
-                  spellCheck={false}
-                />
-              </Field>
-              <div className="flex justify-end">
-                <button
-                  type="button"
-                  onClick={() => openPreview(datos.template_magic_link)}
-                  className="px-4 py-2 rounded-xl border border-gray-200 bg-white font-raleway text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                >
-                  Ver preview
-                </button>
+            <TemplateAccordion title="Email de magic link" description="Se envía cuando un usuario solicita acceder sin contraseña.">
+              <div className="space-y-4">
+                <Field label="Asunto del email">
+                  <input type="text" value={datos.subject_magic_link} onChange={(e) => set('subject_magic_link', e.target.value)} className="input" />
+                </Field>
+                <Field label="HTML del template">
+                  <textarea value={datos.template_magic_link} onChange={(e) => set('template_magic_link', e.target.value)} rows={20} className="input font-mono text-xs resize-y" spellCheck={false} />
+                </Field>
+                <div className="flex justify-end">
+                  <button type="button" onClick={() => openPreview(datos.template_magic_link)} className="px-4 py-2 rounded-xl border border-gray-200 bg-white font-raleway text-sm text-gray-700 hover:bg-gray-50 transition-colors">Ver preview</button>
+                </div>
               </div>
+            </TemplateAccordion>
+          </div>
+
+          {/* Variables help - Transaccionales */}
+          <div className="p-4 bg-teal-50 rounded-xl border border-teal-100">
+            <p className="font-raleway text-xs text-teal-800 font-semibold mb-2">Variables disponibles — Emails del portal de empleo</p>
+            <div className="flex flex-wrap gap-2 mb-3">
+              {['{{candidatoNombre}}', '{{ofertaTitulo}}', '{{empresaNombre}}', '{{candidatoEmail}}', '{{perfilUrl}}', '{{estadoLabel}}'].map((v) => (
+                <code key={v} className="bg-teal-100 text-teal-900 font-mono text-xs px-2 py-1 rounded-md">{v}</code>
+              ))}
             </div>
-          </Section>
+            <p className="font-raleway text-xs text-teal-700">
+              Deja el template vacío para usar el diseño por defecto. Si lo personalizas, estas variables se reemplazarán automáticamente.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <TemplateAccordion
+              title="Confirmación de candidatura al candidato"
+              description="Se envía al candidato cuando aplica a una oferta de empleo."
+            >
+              <div className="space-y-4">
+                <Field label="Asunto del email">
+                  <input
+                    type="text"
+                    value={datos.subject_candidatura_candidato}
+                    onChange={(e) => set('subject_candidatura_candidato', e.target.value)}
+                    placeholder="Tu candidatura ha sido recibida — {{ofertaTitulo}}"
+                    className="input"
+                  />
+                </Field>
+                <Field label="HTML del template">
+                  <textarea
+                    value={datos.template_candidatura_candidato}
+                    onChange={(e) => set('template_candidatura_candidato', e.target.value)}
+                    rows={20}
+                    placeholder="Vacío = usar template por defecto"
+                    className="input font-mono text-xs resize-y"
+                    spellCheck={false}
+                  />
+                </Field>
+                {datos.template_candidatura_candidato && (
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => openPreviewTransaccional(datos.template_candidatura_candidato, {
+                        candidatoNombre: 'Laura García',
+                        ofertaTitulo: 'Coach Ejecutivo',
+                        empresaNombre: 'Empresa ejemplo',
+                      })}
+                      className="px-4 py-2 rounded-xl border border-gray-200 bg-white font-raleway text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      Ver preview
+                    </button>
+                  </div>
+                )}
+              </div>
+            </TemplateAccordion>
+
+            <TemplateAccordion
+              title="Notificación de nueva candidatura a Jennifer"
+              description="Se envía a la dirección ADMIN_NOTIFICATION_EMAIL cuando llega una candidatura nueva."
+            >
+              <div className="space-y-4">
+                <Field label="Asunto del email">
+                  <input
+                    type="text"
+                    value={datos.subject_candidatura_admin}
+                    onChange={(e) => set('subject_candidatura_admin', e.target.value)}
+                    placeholder="Nueva candidatura — {{candidatoNombre}}"
+                    className="input"
+                  />
+                </Field>
+                <Field label="HTML del template">
+                  <textarea
+                    value={datos.template_candidatura_admin}
+                    onChange={(e) => set('template_candidatura_admin', e.target.value)}
+                    rows={20}
+                    placeholder="Vacío = usar template por defecto"
+                    className="input font-mono text-xs resize-y"
+                    spellCheck={false}
+                  />
+                </Field>
+                {datos.template_candidatura_admin && (
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => openPreviewTransaccional(datos.template_candidatura_admin, {
+                        candidatoNombre: 'Laura García',
+                        candidatoEmail: 'laura@ejemplo.com',
+                        ofertaTitulo: 'Coach Ejecutivo',
+                        perfilUrl: 'https://henkoaching.com/dashboard/candidatos/123',
+                      })}
+                      className="px-4 py-2 rounded-xl border border-gray-200 bg-white font-raleway text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      Ver preview
+                    </button>
+                  </div>
+                )}
+              </div>
+            </TemplateAccordion>
+
+            <TemplateAccordion
+              title="Actualización de estado de candidatura"
+              description="Se envía al candidato cuando Jennifer cambia el estado: en revisión, entrevista, seleccionado o descartado."
+            >
+              <div className="space-y-4">
+                <Field label="Asunto del email">
+                  <input
+                    type="text"
+                    value={datos.subject_cambio_estado}
+                    onChange={(e) => set('subject_cambio_estado', e.target.value)}
+                    placeholder="Actualización de tu candidatura — {{ofertaTitulo}}"
+                    className="input"
+                  />
+                </Field>
+                <Field label="HTML del template">
+                  <textarea
+                    value={datos.template_cambio_estado}
+                    onChange={(e) => set('template_cambio_estado', e.target.value)}
+                    rows={20}
+                    placeholder="Vacío = usar template por defecto (con estilos por estado)"
+                    className="input font-mono text-xs resize-y"
+                    spellCheck={false}
+                  />
+                </Field>
+                {datos.template_cambio_estado && (
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => openPreviewTransaccional(datos.template_cambio_estado, {
+                        candidatoNombre: 'Laura García',
+                        ofertaTitulo: 'Coach Ejecutivo',
+                        estadoLabel: 'Entrevista',
+                      })}
+                      className="px-4 py-2 rounded-xl border border-gray-200 bg-white font-raleway text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      Ver preview
+                    </button>
+                  </div>
+                )}
+              </div>
+            </TemplateAccordion>
+          </div>
         </div>
       )}
 
@@ -468,5 +542,33 @@ function Field({ label, wide, children }: { label: string; wide?: boolean; child
       </span>
       {children}
     </label>
+  )
+}
+
+function TemplateAccordion({ title, description, children }: { title: string; description: string; children: React.ReactNode }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between px-6 py-5 text-left hover:bg-gray-50 transition-colors"
+      >
+        <div>
+          <p className="font-roxborough text-base text-gray-900">{title}</p>
+          <p className="font-raleway text-xs text-gray-400 font-light mt-0.5">{description}</p>
+        </div>
+        <span className={`ml-4 shrink-0 text-gray-400 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M3 6l5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </span>
+      </button>
+      {open && (
+        <div className="px-6 pb-6 border-t border-gray-100 pt-5">
+          {children}
+        </div>
+      )}
+    </div>
   )
 }
