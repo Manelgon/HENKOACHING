@@ -30,15 +30,36 @@ export default function DashboardShell({ sections, userEmail, userInitial, child
   const [open, setOpen] = useState(false)
   const unreadCount = useEmailStore((s) => s.unreadCount)
 
+  const isActive = (href: string) => {
+    if (href === '/dashboard') return pathname === '/dashboard'
+    return pathname === href || pathname.startsWith(`${href}/`)
+  }
+
+  const sectionHasActive = (section: NavSection) =>
+    section.items.some((item) => isActive(item.href))
+
+  // Estado de cada sección: abierta si contiene la ruta activa
+  const [expanded, setExpanded] = useState<Record<string, boolean>>(() =>
+    Object.fromEntries(sections.map((s) => [s.title, sectionHasActive(s)]))
+  )
+
+  // Abrir la sección activa cuando cambia la ruta
   useEffect(() => {
-    setOpen(false)
+    setExpanded((prev) => {
+      const next = { ...prev }
+      for (const s of sections) {
+        if (sectionHasActive(s)) next[s.title] = true
+      }
+      return next
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname])
+
+  useEffect(() => { setOpen(false) }, [pathname])
 
   useEffect(() => {
     if (!open) return
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false)
-    }
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
     document.addEventListener('keydown', onKey)
     document.body.style.overflow = 'hidden'
     return () => {
@@ -47,14 +68,12 @@ export default function DashboardShell({ sections, userEmail, userInitial, child
     }
   }, [open])
 
-  const isActive = (href: string) => {
-    if (href === '/dashboard') return pathname === '/dashboard'
-    return pathname === href || pathname.startsWith(`${href}/`)
+  function toggleSection(title: string) {
+    setExpanded((prev) => ({ ...prev, [title]: !prev[title] }))
   }
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      {/* Backdrop (mobile/tablet) */}
       {open && (
         <button
           type="button"
@@ -64,7 +83,6 @@ export default function DashboardShell({ sections, userEmail, userInitial, child
         />
       )}
 
-      {/* Sidebar */}
       <aside
         className={`fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-gray-100 flex flex-col transform transition-transform duration-300 lg:translate-x-0 ${
           open ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
@@ -77,38 +95,61 @@ export default function DashboardShell({ sections, userEmail, userInitial, child
           </Link>
         </div>
 
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-          {sections.map((section) => (
-            <div key={section.title}>
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest px-3 pt-3 pb-2 font-raleway">
-                {section.title}
-              </p>
-              {section.items.map((item) => {
-                const active = isActive(item.href)
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all font-raleway text-sm font-medium group ${
-                      active
-                        ? 'bg-henko-greenblue/30 text-henko-turquoise'
-                        : 'text-gray-700 hover:bg-gray-50 hover:text-henko-turquoise'
-                    }`}
+        <nav className="flex-1 p-4 overflow-y-auto space-y-0.5">
+          {sections.map((section) => {
+            const isOpen = expanded[section.title] ?? false
+            return (
+              <div key={section.title}>
+                {/* Título colapsable */}
+                <button
+                  type="button"
+                  onClick={() => toggleSection(section.title)}
+                  className="w-full flex items-center justify-between px-3 pt-4 pb-1.5 group"
+                >
+                  <span className="text-xs font-bold text-gray-400 uppercase tracking-widest font-raleway group-hover:text-gray-600 transition-colors">
+                    {section.title}
+                  </span>
+                  <svg
+                    className={`w-3 h-3 text-gray-300 group-hover:text-gray-500 transition-all duration-200 ${isOpen ? 'rotate-180' : ''}`}
+                    fill="none" viewBox="0 0 24 24" stroke="currentColor"
                   >
-                    <span className={`relative w-5 h-5 ${active ? 'text-henko-turquoise' : 'text-gray-400 group-hover:text-henko-turquoise transition-colors'}`}>
-                      {isValidElement(item.icon) ? cloneElement(item.icon as React.ReactElement, { key: `icon-${item.href}` }) : item.icon}
-                      {item.href === '/dashboard/email' && unreadCount > 0 && (
-                        <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-0.5 rounded-full bg-henko-turquoise text-white text-[10px] font-bold flex items-center justify-center leading-none">
-                          {unreadCount > 99 ? '99+' : unreadCount}
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {/* Items con animación */}
+                <div
+                  className="overflow-hidden transition-all duration-200 ease-in-out"
+                  style={{ maxHeight: isOpen ? `${section.items.length * 52}px` : '0px', opacity: isOpen ? 1 : 0 }}
+                >
+                  {section.items.map((item) => {
+                    const active = isActive(item.href)
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all font-raleway text-sm font-medium group ${
+                          active
+                            ? 'bg-henko-greenblue/30 text-henko-turquoise'
+                            : 'text-gray-700 hover:bg-gray-50 hover:text-henko-turquoise'
+                        }`}
+                      >
+                        <span className={`relative w-5 h-5 flex-shrink-0 ${active ? 'text-henko-turquoise' : 'text-gray-400 group-hover:text-henko-turquoise transition-colors'}`}>
+                          {isValidElement(item.icon) ? cloneElement(item.icon as React.ReactElement, { key: `icon-${item.href}` }) : item.icon}
+                          {item.href === '/dashboard/email' && unreadCount > 0 && (
+                            <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-0.5 rounded-full bg-henko-turquoise text-white text-[10px] font-bold flex items-center justify-center leading-none">
+                              {unreadCount > 99 ? '99+' : unreadCount}
+                            </span>
+                          )}
                         </span>
-                      )}
-                    </span>
-                    {item.label}
-                  </Link>
-                )
-              })}
-            </div>
-          ))}
+                        {item.label}
+                      </Link>
+                    )
+                  })}
+                </div>
+              </div>
+            )
+          })}
         </nav>
 
         <div className="p-4 border-t border-gray-100">
@@ -132,9 +173,7 @@ export default function DashboardShell({ sections, userEmail, userInitial, child
         </div>
       </aside>
 
-      {/* Main column */}
       <div className="flex-1 flex flex-col min-w-0 lg:ml-64">
-        {/* Top bar (mobile/tablet) */}
         <div className="sticky top-0 z-20 lg:hidden flex items-center gap-3 px-4 h-14 bg-white/90 backdrop-blur border-b border-gray-100">
           <Link href="/dashboard" className="flex items-center gap-2">
             <Image src="/hk.png" alt="Henkoaching" width={60} height={38} className="object-contain w-7 h-auto" />
