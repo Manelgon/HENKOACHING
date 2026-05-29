@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import DashboardShell, { type NavSection } from '@/components/DashboardShell'
 import EmailPoller from '@/features/email/components/EmailPoller'
+import CandidatosPoller from '@/features/candidatos/components/CandidatosPoller'
 import { getEmailConfig } from '@/actions/email'
 
 // Iconos fuera del componente para evitar el warning de key de React 19
@@ -93,6 +94,7 @@ export default async function MainLayout({ children }: { children: React.ReactNo
   return (
     <>
       {isAdmin && <EmailPoller hasImapConfig={hasImapConfig} />}
+      {isAdmin && <CandidatosPoller initialCount={candidatosNuevos ?? 0} />}
       <DashboardShell
         sections={sections}
         userEmail={user.email ?? ''}

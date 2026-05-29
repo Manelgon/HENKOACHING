@@ -4,14 +4,21 @@ import { useEffect, useState, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { actualizarPerfilCandidato, uploadCv, exportarMisDatos, eliminarMiCuenta, solicitarCodigoExportacion, uploadAvatar } from '@/actions/candidato'
+import {
+  actualizarPerfilCandidato, uploadCv, exportarMisDatos, eliminarMiCuenta,
+  solicitarCodigoExportacion, uploadAvatar,
+  crearExperiencia, actualizarExperiencia, eliminarExperiencia,
+  crearEducacion, actualizarEducacion, eliminarEducacion,
+  crearIdioma, actualizarIdioma, eliminarIdioma,
+  actualizarPreferencias,
+} from '@/actions/candidato'
 import { createClient } from '@/lib/supabase/client'
 import { signout } from '@/actions/auth'
 import { getCvUrl } from '@/actions/solicitudes'
 import type { EstadoSolicitud } from '@/lib/supabase/database.types'
 import { useAction, useConfirm } from '@/shared/feedback/FeedbackContext'
 
-type Tab = 'solicitudes' | 'perfil' | 'cv' | 'privacidad'
+type Tab = 'solicitudes' | 'perfil' | 'trayectoria' | 'preferencias' | 'cv' | 'privacidad'
 
 const ESTADO_META: Record<EstadoSolicitud, { label: string; badge: string }> = {
   nuevo:      { label: 'Nueva',       badge: 'bg-henko-turquoise/15 text-henko-turquoise' },
@@ -22,10 +29,12 @@ const ESTADO_META: Record<EstadoSolicitud, { label: string; badge: string }> = {
 }
 
 const NAV: { id: Tab; label: string }[] = [
-  { id: 'solicitudes', label: 'Mis solicitudes' },
-  { id: 'perfil',      label: 'Mi perfil' },
-  { id: 'cv',          label: 'Mi CV' },
-  { id: 'privacidad',  label: 'Privacidad y datos' },
+  { id: 'solicitudes',  label: 'Mis solicitudes' },
+  { id: 'perfil',       label: 'Mi perfil' },
+  { id: 'trayectoria',  label: 'Trayectoria' },
+  { id: 'preferencias', label: 'Preferencias' },
+  { id: 'cv',           label: 'Mi CV' },
+  { id: 'privacidad',   label: 'Privacidad y datos' },
 ]
 
 type SolicitudView = {
@@ -39,7 +48,7 @@ type SolicitudView = {
 
 type PerfilView = {
   nombre: string; apellidos: string; email: string; telefono: string
-  ubicacion: string; cargo: string; resumen: string; linkedinUrl: string; avatarUrl: string
+  ubicacion: string; localidad: string; cp: string; cargo: string; resumen: string; linkedinUrl: string; avatarUrl: string
 }
 
 type CompletionData = {
@@ -53,11 +62,33 @@ type CvView = {
   created_at: string | null; tamano_bytes: number | null
 } | null
 
+type ExperienciaView = {
+  id: string; empresa: string; cargo: string
+  desde: string | null; hasta: string | null; descripcion: string | null
+}
+
+type EducacionView = {
+  id: string; centro: string; titulo: string; ano_fin: string | null
+}
+
+type IdiomaView = {
+  id: string; idioma: string; nivel: string
+}
+
+type PreferenciasView = {
+  tipoJornada: string; modalidad: string; tipoContrato: string
+  sectores: string[]; disponibilidad: string; pretensionSalarial: string
+}
+
 type Props = {
   perfil: PerfilView
   completion: CompletionData
   cv: CvView
   solicitudes: SolicitudView[]
+  experiencias: ExperienciaView[]
+  educacion: EducacionView[]
+  idiomas: IdiomaView[]
+  preferencias: PreferenciasView
 }
 
 const COMPLETION_ITEMS: { key: keyof CompletionData; label: string; weight: number; tab?: string }[] = [
@@ -68,17 +99,17 @@ const COMPLETION_ITEMS: { key: keyof CompletionData; label: string; weight: numb
   { key: 'hasResumen',     label: 'Resumen profesional',    weight: 10, tab: 'perfil' },
   { key: 'hasLinkedin',    label: 'LinkedIn',               weight: 5,  tab: 'perfil' },
   { key: 'hasCv',          label: 'CV subido',              weight: 15, tab: 'cv' },
-  { key: 'hasExperiencia', label: 'Experiencia laboral',    weight: 15 },
-  { key: 'hasEducacion',   label: 'Educación',              weight: 10 },
-  { key: 'hasIdioma',      label: 'Idiomas',                weight: 10 },
-  { key: 'hasPreferencias',label: 'Preferencias laborales', weight: 10 },
+  { key: 'hasExperiencia', label: 'Experiencia laboral',    weight: 15, tab: 'trayectoria' },
+  { key: 'hasEducacion',   label: 'Educación',              weight: 10, tab: 'trayectoria' },
+  { key: 'hasIdioma',      label: 'Idiomas',                weight: 10, tab: 'trayectoria' },
+  { key: 'hasPreferencias',label: 'Preferencias laborales', weight: 10, tab: 'preferencias' },
 ]
 
 function calcCompletion(data: CompletionData) {
   return COMPLETION_ITEMS.reduce((acc, item) => acc + (data[item.key] ? item.weight : 0), 0)
 }
 
-export default function CandidatoDashboard({ perfil, completion, cv, solicitudes }: Props) {
+export default function CandidatoDashboard({ perfil, completion, cv, solicitudes, experiencias, educacion, idiomas, preferencias }: Props) {
   const [tab, setTab] = useState<Tab>('solicitudes')
   const [open, setOpen] = useState(false)
   const iniciales = `${perfil.nombre[0] ?? ''}${perfil.apellidos[0] ?? ''}`.toUpperCase() || 'CD'
@@ -224,10 +255,12 @@ export default function CandidatoDashboard({ perfil, completion, cv, solicitudes
         </div>
 
         <main className="flex-1 px-5 py-6 md:p-12 overflow-y-auto">
-          {tab === 'solicitudes' && <TabSolicitudes solicitudes={solicitudes} completion={completion} pct={pct} onGoTab={goTab} />}
-          {tab === 'perfil' && <TabPerfil perfil={perfil} completion={completion} />}
-          {tab === 'cv' && <TabCV cv={cv} />}
-          {tab === 'privacidad' && <TabPrivacidad perfil={perfil} onGoTab={setTab} />}
+          {tab === 'solicitudes'  && <TabSolicitudes solicitudes={solicitudes} completion={completion} pct={pct} onGoTab={goTab} />}
+          {tab === 'perfil'       && <TabPerfil perfil={perfil} completion={completion} />}
+          {tab === 'trayectoria'  && <TabTrayectoria experiencias={experiencias} educacion={educacion} idiomas={idiomas} />}
+          {tab === 'preferencias' && <TabPreferencias preferencias={preferencias} />}
+          {tab === 'cv'           && <TabCV cv={cv} />}
+          {tab === 'privacidad'   && <TabPrivacidad perfil={perfil} onGoTab={setTab} />}
         </main>
       </div>
     </div>
@@ -411,7 +444,11 @@ function TabPerfil({ perfil, completion }: { perfil: PerfilView; completion: Com
         </div>
         <Field label="EMAIL" name="email" defaultValue={perfil.email} disabled />
         <Field label="TELÉFONO" name="telefono" defaultValue={perfil.telefono} />
-        <Field label="UBICACIÓN" name="ubicacion" defaultValue={perfil.ubicacion} />
+        <Field label="PROVINCIA / UBICACIÓN" name="ubicacion" defaultValue={perfil.ubicacion} />
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="LOCALIDAD" name="localidad" defaultValue={perfil.localidad} />
+          <Field label="CÓDIGO POSTAL" name="cp" defaultValue={perfil.cp} />
+        </div>
         <Field label="CARGO OBJETIVO" name="cargo" defaultValue={perfil.cargo} />
         <div>
           <label className="text-[10px] tracking-[0.14em] text-henko-turquoise font-bold mb-1.5 block">RESUMEN PROFESIONAL</label>
@@ -535,6 +572,401 @@ function TabCV({ cv }: { cv: CvView }) {
           </button>
         </div>
       </div>
+    </div>
+  )
+}
+
+// =============================================================================
+// TRAYECTORIA (Experiencia + Educación + Idiomas)
+// =============================================================================
+
+const NIVELES = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'Nativo']
+
+function ItemForm({ fields, onSave, onCancel }: {
+  fields: { name: string; label: string; type?: string; options?: string[]; defaultValue?: string }[]
+  onSave: (fd: FormData) => Promise<void>
+  onCancel: () => void
+}) {
+  const [saving, setSaving] = useState(false)
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setSaving(true)
+    await onSave(new FormData(e.currentTarget))
+    setSaving(false)
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="bg-gray-50 rounded-xl p-4 space-y-3 border border-henko-turquoise/20">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {fields.map((f) => (
+          <div key={f.name} className={f.type === 'textarea' ? 'sm:col-span-2' : ''}>
+            <label className="text-[10px] tracking-[0.12em] text-henko-turquoise font-bold mb-1 block">{f.label}</label>
+            {f.options ? (
+              <select
+                name={f.name}
+                defaultValue={f.defaultValue ?? ''}
+                className="w-full text-sm text-gray-900 px-3 py-2.5 bg-white border border-gray-200 rounded-xl outline-none focus:border-henko-turquoise focus:ring-2 focus:ring-henko-turquoise/20"
+              >
+                <option value="">— Seleccionar —</option>
+                {f.options.map((o) => <option key={o} value={o}>{o}</option>)}
+              </select>
+            ) : f.type === 'textarea' ? (
+              <textarea
+                name={f.name}
+                defaultValue={f.defaultValue ?? ''}
+                rows={2}
+                placeholder={f.label}
+                className="w-full text-sm text-gray-900 px-3 py-2.5 bg-white border border-gray-200 rounded-xl outline-none focus:border-henko-turquoise focus:ring-2 focus:ring-henko-turquoise/20 resize-none"
+              />
+            ) : (
+              <input
+                name={f.name}
+                type={f.type ?? 'text'}
+                defaultValue={f.defaultValue ?? ''}
+                placeholder={f.label}
+                className="w-full text-sm text-gray-900 px-3 py-2.5 bg-white border border-gray-200 rounded-xl outline-none focus:border-henko-turquoise focus:ring-2 focus:ring-henko-turquoise/20"
+              />
+            )}
+          </div>
+        ))}
+      </div>
+      <div className="flex items-center gap-2 pt-1">
+        <button
+          type="submit"
+          disabled={saving}
+          className="inline-flex items-center gap-1.5 bg-henko-turquoise text-white px-4 py-2 rounded-full text-xs font-semibold hover:bg-henko-turquoise-light transition-all disabled:opacity-60"
+        >
+          {saving ? 'Guardando…' : 'Guardar'}
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="text-xs text-gray-400 hover:text-gray-600 px-3 py-2"
+        >
+          Cancelar
+        </button>
+      </div>
+    </form>
+  )
+}
+
+function Section({ title, isEmpty, emptyText, onAdd, children }: {
+  title: string; isEmpty: boolean; emptyText: string; onAdd: () => void; children: React.ReactNode
+}) {
+  return (
+    <div className="mb-8">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="font-roxborough text-lg text-gray-900">{title}</h3>
+        <button
+          type="button"
+          onClick={onAdd}
+          className="inline-flex items-center gap-1 text-xs font-semibold text-henko-turquoise hover:underline"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+          Añadir
+        </button>
+      </div>
+      {isEmpty ? (
+        <p className="text-sm text-gray-400 italic py-2">{emptyText}</p>
+      ) : children}
+    </div>
+  )
+}
+
+function TabTrayectoria({ experiencias: initExp, educacion: initEdu, idiomas: initIdi }: {
+  experiencias: ExperienciaView[]; educacion: EducacionView[]; idiomas: IdiomaView[]
+}) {
+  const router = useRouter()
+  const runAction = useAction()
+
+  const [exps, setExps] = useState(initExp)
+  const [edus, setEdus] = useState(initEdu)
+  const [idis, setIdis] = useState(initIdi)
+  const [editingExp, setEditingExp] = useState<string | null>(null)
+  const [editingEdu, setEditingEdu] = useState<string | null>(null)
+  const [editingIdi, setEditingIdi] = useState<string | null>(null)
+  const [addingExp, setAddingExp] = useState(false)
+  const [addingEdu, setAddingEdu] = useState(false)
+  const [addingIdi, setAddingIdi] = useState(false)
+
+  const refresh = () => router.refresh()
+
+  // — Experiencia —
+  async function saveExp(fd: FormData, id?: string) {
+    const action = id
+      ? () => actualizarExperiencia(id, fd)
+      : () => crearExperiencia(fd)
+    const r = await runAction('Guardando experiencia', action, { successMessage: 'Guardado' })
+    if (r.ok) { setEditingExp(null); setAddingExp(false); refresh() }
+  }
+  async function deleteExp(id: string) {
+    const r = await runAction('Eliminando', () => eliminarExperiencia(id), { successMessage: 'Eliminado' })
+    if (r.ok) { setExps(p => p.filter(e => e.id !== id)); refresh() }
+  }
+
+  // — Educación —
+  async function saveEdu(fd: FormData, id?: string) {
+    const action = id
+      ? () => actualizarEducacion(id, fd)
+      : () => crearEducacion(fd)
+    const r = await runAction('Guardando educación', action, { successMessage: 'Guardado' })
+    if (r.ok) { setEditingEdu(null); setAddingEdu(false); refresh() }
+  }
+  async function deleteEdu(id: string) {
+    const r = await runAction('Eliminando', () => eliminarEducacion(id), { successMessage: 'Eliminado' })
+    if (r.ok) { setEdus(p => p.filter(e => e.id !== id)); refresh() }
+  }
+
+  // — Idiomas —
+  async function saveIdi(fd: FormData, id?: string) {
+    const action = id
+      ? () => actualizarIdioma(id, fd)
+      : () => crearIdioma(fd)
+    const r = await runAction('Guardando idioma', action, { successMessage: 'Guardado' })
+    if (r.ok) { setEditingIdi(null); setAddingIdi(false); refresh() }
+  }
+  async function deleteIdi(id: string) {
+    const r = await runAction('Eliminando', () => eliminarIdioma(id), { successMessage: 'Eliminado' })
+    if (r.ok) { setIdis(p => p.filter(i => i.id !== id)); refresh() }
+  }
+
+  return (
+    <div>
+      <Eyebrow>Mi trayectoria</Eyebrow>
+      <h2 className="font-roxborough text-2xl md:text-3xl text-gray-900 mb-8">Experiencia, educación e idiomas</h2>
+
+      {/* EXPERIENCIA */}
+      <Section
+        title="Experiencia laboral"
+        isEmpty={exps.length === 0 && !addingExp}
+        emptyText="Aún no has añadido experiencia laboral."
+        onAdd={() => { setAddingExp(true); setEditingExp(null) }}
+      >
+        <div className="space-y-3">
+          {exps.map((e) => editingExp === e.id ? (
+            <ItemForm
+              key={e.id}
+              fields={[
+                { name: 'empresa', label: 'EMPRESA', defaultValue: e.empresa },
+                { name: 'cargo', label: 'CARGO', defaultValue: e.cargo },
+                { name: 'desde', label: 'DESDE (ej: 2020-01)', type: 'text', defaultValue: e.desde ?? '' },
+                { name: 'hasta', label: 'HASTA (en blanco = actual)', type: 'text', defaultValue: e.hasta ?? '' },
+                { name: 'descripcion', label: 'DESCRIPCIÓN (opcional)', type: 'textarea', defaultValue: e.descripcion ?? '' },
+              ]}
+              onSave={(fd) => saveExp(fd, e.id)}
+              onCancel={() => setEditingExp(null)}
+            />
+          ) : (
+            <div key={e.id} className="bg-white rounded-xl px-5 py-4 border border-gray-100 flex items-start justify-between gap-4">
+              <div className="min-w-0">
+                <p className="font-semibold text-sm text-gray-900">{e.cargo}</p>
+                <p className="text-xs text-gray-500">{e.empresa}</p>
+                {(e.desde || e.hasta) && (
+                  <p className="text-xs text-gray-400 mt-0.5">{e.desde ?? '?'} — {e.hasta ?? 'Actualidad'}</p>
+                )}
+                {e.descripcion && <p className="text-xs text-gray-500 mt-1 line-clamp-2">{e.descripcion}</p>}
+              </div>
+              <div className="flex gap-2 shrink-0">
+                <button type="button" onClick={() => { setEditingExp(e.id); setAddingExp(false) }} className="text-xs text-henko-turquoise hover:underline">Editar</button>
+                <button type="button" onClick={() => deleteExp(e.id)} className="text-xs text-red-400 hover:underline">Eliminar</button>
+              </div>
+            </div>
+          ))}
+          {addingExp && (
+            <ItemForm
+              fields={[
+                { name: 'empresa', label: 'EMPRESA' },
+                { name: 'cargo', label: 'CARGO' },
+                { name: 'desde', label: 'DESDE (ej: 2020-01)', type: 'text' },
+                { name: 'hasta', label: 'HASTA (en blanco = actual)', type: 'text' },
+                { name: 'descripcion', label: 'DESCRIPCIÓN (opcional)', type: 'textarea' },
+              ]}
+              onSave={(fd) => saveExp(fd)}
+              onCancel={() => setAddingExp(false)}
+            />
+          )}
+        </div>
+      </Section>
+
+      {/* EDUCACIÓN */}
+      <Section
+        title="Educación"
+        isEmpty={edus.length === 0 && !addingEdu}
+        emptyText="Aún no has añadido formación académica."
+        onAdd={() => { setAddingEdu(true); setEditingEdu(null) }}
+      >
+        <div className="space-y-3">
+          {edus.map((e) => editingEdu === e.id ? (
+            <ItemForm
+              key={e.id}
+              fields={[
+                { name: 'centro', label: 'CENTRO / UNIVERSIDAD', defaultValue: e.centro },
+                { name: 'titulo', label: 'TÍTULO / GRADO', defaultValue: e.titulo },
+                { name: 'ano_fin', label: 'AÑO DE FIN', defaultValue: e.ano_fin ?? '' },
+              ]}
+              onSave={(fd) => saveEdu(fd, e.id)}
+              onCancel={() => setEditingEdu(null)}
+            />
+          ) : (
+            <div key={e.id} className="bg-white rounded-xl px-5 py-4 border border-gray-100 flex items-start justify-between gap-4">
+              <div className="min-w-0">
+                <p className="font-semibold text-sm text-gray-900">{e.titulo}</p>
+                <p className="text-xs text-gray-500">{e.centro}</p>
+                {e.ano_fin && <p className="text-xs text-gray-400 mt-0.5">{e.ano_fin}</p>}
+              </div>
+              <div className="flex gap-2 shrink-0">
+                <button type="button" onClick={() => { setEditingEdu(e.id); setAddingEdu(false) }} className="text-xs text-henko-turquoise hover:underline">Editar</button>
+                <button type="button" onClick={() => deleteEdu(e.id)} className="text-xs text-red-400 hover:underline">Eliminar</button>
+              </div>
+            </div>
+          ))}
+          {addingEdu && (
+            <ItemForm
+              fields={[
+                { name: 'centro', label: 'CENTRO / UNIVERSIDAD' },
+                { name: 'titulo', label: 'TÍTULO / GRADO' },
+                { name: 'ano_fin', label: 'AÑO DE FIN' },
+              ]}
+              onSave={(fd) => saveEdu(fd)}
+              onCancel={() => setAddingEdu(false)}
+            />
+          )}
+        </div>
+      </Section>
+
+      {/* IDIOMAS */}
+      <Section
+        title="Idiomas"
+        isEmpty={idis.length === 0 && !addingIdi}
+        emptyText="Aún no has añadido idiomas."
+        onAdd={() => { setAddingIdi(true); setEditingIdi(null) }}
+      >
+        <div className="space-y-3">
+          {idis.map((i) => editingIdi === i.id ? (
+            <ItemForm
+              key={i.id}
+              fields={[
+                { name: 'idioma', label: 'IDIOMA', defaultValue: i.idioma },
+                { name: 'nivel', label: 'NIVEL', options: NIVELES, defaultValue: i.nivel },
+              ]}
+              onSave={(fd) => saveIdi(fd, i.id)}
+              onCancel={() => setEditingIdi(null)}
+            />
+          ) : (
+            <div key={i.id} className="bg-white rounded-xl px-5 py-4 border border-gray-100 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <span className="font-semibold text-sm text-gray-900">{i.idioma}</span>
+                <span className="text-xs bg-henko-turquoise/10 text-henko-turquoise px-2.5 py-0.5 rounded-full font-bold">{i.nivel}</span>
+              </div>
+              <div className="flex gap-2 shrink-0">
+                <button type="button" onClick={() => { setEditingIdi(i.id); setAddingIdi(false) }} className="text-xs text-henko-turquoise hover:underline">Editar</button>
+                <button type="button" onClick={() => deleteIdi(i.id)} className="text-xs text-red-400 hover:underline">Eliminar</button>
+              </div>
+            </div>
+          ))}
+          {addingIdi && (
+            <ItemForm
+              fields={[
+                { name: 'idioma', label: 'IDIOMA (ej: Inglés)' },
+                { name: 'nivel', label: 'NIVEL', options: NIVELES },
+              ]}
+              onSave={(fd) => saveIdi(fd)}
+              onCancel={() => setAddingIdi(false)}
+            />
+          )}
+        </div>
+      </Section>
+    </div>
+  )
+}
+
+// =============================================================================
+// PREFERENCIAS LABORALES
+// =============================================================================
+
+const OPCIONES_JORNADA = ['Jornada completa', 'Media jornada', 'Por horas', 'Indiferente']
+const OPCIONES_MODALIDAD = ['Presencial', 'Híbrido', 'Remoto', 'Indiferente']
+const OPCIONES_CONTRATO = ['Indefinido', 'Temporal', 'Prácticas / Becario', 'Autónomo', 'Indiferente']
+const OPCIONES_SECTORES = [
+  'Recursos Humanos', 'Administración', 'Comercial / Ventas', 'Marketing', 'Tecnología',
+  'Finanzas', 'Legal', 'Operaciones', 'Logística', 'Atención al cliente',
+  'Educación / Formación', 'Salud', 'Diseño / Creatividad', 'Comunicación', 'Otro',
+]
+
+function SelectPill({ name, label, options, defaultValue }: { name: string; label: string; options: string[]; defaultValue: string }) {
+  return (
+    <div>
+      <label className="text-[10px] tracking-[0.14em] text-henko-turquoise font-bold mb-1.5 block">{label}</label>
+      <select
+        name={name}
+        defaultValue={defaultValue}
+        className="w-full text-sm text-gray-900 px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl outline-none focus:border-henko-turquoise focus:ring-2 focus:ring-henko-turquoise/20"
+      >
+        <option value="">— Sin especificar —</option>
+        {options.map((o) => <option key={o} value={o}>{o}</option>)}
+      </select>
+    </div>
+  )
+}
+
+function TabPreferencias({ preferencias }: { preferencias: PreferenciasView }) {
+  const router = useRouter()
+  const runAction = useAction()
+  const [sectoresSeleccionados, setSectores] = useState<string[]>(preferencias.sectores)
+
+  function toggleSector(s: string) {
+    setSectores((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s])
+  }
+
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const fd = new FormData(e.currentTarget)
+    sectoresSeleccionados.forEach((s) => fd.append('sectores', s))
+    const r = await runAction('Guardando preferencias', () => actualizarPreferencias(fd), { successMessage: 'Preferencias guardadas' })
+    if (r.ok) router.refresh()
+  }
+
+  return (
+    <div>
+      <Eyebrow>Preferencias laborales</Eyebrow>
+      <h2 className="font-roxborough text-2xl md:text-3xl text-gray-900 mb-8">¿Qué tipo de trabajo buscas?</h2>
+
+      <form onSubmit={onSubmit} className="bg-white rounded-2xl px-9 py-8 border border-henko-turquoise/15 shadow-sm max-w-xl space-y-5">
+        <SelectPill name="tipo_jornada" label="TIPO DE JORNADA" options={OPCIONES_JORNADA} defaultValue={preferencias.tipoJornada} />
+        <SelectPill name="modalidad_trabajo" label="MODALIDAD" options={OPCIONES_MODALIDAD} defaultValue={preferencias.modalidad} />
+        <SelectPill name="tipo_contrato" label="TIPO DE CONTRATO" options={OPCIONES_CONTRATO} defaultValue={preferencias.tipoContrato} />
+
+        <div>
+          <label className="text-[10px] tracking-[0.14em] text-henko-turquoise font-bold mb-2 block">SECTORES DE INTERÉS</label>
+          <div className="flex flex-wrap gap-2">
+            {OPCIONES_SECTORES.map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => toggleSector(s)}
+                className={`text-xs px-3 py-1.5 rounded-full border font-medium transition-all ${
+                  sectoresSeleccionados.includes(s)
+                    ? 'bg-henko-turquoise text-white border-henko-turquoise'
+                    : 'bg-transparent text-gray-600 border-gray-200 hover:border-henko-turquoise hover:text-henko-turquoise'
+                }`}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <Field label="DISPONIBILIDAD (ej: Inmediata, 1 mes...)" name="disponibilidad" defaultValue={preferencias.disponibilidad} />
+        <Field label="PRETENSIÓN SALARIAL (ej: 24.000€ bruto/año)" name="pretension_salarial" defaultValue={preferencias.pretensionSalarial} />
+
+        <button
+          type="submit"
+          className="mt-2 inline-flex items-center gap-2 bg-henko-turquoise text-white px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-henko-turquoise-light hover:shadow-lg transition-all"
+        >
+          Guardar preferencias
+        </button>
+      </form>
     </div>
   )
 }

@@ -6,6 +6,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { signout } from '@/actions/auth'
 import { useEmailStore } from '@/features/email/store/emailStore'
+import { useCandidatosStore } from '@/features/candidatos/store/candidatosStore'
 
 export type NavItem = {
   href: string
@@ -31,6 +32,7 @@ export default function DashboardShell({ sections, userEmail, userInitial, child
   const [open, setOpen] = useState(false)
   const unreadCount = useEmailStore((s) => s.unreadCount)
   const failedCount = useEmailStore((s) => s.failedCount)
+  const candidatosNuevos = useCandidatosStore((s) => s.nuevosCount)
 
   const isActive = (href: string) => {
     if (href === '/dashboard') return pathname === '/dashboard'
@@ -148,7 +150,12 @@ export default function DashboardShell({ sections, userEmail, userInitial, child
                               {failedCount > 9 ? '9+' : failedCount}
                             </span>
                           )}
-                          {item.badge && item.badge > 0 && (
+                          {item.href === '/dashboard/candidatos' && candidatosNuevos > 0 && (
+                            <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-0.5 rounded-full bg-henko-turquoise text-white text-[10px] font-bold flex items-center justify-center leading-none">
+                              {candidatosNuevos > 99 ? '99+' : candidatosNuevos}
+                            </span>
+                          )}
+                          {item.href !== '/dashboard/candidatos' && item.badge && item.badge > 0 && (
                             <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-0.5 rounded-full bg-henko-turquoise text-white text-[10px] font-bold flex items-center justify-center leading-none">
                               {item.badge > 99 ? '99+' : item.badge}
                             </span>

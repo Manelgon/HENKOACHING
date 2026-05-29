@@ -137,6 +137,19 @@ export async function getCandidatoPerfil(userId: string): Promise<CandidatoPerfi
   }
 }
 
+export async function contarCandidatosNuevos(): Promise<number> {
+  const auth = await requireAdmin()
+  if ('error' in auth) return 0
+  const admin = createAdminClient()
+  const { count } = await admin
+    .from('profiles')
+    .select('*', { count: 'exact', head: true })
+    .eq('role', 'candidato')
+    .is('deleted_at', null)
+    .gt('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+  return count ?? 0
+}
+
 export async function getCvSignedUrl(storagePath: string): Promise<string | null> {
   const auth = await requireAdmin()
   if ('error' in auth) return null

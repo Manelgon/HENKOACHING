@@ -33,13 +33,13 @@ export default async function CandidatoDashboardPage() {
   ] = await Promise.all([
     supabase.from('profiles').select('nombre, apellidos, email, telefono, avatar_url').eq('id', user.id).single(),
     supabase.from('candidato_profiles')
-      .select('ubicacion, cargo_actual, resumen, linkedin_url, tipo_jornada, sectores_interes')
+      .select('ubicacion, localidad, cp, cargo_actual, resumen, linkedin_url, tipo_jornada, modalidad_trabajo, tipo_contrato, sectores_interes, disponibilidad, pretension_salarial')
       .eq('user_id', user.id).single(),
     supabase.from('cvs').select('id, nombre_archivo, storage_path, created_at, tamano_bytes')
       .eq('candidato_id', user.id).eq('es_principal', true).is('deleted_at', null).maybeSingle(),
-    supabase.from('candidato_experiencias').select('id').eq('candidato_id', user.id).limit(1),
-    supabase.from('candidato_educacion').select('id').eq('candidato_id', user.id).limit(1),
-    supabase.from('candidato_idiomas').select('id').eq('candidato_id', user.id).limit(1),
+    supabase.from('candidato_experiencias').select('id, empresa, cargo, desde, hasta, descripcion').eq('candidato_id', user.id).order('orden').order('created_at'),
+    supabase.from('candidato_educacion').select('id, centro, titulo, ano_fin').eq('candidato_id', user.id).order('orden').order('created_at'),
+    supabase.from('candidato_idiomas').select('id, idioma, nivel').eq('candidato_id', user.id).order('orden').order('created_at'),
     getMisSolicitudes(user.id),
   ])
 
@@ -51,6 +51,8 @@ export default async function CandidatoDashboardPage() {
         email: profile?.email ?? '',
         telefono: profile?.telefono ?? '',
         ubicacion: candProfile?.ubicacion ?? '',
+        localidad: candProfile?.localidad ?? '',
+        cp: candProfile?.cp ?? '',
         cargo: candProfile?.cargo_actual ?? '',
         resumen: candProfile?.resumen ?? '',
         linkedinUrl: candProfile?.linkedin_url ?? '',
@@ -70,6 +72,24 @@ export default async function CandidatoDashboardPage() {
         hasPreferencias: !!candProfile?.tipo_jornada || (candProfile?.sectores_interes?.length ?? 0) > 0,
       }}
       cv={cvActivo}
+      experiencias={(expData ?? []).map((e) => ({
+        id: e.id, empresa: e.empresa, cargo: e.cargo,
+        desde: e.desde ?? null, hasta: e.hasta ?? null, descripcion: e.descripcion ?? null,
+      }))}
+      educacion={(eduData ?? []).map((e) => ({
+        id: e.id, centro: e.centro, titulo: e.titulo, ano_fin: e.ano_fin ?? null,
+      }))}
+      idiomas={(idiomaData ?? []).map((i) => ({
+        id: i.id, idioma: i.idioma, nivel: i.nivel,
+      }))}
+      preferencias={{
+        tipoJornada: candProfile?.tipo_jornada ?? '',
+        modalidad: candProfile?.modalidad_trabajo ?? '',
+        tipoContrato: candProfile?.tipo_contrato ?? '',
+        sectores: candProfile?.sectores_interes ?? [],
+        disponibilidad: candProfile?.disponibilidad ?? '',
+        pretensionSalarial: candProfile?.pretension_salarial ?? '',
+      }}
       solicitudes={solicitudes.map((s) => {
         const oferta = s.ofertas as unknown as {
           id: string

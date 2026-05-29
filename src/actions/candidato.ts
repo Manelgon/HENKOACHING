@@ -115,8 +115,10 @@ export async function signupCandidato(input: CandidatoSignupInput) {
 
   const userId = signupData.user.id
 
-  // 2. Actualizar candidato_profiles con datos extra
-  const { error: profileError } = await supabase
+  const admin = createAdminClient()
+
+  // 2. Actualizar candidato_profiles con datos extra (admin para evitar RLS en sesión no confirmada)
+  const { error: profileError } = await admin
     .from('candidato_profiles')
     .update({
       ubicacion: input.ubicacion || null,
@@ -136,9 +138,9 @@ export async function signupCandidato(input: CandidatoSignupInput) {
     return { error: 'Error guardando perfil: ' + profileError.message }
   }
 
-  // 3. Actualizar telefono en profiles
+  // 3. Actualizar telefono en profiles (admin para evitar RLS en sesión no confirmada)
   if (input.telefono) {
-    await supabase
+    await admin
       .from('profiles')
       .update({ telefono: input.telefono })
       .eq('id', userId)
@@ -301,6 +303,8 @@ export async function actualizarPerfilCandidato(formData: FormData) {
   const apellidos = formData.get('apellidos') as string
   const telefono = formData.get('telefono') as string
   const ubicacion = formData.get('ubicacion') as string
+  const localidad = formData.get('localidad') as string | null
+  const cp = formData.get('cp') as string | null
   const cargo = formData.get('cargo') as string
   const resumen = formData.get('resumen') as string | null
   const linkedin_url = formData.get('linkedin_url') as string | null
@@ -314,7 +318,7 @@ export async function actualizarPerfilCandidato(formData: FormData) {
 
   const { error: e2 } = await supabase
     .from('candidato_profiles')
-    .update({ ubicacion, cargo_actual: cargo, resumen: resumen || null, linkedin_url: linkedin_url || null })
+    .update({ ubicacion, localidad: localidad || null, cp: cp || null, cargo_actual: cargo, resumen: resumen || null, linkedin_url: linkedin_url || null })
     .eq('user_id', user.id)
 
   if (e2) return { error: e2.message }
@@ -524,5 +528,208 @@ export async function eliminarMiCuenta() {
   // 5. Cerrar la sesión local (las cookies)
   await supabase.auth.signOut()
 
+  return { ok: true }
+}
+
+// =============================================================================
+// EXPERIENCIAS
+// =============================================================================
+
+export async function crearExperiencia(formData: FormData) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'No autenticado' }
+
+  const { error } = await supabase.from('candidato_experiencias').insert({
+    candidato_id: user.id,
+    empresa: (formData.get('empresa') as string).trim(),
+    cargo: (formData.get('cargo') as string).trim(),
+    desde: (formData.get('desde') as string) || null,
+    hasta: (formData.get('hasta') as string) || null,
+    descripcion: (formData.get('descripcion') as string) || null,
+    orden: 0,
+  })
+
+  if (error) return { error: error.message }
+  revalidatePath('/candidato/dashboard')
+  return { ok: true }
+}
+
+export async function actualizarExperiencia(id: string, formData: FormData) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'No autenticado' }
+
+  const { error } = await supabase.from('candidato_experiencias')
+    .update({
+      empresa: (formData.get('empresa') as string).trim(),
+      cargo: (formData.get('cargo') as string).trim(),
+      desde: (formData.get('desde') as string) || null,
+      hasta: (formData.get('hasta') as string) || null,
+      descripcion: (formData.get('descripcion') as string) || null,
+    })
+    .eq('id', id)
+    .eq('candidato_id', user.id)
+
+  if (error) return { error: error.message }
+  revalidatePath('/candidato/dashboard')
+  return { ok: true }
+}
+
+export async function eliminarExperiencia(id: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'No autenticado' }
+
+  const { error } = await supabase.from('candidato_experiencias')
+    .delete()
+    .eq('id', id)
+    .eq('candidato_id', user.id)
+
+  if (error) return { error: error.message }
+  revalidatePath('/candidato/dashboard')
+  return { ok: true }
+}
+
+// =============================================================================
+// EDUCACIÓN
+// =============================================================================
+
+export async function crearEducacion(formData: FormData) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'No autenticado' }
+
+  const { error } = await supabase.from('candidato_educacion').insert({
+    candidato_id: user.id,
+    centro: (formData.get('centro') as string).trim(),
+    titulo: (formData.get('titulo') as string).trim(),
+    ano_fin: (formData.get('ano_fin') as string) || null,
+    orden: 0,
+  })
+
+  if (error) return { error: error.message }
+  revalidatePath('/candidato/dashboard')
+  return { ok: true }
+}
+
+export async function actualizarEducacion(id: string, formData: FormData) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'No autenticado' }
+
+  const { error } = await supabase.from('candidato_educacion')
+    .update({
+      centro: (formData.get('centro') as string).trim(),
+      titulo: (formData.get('titulo') as string).trim(),
+      ano_fin: (formData.get('ano_fin') as string) || null,
+    })
+    .eq('id', id)
+    .eq('candidato_id', user.id)
+
+  if (error) return { error: error.message }
+  revalidatePath('/candidato/dashboard')
+  return { ok: true }
+}
+
+export async function eliminarEducacion(id: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'No autenticado' }
+
+  const { error } = await supabase.from('candidato_educacion')
+    .delete()
+    .eq('id', id)
+    .eq('candidato_id', user.id)
+
+  if (error) return { error: error.message }
+  revalidatePath('/candidato/dashboard')
+  return { ok: true }
+}
+
+// =============================================================================
+// IDIOMAS
+// =============================================================================
+
+export async function crearIdioma(formData: FormData) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'No autenticado' }
+
+  const nivel = formData.get('nivel') as string
+  if (!NIVELES_VALIDOS.includes(nivel as NivelIdioma)) return { error: 'Nivel inválido' }
+
+  const { error } = await supabase.from('candidato_idiomas').insert({
+    candidato_id: user.id,
+    idioma: (formData.get('idioma') as string).trim(),
+    nivel: nivel as NivelIdioma,
+    orden: 0,
+  })
+
+  if (error) return { error: error.message }
+  revalidatePath('/candidato/dashboard')
+  return { ok: true }
+}
+
+export async function actualizarIdioma(id: string, formData: FormData) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'No autenticado' }
+
+  const nivel = formData.get('nivel') as string
+  if (!NIVELES_VALIDOS.includes(nivel as NivelIdioma)) return { error: 'Nivel inválido' }
+
+  const { error } = await supabase.from('candidato_idiomas')
+    .update({
+      idioma: (formData.get('idioma') as string).trim(),
+      nivel: nivel as NivelIdioma,
+    })
+    .eq('id', id)
+    .eq('candidato_id', user.id)
+
+  if (error) return { error: error.message }
+  revalidatePath('/candidato/dashboard')
+  return { ok: true }
+}
+
+export async function eliminarIdioma(id: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'No autenticado' }
+
+  const { error } = await supabase.from('candidato_idiomas')
+    .delete()
+    .eq('id', id)
+    .eq('candidato_id', user.id)
+
+  if (error) return { error: error.message }
+  revalidatePath('/candidato/dashboard')
+  return { ok: true }
+}
+
+// =============================================================================
+// PREFERENCIAS LABORALES
+// =============================================================================
+
+export async function actualizarPreferencias(formData: FormData) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'No autenticado' }
+
+  const sectores = formData.getAll('sectores') as string[]
+
+  const { error } = await supabase.from('candidato_profiles')
+    .update({
+      tipo_jornada: (formData.get('tipo_jornada') as string) || null,
+      modalidad_trabajo: (formData.get('modalidad_trabajo') as string) || null,
+      tipo_contrato: (formData.get('tipo_contrato') as string) || null,
+      sectores_interes: sectores.length > 0 ? sectores : null,
+      disponibilidad: (formData.get('disponibilidad') as string) || null,
+      pretension_salarial: (formData.get('pretension_salarial') as string) || null,
+    })
+    .eq('user_id', user.id)
+
+  if (error) return { error: error.message }
+  revalidatePath('/candidato/dashboard')
   return { ok: true }
 }
