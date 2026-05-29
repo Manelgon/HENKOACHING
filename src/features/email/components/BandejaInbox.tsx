@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { listarEmailsBandeja, leerEmailBandeja } from '@/actions/email'
 import EmailDrawer from './EmailDrawer'
 import type { EmailMessage, EmailDetail } from '../types'
