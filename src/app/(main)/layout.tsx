@@ -1,6 +1,8 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import DashboardShell, { type NavSection } from '@/components/DashboardShell'
+import EmailPoller from '@/features/email/components/EmailPoller'
+import { getEmailConfig } from '@/actions/email'
 
 export default async function MainLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -169,12 +171,16 @@ export default async function MainLayout({ children }: { children: React.ReactNo
 
   const userInitial = user.email?.[0]?.toUpperCase() ?? '·'
 
+  const emailConfig = isAdmin ? await getEmailConfig() : null
+  const hasImapConfig = !!(emailConfig?.imap_host && emailConfig?.hasImapPassword)
+
   return (
     <DashboardShell
       sections={sections}
       userEmail={user.email ?? ''}
       userInitial={userInitial}
     >
+      {isAdmin && <EmailPoller hasImapConfig={hasImapConfig} />}
       {children}
     </DashboardShell>
   )

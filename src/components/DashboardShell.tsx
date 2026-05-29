@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { signout } from '@/actions/auth'
+import { useEmailStore } from '@/features/email/store/emailStore'
 
 export type NavItem = {
   href: string
@@ -27,6 +28,7 @@ type Props = {
 export default function DashboardShell({ sections, userEmail, userInitial, children }: Props) {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
+  const unreadCount = useEmailStore((s) => s.unreadCount)
 
   useEffect(() => {
     setOpen(false)
@@ -93,8 +95,13 @@ export default function DashboardShell({ sections, userEmail, userInitial, child
                         : 'text-gray-700 hover:bg-gray-50 hover:text-henko-turquoise'
                     }`}
                   >
-                    <span className={`w-5 h-5 ${active ? 'text-henko-turquoise' : 'text-gray-400 group-hover:text-henko-turquoise transition-colors'}`}>
+                    <span className={`relative w-5 h-5 ${active ? 'text-henko-turquoise' : 'text-gray-400 group-hover:text-henko-turquoise transition-colors'}`}>
                       {item.icon}
+                      {item.href === '/dashboard/email' && unreadCount > 0 && (
+                        <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-0.5 rounded-full bg-henko-turquoise text-white text-[10px] font-bold flex items-center justify-center leading-none">
+                          {unreadCount > 99 ? '99+' : unreadCount}
+                        </span>
+                      )}
                     </span>
                     {item.label}
                   </Link>

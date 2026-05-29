@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect } from 'react'
 import { listarEmailsBandeja, leerEmailBandeja } from '@/actions/email'
 import EmailDrawer from './EmailDrawer'
+import { useEmailStore } from '@/features/email/store/emailStore'
 import type { EmailMessage, EmailDetail } from '../types'
 
 type Props = {
@@ -15,6 +16,7 @@ export default function BandejaInbox({ hasImapConfig }: Props) {
   const [error, setError] = useState<string | null>(null)
   const [selected, setSelected] = useState<EmailDetail | null>(null)
   const [loadingDetail, setLoadingDetail] = useState(false)
+  const { markAllSeen, setUnreadCount } = useEmailStore()
 
   const cargar = useCallback(async (silencioso = false) => {
     if (!silencioso) setLoading(true)
@@ -25,8 +27,15 @@ export default function BandejaInbox({ hasImapConfig }: Props) {
       setError(r.error ?? 'Error desconocido')
     } else {
       setMensajes(r.messages)
+      const unread = r.messages.filter((m) => !m.seen).length
+      setUnreadCount(unread)
     }
-  }, [])
+  }, [setUnreadCount])
+
+  // Al entrar a la bandeja, resetear el badge
+  useEffect(() => {
+    markAllSeen()
+  }, [markAllSeen])
 
   // Cargar al montar
   useEffect(() => { cargar() }, [cargar])
@@ -79,7 +88,7 @@ export default function BandejaInbox({ hasImapConfig }: Props) {
           <h2 className="font-roxborough text-lg text-gray-900">Bandeja de entrada</h2>
           <button
             type="button"
-            onClick={cargar}
+            onClick={() => cargar()}
             disabled={loading}
             className="flex items-center gap-2 px-4 py-2 rounded-xl bg-henko-turquoise text-white font-raleway text-sm font-semibold hover:bg-henko-turquoise-light disabled:opacity-50 transition-colors"
           >
