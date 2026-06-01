@@ -1,11 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import ClienteFicha from '@/features/clientes/components/ClienteFicha'
-import ClienteNotas from '@/features/clientes/components/ClienteNotas'
-import ClienteArchivos from '@/features/clientes/components/ClienteArchivos'
-import ClienteFacturas from '@/features/clientes/components/ClienteFacturas'
-import ClienteOfertas from '@/features/clientes/components/ClienteOfertas'
+import ClienteDetalleLayout from '@/features/clientes/components/ClienteDetalleLayout'
 
 export const dynamic = 'force-dynamic'
 
@@ -62,32 +58,18 @@ export default async function ClienteFichaPage({ params }: { params: Promise<{ i
   return (
     <div className="w-full">
       <div className="mb-6">
-        <Link
-          href="/dashboard/clientes"
-          className="inline-flex items-center gap-1 text-sm text-gray-500 font-raleway hover:text-henko-turquoise"
-        >
+        <Link href="/dashboard/clientes" className="inline-flex items-center gap-1 text-sm text-gray-500 font-raleway hover:text-henko-turquoise">
           ← Volver a clientes
         </Link>
       </div>
 
-      <div className="mb-8 md:mb-10">
-        <h1 className="font-roxborough text-2xl md:text-3xl text-gray-900 mb-2">{cliente.nombre}</h1>
-        {cliente.empresa && <p className="font-raleway text-gray-500 font-light">{cliente.empresa}</p>}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Columna principal */}
-        <div className="lg:col-span-2 space-y-6">
-          <ClienteFicha cliente={cliente} />
-          <ClienteFacturas facturas={facturas ?? []} clienteId={id} />
-          <ClienteOfertas ofertas={ofertas ?? []} />
-        </div>
-        {/* Columna lateral */}
-        <div className="space-y-6">
-          <ClienteNotas clienteId={cliente.id} notas={notas} />
-          <ClienteArchivos clienteId={cliente.id} archivos={archivos ?? []} />
-        </div>
-      </div>
+      <ClienteDetalleLayout
+        cliente={cliente}
+        notas={notas}
+        archivos={archivos ?? []}
+        facturas={facturas ?? []}
+        ofertas={ofertas ?? []}
+      />
     </div>
   )
 }
