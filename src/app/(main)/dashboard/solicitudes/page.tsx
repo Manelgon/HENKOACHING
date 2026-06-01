@@ -37,6 +37,7 @@ export default async function DashboardSolicitudesPage() {
       id: s.id,
       estado: s.estado,
       fecha: s.created_at ? new Date(s.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) : '',
+      candidatoId: s.candidato_id,
       candidato: `${profile?.nombre ?? ''} ${profile?.apellidos ?? ''}`.trim() || profile?.email || '—',
       email: profile?.email ?? '',
       telefono: profile?.telefono ?? '',

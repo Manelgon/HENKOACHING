@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { cambiarEstadoSolicitud, getCvUrl } from '@/actions/solicitudes'
 import type { EstadoSolicitud } from '@/lib/supabase/database.types'
@@ -20,6 +21,7 @@ type SolicitudView = {
   id: string
   estado: EstadoSolicitud
   fecha: string
+  candidatoId: string
   candidato: string
   email: string
   telefono: string
@@ -169,7 +171,9 @@ export default function AdminSolicitudes({ solicitudes, ofertas }: Props) {
               {/* Tabla (desktop/tablet) */}
               <div className="hidden md:grid px-5 lg:px-7 py-4 grid-cols-[2fr_2fr_1.5fr_1fr_140px] items-center">
                 <div>
-                  <p className="text-sm font-semibold">{s.candidato}</p>
+                  <Link href={`/dashboard/candidatos/${s.candidatoId}`} className="text-sm font-semibold hover:text-henko-turquoise hover:underline transition-colors">
+                    {s.candidato}
+                  </Link>
                   <p className="text-[11px] text-gray-400">{s.email} · {s.fecha}</p>
                 </div>
                 <p className="text-sm text-gray-600">{s.ofertaTitulo}</p>
@@ -186,7 +190,9 @@ export default function AdminSolicitudes({ solicitudes, ofertas }: Props) {
               <div className="md:hidden px-4 py-4">
                 <div className="flex items-start justify-between gap-3 mb-2">
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold truncate">{s.candidato}</p>
+                    <Link href={`/dashboard/candidatos/${s.candidatoId}`} className="text-sm font-semibold truncate block hover:text-henko-turquoise transition-colors">
+                      {s.candidato}
+                    </Link>
                     <p className="text-[11px] text-gray-400 truncate">{s.email} · {s.fecha}</p>
                   </div>
                   <span className={`text-[11px] px-2.5 py-1 rounded-full font-bold whitespace-nowrap flex-shrink-0 ${meta.badge}`}>
