@@ -136,22 +136,6 @@ function EstadoDropdown({ estado, onChange }: { estado: OfertaView['estado']; on
   )
 }
 
-// ─── Estado badge (solo lectura) ─────────────────────────────────────────────
-function EstadoBadge({ estado }: { estado: OfertaView['estado'] }) {
-  const cfg = {
-    publicada: 'bg-henko-greenblue text-henko-turquoise',
-    borrador:  'bg-henko-yellow text-yellow-900',
-    pausada:   'bg-orange-100 text-orange-700',
-    cerrada:   'bg-black/5 text-gray-500',
-  }
-  const labels = { publicada: 'Activa', borrador: 'Borrador', pausada: 'Pausada', cerrada: 'Cerrada' }
-  return (
-    <span className={`text-[11px] px-2.5 py-1 rounded-full font-bold ${cfg[estado]}`}>
-      {labels[estado]}
-    </span>
-  )
-}
-
 export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas, empresas }: Props) {
   const router = useRouter()
   const runAction = useAction()
@@ -245,18 +229,6 @@ export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas,
       { successMessage: `Estado cambiado a ${labels[nuevoEstado]}` },
     )
     if (result.ok) router.refresh()
-  }
-
-  const borrar = async (o: OfertaView) => {
-    const ok = await confirm({
-      title: 'Eliminar oferta',
-      description: `¿Eliminar oferta "${o.titulo}"? Esta acción no se puede deshacer.`,
-      confirmLabel: 'Eliminar',
-      variant: 'danger',
-    })
-    if (!ok) return
-    const result = await runAction(`Eliminando "${o.titulo}"`, () => eliminarOferta(o.id), { successMessage: 'Oferta eliminada' })
-    if (result.ok) { cerrar(); router.refresh() }
   }
 
   useEffect(() => {
@@ -404,78 +376,6 @@ export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas,
           </div>
         </div>
       )}
-    </div>
-  )
-}
-
-// ─── Vista detalle (read-only) ────────────────────────────────────────────────
-function DetalleOferta({ oferta: o, onToggleEstado: _, onBorrar: __ }: {
-  oferta: OfertaView
-  onToggleEstado: () => void
-  onBorrar: () => void
-}) {
-  return (
-    <div className="space-y-6">
-      {/* Badges info */}
-      <div className="flex flex-wrap gap-2">
-        {[o.sector_nombre, o.modalidad_nombre, o.jornada_nombre].filter(Boolean).map((tag, i) => (
-          <span key={i} className="text-xs px-3 py-1 rounded-full bg-gray-100 text-gray-600 font-medium">{tag}</span>
-        ))}
-        {o.salario_texto && (
-          <span className="text-xs px-3 py-1 rounded-full bg-henko-turquoise/10 text-henko-turquoise font-semibold">{o.salario_texto}</span>
-        )}
-        <EstadoBadge estado={o.estado} />
-      </div>
-
-      {/* Datos clave */}
-      <div className="grid grid-cols-2 gap-4">
-        {o.ubicacion && <InfoField label="UBICACIÓN" value={o.ubicacion} />}
-        {o.empresa && <InfoField label="EMPRESA" value={o.empresa} note={o.empresa_oculta ? 'Oculta en web' : undefined} />}
-        {o.reporta_a && <InfoField label="REPORTA A" value={o.reporta_a} />}
-        {o.contrato && <InfoField label="CONTRATO" value={o.contrato} />}
-        {o.fecha && <InfoField label="PUBLICADA" value={o.fecha} />}
-        {o.fecha_expiracion && <InfoField label="EXPIRA" value={o.fecha_expiracion} />}
-      </div>
-
-      {/* Descripción */}
-      {o.descripcion && (
-        <div>
-          <p className="text-[10px] tracking-[0.14em] text-henko-turquoise font-bold mb-2">DESCRIPCIÓN</p>
-          <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{o.descripcion}</p>
-        </div>
-      )}
-
-      {/* Listas */}
-      {o.funciones.length > 0 && <ListaDetalle label="FUNCIONES PRINCIPALES" items={o.funciones} />}
-      {o.requisitos.length > 0 && <ListaDetalle label="REQUISITOS" items={o.requisitos} />}
-      {o.competencias.length > 0 && <ListaDetalle label="COMPETENCIAS CLAVE" items={o.competencias} />}
-      {o.ofrecemos.length > 0 && <ListaDetalle label="SE OFRECE" items={o.ofrecemos} />}
-    </div>
-  )
-}
-
-function InfoField({ label, value, note }: { label: string; value: string; note?: string }) {
-  return (
-    <div>
-      <p className="text-[10px] tracking-[0.14em] text-henko-turquoise font-bold mb-1">{label}</p>
-      <p className="text-sm text-gray-800">{value}</p>
-      {note && <p className="text-[10px] text-gray-400 mt-0.5">{note}</p>}
-    </div>
-  )
-}
-
-function ListaDetalle({ label, items }: { label: string; items: string[] }) {
-  return (
-    <div>
-      <p className="text-[10px] tracking-[0.14em] text-henko-turquoise font-bold mb-2">{label}</p>
-      <ul className="space-y-1.5">
-        {items.map((item, i) => (
-          <li key={i} className="flex gap-2.5 items-start text-sm text-gray-700">
-            <span className="w-1.5 h-1.5 rounded-full bg-henko-turquoise flex-shrink-0 mt-[0.4rem]" />
-            {item}
-          </li>
-        ))}
-      </ul>
     </div>
   )
 }
