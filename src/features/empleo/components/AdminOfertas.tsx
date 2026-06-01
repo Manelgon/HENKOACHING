@@ -240,9 +240,9 @@ export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas,
       empresa_nombre: draft.empresa,
       empresa_oculta: draft.empresa_oculta,
       ubicacion: draft.ubicacion,
-      modalidad_id: draft.modalidad_id,
-      jornada_id: draft.jornada_id,
-      sector_id: draft.sector_id,
+      modalidad_id: draft.modalidad_id || null,
+      jornada_id: draft.jornada_id || null,
+      sector_id: draft.sector_id || null,
       salario_texto: draft.salario_texto,
       reporta_a: draft.reporta_a,
       contrato: draft.contrato,
@@ -316,26 +316,15 @@ export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas,
 
   return (
     <div>
-      {/* Header */}
-      <div className="flex items-center justify-end mb-6">
-        <button
-          type="button"
-          onClick={abrirNueva}
-          className="inline-flex items-center gap-2 bg-henko-turquoise text-white px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-henko-turquoise-light hover:shadow-lg transition-all"
-        >
-          + Nueva oferta
-        </button>
-      </div>
-
-      {/* Toolbar búsqueda + filtros */}
+      {/* Toolbar: búsqueda + filtro + botón nueva oferta */}
       <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm px-4 md:px-6 py-4 mb-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="flex flex-wrap gap-3 items-center">
           <input
             type="text"
             placeholder="Buscar por título o empresa…"
             value={busqueda}
             onChange={e => setBusqueda(e.target.value)}
-            className="px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 font-raleway text-sm outline-none focus:border-henko-turquoise focus:bg-white transition-colors"
+            className="flex-1 min-w-[180px] px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 font-raleway text-sm outline-none focus:border-henko-turquoise focus:bg-white transition-colors"
           />
           <CustomSelect
             value={filtroEstado}
@@ -347,8 +336,15 @@ export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas,
               { value: 'pausada', label: 'Pausada' },
               { value: 'cerrada', label: 'Cerrada' },
             ]}
-            className="w-full"
+            className="min-w-[160px]"
           />
+          <button
+            type="button"
+            onClick={abrirNueva}
+            className="inline-flex items-center gap-2 bg-henko-turquoise text-white px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-henko-turquoise-light hover:shadow-lg transition-all whitespace-nowrap"
+          >
+            + Nueva oferta
+          </button>
         </div>
       </div>
 
@@ -681,9 +677,9 @@ function FormOferta({
 function emptyDraft(sectores: Catalogo[], modalidades: Catalogo[], jornadas: Catalogo[]): Draft {
   return {
     titulo: '', empresa: '', empresa_oculta: false, ubicacion: '',
-    modalidad_id: modalidades[0]?.id ?? 0,
-    jornada_id: jornadas[0]?.id ?? 0,
-    sector_id: sectores[0]?.id ?? 0,
+    modalidad_id: 0,
+    jornada_id: 0,
+    sector_id: 0,
     salario_texto: '', reporta_a: '', contrato: '', descripcion: '',
     funciones: '', requisitos: '', competencias: '', ofrecemos: '',
     estado: 'publicada', fecha_expiracion: '',
@@ -724,7 +720,7 @@ function SelectField({ label, value, onChange, options }: { label: string; value
       <CustomSelect
         value={String(value)}
         onChange={(v) => onChange(Number(v))}
-        options={options.map(o => ({ value: String(o.id), label: o.nombre }))}
+        options={[{ value: '0', label: '— Seleccionar —' }, ...options.map(o => ({ value: String(o.id), label: o.nombre }))]}
         className="w-full"
       />
     </div>
