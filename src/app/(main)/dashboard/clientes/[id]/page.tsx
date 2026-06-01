@@ -3,8 +3,9 @@ import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import ClienteFicha from '@/features/clientes/components/ClienteFicha'
 import ClienteNotas from '@/features/clientes/components/ClienteNotas'
-import ClienteSesiones from '@/features/clientes/components/ClienteSesiones'
 import ClienteArchivos from '@/features/clientes/components/ClienteArchivos'
+import ClienteFacturas from '@/features/clientes/components/ClienteFacturas'
+import ClienteOfertas from '@/features/clientes/components/ClienteOfertas'
 
 export const dynamic = 'force-dynamic'
 
@@ -21,21 +22,31 @@ export default async function ClienteFichaPage({ params }: { params: Promise<{ i
 
   if (!cliente) notFound()
 
-  // Cargar relaciones en paralelo
-  const [{ data: notasRaw }, { data: sesiones }, { data: archivos }] = await Promise.all([
+  const [{ data: notasRaw }, { data: archivos }, { data: facturas }, { data: ofertas }] = await Promise.all([
     supabase
       .from('cliente_notas')
       .select('id, contenido, created_at, autor_id, profiles:autor_id(email)')
       .eq('cliente_id', id)
       .order('created_at', { ascending: false }),
     supabase
-      .from('cliente_sesiones')
-      .select('id, fecha, tipo, duracion, notas, realizada')
-      .eq('cliente_id', id)
-      .order('fecha', { ascending: false }),
-    supabase
       .from('cliente_archivos')
       .select('id, nombre_archivo, storage_path, tipo, tamano_bytes, created_at')
+      .eq('cliente_id', id)
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('facturas')
+      .select('id, numero, fecha_emision, total, estado')
+      .eq('cliente_id', id)
+      .order('fecha_emision', { ascending: false }),
+    supabase
+      .from('ofertas')
+      .select(`
+        id, titulo, estado, fecha_publicacion,
+        solicitudes(id, estado, created_at,
+          candidato_profiles:candidato_id(profiles(nombre, apellidos, email))
+        )
+      `)
       .eq('cliente_id', id)
       .is('deleted_at', null)
       .order('created_at', { ascending: false }),
@@ -65,10 +76,13 @@ export default async function ClienteFichaPage({ params }: { params: Promise<{ i
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Columna principal */}
         <div className="lg:col-span-2 space-y-6">
           <ClienteFicha cliente={cliente} />
-          <ClienteSesiones clienteId={cliente.id} sesiones={sesiones ?? []} />
+          <ClienteFacturas facturas={facturas ?? []} clienteId={id} />
+          <ClienteOfertas ofertas={ofertas ?? []} />
         </div>
+        {/* Columna lateral */}
         <div className="space-y-6">
           <ClienteNotas clienteId={cliente.id} notas={notas} />
           <ClienteArchivos clienteId={cliente.id} archivos={archivos ?? []} />
