@@ -3,11 +3,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getCandidatoPerfil } from '@/actions/candidatos-admin'
-import CandidatoHeader from '@/features/candidatos/components/CandidatoHeader'
-import { CandidatoExperiencia, CandidatoEducacion, CandidatoIdiomas, CandidatoPreferencias } from '@/features/candidatos/components/CandidatoExperiencia'
-import CandidatoCVs from '@/features/candidatos/components/CandidatoCVs'
-import CandidatoSolicitudes from '@/features/candidatos/components/CandidatoSolicitudes'
-import CandidatoAccionesAdmin from '@/features/candidatos/components/CandidatoAccionesAdmin'
+import CandidatoDetalleLayout from '@/features/candidatos/components/CandidatoDetalleLayout'
 
 export const dynamic = 'force-dynamic'
 
@@ -47,33 +43,12 @@ export default async function CandidatoPerfilPage({ params }: Props) {
         <span className="text-gray-700 font-medium truncate">{nombre}</span>
       </div>
 
-      {/* Header full width */}
-      <CandidatoHeader perfil={perfil} />
-
-      {/* Dos columnas */}
-      <div className="mt-5 grid grid-cols-1 xl:grid-cols-2 gap-5 items-start">
-        {/* Columna izquierda: experiencia, educación, idiomas, preferencias */}
-        <div className="space-y-5">
-          <CandidatoExperiencia experiencias={perfil.experiencias} />
-          <CandidatoEducacion educacion={perfil.educacion} />
-          <CandidatoIdiomas idiomas={perfil.idiomas} />
-          <CandidatoPreferencias perfil={perfil} />
-        </div>
-
-        {/* Columna derecha: CV, solicitudes, acciones admin */}
-        <div className="space-y-5">
-          {perfil.cvs.length > 0 && <CandidatoCVs cvs={perfil.cvs} />}
-          <CandidatoSolicitudes solicitudes={perfil.solicitudes} candidatoId={id} />
-          <CandidatoAccionesAdmin
-            candidatoId={id}
-            candidatoEmail={perfil.email}
-            archivado={perfil.archivado}
-            notas={perfil.notas}
-            ofertas={ofertas}
-            ofertasVinculadas={ofertasVinculadas}
-          />
-        </div>
-      </div>
+      <CandidatoDetalleLayout
+        perfil={perfil}
+        cvPrincipal={perfil.cvs.find(cv => cv.es_principal) ?? perfil.cvs[0] ?? null}
+        ofertas={ofertas}
+        ofertasVinculadas={ofertasVinculadas}
+      />
     </div>
   )
 }
