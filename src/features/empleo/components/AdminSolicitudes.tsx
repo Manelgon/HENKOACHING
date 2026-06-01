@@ -39,6 +39,7 @@ export default function AdminSolicitudes({ solicitudes, ofertas }: Props) {
   const router = useRouter()
   const runAction = useAction()
   const [filtroOferta, setFiltroOferta] = useState<string>('todas')
+  const [busqueda, setBusqueda] = useState('')
 
   useEffect(() => {
     const supabase = createClient()
@@ -51,10 +52,17 @@ export default function AdminSolicitudes({ solicitudes, ofertas }: Props) {
     return () => { supabase.removeChannel(channel) }
   }, [router])
 
-  const filtradas = useMemo(() =>
-    filtroOferta === 'todas' ? solicitudes : solicitudes.filter(s => s.ofertaId === filtroOferta),
-    [solicitudes, filtroOferta],
-  )
+  const filtradas = useMemo(() => {
+    const q = busqueda.trim().toLowerCase()
+    return solicitudes.filter(s => {
+      if (filtroOferta !== 'todas' && s.ofertaId !== filtroOferta) return false
+      if (q) {
+        const hay = `${s.candidato} ${s.email} ${s.telefono} ${s.mensaje}`.toLowerCase()
+        if (!hay.includes(q)) return false
+      }
+      return true
+    })
+  }, [solicitudes, filtroOferta, busqueda])
   const pagination = usePagination(filtradas, 20)
 
   const stats = [
@@ -99,29 +107,27 @@ export default function AdminSolicitudes({ solicitudes, ofertas }: Props) {
         ))}
       </div>
 
-      {/* Filtro por oferta */}
-      <div className="flex gap-2 mb-5 flex-wrap">
-        <button
-          type="button"
-          onClick={() => setFiltroOferta('todas')}
-          className={`px-4 py-1.5 rounded-full text-xs font-semibold shadow-sm transition-all ${
-            filtroOferta === 'todas' ? 'bg-henko-turquoise text-white' : 'bg-white text-gray-500 hover:text-gray-800'
-          }`}
-        >
-          Todas
-        </button>
-        {ofertas.map(o => (
-          <button
-            key={o.id}
-            type="button"
-            onClick={() => setFiltroOferta(o.id)}
-            className={`px-4 py-1.5 rounded-full text-xs font-semibold shadow-sm transition-all ${
-              filtroOferta === o.id ? 'bg-henko-turquoise text-white' : 'bg-white text-gray-500 hover:text-gray-800'
-            }`}
+      {/* Toolbar: buscador + filtro por oferta */}
+      <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm px-4 md:px-6 py-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <input
+            type="text"
+            placeholder="Buscar por candidato, email, mensaje…"
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+            className="px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 font-raleway text-sm outline-none focus:border-henko-turquoise focus:bg-white transition-colors"
+          />
+          <select
+            value={filtroOferta}
+            onChange={(e) => setFiltroOferta(e.target.value)}
+            className="px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 font-raleway text-sm outline-none focus:border-henko-turquoise focus:bg-white transition-colors"
           >
-            {o.titulo}
-          </button>
-        ))}
+            <option value="todas">Todas las ofertas</option>
+            {ofertas.map(o => (
+              <option key={o.id} value={o.id}>{o.titulo}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* Tabla */}
