@@ -259,8 +259,7 @@ export default function AdminSolicitudes({ solicitudes, ofertas }: Props) {
           return (
             <div
               key={s.id}
-              className={`border-b border-black/5 last:border-0 hover:bg-henko-white/40 transition-colors cursor-pointer ${esNueva ? 'bg-henko-greenblue/10' : ''}`}
-              onClick={() => abrirDetalle(s)}
+              className={`border-b border-black/5 last:border-0 transition-colors ${esNueva ? 'bg-henko-greenblue/10' : ''}`}
             >
               {/* Desktop */}
               <div className="hidden md:grid px-5 lg:px-7 py-4 grid-cols-[2fr_2fr_1fr_1fr_1fr] items-center gap-3">
