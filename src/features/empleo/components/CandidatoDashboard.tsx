@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef, useTransition } from 'react'
+import { useEffect, useState, useRef, useTransition, useMemo } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
@@ -14,11 +14,12 @@ import {
 } from '@/actions/candidato'
 import { createClient } from '@/lib/supabase/client'
 import { signout } from '@/actions/auth'
-import { getCvUrl } from '@/actions/solicitudes'
+import { getCvUrl, aplicarAOferta } from '@/actions/solicitudes'
 import type { EstadoSolicitud } from '@/lib/supabase/database.types'
+import type { OfertaListing } from '@/features/empleo/queries'
 import { useAction, useConfirm } from '@/shared/feedback/FeedbackContext'
 
-type Tab = 'solicitudes' | 'perfil' | 'trayectoria' | 'preferencias'
+type Tab = 'solicitudes' | 'empleos' | 'perfil' | 'trayectoria' | 'preferencias'
 
 const ESTADO_META: Record<EstadoSolicitud, { label: string; badge: string; desc: string }> = {
   nuevo:      { label: 'Solicitud recibida',        badge: 'bg-henko-turquoise/10 text-henko-turquoise',  desc: 'Tu solicitud ha llegado correctamente. Estamos revisando los candidatos.' },
@@ -30,6 +31,7 @@ const ESTADO_META: Record<EstadoSolicitud, { label: string; badge: string; desc:
 
 const NAV: { id: Tab; label: string }[] = [
   { id: 'solicitudes',  label: 'Mis solicitudes' },
+  { id: 'empleos',      label: 'Ofertas de empleo' },
   { id: 'perfil',       label: 'Mi perfil' },
   { id: 'trayectoria',  label: 'Trayectoria' },
   { id: 'preferencias', label: 'Preferencias' },
@@ -83,6 +85,8 @@ type Props = {
   completion: CompletionData
   cv: CvView
   solicitudes: SolicitudView[]
+  ofertas: OfertaListing[]
+  aplicadas: Set<string>
   experiencias: ExperienciaView[]
   educacion: EducacionView[]
   idiomas: IdiomaView[]
@@ -107,7 +111,7 @@ function calcCompletion(data: CompletionData) {
   return COMPLETION_ITEMS.reduce((acc, item) => acc + (data[item.key] ? item.weight : 0), 0)
 }
 
-export default function CandidatoDashboard({ perfil, completion, cv, solicitudes, experiencias, educacion, idiomas, preferencias }: Props) {
+export default function CandidatoDashboard({ perfil, completion, cv, solicitudes, ofertas, aplicadas, experiencias, educacion, idiomas, preferencias }: Props) {
   const [tab, setTab] = useState<Tab>('solicitudes')
   const [open, setOpen] = useState(false)
   const iniciales = `${perfil.nombre[0] ?? ''}${perfil.apellidos[0] ?? ''}`.toUpperCase() || 'CD'
@@ -254,6 +258,7 @@ export default function CandidatoDashboard({ perfil, completion, cv, solicitudes
 
         <main className="flex-1 px-5 py-6 md:p-12 overflow-y-auto">
           {tab === 'solicitudes'  && <TabSolicitudes solicitudes={solicitudes} completion={completion} pct={pct} onGoTab={goTab} />}
+          {tab === 'empleos'      && <TabEmpleos ofertas={ofertas} aplicadas={aplicadas} />}
           {tab === 'perfil'       && <TabPerfil perfil={perfil} completion={completion} cv={cv} />}
           {tab === 'trayectoria'  && <TabTrayectoria experiencias={experiencias} educacion={educacion} idiomas={idiomas} />}
           {tab === 'preferencias' && <TabPreferencias preferencias={preferencias} />}
@@ -365,6 +370,105 @@ function TabSolicitudes({ solicitudes, completion, pct, onGoTab }: { solicitudes
           Ver más ofertas →
         </Link>
       </div>
+    </div>
+  )
+}
+
+function TabEmpleos({ ofertas, aplicadas }: { ofertas: OfertaListing[]; aplicadas: Set<string> }) {
+  const router = useRouter()
+  const runAction = useAction()
+  const [busqueda, setBusqueda] = useState('')
+  const [aplicadasLocal, setAplicadasLocal] = useState<Set<string>>(new Set(aplicadas))
+
+  const filtradas = useMemo(() => {
+    const q = busqueda.trim().toLowerCase()
+    if (!q) return ofertas
+    return ofertas.filter(o =>
+      o.titulo.toLowerCase().includes(q) ||
+      o.empresa.toLowerCase().includes(q) ||
+      o.sector.toLowerCase().includes(q) ||
+      o.ubicacion.toLowerCase().includes(q)
+    )
+  }, [ofertas, busqueda])
+
+  async function aplicar(ofertaId: string) {
+    const result = await runAction(
+      'Enviando solicitud',
+      () => aplicarAOferta(ofertaId),
+      { successMessage: '¡Solicitud enviada!' },
+    )
+    if (result.ok) {
+      setAplicadasLocal(prev => new Set([...prev, ofertaId]))
+      router.refresh()
+    }
+  }
+
+  return (
+    <div>
+      <Eyebrow>Portal de empleo</Eyebrow>
+      <h2 className="font-roxborough text-2xl md:text-3xl text-gray-900 mb-6">Ofertas disponibles</h2>
+
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-3.5 mb-6">
+        <input
+          type="text"
+          placeholder="Buscar por puesto, empresa, sector o ubicación…"
+          value={busqueda}
+          onChange={e => setBusqueda(e.target.value)}
+          className="w-full text-sm text-gray-900 bg-transparent outline-none placeholder:text-gray-400"
+        />
+      </div>
+
+      {filtradas.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-6 py-16 text-center">
+          <p className="font-roxborough text-xl text-gray-400 mb-2">
+            {ofertas.length === 0 ? 'No hay ofertas activas' : 'Ninguna oferta coincide con tu búsqueda'}
+          </p>
+          <p className="text-sm text-gray-400">
+            {ofertas.length === 0 ? 'Vuelve pronto, publicamos nuevas oportunidades regularmente.' : 'Prueba con otras palabras.'}
+          </p>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-4">
+          {filtradas.map(o => {
+            const yaAplicado = aplicadasLocal.has(o.id)
+            return (
+              <div key={o.id} className="bg-white rounded-2xl border border-henko-turquoise/15 shadow-sm px-7 py-6">
+                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-roxborough text-lg text-gray-900 mb-0.5">{o.titulo}</p>
+                    <p className="text-xs text-gray-400 mb-3">{o.empresa} · {o.ubicacion}</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {[o.modalidad, o.jornada, o.sector].filter(Boolean).map((tag, i) => (
+                        <span key={i} className="text-[11px] px-3 py-1 rounded-full bg-gray-100 text-gray-600 font-medium">{tag}</span>
+                      ))}
+                      {o.salario && (
+                        <span className="text-[11px] px-3 py-1 rounded-full bg-henko-turquoise/10 text-henko-turquoise font-semibold">{o.salario}</span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex-shrink-0 flex flex-col items-start md:items-end gap-2">
+                    {yaAplicado ? (
+                      <span className="inline-flex items-center gap-1.5 text-[11px] px-4 py-1.5 rounded-full bg-henko-turquoise/10 text-henko-turquoise font-bold">
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+                        Solicitud enviada
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => aplicar(o.id)}
+                        className="inline-flex items-center gap-2 bg-henko-turquoise text-white px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-henko-turquoise-light hover:shadow-lg transition-all"
+                      >
+                        Solicitar
+                      </button>
+                    )}
+                    <p className="text-[10px] text-gray-400">{o.fecha}</p>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }

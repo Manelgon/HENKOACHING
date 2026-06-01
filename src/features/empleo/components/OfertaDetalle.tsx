@@ -1,10 +1,7 @@
 'use client'
 
-import { useState } from 'react'
 import Link from 'next/link'
-import { aplicarAOferta } from '@/actions/solicitudes'
 import type { OfertaDetalle as OfertaDetalleType } from '@/features/empleo/queries'
-import { useAction } from '@/shared/feedback/FeedbackContext'
 
 type Props = {
   oferta: OfertaDetalleType
@@ -14,17 +11,6 @@ type Props = {
 }
 
 export default function OfertaDetalle({ oferta: o, yaAplicado, isCandidato, isLoggedIn }: Props) {
-  const runAction = useAction()
-  const [aplicado, setAplicado] = useState(yaAplicado)
-
-  async function aplicar() {
-    const result = await runAction(
-      'Enviando solicitud',
-      () => aplicarAOferta(o.id),
-      { successMessage: 'Solicitud enviada' },
-    )
-    if (result.ok) setAplicado(true)
-  }
 
   return (
     <div className="bg-white pt-28 pb-24 font-raleway">
@@ -142,7 +128,7 @@ export default function OfertaDetalle({ oferta: o, yaAplicado, isCandidato, isLo
           <aside className="lg:sticky lg:top-24">
             <div className="bg-white border border-henko-turquoise/15 shadow-sm rounded-3xl p-8 mb-4">
               {o.fecha && <p className="text-xs text-gray-400 mb-5">Publicada el {o.fecha}</p>}
-              {aplicado ? (
+              {yaAplicado ? (
                 <div className="text-center py-5">
                   <div className="w-12 h-12 rounded-full bg-henko-turquoise/15 flex items-center justify-center mx-auto mb-3">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1f8f9b" strokeWidth="2.5">
@@ -151,22 +137,25 @@ export default function OfertaDetalle({ oferta: o, yaAplicado, isCandidato, isLo
                   </div>
                   <p className="font-roxborough text-lg mb-1.5">¡Solicitud enviada!</p>
                   <p className="text-xs text-gray-400 leading-relaxed">
-                    Te avisaremos cuando haya novedades en tu candidatura.
+                    Sigue el estado desde tu panel de candidato.
                   </p>
+                  <Link
+                    href="/candidato/dashboard"
+                    className="mt-4 inline-flex items-center gap-1.5 text-xs text-henko-turquoise font-semibold hover:underline"
+                  >
+                    Ir a mi panel →
+                  </Link>
                 </div>
               ) : isLoggedIn && isCandidato ? (
                 <div className="flex flex-col gap-2.5">
-                  <button
-                    onClick={aplicar}
+                  <Link
+                    href="/candidato/dashboard"
                     className="w-full inline-flex items-center justify-center gap-2 bg-henko-turquoise text-white px-6 py-3 rounded-full text-sm font-semibold hover:bg-henko-turquoise-light hover:shadow-lg transition-all"
                   >
-                    Aplicar a esta oferta
-                  </button>
+                    Solicitar desde mi panel →
+                  </Link>
                   <p className="text-[11px] leading-relaxed text-gray-400 mt-1">
-                    Al aplicar, tu perfil y CV serán visibles para Jennifer Cervera Alzate como responsable del proceso.{' '}
-                    <Link href="/legal#privacidad" target="_blank" className="underline hover:text-henko-turquoise">
-                      Más info
-                    </Link>
+                    Gestiona todas tus candidaturas desde tu área personal.
                   </p>
                 </div>
               ) : (
@@ -175,7 +164,7 @@ export default function OfertaDetalle({ oferta: o, yaAplicado, isCandidato, isLo
                     href="/candidato/signup"
                     className="w-full inline-flex items-center justify-center gap-2 bg-henko-turquoise text-white px-6 py-3 rounded-full text-sm font-semibold hover:bg-henko-turquoise-light hover:shadow-lg transition-all"
                   >
-                    Crear perfil y aplicar
+                    Crear perfil y solicitar
                   </Link>
                   <Link
                     href="/candidato/login"

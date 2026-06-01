@@ -2,7 +2,7 @@ import { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import CandidatoDashboard from '@/features/empleo/components/CandidatoDashboard'
 import { createClient } from '@/lib/supabase/server'
-import { getMisSolicitudes } from '@/features/empleo/queries'
+import { getMisSolicitudes, getOfertasPublicadas } from '@/features/empleo/queries'
 
 export const metadata: Metadata = {
   title: 'Mi área — Henkoaching',
@@ -30,6 +30,7 @@ export default async function CandidatoDashboardPage() {
     { data: eduData },
     { data: idiomaData },
     solicitudes,
+    ofertas,
   ] = await Promise.all([
     supabase.from('profiles').select('nombre, apellidos, email, telefono, avatar_url').eq('id', user.id).single(),
     supabase.from('candidato_profiles')
@@ -41,6 +42,7 @@ export default async function CandidatoDashboardPage() {
     supabase.from('candidato_educacion').select('id, centro, titulo, ano_fin').eq('candidato_id', user.id).order('orden').order('created_at'),
     supabase.from('candidato_idiomas').select('id, idioma, nivel').eq('candidato_id', user.id).order('orden').order('created_at'),
     getMisSolicitudes(user.id),
+    getOfertasPublicadas(),
   ])
 
   return (
@@ -91,6 +93,11 @@ export default async function CandidatoDashboardPage() {
         disponibilidad: candProfile?.disponibilidad ?? '',
         pretensionSalarial: candProfile?.pretension_salarial ?? '',
       }}
+      ofertas={ofertas}
+      aplicadas={new Set(solicitudes.map((s) => {
+        const oferta = s.ofertas as unknown as { id: string } | null
+        return oferta?.id ?? ''
+      }).filter(Boolean))}
       solicitudes={solicitudes.map((s) => {
         const oferta = s.ofertas as unknown as {
           id: string
