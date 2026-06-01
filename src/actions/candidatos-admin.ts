@@ -120,19 +120,21 @@ export async function getCandidatoPerfil(userId: string): Promise<CandidatoPerfi
     { data: idiomas },
     { data: cvs },
     { data: solicitudes },
+    { data: notas },
   ] = await Promise.all([
-    admin.from('profiles').select('id,nombre,apellidos,email,telefono,created_at').eq('id', userId).maybeSingle(),
+    admin.from('profiles').select('id,nombre,apellidos,email,telefono,created_at,deleted_at').eq('id', userId).maybeSingle(),
     admin.from('candidato_profiles').select('*').eq('user_id', userId).maybeSingle(),
     admin.from('candidato_experiencias').select('*').eq('candidato_id', userId).order('orden'),
     admin.from('candidato_educacion').select('*').eq('candidato_id', userId).order('orden'),
     admin.from('candidato_idiomas').select('*').eq('candidato_id', userId),
     admin.from('cvs').select('*').eq('candidato_id', userId).is('deleted_at', null).order('es_principal', { ascending: false }),
     admin.from('solicitudes').select('id,estado,mensaje,created_at,oferta_id,ofertas(titulo)').eq('candidato_id', userId).order('created_at', { ascending: false }),
+    admin.from('candidato_notas').select('id,contenido,created_at,autor_id,profiles:autor_id(nombre,apellidos)').eq('candidato_id', userId).order('created_at', { ascending: false }),
   ])
 
   if (!profile) return null
 
-  type ProfileRow = { id: string; nombre: string | null; apellidos: string | null; email: string; telefono: string | null }
+  type ProfileRow = { id: string; nombre: string | null; apellidos: string | null; email: string; telefono: string | null; deleted_at: string | null }
   type CpRow = { cargo_actual: string | null; ubicacion: string | null; localidad: string | null; cp: string | null; resumen: string | null; linkedin_url: string | null; web_url: string | null; disponibilidad: string | null; pretension_salarial: string | null; tipo_jornada: string | null; modalidad_trabajo: string | null; tipo_contrato: string | null; sectores_interes: string[] | null }
   type ExpRow = { id: string; empresa: string; cargo: string; desde: string | null; hasta: string | null; descripcion: string | null }
   type EduRow = { id: string; centro: string; titulo: string; ano_fin: string | null }
@@ -174,6 +176,7 @@ export async function getCandidatoPerfil(userId: string): Promise<CandidatoPerfi
     cvs: ((cvs ?? []) as unknown as CvRow[]).map((cv) => ({
       id: cv.id, nombre_archivo: cv.nombre_archivo, storage_path: cv.storage_path, es_principal: cv.es_principal,
     })),
+    archivado: !!(p as unknown as ProfileRow).deleted_at,
     solicitudes: ((solicitudes ?? []) as unknown as SolRow[]).map((s) => ({
       id: s.id,
       estado: s.estado as never,
@@ -181,6 +184,16 @@ export async function getCandidatoPerfil(userId: string): Promise<CandidatoPerfi
       created_at: s.created_at,
       oferta_id: s.oferta_id,
       oferta_titulo: s.ofertas?.titulo ?? '(oferta eliminada)',
+    })),
+    notas: ((notas ?? []) as unknown as Array<{
+      id: string; contenido: string; created_at: string; autor_id: string | null
+      profiles: { nombre: string | null; apellidos: string | null } | null
+    }>).map((n) => ({
+      id: n.id,
+      contenido: n.contenido,
+      created_at: n.created_at,
+      autor_id: n.autor_id,
+      autor_nombre: [n.profiles?.nombre, n.profiles?.apellidos].filter(Boolean).join(' ') || 'Admin',
     })),
   }
 }
@@ -204,4 +217,122 @@ export async function getCvSignedUrl(storagePath: string): Promise<string | null
   const admin = createAdminClient()
   const { data } = await admin.storage.from('cvs').createSignedUrl(storagePath, 600)
   return data?.signedUrl ?? null
+}
+
+// ─── Resetear contraseña ─────────────────────────────────────────────────────
+
+export async function resetearPasswordCandidato(candidatoId: string) {
+  const auth = await requireAdmin()
+  if ('error' in auth) return { error: auth.error }
+
+  const admin = createAdminClient()
+  const { data: profile } = await admin
+    .from('profiles').select('email').eq('id', candidatoId).maybeSingle()
+  if (!profile?.email) return { error: 'Candidato no encontrado' }
+
+  const { error } = await admin.auth.resetPasswordForEmail(profile.email, {
+    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/candidato/update-password`,
+  })
+  if (error) return { error: error.message }
+  return { ok: true, email: profile.email }
+}
+
+// ─── Notas internas ──────────────────────────────────────────────────────────
+
+export async function getNotasCandidato(candidatoId: string) {
+  const auth = await requireAdmin()
+  if ('error' in auth) return []
+
+  const admin = createAdminClient()
+  const { data } = await admin
+    .from('candidato_notas')
+    .select('id, contenido, created_at, autor_id, profiles:autor_id(nombre, apellidos)')
+    .eq('candidato_id', candidatoId)
+    .order('created_at', { ascending: false })
+
+  return (data ?? []) as Array<{
+    id: string
+    contenido: string
+    created_at: string
+    autor_id: string | null
+    profiles: { nombre: string | null; apellidos: string | null } | null
+  }>
+}
+
+export async function crearNotaCandidato(candidatoId: string, contenido: string) {
+  const auth = await requireAdmin()
+  if ('error' in auth) return { error: auth.error }
+
+  const admin = createAdminClient()
+  const { error } = await admin.from('candidato_notas').insert({
+    candidato_id: candidatoId,
+    autor_id: auth.user.id,
+    contenido: contenido.trim(),
+  })
+  if (error) return { error: error.message }
+  return { ok: true }
+}
+
+export async function eliminarNotaCandidato(notaId: string) {
+  const auth = await requireAdmin()
+  if ('error' in auth) return { error: auth.error }
+
+  const admin = createAdminClient()
+  const { error } = await admin.from('candidato_notas').delete().eq('id', notaId)
+  if (error) return { error: error.message }
+  return { ok: true }
+}
+
+// ─── Vincular candidato a oferta ─────────────────────────────────────────────
+
+export async function vincularCandidatoAOferta(candidatoId: string, ofertaId: string) {
+  const auth = await requireAdmin()
+  if ('error' in auth) return { error: auth.error }
+
+  const admin = createAdminClient()
+
+  const { data: existe } = await admin
+    .from('solicitudes')
+    .select('id')
+    .eq('candidato_id', candidatoId)
+    .eq('oferta_id', ofertaId)
+    .maybeSingle()
+  if (existe) return { error: 'Este candidato ya está vinculado a esa oferta' }
+
+  const { error } = await admin.from('solicitudes').insert({
+    candidato_id: candidatoId,
+    oferta_id: ofertaId,
+    estado: 'revisando',
+    mensaje: null,
+  })
+  if (error) return { error: error.message }
+  return { ok: true }
+}
+
+// ─── Archivar / restaurar candidato ─────────────────────────────────────────
+
+export async function archivarCandidato(candidatoId: string) {
+  const auth = await requireAdmin()
+  if ('error' in auth) return { error: auth.error }
+
+  const admin = createAdminClient()
+  const { error } = await admin
+    .from('profiles')
+    .update({ deleted_at: new Date().toISOString() })
+    .eq('id', candidatoId)
+  if (error) return { error: error.message }
+  return { ok: true }
+}
+
+export async function restaurarCandidato(candidatoId: string) {
+  const auth = await requireAdmin()
+  if ('error' in auth) return { error: auth.error }
+
+  const admin = createAdminClient()
+  const { error } = await admin
+    .from('profiles')
+    .update({ deleted_at: null })
+    .eq('id', candidatoId)
+  if (error) return { error: error.message }
+  return { ok: true }
 }

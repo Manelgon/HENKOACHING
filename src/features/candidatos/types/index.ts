@@ -61,6 +61,14 @@ export type SolicitudCandidato = {
   oferta_id: string
 }
 
+export type NotaInterna = {
+  id: string
+  contenido: string
+  created_at: string
+  autor_id: string | null
+  autor_nombre: string | null
+}
+
 export type CandidatoPerfil = {
   id: string
   nombre: string | null
@@ -80,9 +88,11 @@ export type CandidatoPerfil = {
   modalidad_trabajo: string | null
   tipo_contrato: string | null
   sectores_interes: string[] | null
+  archivado: boolean
   experiencias: Experiencia[]
   educacion: Educacion[]
   idiomas: Idioma[]
   cvs: CvDoc[]
   solicitudes: SolicitudCandidato[]
+  notas: NotaInterna[]
 }
