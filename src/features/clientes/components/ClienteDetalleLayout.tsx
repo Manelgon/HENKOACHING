@@ -20,7 +20,7 @@ type Archivo = { id: string; nombre_archivo: string; storage_path: string; tipo:
 type Factura = { id: string; numero: string | null; fecha_emision: string | null; total: number | null; estado: string }
 type OfertaRow = {
   id: string; titulo: string; estado: string; fecha_publicacion: string | null
-  solicitudes: { id: string; estado: string; created_at: string | null; candidato_profiles: unknown }[]
+  solicitudes: { id: string; estado: string; created_at: string | null; candidato_profiles: { profiles: { nombre: string | null; apellidos: string | null; email: string } | null } | null }[]
 }
 
 type Tab = 'facturas' | 'empleo' | 'archivos' | 'notas'
