@@ -1,9 +1,9 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import DashboardShell, { type NavSection } from '@/components/DashboardShell'
 import EmailPoller from '@/features/email/components/EmailPoller'
 import CandidatosPoller from '@/features/candidatos/components/CandidatosPoller'
-import { getEmailConfig } from '@/actions/email'
 
 // Iconos fuera del componente para evitar el warning de key de React 19
 // (JSX creado dentro de arrays de props necesita keys; renderizar desde función lo evita)
@@ -87,9 +87,20 @@ export default async function MainLayout({ children }: { children: React.ReactNo
 
   const userInitial = user.email?.[0]?.toUpperCase() ?? '·'
 
-  const emailConfig = isAdmin ? await getEmailConfig() : null
-  const hasImapConfig = !!(emailConfig?.imap_host && emailConfig?.hasImapPassword)
-
+  let hasImapConfig = false
+  if (isAdmin) {
+    try {
+      const admin = createAdminClient()
+      const { data: emailSettings } = await admin
+        .from('email_settings' as never)
+        .select('imap_host, imap_password')
+        .eq('id', 1)
+        .maybeSingle() as { data: { imap_host: string | null; imap_password: string | null } | null }
+      hasImapConfig = !!(emailSettings?.imap_host && emailSettings?.imap_password)
+    } catch {
+      // email_settings no disponible — EmailPoller arranca sin IMAP
+    }
+  }
 
   return (
     <>

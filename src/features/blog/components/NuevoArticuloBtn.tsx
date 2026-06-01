@@ -12,13 +12,18 @@ export default function NuevoArticuloBtn() {
 
   async function handleClick() {
     setLoading(true)
-    const result = await crearArticulo({})
-    setLoading(false)
-    if ('error' in result) {
-      pushToast('error', result.error)
-      return
+    try {
+      const result = await crearArticulo({})
+      if ('error' in result) {
+        pushToast('error', result.error)
+        return
+      }
+      router.push(`/dashboard/blog/${result.data!.id}`)
+    } catch {
+      pushToast('error', 'No se pudo crear el artículo. Inténtalo de nuevo.')
+    } finally {
+      setLoading(false)
     }
-    router.push(`/dashboard/blog/${result.data!.id}`)
   }
 
   return (
