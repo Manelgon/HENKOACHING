@@ -63,10 +63,9 @@ function SolicitudRow({ s, candidatoId }: { s: SolicitudCandidato; candidatoId: 
     const r = await runAction('Actualizando estado', () => cambiarEstadoSolicitud(s.id, nuevoEstado), { silentSuccess: true })
     setActing(false)
     if (!r.ok) {
-      setOptimisticEstado(prev)
+      setOptimisticEstado(prev) // rollback solo en error
     } else {
-      setOptimisticEstado(null) // dejar que el prop actualizado tome el control
-      startRefresh(() => router.refresh())
+      startRefresh(() => router.refresh()) // optimisticEstado se queda hasta que s.estado se actualice
     }
   }
 
