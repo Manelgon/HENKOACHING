@@ -76,23 +76,36 @@ const ESTADO_OPCIONES: { value: OfertaView['estado']; label: string; badge: stri
 
 function EstadoDropdown({ estado, onChange }: { estado: OfertaView['estado']; onChange: (v: OfertaView['estado']) => void }) {
   const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
+  const [pos, setPos] = useState({ top: 0, left: 0 })
+  const btnRef = useRef<HTMLButtonElement>(null)
   const actual = ESTADO_OPCIONES.find(o => o.value === estado)!
+
+  // Borrador solo disponible si la oferta está actualmente en borrador
+  const opciones = ESTADO_OPCIONES.filter(o => o.value !== 'borrador' || estado === 'borrador')
+
+  function handleOpen() {
+    if (btnRef.current) {
+      const r = btnRef.current.getBoundingClientRect()
+      setPos({ top: r.bottom + window.scrollY + 4, left: r.left + window.scrollX })
+    }
+    setOpen(v => !v)
+  }
 
   useEffect(() => {
     if (!open) return
     const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+      if (btnRef.current && !btnRef.current.contains(e.target as Node)) setOpen(false)
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [open])
 
   return (
-    <div ref={ref} className="relative inline-block">
+    <>
       <button
+        ref={btnRef}
         type="button"
-        onClick={() => setOpen(v => !v)}
+        onClick={handleOpen}
         className={`inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-full font-bold cursor-pointer transition-opacity hover:opacity-80 ${actual.badge}`}
       >
         {actual.label}
@@ -101,13 +114,16 @@ function EstadoDropdown({ estado, onChange }: { estado: OfertaView['estado']; on
         </svg>
       </button>
       {open && (
-        <div className="absolute left-0 top-full mt-1 z-20 bg-white rounded-xl shadow-lg border border-gray-100 py-1 min-w-[110px]">
-          {ESTADO_OPCIONES.map(op => (
+        <div
+          className="fixed z-50 bg-white rounded-xl shadow-xl border border-gray-100 py-1 min-w-[120px]"
+          style={{ top: pos.top, left: pos.left }}
+        >
+          {opciones.map(op => (
             <button
               key={op.value}
               type="button"
-              onClick={() => { setOpen(false); onChange(op.value) }}
-              className={`w-full text-left px-3 py-1.5 text-[11px] font-semibold hover:bg-gray-50 transition-colors flex items-center gap-2 ${op.value === estado ? 'opacity-50 cursor-default' : ''}`}
+              onClick={() => { setOpen(false); if (op.value !== estado) onChange(op.value) }}
+              className={`w-full text-left px-3 py-2 text-[11px] font-semibold hover:bg-gray-50 transition-colors flex items-center gap-2 ${op.value === estado ? 'opacity-40 cursor-default' : ''}`}
             >
               <span className={`inline-block w-2 h-2 rounded-full flex-shrink-0 ${op.badge.split(' ')[0]}`} />
               {op.label}
@@ -115,7 +131,7 @@ function EstadoDropdown({ estado, onChange }: { estado: OfertaView['estado']; on
           ))}
         </div>
       )}
-    </div>
+    </>
   )
 }
 
