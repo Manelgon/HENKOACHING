@@ -16,7 +16,21 @@ import { createClient } from '@/lib/supabase/client'
 import { signout } from '@/actions/auth'
 import { getCvUrl, aplicarAOferta } from '@/actions/solicitudes'
 import type { EstadoSolicitud } from '@/lib/supabase/database.types'
-import type { OfertaListing } from '@/features/empleo/queries'
+
+type OfertaItem = {
+  id: string
+  slug: string
+  titulo: string
+  empresa: string
+  empresaOculta: boolean
+  ubicacion: string
+  modalidad: string
+  jornada: string
+  sector: string
+  salario: string
+  fecha: string
+  estado: string
+}
 import { useAction, useConfirm } from '@/shared/feedback/FeedbackContext'
 
 type Tab = 'solicitudes' | 'empleos' | 'perfil' | 'trayectoria' | 'preferencias'
@@ -85,7 +99,7 @@ type Props = {
   completion: CompletionData
   cv: CvView
   solicitudes: SolicitudView[]
-  ofertas: OfertaListing[]
+  ofertas: OfertaItem[]
   aplicadas: Set<string>
   experiencias: ExperienciaView[]
   educacion: EducacionView[]
@@ -374,7 +388,7 @@ function TabSolicitudes({ solicitudes, completion, pct, onGoTab }: { solicitudes
   )
 }
 
-function TabEmpleos({ ofertas, aplicadas }: { ofertas: OfertaListing[]; aplicadas: Set<string> }) {
+function TabEmpleos({ ofertas, aplicadas }: { ofertas: OfertaItem[]; aplicadas: Set<string> }) {
   const router = useRouter()
   const runAction = useAction()
   const [busqueda, setBusqueda] = useState('')
