@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { crearOferta, actualizarOferta, cambiarEstadoOferta, eliminarOferta } from '@/actions/ofertas'
 import { useAction, useConfirm } from '@/shared/feedback/FeedbackContext'
@@ -67,31 +67,55 @@ const labelClass = 'text-[10px] tracking-[0.14em] text-henko-turquoise font-bold
 const inputClass = 'w-full px-4 py-2.5 rounded-xl text-sm border-[1.5px] border-gray-200 bg-henko-white outline-none focus:border-henko-turquoise transition-colors'
 
 // ─── Estado dropdown (tabla) ─────────────────────────────────────────────────
-const ESTADO_OPCIONES: { value: OfertaView['estado']; label: string }[] = [
-  { value: 'publicada', label: 'Activa' },
-  { value: 'borrador',  label: 'Borrador' },
-  { value: 'pausada',   label: 'Pausada' },
-  { value: 'cerrada',   label: 'Cerrada' },
+const ESTADO_OPCIONES: { value: OfertaView['estado']; label: string; badge: string }[] = [
+  { value: 'publicada', label: 'Activa',    badge: 'bg-henko-greenblue text-henko-turquoise' },
+  { value: 'borrador',  label: 'Borrador',  badge: 'bg-henko-yellow text-yellow-900' },
+  { value: 'pausada',   label: 'Pausada',   badge: 'bg-orange-100 text-orange-700' },
+  { value: 'cerrada',   label: 'Cerrada',   badge: 'bg-black/5 text-gray-500' },
 ]
 
 function EstadoDropdown({ estado, onChange }: { estado: OfertaView['estado']; onChange: (v: OfertaView['estado']) => void }) {
-  const cfg = {
-    publicada: 'bg-henko-greenblue text-henko-turquoise',
-    borrador:  'bg-henko-yellow text-yellow-900',
-    pausada:   'bg-orange-100 text-orange-700',
-    cerrada:   'bg-black/5 text-gray-500',
-  }
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  const actual = ESTADO_OPCIONES.find(o => o.value === estado)!
+
+  useEffect(() => {
+    if (!open) return
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [open])
+
   return (
-    <select
-      value={estado}
-      onChange={e => onChange(e.target.value as OfertaView['estado'])}
-      className={`text-[11px] px-2.5 py-1 rounded-full font-bold border-0 outline-none cursor-pointer appearance-none ${cfg[estado]}`}
-      style={{ backgroundImage: 'none' }}
-    >
-      {ESTADO_OPCIONES.map(o => (
-        <option key={o.value} value={o.value}>{o.label}</option>
-      ))}
-    </select>
+    <div ref={ref} className="relative inline-block">
+      <button
+        type="button"
+        onClick={() => setOpen(v => !v)}
+        className={`inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-full font-bold cursor-pointer transition-opacity hover:opacity-80 ${actual.badge}`}
+      >
+        {actual.label}
+        <svg className="w-2.5 h-2.5 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      {open && (
+        <div className="absolute left-0 top-full mt-1 z-20 bg-white rounded-xl shadow-lg border border-gray-100 py-1 min-w-[110px]">
+          {ESTADO_OPCIONES.map(op => (
+            <button
+              key={op.value}
+              type="button"
+              onClick={() => { setOpen(false); onChange(op.value) }}
+              className={`w-full text-left px-3 py-1.5 text-[11px] font-semibold hover:bg-gray-50 transition-colors flex items-center gap-2 ${op.value === estado ? 'opacity-50 cursor-default' : ''}`}
+            >
+              <span className={`inline-block w-2 h-2 rounded-full flex-shrink-0 ${op.badge.split(' ')[0]}`} />
+              {op.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }
 
