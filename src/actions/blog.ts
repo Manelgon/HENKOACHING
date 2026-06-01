@@ -12,9 +12,23 @@ import type { EstadoPost } from '@/features/blog/types'
 type ActionResult<T = undefined> = { ok: true; data?: T } | { error: string; fieldErrors?: Record<string, string> }
 
 function revalidarRutasBlog(slug?: string | null) {
-  revalidatePath('/dashboard/blog')
-  revalidatePath('/blog')
-  if (slug) revalidatePath(`/blog/${slug}`)
+  try {
+    revalidatePath('/dashboard/blog')
+  } catch (e) {
+    console.error('[blog] revalidatePath /dashboard/blog falló:', e)
+  }
+  try {
+    revalidatePath('/blog')
+  } catch (e) {
+    console.error('[blog] revalidatePath /blog falló:', e)
+  }
+  if (slug) {
+    try {
+      revalidatePath(`/blog/${slug}`)
+    } catch (e) {
+      console.error('[blog] revalidatePath /blog/slug falló:', e)
+    }
+  }
 }
 
 async function generarSlugUnico(base: string, exceptId?: string): Promise<string> {
