@@ -66,7 +66,36 @@ type Props = {
 const labelClass = 'text-[10px] tracking-[0.14em] text-henko-turquoise font-bold mb-1.5 block'
 const inputClass = 'w-full px-4 py-2.5 rounded-xl text-sm border-[1.5px] border-gray-200 bg-henko-white outline-none focus:border-henko-turquoise transition-colors'
 
-// ─── Estado badge ────────────────────────────────────────────────────────────
+// ─── Estado dropdown (tabla) ─────────────────────────────────────────────────
+const ESTADO_OPCIONES: { value: OfertaView['estado']; label: string }[] = [
+  { value: 'publicada', label: 'Activa' },
+  { value: 'borrador',  label: 'Borrador' },
+  { value: 'pausada',   label: 'Pausada' },
+  { value: 'cerrada',   label: 'Cerrada' },
+]
+
+function EstadoDropdown({ estado, onChange }: { estado: OfertaView['estado']; onChange: (v: OfertaView['estado']) => void }) {
+  const cfg = {
+    publicada: 'bg-henko-greenblue text-henko-turquoise',
+    borrador:  'bg-henko-yellow text-yellow-900',
+    pausada:   'bg-orange-100 text-orange-700',
+    cerrada:   'bg-black/5 text-gray-500',
+  }
+  return (
+    <select
+      value={estado}
+      onChange={e => onChange(e.target.value as OfertaView['estado'])}
+      className={`text-[11px] px-2.5 py-1 rounded-full font-bold border-0 outline-none cursor-pointer appearance-none ${cfg[estado]}`}
+      style={{ backgroundImage: 'none' }}
+    >
+      {ESTADO_OPCIONES.map(o => (
+        <option key={o.value} value={o.value}>{o.label}</option>
+      ))}
+    </select>
+  )
+}
+
+// ─── Estado badge (solo lectura) ─────────────────────────────────────────────
 function EstadoBadge({ estado }: { estado: OfertaView['estado'] }) {
   const cfg = {
     publicada: 'bg-henko-greenblue text-henko-turquoise',
@@ -205,6 +234,25 @@ export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas,
     if (result.ok) router.refresh()
   }
 
+  const cambiarEstadoConConfirm = async (o: OfertaView, nuevoEstado: OfertaView['estado']) => {
+    if (nuevoEstado === o.estado) return
+    const labels: Record<OfertaView['estado'], string> = {
+      publicada: 'Activa', borrador: 'Borrador', pausada: 'Pausada', cerrada: 'Cerrada',
+    }
+    const ok = await confirm({
+      title: `Cambiar estado a "${labels[nuevoEstado]}"`,
+      description: `¿Confirmas cambiar el estado de "${o.titulo}" de ${labels[o.estado]} a ${labels[nuevoEstado]}?`,
+      confirmLabel: 'Confirmar',
+    })
+    if (!ok) return
+    const result = await runAction(
+      `Cambiando estado a ${labels[nuevoEstado]}`,
+      () => cambiarEstadoOferta(o.id, nuevoEstado),
+      { successMessage: `Estado cambiado a ${labels[nuevoEstado]}` },
+    )
+    if (result.ok) router.refresh()
+  }
+
   const borrar = async (o: OfertaView) => {
     const ok = await confirm({
       title: 'Eliminar oferta',
@@ -228,10 +276,7 @@ export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas,
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-            <h2 className="font-roxborough text-2xl text-gray-900">Ofertas publicadas</h2>
-        </div>
+      <div className="flex items-center justify-end mb-6">
         <button
           type="button"
           onClick={abrirNueva}
@@ -294,7 +339,9 @@ export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas,
                 )}
               </span>
               <span className="text-xs text-gray-500">{o.modalidad_nombre}</span>
-              <EstadoBadge estado={o.estado} />
+              <div onClick={e => e.stopPropagation()}>
+                <EstadoDropdown estado={o.estado} onChange={nuevoEstado => cambiarEstadoConConfirm(o, nuevoEstado)} />
+              </div>
             </div>
             {/* Móvil */}
             <div className="md:hidden px-4 py-4">
@@ -303,7 +350,9 @@ export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas,
                   <p className="text-sm font-semibold truncate">{o.titulo}</p>
                   <p className="text-[11px] text-gray-400">{o.empresa} · {o.fecha}</p>
                 </div>
-                <EstadoBadge estado={o.estado} />
+                <div onClick={e => e.stopPropagation()}>
+                  <EstadoDropdown estado={o.estado} onChange={nuevoEstado => cambiarEstadoConConfirm(o, nuevoEstado)} />
+                </div>
               </div>
               <p className="text-[11px] text-gray-400">{o.modalidad_nombre}</p>
             </div>
