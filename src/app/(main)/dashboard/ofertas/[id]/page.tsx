@@ -43,7 +43,7 @@ export default async function OfertaDetallePage({ params }: Props) {
       .from('solicitudes')
       .select(`
         id, estado, created_at, mensaje, candidato_id,
-        candidato_profiles:candidato_id(cargo_actual, profiles:user_id(nombre, apellidos, email, telefono))
+        candidato_profiles:candidato_id(cargo_actual, profiles(nombre, apellidos, email, telefono))
       `)
       .eq('oferta_id', id)
       .order('created_at', { ascending: false }),
