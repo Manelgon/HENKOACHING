@@ -12,6 +12,7 @@ import {
   type TestimonioInput,
 } from '@/actions/testimonios'
 import type { Database } from '@/lib/supabase/database.types'
+import CustomSelect from '@/shared/components/CustomSelect'
 
 type Testimonio = Database['public']['Tables']['testimonios']['Row']
 
@@ -229,16 +230,15 @@ export default function TestimoniosManager({ testimonios }: { testimonios: Testi
             onChange={(e) => setFiltros((f) => ({ ...f, busqueda: e.target.value }))}
             className="px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 font-raleway text-sm outline-none focus:border-henko-turquoise focus:bg-white"
           />
-          <select
+          <CustomSelect
             value={filtros.fuente}
-            onChange={(e) => setFiltros((f) => ({ ...f, fuente: e.target.value }))}
-            className="px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 font-raleway text-sm outline-none focus:border-henko-turquoise focus:bg-white"
-          >
-            <option value="todas">Todas las fuentes</option>
-            {FUENTES.map((f) => (
-              <option key={f} value={f}>{FUENTE_LABEL[f]}</option>
-            ))}
-          </select>
+            onChange={(v) => setFiltros((f) => ({ ...f, fuente: v }))}
+            options={[
+              { value: 'todas', label: 'Todas las fuentes' },
+              ...FUENTES.map((f) => ({ value: f, label: FUENTE_LABEL[f] })),
+            ]}
+            className="w-full"
+          />
         </div>
       </div>
 
@@ -552,15 +552,12 @@ export default function TestimoniosManager({ testimonios }: { testimonios: Testi
                 </div>
                 <div>
                   <label className="font-raleway text-xs font-bold mb-1.5 block text-gray-500 uppercase tracking-widest">Fuente</label>
-                  <select
+                  <CustomSelect
                     value={form.fuente ?? 'manual'}
-                    onChange={(e) => setForm({ ...form, fuente: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 font-raleway text-sm outline-none focus:border-henko-turquoise focus:bg-white"
-                  >
-                    {FUENTES.map((f) => (
-                      <option key={f} value={f}>{FUENTE_LABEL[f]}</option>
-                    ))}
-                  </select>
+                    onChange={(v) => setForm({ ...form, fuente: v })}
+                    options={FUENTES.map((f) => ({ value: f, label: FUENTE_LABEL[f] }))}
+                    className="w-full"
+                  />
                 </div>
                 <div>
                   <label className="font-raleway text-xs font-bold mb-1.5 block text-gray-500 uppercase tracking-widest">Fecha</label>
@@ -576,15 +573,15 @@ export default function TestimoniosManager({ testimonios }: { testimonios: Testi
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                 <div>
                   <label className="font-raleway text-xs font-bold mb-1.5 block text-gray-500 uppercase tracking-widest">Rating</label>
-                  <select
-                    value={form.rating ?? 5}
-                    onChange={(e) => setForm({ ...form, rating: Number(e.target.value) })}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 font-raleway text-sm outline-none focus:border-henko-turquoise focus:bg-white"
-                  >
-                    {[5, 4, 3, 2, 1].map((n) => (
-                      <option key={n} value={n}>{'★'.repeat(n)}{'☆'.repeat(5 - n)}  ({n}/5)</option>
-                    ))}
-                  </select>
+                  <CustomSelect
+                    value={String(form.rating ?? 5)}
+                    onChange={(v) => setForm({ ...form, rating: Number(v) })}
+                    options={[5, 4, 3, 2, 1].map((n) => ({
+                      value: String(n),
+                      label: `${'★'.repeat(n)}${'☆'.repeat(5 - n)}  (${n}/5)`,
+                    }))}
+                    className="w-full"
+                  />
                 </div>
                 <div>
                   <label className="font-raleway text-xs font-bold mb-1.5 block text-gray-500 uppercase tracking-widest">Orden</label>

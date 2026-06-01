@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { crearOferta, actualizarOferta, cambiarEstadoOferta, eliminarOferta } from '@/actions/ofertas'
 import { useAction, useConfirm } from '@/shared/feedback/FeedbackContext'
 import { TablePagination, usePagination } from '@/components/TablePagination'
+import CustomSelect from '@/shared/components/CustomSelect'
 
 type Catalogo = { id: number; nombre: string; slug: string }
 
@@ -336,17 +337,18 @@ export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas,
             onChange={e => setBusqueda(e.target.value)}
             className="px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 font-raleway text-sm outline-none focus:border-henko-turquoise focus:bg-white transition-colors"
           />
-          <select
+          <CustomSelect
             value={filtroEstado}
-            onChange={e => setFiltroEstado(e.target.value)}
-            className="px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 font-raleway text-sm outline-none focus:border-henko-turquoise focus:bg-white transition-colors"
-          >
-            <option value="todos">Todos los estados</option>
-            <option value="publicada">Activa</option>
-            <option value="borrador">Borrador</option>
-            <option value="pausada">Pausada</option>
-            <option value="cerrada">Cerrada</option>
-          </select>
+            onChange={(v) => setFiltroEstado(v)}
+            options={[
+              { value: 'todos', label: 'Todos los estados' },
+              { value: 'publicada', label: 'Activa' },
+              { value: 'borrador', label: 'Borrador' },
+              { value: 'pausada', label: 'Pausada' },
+              { value: 'cerrada', label: 'Cerrada' },
+            ]}
+            className="w-full"
+          />
         </div>
       </div>
 
@@ -634,12 +636,17 @@ function FormOferta({
       </div>
       <div className="mb-4">
         <label className={labelClass}>ESTADO</label>
-        <select className={inputClass + ' appearance-none'} value={draft.estado} onChange={e => update('estado', e.target.value as Draft['estado'])}>
-          <option value="borrador">Borrador (no visible)</option>
-          <option value="publicada">Publicada</option>
-          <option value="pausada">Pausada</option>
-          <option value="cerrada">Cerrada</option>
-        </select>
+        <CustomSelect
+          value={draft.estado}
+          onChange={(v) => update('estado', v as Draft['estado'])}
+          options={[
+            { value: 'borrador', label: 'Borrador (no visible)' },
+            { value: 'publicada', label: 'Publicada' },
+            { value: 'pausada', label: 'Pausada' },
+            { value: 'cerrada', label: 'Cerrada' },
+          ]}
+          className="w-full"
+        />
       </div>
       <div className="mb-4">
         <label className={labelClass}>FECHA LÍMITE <span className="text-gray-400 normal-case tracking-normal">(opcional — mejora Google for Jobs)</span></label>
@@ -714,9 +721,12 @@ function SelectField({ label, value, onChange, options }: { label: string; value
   return (
     <div>
       <label className={labelClass}>{label}</label>
-      <select className={inputClass + ' appearance-none'} value={value} onChange={e => onChange(Number(e.target.value))}>
-        {options.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}
-      </select>
+      <CustomSelect
+        value={String(value)}
+        onChange={(v) => onChange(Number(v))}
+        options={options.map(o => ({ value: String(o.id), label: o.nombre }))}
+        className="w-full"
+      />
     </div>
   )
 }

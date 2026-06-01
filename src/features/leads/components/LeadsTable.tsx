@@ -10,6 +10,7 @@ import { ESTADOS_LEAD, getEstadoMeta, getOrigenLabel } from './estados'
 import LeadDrawer from './LeadDrawer'
 import NewLeadModal from './NewLeadModal'
 import ConvertirClienteModal from './ConvertirClienteModal'
+import CustomSelect from '@/shared/components/CustomSelect'
 
 export type LeadRow = {
   id: string
@@ -282,16 +283,15 @@ export default function LeadsTable({ leads }: { leads: LeadRow[] }) {
             onChange={(e) => setFiltros((f) => ({ ...f, busqueda: e.target.value }))}
             className="px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 font-raleway text-sm outline-none focus:border-henko-turquoise focus:bg-white"
           />
-          <select
+          <CustomSelect
             value={filtros.origen}
-            onChange={(e) => setFiltros((f) => ({ ...f, origen: e.target.value }))}
-            className="px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 font-raleway text-sm outline-none focus:border-henko-turquoise focus:bg-white"
-          >
-            <option value="todos">Todos los orígenes</option>
-            {origenesPresentes.map((o) => (
-              <option key={o} value={o}>{getOrigenLabel(o)}</option>
-            ))}
-          </select>
+            onChange={(v) => setFiltros((f) => ({ ...f, origen: v }))}
+            options={[
+              { value: 'todos', label: 'Todos los orígenes' },
+              ...origenesPresentes.map((o) => ({ value: o, label: getOrigenLabel(o) })),
+            ]}
+            className="w-full"
+          />
         </div>
       </div>
 

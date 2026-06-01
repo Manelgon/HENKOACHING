@@ -8,6 +8,7 @@ import { TablePagination, usePagination } from '@/components/TablePagination'
 import { cambiarEstadoArticulo, eliminarArticulo } from '@/actions/blog'
 import type { EstadoPost, BlogPostListItem } from '../types'
 import { ESTADOS_BLOG, getEstadoMeta } from './estados'
+import CustomSelect from '@/shared/components/CustomSelect'
 
 type Tab = EstadoPost
 
@@ -121,21 +122,20 @@ export default function BlogTable({ posts, categorias }: Props) {
             onChange={(e) => setFiltros((f) => ({ ...f, busqueda: e.target.value }))}
             className="px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 font-raleway text-sm outline-none focus:border-henko-turquoise focus:bg-white"
           />
-          <select
-            value={filtros.categoria}
-            onChange={(e) =>
+          <CustomSelect
+            value={String(filtros.categoria)}
+            onChange={(v) =>
               setFiltros((f) => ({
                 ...f,
-                categoria: e.target.value === 'todas' ? 'todas' : Number(e.target.value),
+                categoria: v === 'todas' ? 'todas' : Number(v),
               }))
             }
-            className="px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 font-raleway text-sm outline-none focus:border-henko-turquoise focus:bg-white"
-          >
-            <option value="todas">Todas las categorías</option>
-            {categorias.map((c) => (
-              <option key={c.id} value={c.id}>{c.nombre}</option>
-            ))}
-          </select>
+            options={[
+              { value: 'todas', label: 'Todas las categorías' },
+              ...categorias.map((c) => ({ value: String(c.id), label: c.nombre })),
+            ]}
+            className="w-full"
+          />
         </div>
       </div>
 

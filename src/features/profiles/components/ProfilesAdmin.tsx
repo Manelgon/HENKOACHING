@@ -14,6 +14,7 @@ import {
 import type { UserRole } from '@/lib/supabase/database.types'
 import { useAction, useConfirm } from '@/shared/feedback/FeedbackContext'
 import { TablePagination, usePagination } from '@/components/TablePagination'
+import CustomSelect from '@/shared/components/CustomSelect'
 
 type ProfileRow = {
   id: string
@@ -98,24 +99,24 @@ export default function ProfilesAdmin({ profiles }: { profiles: ProfileRow[] }) 
           onChange={(e) => setSearch(e.target.value)}
           className="flex-1 min-w-[200px] px-4 py-2 rounded-xl border border-gray-200 text-sm font-raleway focus:outline-none focus:ring-2 focus:ring-henko-turquoise/30"
         />
-        <select
+        <CustomSelect
           value={filterRole}
-          onChange={(e) => setFilterRole(e.target.value as UserRole | 'todos')}
-          className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-raleway"
-        >
-          <option value="todos">Todos los roles</option>
-          {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
-        </select>
-        <select
+          onChange={(v) => setFilterRole(v as UserRole | 'todos')}
+          options={[
+            { value: 'todos', label: 'Todos los roles' },
+            ...ROLES.map((r) => ({ value: r, label: r })),
+          ]}
+        />
+        <CustomSelect
           value={filterEstado}
-          onChange={(e) => setFilterEstado(e.target.value as typeof filterEstado)}
-          className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-raleway"
-        >
-          <option value="todos">Todos</option>
-          <option value="activos">Activos</option>
-          <option value="desactivados">Desactivados</option>
-          <option value="sin_verificar">Sin verificar</option>
-        </select>
+          onChange={(v) => setFilterEstado(v as typeof filterEstado)}
+          options={[
+            { value: 'todos', label: 'Todos' },
+            { value: 'activos', label: 'Activos' },
+            { value: 'desactivados', label: 'Desactivados' },
+            { value: 'sin_verificar', label: 'Sin verificar' },
+          ]}
+        />
         <button
           type="button"
           onClick={() => setOpenCreate(true)}
@@ -312,9 +313,12 @@ function CreateModal({
           <Field label="Teléfono" value={telefono} onChange={setTelefono} />
           <div>
             <label className="block text-xs text-gray-500 mb-1">Rol</label>
-            <select value={role} onChange={(e) => setRole(e.target.value as UserRole)} className="w-full px-3 py-2 rounded-xl border border-gray-200">
-              {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
-            </select>
+            <CustomSelect
+              value={role}
+              onChange={(v) => setRole(v as UserRole)}
+              options={ROLES.map((r) => ({ value: r, label: r }))}
+              className="w-full"
+            />
           </div>
           <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-3">
             <button type="button" onClick={onClose} className="px-4 py-2 text-gray-500 text-sm">Cancelar</button>
@@ -372,9 +376,12 @@ function EditDrawer({
           <Field label="Teléfono" value={telefono} onChange={setTelefono} />
           <div>
             <label className="block text-xs text-gray-500 mb-1">Rol</label>
-            <select value={role} onChange={(e) => setRole(e.target.value as UserRole)} className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm">
-              {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
-            </select>
+            <CustomSelect
+              value={role}
+              onChange={(v) => setRole(v as UserRole)}
+              options={ROLES.map((r) => ({ value: r, label: r }))}
+              className="w-full"
+            />
           </div>
           <button
             type="button"

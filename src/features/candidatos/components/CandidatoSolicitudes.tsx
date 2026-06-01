@@ -7,6 +7,7 @@ import { useAction } from '@/shared/feedback/FeedbackContext'
 import { cambiarEstadoSolicitud } from '@/actions/solicitudes'
 import type { SolicitudCandidato } from '../types'
 import type { EstadoSolicitud } from '@/lib/supabase/database.types'
+import CustomSelect from '@/shared/components/CustomSelect'
 
 const ESTADOS: { value: EstadoSolicitud; label: string; color: string }[] = [
   { value: 'nuevo',      label: 'Nuevo',      color: 'bg-blue-100 text-blue-700' },
@@ -54,12 +55,12 @@ function SolicitudRow({ s, candidatoId }: { s: SolicitudCandidato; candidatoId: 
   const estadoActual = optimisticEstado ?? s.estado
   const badge = getBadge(estadoActual)
 
-  async function onChange(e: React.ChangeEvent<HTMLSelectElement>) {
-    const nuevo = e.target.value as EstadoSolicitud
+  async function onChange(nuevo: string) {
+    const nuevoEstado = nuevo as EstadoSolicitud
     const prev = s.estado
-    setOptimisticEstado(nuevo)
+    setOptimisticEstado(nuevoEstado)
     setActing(true)
-    const r = await runAction('Actualizando estado', () => cambiarEstadoSolicitud(s.id, nuevo), { silentSuccess: true })
+    const r = await runAction('Actualizando estado', () => cambiarEstadoSolicitud(s.id, nuevoEstado), { silentSuccess: true })
     setActing(false)
     if (!r.ok) {
       setOptimisticEstado(prev)
@@ -92,16 +93,11 @@ function SolicitudRow({ s, candidatoId }: { s: SolicitudCandidato; candidatoId: 
         <span className={`font-raleway text-xs font-semibold px-2.5 py-1 rounded-full ${badge.color}`}>
           {badge.label}
         </span>
-        <select
+        <CustomSelect
           value={estadoActual}
           onChange={onChange}
-          disabled={isLoading}
-          className="font-raleway text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white text-gray-600 outline-none focus:border-henko-turquoise transition-colors disabled:opacity-50"
-        >
-          {ESTADOS.map((e) => (
-            <option key={e.value} value={e.value}>{e.label}</option>
-          ))}
-        </select>
+          options={ESTADOS.map((e) => ({ value: e.value, label: e.label }))}
+        />
       </div>
     </div>
   )

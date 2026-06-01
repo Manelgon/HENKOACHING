@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { TablePagination, usePagination } from '@/components/TablePagination'
 import { getCvSignedUrl } from '@/actions/candidatos-admin'
 import type { CandidatoRow } from '../types'
+import CustomSelect from '@/shared/components/CustomSelect'
 
 function formatDate(d: string | null) {
   if (!d) return '—'
@@ -111,39 +112,54 @@ export default function CandidatosTable({ candidatos }: { candidatos: CandidatoR
 
       {/* Filtros */}
       <div className="flex flex-wrap gap-2 items-center">
-        <select value={filtroSolicitudes} onChange={(e) => setFiltroSolicitudes(e.target.value as typeof filtroSolicitudes)}
-          className="px-3 py-2 rounded-xl border border-gray-200 bg-white font-raleway text-sm outline-none focus:border-henko-turquoise transition-colors">
-          <option value="todos">Solicitudes: todas</option>
-          <option value="nuevos">Nuevos (7 días)</option>
-          <option value="con">Con solicitudes</option>
-          <option value="sin">Sin solicitudes</option>
-        </select>
+        <CustomSelect
+          value={filtroSolicitudes}
+          onChange={(v) => setFiltroSolicitudes(v as typeof filtroSolicitudes)}
+          options={[
+            { value: 'todos', label: 'Solicitudes: todas' },
+            { value: 'nuevos', label: 'Nuevos (7 días)' },
+            { value: 'con', label: 'Con solicitudes' },
+            { value: 'sin', label: 'Sin solicitudes' },
+          ]}
+        />
 
-        <select value={filtroJornada} onChange={(e) => setFiltroJornada(e.target.value)}
-          className={`px-3 py-2 rounded-xl border font-raleway text-sm outline-none focus:border-henko-turquoise transition-colors ${filtroJornada ? 'border-henko-turquoise bg-henko-turquoise/5 text-henko-turquoise' : 'border-gray-200 bg-white'}`}>
-          <option value="">Jornada: todas</option>
-          {JORNADAS.map(j => <option key={j} value={j}>{j}</option>)}
-        </select>
+        <CustomSelect
+          value={filtroJornada}
+          onChange={(v) => setFiltroJornada(v)}
+          options={[
+            { value: '', label: 'Jornada: todas' },
+            ...JORNADAS.map(j => ({ value: j, label: j })),
+          ]}
+        />
 
-        <select value={filtroModalidad} onChange={(e) => setFiltroModalidad(e.target.value)}
-          className={`px-3 py-2 rounded-xl border font-raleway text-sm outline-none focus:border-henko-turquoise transition-colors ${filtroModalidad ? 'border-henko-turquoise bg-henko-turquoise/5 text-henko-turquoise' : 'border-gray-200 bg-white'}`}>
-          <option value="">Modalidad: todas</option>
-          {MODALIDADES.map(m => <option key={m} value={m}>{m}</option>)}
-        </select>
+        <CustomSelect
+          value={filtroModalidad}
+          onChange={(v) => setFiltroModalidad(v)}
+          options={[
+            { value: '', label: 'Modalidad: todas' },
+            ...MODALIDADES.map(m => ({ value: m, label: m })),
+          ]}
+        />
 
-        <select value={filtroCv} onChange={(e) => setFiltroCv(e.target.value as typeof filtroCv)}
-          className={`px-3 py-2 rounded-xl border font-raleway text-sm outline-none focus:border-henko-turquoise transition-colors ${filtroCv !== 'todos' ? 'border-henko-turquoise bg-henko-turquoise/5 text-henko-turquoise' : 'border-gray-200 bg-white'}`}>
-          <option value="todos">CV: todos</option>
-          <option value="con">Con CV</option>
-          <option value="sin">Sin CV</option>
-        </select>
+        <CustomSelect
+          value={filtroCv}
+          onChange={(v) => setFiltroCv(v as typeof filtroCv)}
+          options={[
+            { value: 'todos', label: 'CV: todos' },
+            { value: 'con', label: 'Con CV' },
+            { value: 'sin', label: 'Sin CV' },
+          ]}
+        />
 
-        <select value={filtroExp} onChange={(e) => setFiltroExp(e.target.value as typeof filtroExp)}
-          className={`px-3 py-2 rounded-xl border font-raleway text-sm outline-none focus:border-henko-turquoise transition-colors ${filtroExp !== 'todos' ? 'border-henko-turquoise bg-henko-turquoise/5 text-henko-turquoise' : 'border-gray-200 bg-white'}`}>
-          <option value="todos">Experiencia: todas</option>
-          <option value="con">Con experiencia</option>
-          <option value="sin">Sin experiencia</option>
-        </select>
+        <CustomSelect
+          value={filtroExp}
+          onChange={(v) => setFiltroExp(v as typeof filtroExp)}
+          options={[
+            { value: 'todos', label: 'Experiencia: todas' },
+            { value: 'con', label: 'Con experiencia' },
+            { value: 'sin', label: 'Sin experiencia' },
+          ]}
+        />
 
         {activeFilters > 0 && (
           <button type="button" onClick={resetFiltros}

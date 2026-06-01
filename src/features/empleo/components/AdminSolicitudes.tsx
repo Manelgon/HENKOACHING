@@ -8,6 +8,7 @@ import type { EstadoSolicitud } from '@/lib/supabase/database.types'
 import { useAction } from '@/shared/feedback/FeedbackContext'
 import { TablePagination, usePagination } from '@/components/TablePagination'
 import { createClient } from '@/lib/supabase/client'
+import CustomSelect from '@/shared/components/CustomSelect'
 
 const ESTADO_META: Record<EstadoSolicitud, { label: string; badge: string }> = {
   nuevo:      { label: 'Nueva',       badge: 'bg-henko-greenblue text-henko-turquoise' },
@@ -161,14 +162,15 @@ export default function AdminSolicitudes({ solicitudes, ofertas }: Props) {
             onChange={e => setBusqueda(e.target.value)}
             className="px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 font-raleway text-sm outline-none focus:border-henko-turquoise focus:bg-white transition-colors"
           />
-          <select
+          <CustomSelect
             value={filtroOferta}
-            onChange={e => setFiltroOferta(e.target.value)}
-            className="px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 font-raleway text-sm outline-none focus:border-henko-turquoise focus:bg-white transition-colors"
-          >
-            <option value="todas">Todas las ofertas</option>
-            {ofertas.map(o => <option key={o.id} value={o.id}>{o.titulo}</option>)}
-          </select>
+            onChange={(v) => setFiltroOferta(v)}
+            options={[
+              { value: 'todas', label: 'Todas las ofertas' },
+              ...ofertas.map(o => ({ value: o.id, label: o.titulo })),
+            ]}
+            className="w-full"
+          />
         </div>
       </div>
 
@@ -250,15 +252,11 @@ export default function AdminSolicitudes({ solicitudes, ofertas }: Props) {
               {/* Estado */}
               <div>
                 <p className="text-[10px] tracking-[0.14em] text-henko-turquoise font-bold mb-2">ESTADO</p>
-                <select
+                <CustomSelect
                   value={selected.estado}
-                  onChange={e => cambiarEstado(selected.id, e.target.value as EstadoSolicitud)}
-                  className="px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm outline-none focus:border-henko-turquoise transition-colors"
-                >
-                  {Object.entries(ESTADO_META).map(([k, v]) => (
-                    <option key={k} value={k}>{v.label}</option>
-                  ))}
-                </select>
+                  onChange={(v) => cambiarEstado(selected.id, v as EstadoSolicitud)}
+                  options={Object.entries(ESTADO_META).map(([k, v]) => ({ value: k, label: v.label }))}
+                />
               </div>
 
               {/* Contacto */}

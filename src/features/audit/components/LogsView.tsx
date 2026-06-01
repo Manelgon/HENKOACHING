@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import type { Json } from '@/lib/supabase/database.types'
 import { PAGE_SIZE_OPTIONS, type PageSize } from '@/components/TablePagination'
+import CustomSelect from '@/shared/components/CustomSelect'
 
 type LogRow = {
   id: string
@@ -88,22 +89,22 @@ export default function LogsView({ logs, total, page, pageSize, acciones, recurs
           onKeyDown={(e) => e.key === 'Enter' && applyFilters(filters)}
           className="px-3 py-2 rounded-xl border border-gray-200 text-sm font-raleway md:col-span-2"
         />
-        <select
+        <CustomSelect
           value={filters.accion}
-          onChange={(e) => setFilters({ ...filters, accion: e.target.value })}
-          className="px-3 py-2 rounded-xl border border-gray-200 text-sm font-raleway"
-        >
-          <option value="">Todas las acciones</option>
-          {acciones.map((a) => <option key={a} value={a}>{a}</option>)}
-        </select>
-        <select
+          onChange={(v) => setFilters({ ...filters, accion: v })}
+          options={[
+            { value: '', label: 'Todas las acciones' },
+            ...acciones.map((a) => ({ value: a, label: a })),
+          ]}
+        />
+        <CustomSelect
           value={filters.recurso}
-          onChange={(e) => setFilters({ ...filters, recurso: e.target.value })}
-          className="px-3 py-2 rounded-xl border border-gray-200 text-sm font-raleway"
-        >
-          <option value="">Todos los recursos</option>
-          {recursos.map((r) => <option key={r} value={r}>{r}</option>)}
-        </select>
+          onChange={(v) => setFilters({ ...filters, recurso: v })}
+          options={[
+            { value: '', label: 'Todos los recursos' },
+            ...recursos.map((r) => ({ value: r, label: r })),
+          ]}
+        />
         <input
           type="text"
           placeholder="Actor (email)…"

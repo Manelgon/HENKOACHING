@@ -13,6 +13,7 @@ import {
 import { useAction, useConfirm } from '@/shared/feedback/FeedbackContext'
 import ComposeDrawer from '@/features/email/components/ComposeDrawer'
 import type { NotaInterna } from '../types'
+import CustomSelect from '@/shared/components/CustomSelect'
 
 type OfertaOpcion = { id: string; titulo: string }
 
@@ -180,16 +181,15 @@ export default function CandidatoAccionesAdmin({ candidatoId, candidatoEmail, ar
           <p className="text-xs text-gray-400 italic">Ya está vinculado a todas las ofertas activas.</p>
         ) : (
           <div className="flex gap-2">
-            <select
+            <CustomSelect
               value={ofertaSeleccionada}
-              onChange={e => setOfertaSeleccionada(e.target.value)}
-              className="flex-1 text-sm px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 outline-none focus:border-henko-turquoise focus:bg-white transition-colors"
-            >
-              <option value="">Seleccionar oferta…</option>
-              {ofertasDisponibles.map(o => (
-                <option key={o.id} value={o.id}>{o.titulo}</option>
-              ))}
-            </select>
+              onChange={(v) => setOfertaSeleccionada(v)}
+              options={[
+                { value: '', label: 'Seleccionar oferta…' },
+                ...ofertasDisponibles.map(o => ({ value: o.id, label: o.titulo })),
+              ]}
+              className="flex-1"
+            />
             <button
               type="button"
               onClick={handleVincular}
