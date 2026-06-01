@@ -1,6 +1,8 @@
 import { notFound } from 'next/navigation'
+import dynamicImport from 'next/dynamic'
 import { createClient } from '@/lib/supabase/server'
-import BlogEditor from '@/features/blog/components/BlogEditor'
+
+const BlogEditor = dynamicImport(() => import('@/features/blog/components/BlogEditor'), { ssr: false })
 
 export const metadata = {
   title: 'Editar artículo — Henkoaching',
