@@ -25,7 +25,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
 
   const [{ data: p }, { data: cp }, { data: experiencias }, { data: educacion }, { data: idiomas }] = await Promise.all([
     admin.from('profiles').select('nombre, apellidos, email, telefono').eq('id', id).maybeSingle(),
-    admin.from('candidato_profiles').select('cargo_actual, ubicacion, localidad, resumen, linkedin_url, disponibilidad, pretension_salarial, tipo_jornada, modalidad_trabajo').eq('user_id', id).maybeSingle(),
+    admin.from('candidato_profiles').select('cargo_actual, ubicacion, localidad, resumen, linkedin_url, disponibilidad, pretension_salarial, tipo_jornada, modalidad_trabajo, fecha_nacimiento').eq('user_id', id).maybeSingle(),
     admin.from('candidato_experiencias').select('empresa, cargo, desde, hasta, descripcion').eq('candidato_id', id).order('orden'),
     admin.from('candidato_educacion').select('centro, titulo, ano_fin').eq('candidato_id', id).order('orden'),
     admin.from('candidato_idiomas').select('idioma, nivel').eq('candidato_id', id),
@@ -34,7 +34,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
   if (!p) return NextResponse.json({ error: 'Candidato no encontrado' }, { status: 404 })
 
   type PRow = { nombre: string | null; apellidos: string | null; email: string; telefono: string | null }
-  type CpRow = { cargo_actual: string | null; ubicacion: string | null; localidad: string | null; resumen: string | null; linkedin_url: string | null; disponibilidad: string | null; pretension_salarial: string | null; tipo_jornada: string | null; modalidad_trabajo: string | null }
+  type CpRow = { cargo_actual: string | null; ubicacion: string | null; localidad: string | null; resumen: string | null; linkedin_url: string | null; disponibilidad: string | null; pretension_salarial: string | null; tipo_jornada: string | null; modalidad_trabajo: string | null; fecha_nacimiento: string | null }
   type ExpRow = { empresa: string; cargo: string; desde: string | null; hasta: string | null; descripcion: string | null }
   type EduRow = { centro: string; titulo: string; ano_fin: string | null }
   type IdiomaRow = { idioma: string; nivel: string }
@@ -56,6 +56,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
     pretension: cr?.pretension_salarial ?? null,
     tipoJornada: cr?.tipo_jornada ?? null,
     modalidad: cr?.modalidad_trabajo ?? null,
+    fechaNacimiento: cr?.fecha_nacimiento ?? null,
     experiencias: ((experiencias ?? []) as unknown as ExpRow[]).map(e => ({
       empresa: e.empresa, cargo: e.cargo, desde: e.desde, hasta: e.hasta, descripcion: e.descripcion,
     })),

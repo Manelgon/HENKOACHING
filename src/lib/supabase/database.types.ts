@@ -381,6 +381,7 @@ export type Database = {
           cp: string | null
           created_at: string | null
           disponibilidad: string | null
+          fecha_nacimiento: string | null
           linkedin_url: string | null
           localidad: string | null
           modalidad_trabajo: string | null
@@ -399,6 +400,7 @@ export type Database = {
           cp?: string | null
           created_at?: string | null
           disponibilidad?: string | null
+          fecha_nacimiento?: string | null
           linkedin_url?: string | null
           localidad?: string | null
           modalidad_trabajo?: string | null
@@ -417,6 +419,7 @@ export type Database = {
           cp?: string | null
           created_at?: string | null
           disponibilidad?: string | null
+          fecha_nacimiento?: string | null
           linkedin_url?: string | null
           localidad?: string | null
           modalidad_trabajo?: string | null

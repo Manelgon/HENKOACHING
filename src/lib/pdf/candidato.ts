@@ -52,6 +52,7 @@ export type CandidatoPdfData = {
   pretension: string | null
   tipoJornada: string | null
   modalidad: string | null
+  fechaNacimiento: string | null
   experiencias: ExperienciaPdf[]
   educacion: EducacionPdf[]
   idiomas: IdiomaPdf[]
@@ -197,8 +198,21 @@ export async function buildCandidatoPdf(data: CandidatoPdfData, emisor: EmisorPd
     state.cursorY -= bandH + 14
   }
 
+  // Fecha nacimiento en banda de contacto si existe
+  const fechaNacDisplay = data.fechaNacimiento
+    ? (() => {
+        const d = new Date(data.fechaNacimiento + 'T00:00:00')
+        const dd = String(d.getDate()).padStart(2, '0')
+        const mm = String(d.getMonth() + 1).padStart(2, '0')
+        const yyyy = d.getFullYear()
+        const age = Math.floor((Date.now() - d.getTime()) / (1000 * 60 * 60 * 24 * 365.25))
+        return `${dd}/${mm}/${yyyy} (${age} años)`
+      })()
+    : null
+
   // Disponibilidad / pretensión / jornada / modalidad
   const metaItems = [
+    fechaNacDisplay                ? { label: 'Fecha de nacimiento', value: fechaNacDisplay } : null,
     data.disponibilidad ? { label: 'Disponibilidad', value: data.disponibilidad } : null,
     data.pretension     ? { label: 'Pretensión salarial', value: data.pretension } : null,
     data.tipoJornada    ? { label: 'Jornada', value: data.tipoJornada } : null,

@@ -1,9 +1,20 @@
 import Link from 'next/link'
 import type { CandidatoPerfil } from '../types'
 
+function formatFechaNacimiento(fecha: string | null): string | null {
+  if (!fecha) return null
+  const d = new Date(fecha + 'T00:00:00')
+  const dd = String(d.getDate()).padStart(2, '0')
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const yyyy = d.getFullYear()
+  const age = Math.floor((Date.now() - d.getTime()) / (1000 * 60 * 60 * 24 * 365.25))
+  return `${dd}/${mm}/${yyyy} (${age} años)`
+}
+
 export default function CandidatoHeader({ perfil }: { perfil: CandidatoPerfil }) {
   const nombre = [perfil.nombre, perfil.apellidos].filter(Boolean).join(' ') || perfil.email
   const inicial = (perfil.nombre?.[0] ?? perfil.email[0]).toUpperCase()
+  const fechaNac = formatFechaNacimiento(perfil.fecha_nacimiento)
 
   // Cargo a mostrar: empleo actual (hasta null) o el más reciente de experiencias
   const expActual = perfil.experiencias.find(e => !e.hasta) ?? perfil.experiencias[0] ?? null
@@ -44,6 +55,14 @@ export default function CandidatoHeader({ perfil }: { perfil: CandidatoPerfil })
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
                 {[perfil.localidad, perfil.ubicacion, perfil.cp].filter(Boolean).join(', ')}
+              </span>
+            )}
+            {fechaNac && (
+              <span className="font-raleway text-sm text-gray-500 flex items-center gap-1.5">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                {fechaNac}
               </span>
             )}
           </div>

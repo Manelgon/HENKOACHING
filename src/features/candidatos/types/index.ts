@@ -88,6 +88,7 @@ export type CandidatoPerfil = {
   modalidad_trabajo: string | null
   tipo_contrato: string | null
   sectores_interes: string[] | null
+  fecha_nacimiento: string | null
   archivado: boolean
   experiencias: Experiencia[]
   educacion: Educacion[]

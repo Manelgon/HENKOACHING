@@ -66,7 +66,7 @@ export default async function ClienteFichaPage({ params }: { params: Promise<{ i
       <ClienteDetalleLayout
         cliente={cliente}
         notas={notas}
-        archivos={archivos ?? []}
+        archivos={(archivos ?? []).map(a => ({ ...a, tipo: a.tipo ?? '' }))}
         facturas={facturas ?? []}
         ofertas={ofertas ?? []}
       />
