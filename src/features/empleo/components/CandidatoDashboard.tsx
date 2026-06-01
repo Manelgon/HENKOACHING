@@ -20,12 +20,12 @@ import { useAction, useConfirm } from '@/shared/feedback/FeedbackContext'
 
 type Tab = 'solicitudes' | 'perfil' | 'trayectoria' | 'preferencias'
 
-const ESTADO_META: Record<EstadoSolicitud, { label: string; badge: string }> = {
-  nuevo:      { label: 'Nueva',       badge: 'bg-henko-turquoise/15 text-henko-turquoise' },
-  revisando:  { label: 'Revisando',   badge: 'bg-amber-50 text-amber-700' },
-  entrevista: { label: 'Entrevista',  badge: 'bg-henko-turquoise text-white' },
-  descartado: { label: 'Descartado',  badge: 'bg-gray-100 text-gray-500' },
-  contratado: { label: 'Contratado',  badge: 'bg-emerald-50 text-emerald-700' },
+const ESTADO_META: Record<EstadoSolicitud, { label: string; badge: string; desc: string }> = {
+  nuevo:      { label: 'Solicitud recibida',        badge: 'bg-henko-turquoise/10 text-henko-turquoise',  desc: 'Tu solicitud ha llegado correctamente. Estamos revisando los candidatos.' },
+  revisando:  { label: 'Solicitud recibida',        badge: 'bg-henko-turquoise/10 text-henko-turquoise',  desc: 'Tu solicitud ha llegado correctamente. Estamos revisando los candidatos.' },
+  entrevista: { label: 'En proceso de selección',   badge: 'bg-emerald-50 text-emerald-700',              desc: 'Tu perfil ha despertado interés. Pronto nos pondremos en contacto contigo.' },
+  descartado: { label: 'Proceso finalizado',        badge: 'bg-gray-100 text-gray-500',                   desc: 'En esta ocasión no hemos avanzado con tu candidatura. Sigue aplicando a otras ofertas.' },
+  contratado: { label: '¡Seleccionado/a!',          badge: 'bg-emerald-500 text-white',                   desc: '¡Enhorabuena! Has sido seleccionado/a para este puesto.' },
 }
 
 const NAV: { id: Tab; label: string }[] = [
@@ -329,24 +329,27 @@ function TabSolicitudes({ solicitudes, completion, pct, onGoTab }: { solicitudes
             return (
               <div
                 key={s.id}
-                className="bg-white rounded-2xl px-8 py-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4 border border-henko-turquoise/15 shadow-sm"
+                className="bg-white rounded-2xl px-8 py-6 border border-henko-turquoise/15 shadow-sm"
               >
-                <div>
-                  <p className="font-roxborough text-lg mb-1">{s.ofertaTitulo}</p>
-                  <p className="text-xs text-gray-400">{s.empresa} · Aplicado el {s.fecha}</p>
-                </div>
-                <div className="flex items-center gap-4">
-                  <span className={`text-[11px] px-3.5 py-1 rounded-full font-bold ${meta.badge}`}>
-                    {meta.label}
-                  </span>
-                  {s.ofertaSlug && (
-                    <Link
-                      href={`/empleo/${s.ofertaSlug}`}
-                      className="text-xs text-henko-turquoise font-semibold hover:underline whitespace-nowrap"
-                    >
-                      Ver oferta →
-                    </Link>
-                  )}
+                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-roxborough text-lg mb-0.5">{s.ofertaTitulo}</p>
+                    <p className="text-xs text-gray-400 mb-3">{s.empresa} · Aplicado el {s.fecha}</p>
+                    <p className="text-xs text-gray-500 leading-relaxed">{meta.desc}</p>
+                  </div>
+                  <div className="flex items-center gap-3 md:flex-col md:items-end md:gap-2 flex-shrink-0">
+                    <span className={`text-[11px] px-3.5 py-1 rounded-full font-bold whitespace-nowrap ${meta.badge}`}>
+                      {meta.label}
+                    </span>
+                    {s.ofertaSlug && (
+                      <Link
+                        href={`/empleo/${s.ofertaSlug}`}
+                        className="text-xs text-henko-turquoise font-semibold hover:underline whitespace-nowrap"
+                      >
+                        Ver oferta →
+                      </Link>
+                    )}
+                  </div>
                 </div>
               </div>
             )
