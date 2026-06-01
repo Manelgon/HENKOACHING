@@ -278,7 +278,22 @@ export default function AdminSolicitudes({ solicitudes, ofertas }: Props) {
                 </div>
                 <p className="text-sm text-gray-600 truncate">{s.ofertaTitulo}</p>
                 <p className="text-xs text-gray-400">{s.fecha}</p>
-                <p className="text-xs text-henko-turquoise font-medium truncate">{s.cvNombre || (s.cvPath ? 'Ver CV' : '—')}</p>
+                <div>
+                  {s.cvPath ? (
+                    <button
+                      type="button"
+                      onClick={e => { e.stopPropagation(); descargarCv(s.cvPath!) }}
+                      className="w-8 h-8 rounded-lg bg-henko-turquoise/10 hover:bg-henko-turquoise/20 flex items-center justify-center transition-colors"
+                      title={s.cvNombre ?? 'Descargar CV'}
+                    >
+                      <svg className="w-4 h-4 text-henko-turquoise" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                      </svg>
+                    </button>
+                  ) : (
+                    <span className="text-xs text-gray-300">—</span>
+                  )}
+                </div>
                 <div onClick={e => e.stopPropagation()}>
                   <EstadoDropdown estado={s.estado} onChange={v => cambiarEstado(s.id, v)} />
                 </div>
