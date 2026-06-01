@@ -11,6 +11,7 @@ import {
   restaurarCandidato,
 } from '@/actions/candidatos-admin'
 import { useAction, useConfirm } from '@/shared/feedback/FeedbackContext'
+import ComposeDrawer from '@/features/email/components/ComposeDrawer'
 import type { NotaInterna } from '../types'
 
 type OfertaOpcion = { id: string; titulo: string }
@@ -32,6 +33,7 @@ export default function CandidatoAccionesAdmin({ candidatoId, candidatoEmail, ar
   const [notas, setNotas] = useState(initNotas)
   const [nuevaNota, setNuevaNota] = useState('')
   const [ofertaSeleccionada, setOfertaSeleccionada] = useState('')
+  const [composeOpen, setComposeOpen] = useState(false)
 
   const ofertasDisponibles = ofertas.filter(o => !ofertasVinculadas.includes(o.id))
 
@@ -120,6 +122,7 @@ export default function CandidatoAccionesAdmin({ candidatoId, candidatoEmail, ar
   }
 
   return (
+    <>
     <div className="space-y-5">
 
       {/* Notas internas */}
@@ -205,6 +208,22 @@ export default function CandidatoAccionesAdmin({ candidatoId, candidatoEmail, ar
         <div className="flex flex-col gap-2.5">
           <button
             type="button"
+            onClick={() => setComposeOpen(true)}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-gray-200 hover:border-henko-turquoise hover:bg-henko-turquoise/5 transition-all text-left group"
+          >
+            <div className="w-8 h-8 rounded-lg bg-gray-100 group-hover:bg-henko-turquoise/10 flex items-center justify-center flex-shrink-0 transition-colors">
+              <svg className="w-4 h-4 text-gray-500 group-hover:text-henko-turquoise" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-gray-800 group-hover:text-henko-turquoise transition-colors">Enviar email</p>
+              <p className="text-[11px] text-gray-400">Redactar y enviar un correo a {candidatoEmail}</p>
+            </div>
+          </button>
+
+          <button
+            type="button"
             onClick={handleReset}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-gray-200 hover:border-henko-turquoise hover:bg-henko-turquoise/5 transition-all text-left group"
           >
@@ -254,5 +273,13 @@ export default function CandidatoAccionesAdmin({ candidatoId, candidatoEmail, ar
       </div>
 
     </div>
+
+      {composeOpen && (
+        <ComposeDrawer
+          onClose={() => setComposeOpen(false)}
+          defaultTo={candidatoEmail}
+        />
+      )}
+    </>
   )
 }
