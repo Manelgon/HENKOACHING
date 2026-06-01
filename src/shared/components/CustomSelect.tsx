@@ -20,6 +20,7 @@ export default function CustomSelect({ value, onChange, options, placeholder = '
   const [open, setOpen] = useState(false)
   const [pos, setPos] = useState({ top: 0, left: 0, width: 0 })
   const btnRef = useRef<HTMLButtonElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
 
   const selected = options.find(o => o.value === value)
 
@@ -34,7 +35,10 @@ export default function CustomSelect({ value, onChange, options, placeholder = '
   useEffect(() => {
     if (!open) return
     const handler = (e: MouseEvent) => {
-      if (btnRef.current && !btnRef.current.contains(e.target as Node)) setOpen(false)
+      const target = e.target as Node
+      const insideBtn = btnRef.current?.contains(target)
+      const insideMenu = menuRef.current?.contains(target)
+      if (!insideBtn && !insideMenu) setOpen(false)
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
@@ -61,6 +65,7 @@ export default function CustomSelect({ value, onChange, options, placeholder = '
 
       {open && (
         <div
+          ref={menuRef}
           className="fixed z-50 bg-white rounded-xl shadow-xl border border-gray-100 py-1 overflow-hidden"
           style={{ top: pos.top, left: pos.left, minWidth: pos.width }}
         >
