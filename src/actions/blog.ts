@@ -11,24 +11,16 @@ import type { EstadoPost } from '@/features/blog/types'
 
 type ActionResult<T = undefined> = { ok: true; data?: T } | { error: string; fieldErrors?: Record<string, string> }
 
-function revalidarRutasBlog(slug?: string | null) {
-  try {
-    revalidatePath('/dashboard/blog')
-  } catch (e) {
-    console.error('[blog] revalidatePath /dashboard/blog falló:', e)
-  }
-  try {
-    revalidatePath('/blog')
-  } catch (e) {
-    console.error('[blog] revalidatePath /blog falló:', e)
-  }
-  if (slug) {
-    try {
-      revalidatePath(`/blog/${slug}`)
-    } catch (e) {
-      console.error('[blog] revalidatePath /blog/slug falló:', e)
-    }
-  }
+// Solo dashboard (para borradores — crear, guardar, eliminar)
+function revalidarDashboard() {
+  try { revalidatePath('/dashboard/blog') } catch {}
+}
+
+// Dashboard + blog público (solo al publicar / despublicar / archivar)
+function revalidarBlogPublico(slug?: string | null) {
+  try { revalidatePath('/dashboard/blog') } catch {}
+  try { revalidatePath('/blog') } catch {}
+  if (slug) { try { revalidatePath(`/blog/${slug}`) } catch {} }
 }
 
 async function generarSlugUnico(base: string, exceptId?: string): Promise<string> {
@@ -86,7 +78,7 @@ export async function crearArticulo(input: Partial<BlogPostInput>): Promise<Acti
       recursoLabel: titulo,
     })
 
-    revalidarRutasBlog(nuevo.slug)
+    revalidarDashboard()
     return { ok: true, data: { id: nuevo.id, slug: nuevo.slug } }
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
@@ -156,8 +148,7 @@ export async function guardarArticulo(id: string, input: unknown): Promise<Actio
     recursoLabel: data.titulo,
   })
 
-  revalidarRutasBlog(slug)
-  if (actual.slug !== slug) revalidarRutasBlog(actual.slug)
+  revalidarDashboard()
   return { ok: true, data: { slug } }
 }
 
@@ -191,7 +182,7 @@ export async function cambiarEstadoArticulo(id: string, nuevoEstado: EstadoPost)
       metadata: { de: actual.estado, a: nuevoEstado },
     })
 
-    revalidarRutasBlog(actual.slug)
+    revalidarBlogPublico(actual.slug)
     return { ok: true }
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
@@ -228,7 +219,7 @@ export async function eliminarArticulo(id: string): Promise<ActionResult> {
       recursoLabel: actual.titulo,
     })
 
-    revalidarRutasBlog(actual.slug)
+    revalidarDashboard()
     return { ok: true }
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
