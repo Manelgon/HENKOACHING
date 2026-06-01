@@ -88,6 +88,65 @@ export async function crearArticulo(input: Partial<BlogPostInput>): Promise<Acti
 }
 
 // =============================================================================
+// CREAR Y GUARDAR ARTÍCULO EN UN SOLO PASO (desde el formulario de nuevo)
+// =============================================================================
+export async function crearYGuardarArticulo(
+  input: Partial<BlogPostInput> & { estado: 'borrador' | 'publicado' }
+): Promise<ActionResult<{ id: string; slug: string }>> {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: 'No autenticado' }
+
+    const titulo = (input.titulo ?? '').trim() || 'Sin título'
+    const slug = await generarSlugUnico(input.slug?.trim() || titulo)
+    const contenidoLimpio = sanitizarHtml(input.contenido ?? '<p></p>')
+    const tiempoLectura = calcularTiempoLectura(contenidoLimpio)
+
+    const { data: nuevo, error } = await supabase
+      .from('blog_posts')
+      .insert({
+        titulo,
+        slug,
+        contenido: contenidoLimpio,
+        extracto: input.extracto?.trim() || null,
+        imagen_portada: input.imagen_portada || null,
+        imagen_portada_alt: input.imagen_portada_alt || null,
+        categoria_id: input.categoria_id ?? null,
+        meta_titulo: input.meta_titulo?.trim() || null,
+        meta_descripcion: input.meta_descripcion?.trim() || null,
+        og_image_url: input.og_image_url || null,
+        canonical_url: input.canonical_url?.trim() || null,
+        keywords: input.keywords ?? [],
+        estado: input.estado,
+        autor_id: user.id,
+        tiempo_lectura: tiempoLectura,
+        ...(input.estado === 'publicado' ? { fecha_publicacion: new Date().toISOString() } : {}),
+      })
+      .select('id, slug')
+      .single()
+
+    if (error) return { error: error.message }
+    if (!nuevo) return { error: 'No se pudo crear el artículo' }
+
+    await logAction({
+      accion: input.estado === 'publicado' ? 'blog.crear_publicar' : 'blog.crear',
+      recursoTipo: 'blog_post',
+      recursoId: nuevo.id,
+      recursoLabel: titulo,
+    })
+
+    revalidarDashboard()
+    if (input.estado === 'publicado') revalidarBlogPublico(nuevo.slug)
+    return { ok: true, data: { id: nuevo.id, slug: nuevo.slug } }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    console.error('[crearYGuardarArticulo] Error:', msg)
+    return { error: `Error interno: ${msg}` }
+  }
+}
+
+// =============================================================================
 // GUARDAR / EDITAR ARTÍCULO
 // =============================================================================
 export async function guardarArticulo(id: string, input: unknown): Promise<ActionResult<{ slug: string }>> {
