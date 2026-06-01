@@ -17,7 +17,6 @@ type Archivo = {
 
 const TIPOS = [
   { value: 'contrato', label: 'Contrato' },
-  { value: 'factura', label: 'Factura' },
   { value: 'propuesta', label: 'Propuesta' },
   { value: 'otro', label: 'Otro' },
 ]
