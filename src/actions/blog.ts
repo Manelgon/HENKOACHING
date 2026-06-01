@@ -1,7 +1,6 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { after } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { logAction } from '@/lib/audit/log-action'
 import { blogPostSchema, type BlogPostInput } from '@/features/blog/lib/validation'
@@ -13,11 +12,9 @@ import type { EstadoPost } from '@/features/blog/types'
 type ActionResult<T = undefined> = { ok: true; data?: T } | { error: string; fieldErrors?: Record<string, string> }
 
 function revalidarRutasBlog(slug?: string | null) {
-  after(() => {
-    revalidatePath('/dashboard/blog')
-    revalidatePath('/blog')
-    if (slug) revalidatePath(`/blog/${slug}`)
-  })
+  revalidatePath('/dashboard/blog')
+  revalidatePath('/blog')
+  if (slug) revalidatePath(`/blog/${slug}`)
 }
 
 async function generarSlugUnico(base: string, exceptId?: string): Promise<string> {
