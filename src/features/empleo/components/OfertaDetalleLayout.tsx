@@ -467,7 +467,6 @@ function EstadoSolSelect({ estado, onChange }: { estado: EstadoSolicitud; onChan
         onChange={v => onChange(v as EstadoSolicitud)}
         options={ESTADOS.map(e => ({ value: e, label: SOL_LABEL[e] }))}
         className="w-full"
-        badgeColors={SOL_BADGE}
       />
     </div>
   )
