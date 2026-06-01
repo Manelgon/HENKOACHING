@@ -108,6 +108,14 @@ export default function AdminSolicitudes({ solicitudes, ofertas }: Props) {
     setSelectedId(s.id)
   }
 
+  async function handleNombreClick(s: SolicitudView) {
+    if (s.estado === 'nuevo') {
+      setOverrides(prev => ({ ...prev, [s.id]: 'revisando' }))
+      await cambiarEstadoSolicitud(s.id, 'revisando')
+      router.refresh()
+    }
+  }
+
   async function cambiarEstado(id: string, estado: EstadoSolicitud) {
     setOverrides(prev => ({ ...prev, [id]: estado }))
     const result = await runAction(
@@ -192,7 +200,7 @@ export default function AdminSolicitudes({ solicitudes, ofertas }: Props) {
                   <div className="min-w-0">
                     <Link
                       href={`/dashboard/candidatos/${s.candidatoId}`}
-                      onClick={e => e.stopPropagation()}
+                      onClick={e => { e.stopPropagation(); handleNombreClick(s) }}
                       className="text-sm font-semibold truncate block hover:text-henko-turquoise hover:underline transition-colors"
                     >
                       {s.candidato}
@@ -214,7 +222,7 @@ export default function AdminSolicitudes({ solicitudes, ofertas }: Props) {
                     <div>
                       <Link
                         href={`/dashboard/candidatos/${s.candidatoId}`}
-                        onClick={e => e.stopPropagation()}
+                        onClick={e => { e.stopPropagation(); handleNombreClick(s) }}
                         className="text-sm font-semibold truncate block hover:text-henko-turquoise transition-colors"
                       >
                         {s.candidato}
