@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { cambiarEstadoSolicitud, getCvUrl } from '@/actions/solicitudes'
@@ -36,6 +36,75 @@ type SolicitudView = {
 type Props = {
   solicitudes: SolicitudView[]
   ofertas: { id: string; titulo: string }[]
+}
+
+// ─── Dropdown de estado en tabla ─────────────────────────────────────────────
+const ESTADO_OPCIONES = Object.entries(ESTADO_META).map(([value, meta]) => ({
+  value: value as EstadoSolicitud,
+  label: meta.label,
+  badge: meta.badge,
+}))
+
+function EstadoDropdown({ estado, onChange }: { estado: EstadoSolicitud; onChange: (v: EstadoSolicitud) => void }) {
+  const [open, setOpen] = useState(false)
+  const [pos, setPos] = useState({ top: 0, left: 0 })
+  const btnRef = useRef<HTMLButtonElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
+  const actual = ESTADO_META[estado]
+
+  function handleOpen(e: React.MouseEvent) {
+    e.stopPropagation()
+    if (btnRef.current) {
+      const r = btnRef.current.getBoundingClientRect()
+      setPos({ top: r.bottom + window.scrollY + 4, left: r.left + window.scrollX })
+    }
+    setOpen(v => !v)
+  }
+
+  useEffect(() => {
+    if (!open) return
+    const handler = (e: MouseEvent) => {
+      const t = e.target as Node
+      if (!btnRef.current?.contains(t) && !menuRef.current?.contains(t)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [open])
+
+  return (
+    <>
+      <button
+        ref={btnRef}
+        type="button"
+        onClick={handleOpen}
+        className={`inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-full font-bold cursor-pointer hover:opacity-80 transition-opacity ${actual.badge}`}
+      >
+        {actual.label}
+        <svg className="w-2.5 h-2.5 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      {open && (
+        <div
+          ref={menuRef}
+          className="fixed z-50 bg-white rounded-xl shadow-xl border border-gray-100 py-1 min-w-[130px]"
+          style={{ top: pos.top, left: pos.left }}
+        >
+          {ESTADO_OPCIONES.map(op => (
+            <button
+              key={op.value}
+              type="button"
+              onClick={(e) => { e.stopPropagation(); setOpen(false); if (op.value !== estado) onChange(op.value) }}
+              className={`w-full text-left px-3 py-2 text-[11px] font-semibold flex items-center gap-2 transition-colors ${op.value === estado ? 'opacity-40 cursor-default' : 'hover:bg-gray-50'}`}
+            >
+              <span className={`w-2 h-2 rounded-full flex-shrink-0 ${op.badge.split(' ')[0]}`} />
+              {op.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </>
+  )
 }
 
 export default function AdminSolicitudes({ solicitudes, ofertas }: Props) {
@@ -178,8 +247,8 @@ export default function AdminSolicitudes({ solicitudes, ofertas }: Props) {
 
       {/* Tabla */}
       <div className="bg-white rounded-3xl border border-black/5 overflow-hidden">
-        <div className="hidden md:grid px-5 lg:px-7 py-3.5 border-b border-black/5 grid-cols-[2fr_2fr_1.5fr_1fr] text-[10px] tracking-widest text-gray-400 font-bold">
-          <span>CANDIDATO</span><span>OFERTA</span><span>CV</span><span>ESTADO</span>
+        <div className="hidden md:grid px-5 lg:px-7 py-3.5 border-b border-black/5 grid-cols-[2fr_2fr_1fr_1fr_1fr] text-[10px] tracking-widest text-gray-400 font-bold">
+          <span>CANDIDATO</span><span>OFERTA</span><span>FECHA</span><span>CV</span><span>ESTADO</span>
         </div>
         {filtradas.length === 0 && (
           <div className="px-5 md:px-7 py-12 text-center text-gray-400 text-sm">No hay solicitudes para mostrar.</div>
@@ -194,7 +263,7 @@ export default function AdminSolicitudes({ solicitudes, ofertas }: Props) {
               onClick={() => abrirDetalle(s)}
             >
               {/* Desktop */}
-              <div className="hidden md:grid px-5 lg:px-7 py-4 grid-cols-[2fr_2fr_1.5fr_1fr] items-center gap-3">
+              <div className="hidden md:grid px-5 lg:px-7 py-4 grid-cols-[2fr_2fr_1fr_1fr_1fr] items-center gap-3">
                 <div className="flex items-center gap-2 min-w-0">
                   {esNueva && <span className="w-2 h-2 rounded-full bg-henko-turquoise flex-shrink-0" />}
                   <div className="min-w-0">
@@ -205,14 +274,15 @@ export default function AdminSolicitudes({ solicitudes, ofertas }: Props) {
                     >
                       {s.candidato}
                     </Link>
-                    <p className="text-[11px] text-gray-400">{s.email} · {s.fecha}</p>
+                    <p className="text-[11px] text-gray-400">{s.email}</p>
                   </div>
                 </div>
                 <p className="text-sm text-gray-600 truncate">{s.ofertaTitulo}</p>
+                <p className="text-xs text-gray-400">{s.fecha}</p>
                 <p className="text-xs text-henko-turquoise font-medium truncate">{s.cvNombre || (s.cvPath ? 'Ver CV' : '—')}</p>
-                <span className={`text-[11px] px-2.5 py-1 rounded-full font-bold whitespace-nowrap inline-block ${meta.badge}`}>
-                  {meta.label}
-                </span>
+                <div onClick={e => e.stopPropagation()}>
+                  <EstadoDropdown estado={s.estado} onChange={v => cambiarEstado(s.id, v)} />
+                </div>
               </div>
               {/* Móvil */}
               <div className="md:hidden px-4 py-4">
@@ -230,11 +300,12 @@ export default function AdminSolicitudes({ solicitudes, ofertas }: Props) {
                       <p className="text-[11px] text-gray-400 truncate">{s.email} · {s.fecha}</p>
                     </div>
                   </div>
-                  <span className={`text-[11px] px-2.5 py-1 rounded-full font-bold whitespace-nowrap flex-shrink-0 ${meta.badge}`}>
-                    {meta.label}
-                  </span>
+                  <div onClick={e => e.stopPropagation()} className="flex-shrink-0">
+                    <EstadoDropdown estado={s.estado} onChange={v => cambiarEstado(s.id, v)} />
+                  </div>
                 </div>
-                <p className="text-xs text-gray-500 truncate">{s.ofertaTitulo}</p>
+                <p className="text-xs text-gray-500 truncate mb-1">{s.ofertaTitulo}</p>
+                <p className="text-[11px] text-gray-400">{s.fecha}</p>
               </div>
             </div>
           )
