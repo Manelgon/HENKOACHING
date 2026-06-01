@@ -24,6 +24,7 @@ type OfertaView = {
   ofrecemos: string[]
   estado: 'borrador' | 'publicada' | 'pausada' | 'cerrada'
   fecha: string
+  fecha_expiracion: string
   sector_id: number | null
   modalidad_id: number | null
   jornada_id: number | null
@@ -49,6 +50,7 @@ type Draft = {
   competencias: string
   ofrecemos: string
   estado: 'borrador' | 'publicada' | 'pausada' | 'cerrada'
+  fecha_expiracion: string
 }
 
 type EmpresaOption = { id: string; nombre: string; ubicacion: string | null }
@@ -96,6 +98,7 @@ export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas,
       competencias: o.competencias.join('\n'),
       ofrecemos: o.ofrecemos.join('\n'),
       estado: o.estado,
+      fecha_expiracion: o.fecha_expiracion ?? '',
     })
   }
 
@@ -123,6 +126,7 @@ export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas,
       competencias: draft.competencias.split('\n').map(s => s.trim()).filter(Boolean),
       ofrecemos: draft.ofrecemos.split('\n').map(s => s.trim()).filter(Boolean),
       estado: draft.estado,
+      fecha_expiracion: draft.fecha_expiracion || null,
     }
 
     const description = editando ? 'Guardando cambios de la oferta' : 'Publicando oferta'
@@ -393,6 +397,16 @@ export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas,
               </div>
 
               <div className="mb-4">
+                <label className={labelClass}>FECHA LÍMITE DE LA OFERTA <span className="text-gray-400 normal-case tracking-normal">(opcional — mejora el posicionamiento en Google)</span></label>
+                <input
+                  type="date"
+                  className={inputClass}
+                  value={draft.fecha_expiracion}
+                  onChange={(e) => update('fecha_expiracion', e.target.value)}
+                />
+              </div>
+
+              <div className="mb-4">
                 <label className={labelClass}>DESCRIPCIÓN DEL PUESTO</label>
                 <textarea
                   rows={5}
@@ -492,6 +506,7 @@ function emptyDraft(sectores: Catalogo[], modalidades: Catalogo[], jornadas: Cat
     competencias: '',
     ofrecemos: '',
     estado: 'publicada',
+    fecha_expiracion: '',
   }
 }
 

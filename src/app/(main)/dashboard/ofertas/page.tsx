@@ -15,7 +15,7 @@ export default async function DashboardOfertasPage() {
       .from('ofertas')
       .select(`
         id, slug, titulo, ubicacion, salario_texto, descripcion, requisitos, ofrecemos,
-        estado, fecha_publicacion, sector_id, modalidad_id, jornada_id, cliente_id,
+        estado, fecha_publicacion, fecha_expiracion, sector_id, modalidad_id, jornada_id, cliente_id,
         empresa_oculta, reporta_a, contrato, funciones, competencias,
         clientes(nombre),
         sectores(nombre),
@@ -51,6 +51,7 @@ export default async function DashboardOfertasPage() {
     ofrecemos: o.ofrecemos ?? [],
     estado: o.estado,
     fecha: o.fecha_publicacion ? new Date(o.fecha_publicacion).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' }) : '',
+    fecha_expiracion: o.fecha_expiracion ? new Date(o.fecha_expiracion).toISOString().slice(0, 10) : '',
     sector_id: o.sector_id,
     modalidad_id: o.modalidad_id,
     jornada_id: o.jornada_id,

@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { cambiarEstadoSolicitud, getCvUrl } from '@/actions/solicitudes'
 import type { EstadoSolicitud } from '@/lib/supabase/database.types'
 import { useAction } from '@/shared/feedback/FeedbackContext'
 import { TablePagination, usePagination } from '@/components/TablePagination'
+import { createClient } from '@/lib/supabase/client'
 
 const ESTADO_META: Record<EstadoSolicitud, { label: string; badge: string }> = {
   nuevo:      { label: 'Nueva',       badge: 'bg-henko-greenblue text-henko-turquoise' },
@@ -38,6 +39,17 @@ export default function AdminSolicitudes({ solicitudes, ofertas }: Props) {
   const router = useRouter()
   const runAction = useAction()
   const [filtroOferta, setFiltroOferta] = useState<string>('todas')
+
+  useEffect(() => {
+    const supabase = createClient()
+    const channel = supabase
+      .channel('admin-solicitudes')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'solicitudes' }, () => {
+        router.refresh()
+      })
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  }, [router])
 
   const filtradas = useMemo(() =>
     filtroOferta === 'todas' ? solicitudes : solicitudes.filter(s => s.ofertaId === filtroOferta),

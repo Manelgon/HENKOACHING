@@ -22,6 +22,7 @@ export type OfertaInput = {
   competencias?: string[]
   ofrecemos?: string[]
   estado: 'borrador' | 'publicada' | 'pausada' | 'cerrada'
+  fecha_expiracion?: string | null
 }
 
 function slugify(s: string) {
@@ -86,6 +87,7 @@ export async function crearOferta(input: OfertaInput) {
       ofrecemos: input.ofrecemos ?? [],
       estado: input.estado,
       fecha_publicacion: input.estado === 'publicada' ? new Date().toISOString() : null,
+      fecha_expiracion: input.fecha_expiracion ? new Date(input.fecha_expiracion).toISOString() : null,
       publicado_por: user.id,
     }).select('id').single()
 
@@ -134,6 +136,7 @@ export async function actualizarOferta(id: string, input: OfertaInput) {
         competencias: input.competencias ?? [],
         ofrecemos: input.ofrecemos ?? [],
         estado: input.estado,
+        fecha_expiracion: input.fecha_expiracion ? new Date(input.fecha_expiracion).toISOString() : null,
       })
       .eq('id', id)
 
