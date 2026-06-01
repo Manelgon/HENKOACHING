@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAction, useConfirm } from '@/shared/feedback/FeedbackContext'
 import { crearSesion, actualizarSesion, eliminarSesion } from '@/actions/clientes'
+import CustomSelect from '@/shared/components/CustomSelect'
 
 type Sesion = {
   id: string
@@ -105,15 +106,12 @@ export default function ClienteSesiones({
             </div>
             <div>
               <label className="block font-raleway text-xs font-semibold text-gray-500 mb-1">Tipo</label>
-              <select
+              <CustomSelect
                 value={form.tipo}
-                onChange={(e) => setForm({ ...form, tipo: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg border border-gray-200 bg-white font-raleway text-sm outline-none focus:border-henko-turquoise"
-              >
-                {TIPOS.map((t) => (
-                  <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
-                ))}
-              </select>
+                onChange={(v) => setForm({ ...form, tipo: v })}
+                options={TIPOS.map((t) => ({ value: t, label: t.charAt(0).toUpperCase() + t.slice(1) }))}
+                className="w-full"
+              />
             </div>
             <div>
               <label className="block font-raleway text-xs font-semibold text-gray-500 mb-1">Duración (min)</label>

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useConfirm } from '@/shared/feedback/FeedbackContext'
 import { getEstadoMeta, FORMAS_PAGO, type EstadoFactura } from './estados'
 import type { FacturaRow } from '@/app/(main)/dashboard/facturas/page'
+import CustomSelect from '@/shared/components/CustomSelect'
 
 type FormaPago = 'transferencia' | 'efectivo' | 'bizum' | 'tarjeta' | 'domiciliacion'
 
@@ -223,16 +224,12 @@ export default function FacturaDrawer({
               </div>
               <div>
                 <label className="font-raleway text-[10px] font-bold uppercase tracking-widest text-gray-400 block mb-1">Forma de pago</label>
-                <select
+                <CustomSelect
                   value={formaPagoDraft}
-                  onChange={(e) => setFormaPagoDraft(e.target.value as FormaPago | '')}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-200 bg-white font-raleway text-sm outline-none focus:border-henko-turquoise"
-                >
-                  <option value="">—</option>
-                  {FORMAS_PAGO.map((f) => (
-                    <option key={f.value} value={f.value}>{f.label}</option>
-                  ))}
-                </select>
+                  onChange={(v) => setFormaPagoDraft(v as FormaPago | '')}
+                  options={[{ value: '', label: '—' }, ...FORMAS_PAGO]}
+                  className="w-full"
+                />
               </div>
             </div>
             <div className="flex justify-end gap-2 pt-1">

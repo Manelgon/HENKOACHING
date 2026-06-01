@@ -4,6 +4,7 @@ import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAction, useConfirm } from '@/shared/feedback/FeedbackContext'
 import { eliminarArchivoCliente, getArchivoSignedUrl, subirArchivoCliente } from '@/actions/clientes'
+import CustomSelect from '@/shared/components/CustomSelect'
 
 type Archivo = {
   id: string
@@ -96,15 +97,12 @@ export default function ClienteArchivos({
 
       <div className="bg-gray-50 rounded-xl p-4 mb-4">
         <div className="flex flex-col sm:flex-row gap-2">
-          <select
+          <CustomSelect
             value={tipo}
-            onChange={(e) => setTipo(e.target.value)}
-            className="px-3 py-2 rounded-lg border border-gray-200 bg-white font-raleway text-sm outline-none focus:border-henko-turquoise"
-          >
-            {TIPOS.map((t) => (
-              <option key={t.value} value={t.value}>{t.label}</option>
-            ))}
-          </select>
+            onChange={(v) => setTipo(v)}
+            options={TIPOS}
+            className="w-full"
+          />
           <input
             ref={inputRef}
             type="file"

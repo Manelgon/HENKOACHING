@@ -5,6 +5,7 @@ import { useAction } from '@/shared/feedback/FeedbackContext'
 import { crearLeadManual } from '@/actions/leads'
 import type { EstadoLead } from '@/lib/supabase/database.types'
 import { ESTADOS_LEAD, ORIGENES_LEAD } from './estados'
+import CustomSelect from '@/shared/components/CustomSelect'
 
 const labelClass = 'text-[10px] tracking-[0.14em] text-henko-turquoise font-bold mb-1.5 block'
 const inputBase = 'w-full px-4 py-2.5 rounded-xl text-sm border-[1.5px] bg-henko-white outline-none transition-colors'
@@ -195,24 +196,20 @@ function FieldInline({
 }
 
 function SelectInline({
-  label, value, onChange, options, placeholder, required, error,
+  label, value, onChange, options, placeholder, error,
 }: {
   label: string; value: string; onChange: (v: string) => void; options: { value: string; label: string }[]; placeholder?: string; required?: boolean; error?: boolean
 }) {
+  const allOptions = placeholder ? [{ value: '', label: placeholder }, ...options] : options
   return (
     <div>
       <label className={error ? labelClass.replace('text-henko-turquoise', 'text-red-500') : labelClass}>{label}</label>
-      <select
-        className={(error ? inputError : inputClass) + ' appearance-none'}
+      <CustomSelect
         value={value}
-        onChange={(e) => onChange(e.target.value)}
-        required={required}
-      >
-        {placeholder && <option value="">{placeholder}</option>}
-        {options.map((o) => (
-          <option key={o.value} value={o.value}>{o.label}</option>
-        ))}
-      </select>
+        onChange={(v) => onChange(v)}
+        options={allOptions}
+        className="w-full"
+      />
     </div>
   )
 }

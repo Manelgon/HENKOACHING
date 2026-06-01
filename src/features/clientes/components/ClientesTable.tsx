@@ -7,6 +7,7 @@ import { TablePagination, usePagination } from '@/components/TablePagination'
 import type { EstadoCliente, ServicioContratado, TipoCliente } from '@/lib/supabase/database.types'
 import { ESTADOS_CLIENTE, SERVICIOS, formatImporte, getEstadoClienteMeta, getServicioLabel } from './estados'
 import NewClienteModal from './NewClienteModal'
+import CustomSelect from '@/shared/components/CustomSelect'
 
 export type ClienteRow = {
   id: string
@@ -68,35 +69,34 @@ export default function ClientesTable({ clientes }: { clientes: ClienteRow[] }) 
               onChange={(e) => setFiltros((f) => ({ ...f, busqueda: e.target.value }))}
               className="px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 font-raleway text-sm outline-none focus:border-henko-turquoise focus:bg-white"
             />
-            <select
+            <CustomSelect
               value={filtros.tipo}
-              onChange={(e) => setFiltros((f) => ({ ...f, tipo: e.target.value as TipoCliente | 'todos' }))}
-              className="px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 font-raleway text-sm outline-none focus:border-henko-turquoise focus:bg-white"
-            >
-              <option value="todos">Todos los tipos</option>
-              <option value="particular">Particulares</option>
-              <option value="empresa">Empresas</option>
-            </select>
-            <select
+              onChange={(v) => setFiltros((f) => ({ ...f, tipo: v as TipoCliente | 'todos' }))}
+              options={[
+                { value: 'todos', label: 'Todos los tipos' },
+                { value: 'particular', label: 'Particulares' },
+                { value: 'empresa', label: 'Empresas' },
+              ]}
+              className="w-full"
+            />
+            <CustomSelect
               value={filtros.estado}
-              onChange={(e) => setFiltros((f) => ({ ...f, estado: e.target.value as EstadoCliente | 'todos' }))}
-              className="px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 font-raleway text-sm outline-none focus:border-henko-turquoise focus:bg-white"
-            >
-              <option value="todos">Todos los estados</option>
-              {ESTADOS_CLIENTE.map((e) => (
-                <option key={e.value} value={e.value}>{e.label}</option>
-              ))}
-            </select>
-            <select
+              onChange={(v) => setFiltros((f) => ({ ...f, estado: v as EstadoCliente | 'todos' }))}
+              options={[
+                { value: 'todos', label: 'Todos los estados' },
+                ...ESTADOS_CLIENTE.map((e) => ({ value: e.value, label: e.label })),
+              ]}
+              className="w-full"
+            />
+            <CustomSelect
               value={filtros.servicio}
-              onChange={(e) => setFiltros((f) => ({ ...f, servicio: e.target.value as ServicioContratado | 'todos' }))}
-              className="px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 font-raleway text-sm outline-none focus:border-henko-turquoise focus:bg-white"
-            >
-              <option value="todos">Todos los servicios</option>
-              {SERVICIOS.map((s) => (
-                <option key={s.value} value={s.value}>{s.label}</option>
-              ))}
-            </select>
+              onChange={(v) => setFiltros((f) => ({ ...f, servicio: v as ServicioContratado | 'todos' }))}
+              options={[
+                { value: 'todos', label: 'Todos los servicios' },
+                ...SERVICIOS.map((s) => ({ value: s.value, label: s.label })),
+              ]}
+              className="w-full"
+            />
           </div>
           <button
             type="button"

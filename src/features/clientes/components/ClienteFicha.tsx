@@ -20,6 +20,7 @@ import {
   getTarifaLabel,
 } from './estados'
 import { getOrigenLabel, ORIGENES_LEAD } from '@/features/leads/components/estados'
+import CustomSelect from '@/shared/components/CustomSelect'
 
 export type Cliente = {
   id: string
@@ -373,15 +374,12 @@ function Select({
   return (
     <div>
       <label className="block font-raleway text-xs font-semibold text-gray-500 mb-1.5">{label}</label>
-      <select
+      <CustomSelect
         value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 font-raleway text-sm outline-none focus:border-henko-turquoise focus:bg-white"
-      >
-        {options.map((o) => (
-          <option key={o.value} value={o.value}>{o.label}</option>
-        ))}
-      </select>
+        onChange={(v) => onChange(v)}
+        options={options}
+        className="w-full"
+      />
     </div>
   )
 }

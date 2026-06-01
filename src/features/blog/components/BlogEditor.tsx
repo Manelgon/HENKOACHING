@@ -12,6 +12,7 @@ import TipTapEditor from './TipTapEditor'
 import ImageUploader from './ImageUploader'
 import SeoPanel from './SeoPanel'
 import { getEstadoMeta } from './estados'
+import CustomSelect from '@/shared/components/CustomSelect'
 
 type Props = {
   post: BlogPostRow
@@ -240,16 +241,15 @@ export default function BlogEditor({ post, categorias }: Props) {
           <div className="grid sm:grid-cols-2 gap-4">
             <div>
               <label className="block font-raleway text-sm font-semibold text-gray-700 mb-2">Categoría</label>
-              <select
-                value={form.categoria_id ?? ''}
-                onChange={(e) => update('categoria_id', e.target.value ? Number(e.target.value) : null)}
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 font-raleway text-sm outline-none focus:border-henko-turquoise focus:bg-white"
-              >
-                <option value="">Sin categoría</option>
-                {categorias.map((c) => (
-                  <option key={c.id} value={c.id}>{c.nombre}</option>
-                ))}
-              </select>
+              <CustomSelect
+                value={form.categoria_id != null ? String(form.categoria_id) : ''}
+                onChange={(v) => update('categoria_id', v ? Number(v) : null)}
+                options={[
+                  { value: '', label: 'Sin categoría' },
+                  ...categorias.map((c) => ({ value: String(c.id), label: c.nombre })),
+                ]}
+                className="w-full"
+              />
             </div>
             <div>
               <label className="block font-raleway text-sm font-semibold text-gray-700 mb-2">Tiempo de lectura</label>

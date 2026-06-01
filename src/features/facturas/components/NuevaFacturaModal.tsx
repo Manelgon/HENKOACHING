@@ -5,6 +5,7 @@ import { useAction, useFeedback } from '@/shared/feedback/FeedbackContext'
 import { crearFactura, type FacturaInput, type LineaInput } from '@/actions/facturas'
 import { FORMAS_PAGO } from './estados'
 import type { ClienteOption, FacturaRow } from '@/app/(main)/dashboard/facturas/page'
+import CustomSelect from '@/shared/components/CustomSelect'
 
 export type FacturaRectificableOption = Pick<FacturaRow, 'id' | 'numero' | 'cliente_id' | 'cliente_nombre' | 'total' | 'fecha_emision' | 'estado'>
 
@@ -195,19 +196,15 @@ export default function NuevaFacturaModal({ clientes, facturasRectificables, ser
         <form onSubmit={onSubmit} className="flex-1 overflow-y-auto px-8 py-6 space-y-6">
           {/* Cliente */}
           <Field label="Cliente" required>
-            <select
-              required
+            <CustomSelect
               value={clienteId}
-              onChange={(e) => setClienteId(e.target.value)}
-              className="modal-input"
-            >
-              <option value="">Selecciona un cliente…</option>
-              {clientes.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.empresa || c.nombre}{c.nif_cif ? ` — ${c.nif_cif}` : ''}
-                </option>
-              ))}
-            </select>
+              onChange={(v) => setClienteId(v)}
+              options={[
+                { value: '', label: 'Selecciona un cliente…' },
+                ...clientes.map((c) => ({ value: c.id, label: `${c.empresa || c.nombre}${c.nif_cif ? ` — ${c.nif_cif}` : ''}` })),
+              ]}
+              className="w-full"
+            />
             {clientes.length === 0 && (
               <p className="text-xs text-red-500 mt-1 font-raleway">No hay clientes. Crea uno primero en Clientes.</p>
             )}
@@ -248,19 +245,15 @@ export default function NuevaFacturaModal({ clientes, facturasRectificables, ser
           {esRectificativa && (
             <div className={`rounded-2xl border p-4 space-y-3 ${tipoFactura === 'abono' ? 'border-red-200 bg-red-50/50' : 'border-orange-200 bg-orange-50/50'}`}>
               <Field label={tipoFactura === 'abono' ? 'Factura a abonar' : 'Factura que rectifica'} required>
-                <select
-                  required={esRectificativa}
+                <CustomSelect
                   value={facturaRectificadaId}
-                  onChange={(e) => onSelectFacturaRectificada(e.target.value)}
-                  className="modal-input"
-                >
-                  <option value="">Selecciona la factura original…</option>
-                  {facturasRectificables.map((f) => (
-                    <option key={f.id} value={f.id}>
-                      {f.numero} — {f.cliente_nombre} ({moneyES(Number(f.total))})
-                    </option>
-                  ))}
-                </select>
+                  onChange={(v) => onSelectFacturaRectificada(v)}
+                  options={[
+                    { value: '', label: 'Selecciona la factura original…' },
+                    ...facturasRectificables.map((f) => ({ value: f.id, label: `${f.numero} — ${f.cliente_nombre} (${moneyES(Number(f.total))})` })),
+                  ]}
+                  className="w-full"
+                />
                 {facturasRectificables.length === 0 && (
                   <p className="text-xs text-gray-500 mt-1 font-raleway">No hay facturas para {tipoFactura === 'abono' ? 'abonar' : 'rectificar'} todavía.</p>
                 )}
@@ -424,15 +417,12 @@ export default function NuevaFacturaModal({ clientes, facturasRectificables, ser
               />
             </Field>
             <Field label="Forma de pago" wide>
-              <select
+              <CustomSelect
                 value={formaPago}
-                onChange={(e) => setFormaPago(e.target.value as FormaPago)}
-                className="modal-input"
-              >
-                {FORMAS_PAGO.map((f) => (
-                  <option key={f.value} value={f.value}>{f.label}</option>
-                ))}
-              </select>
+                onChange={(v) => setFormaPago(v as FormaPago)}
+                options={FORMAS_PAGO}
+                className="w-full"
+              />
             </Field>
           </div>
 

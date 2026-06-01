@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAction } from '@/shared/feedback/FeedbackContext'
 import { guardarEmailConfig, type EmailConfigInput, type EmailConfigPublic } from '@/actions/email'
+import CustomSelect from '@/shared/components/CustomSelect'
 
 type Tab = 'credenciales' | 'templates'
 
@@ -120,15 +121,16 @@ export default function EmailConfigForm({ config }: Props) {
                 />
               </Field>
               <Field label="Cifrado">
-                <select
+                <CustomSelect
                   value={datos.smtp_encryption}
-                  onChange={(e) => set('smtp_encryption', e.target.value as EmailConfigInput['smtp_encryption'])}
-                  className="input"
-                >
-                  <option value="starttls">STARTTLS (recomendado, puerto 587)</option>
-                  <option value="ssl">SSL/TLS (puerto 465)</option>
-                  <option value="none">Sin cifrado (no recomendado)</option>
-                </select>
+                  onChange={(v) => set('smtp_encryption', v as EmailConfigInput['smtp_encryption'])}
+                  options={[
+                    { value: 'starttls', label: 'STARTTLS (recomendado, puerto 587)' },
+                    { value: 'ssl', label: 'SSL/TLS (puerto 465)' },
+                    { value: 'none', label: 'Sin cifrado (no recomendado)' },
+                  ]}
+                  className="w-full"
+                />
               </Field>
               <Field label="Usuario SMTP">
                 <input
@@ -193,15 +195,16 @@ export default function EmailConfigForm({ config }: Props) {
                 />
               </Field>
               <Field label="Cifrado">
-                <select
+                <CustomSelect
                   value={datos.imap_encryption}
-                  onChange={(e) => set('imap_encryption', e.target.value as EmailConfigInput['imap_encryption'])}
-                  className="input"
-                >
-                  <option value="ssl">SSL/TLS (recomendado, puerto 993)</option>
-                  <option value="starttls">STARTTLS (puerto 143)</option>
-                  <option value="none">Sin cifrado (no recomendado)</option>
-                </select>
+                  onChange={(v) => set('imap_encryption', v as EmailConfigInput['imap_encryption'])}
+                  options={[
+                    { value: 'ssl', label: 'SSL/TLS (recomendado, puerto 993)' },
+                    { value: 'starttls', label: 'STARTTLS (puerto 143)' },
+                    { value: 'none', label: 'Sin cifrado (no recomendado)' },
+                  ]}
+                  className="w-full"
+                />
               </Field>
               <Field label="Usuario IMAP">
                 <input

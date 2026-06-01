@@ -6,6 +6,7 @@ import { crearClienteManual } from '@/actions/clientes'
 import type { EstadoCliente, ServicioContratado, TarifaTipo, TipoCliente } from '@/lib/supabase/database.types'
 import { ESTADOS_CLIENTE, SERVICIOS, TARIFAS } from './estados'
 import { ORIGENES_LEAD } from '@/features/leads/components/estados'
+import CustomSelect from '@/shared/components/CustomSelect'
 
 const labelClass = 'text-[10px] tracking-[0.14em] text-henko-turquoise font-bold mb-1.5 block'
 const labelErrorClass = 'text-[10px] tracking-[0.14em] text-red-500 font-bold mb-1.5 block'
@@ -330,19 +331,16 @@ function Select({
 }: {
   label: string; value: string; onChange: (v: string) => void; options: { value: string; label: string }[]; placeholder?: string
 }) {
+  const allOptions = placeholder ? [{ value: '', label: placeholder }, ...options] : options
   return (
     <div>
       <label className={labelClass}>{label}</label>
-      <select
-        className={inputClass + ' appearance-none'}
+      <CustomSelect
         value={value}
-        onChange={(e) => onChange(e.target.value)}
-      >
-        {placeholder && <option value="">{placeholder}</option>}
-        {options.map((o) => (
-          <option key={o.value} value={o.value}>{o.label}</option>
-        ))}
-      </select>
+        onChange={(v) => onChange(v)}
+        options={allOptions}
+        className="w-full"
+      />
     </div>
   )
 }
