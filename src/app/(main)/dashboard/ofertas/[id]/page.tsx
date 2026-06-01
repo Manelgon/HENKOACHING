@@ -42,7 +42,8 @@ export default async function OfertaDetallePage({ params }: Props) {
     supabase
       .from('solicitudes')
       .select(`
-        id, estado, created_at, mensaje, candidato_id,
+        id, estado, created_at, mensaje, candidato_id, cv_id,
+        cvs(nombre_archivo, storage_path),
         candidato_profiles:candidato_id(cargo_actual, profiles(nombre, apellidos, email, telefono))
       `)
       .eq('oferta_id', id)
@@ -96,6 +97,8 @@ export default async function OfertaDetallePage({ params }: Props) {
     created_at: string | null
     mensaje: string | null
     candidato_id: string
+    cv_id: string | null
+    cvs: { nombre_archivo: string; storage_path: string } | null
     candidato_profiles: {
       cargo_actual: string | null
       profiles: { nombre: string | null; apellidos: string | null; email: string; telefono: string | null } | null
@@ -112,6 +115,8 @@ export default async function OfertaDetallePage({ params }: Props) {
     nombre: [s.candidato_profiles?.profiles?.nombre, s.candidato_profiles?.profiles?.apellidos].filter(Boolean).join(' ') || s.candidato_profiles?.profiles?.email || 'Candidato',
     email: s.candidato_profiles?.profiles?.email ?? '',
     telefono: s.candidato_profiles?.profiles?.telefono ?? null,
+    cvPath: s.cvs?.storage_path ?? null,
+    cvNombre: s.cvs?.nombre_archivo ?? null,
   }))
 
   return (

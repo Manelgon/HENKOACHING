@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { actualizarOferta, cambiarEstadoOferta, eliminarOferta } from '@/actions/ofertas'
-import { cambiarEstadoSolicitud } from '@/actions/solicitudes'
+import { cambiarEstadoSolicitud, getCvUrl } from '@/actions/solicitudes'
 import { useAction, useConfirm } from '@/shared/feedback/FeedbackContext'
+import { TablePagination, usePagination } from '@/components/TablePagination'
 import CustomSelect from '@/shared/components/CustomSelect'
 import type { EstadoSolicitud } from '@/lib/supabase/database.types'
 
@@ -49,6 +50,8 @@ type Solicitud = {
   email: string
   telefono: string | null
   cargo_actual: string | null
+  cvPath: string | null
+  cvNombre: string | null
 }
 
 type Draft = {
@@ -94,17 +97,6 @@ const ESTADO_LABEL: Record<OfertaView['estado'], string> = {
   publicada: 'Activa', borrador: 'Borrador', pausada: 'Pausada', cerrada: 'Cerrada',
 }
 
-const SOL_BADGE: Record<EstadoSolicitud, string> = {
-  nuevo:       'bg-blue-50 text-blue-700',
-  revisando:   'bg-yellow-50 text-yellow-700',
-  entrevista:  'bg-purple-50 text-purple-700',
-  descartado:  'bg-red-50 text-red-500',
-  contratado:  'bg-henko-greenblue text-henko-turquoise',
-}
-const SOL_LABEL: Record<EstadoSolicitud, string> = {
-  nuevo: 'Nuevo', revisando: 'Revisando', entrevista: 'Entrevista',
-  descartado: 'Descartado', contratado: 'Contratado',
-}
 
 const labelClass = 'text-[10px] tracking-[0.14em] text-henko-turquoise font-bold mb-1.5 block'
 const inputClass = 'w-full px-4 py-2.5 rounded-xl text-sm border-[1.5px] border-gray-200 bg-henko-white outline-none focus:border-henko-turquoise transition-colors'
@@ -182,14 +174,17 @@ export default function OfertaDetalleLayout({ oferta: initialOferta, solicitudes
   }
 
   async function handleCambiarEstadoSol(solicitudId: string, nuevoEstado: EstadoSolicitud) {
-    const result = await runAction(
+    setSolicitudes(prev => prev.map(s => s.id === solicitudId ? { ...s, estado: nuevoEstado } : s))
+    await runAction(
       'Actualizando estado',
       () => cambiarEstadoSolicitud(solicitudId, nuevoEstado),
       { successMessage: 'Estado actualizado', silentSuccess: true },
     )
-    if (result.ok) {
-      setSolicitudes(prev => prev.map(s => s.id === solicitudId ? { ...s, estado: nuevoEstado } : s))
-    }
+  }
+
+  async function handleDescargarCv(path: string) {
+    const result = await runAction('Generando enlace del CV', () => getCvUrl(path), { silentSuccess: true })
+    if (result.ok && (result.data as { url?: string })?.url) window.open((result.data as { url: string }).url, '_blank')
   }
 
   const tabs: { id: Tab; label: string }[] = [
@@ -338,6 +333,7 @@ export default function OfertaDetalleLayout({ oferta: initialOferta, solicitudes
             <OfertaCandidatos
               solicitudes={solicitudes}
               onCambiarEstado={handleCambiarEstadoSol}
+              onDescargarCv={handleDescargarCv}
             />
           )}
         </>
@@ -377,13 +373,90 @@ function OfertaInformacion({ oferta: o }: { oferta: OfertaView }) {
 
 // ─── Tab Candidatos ───────────────────────────────────────────────────────────
 
+const ESTADO_META: Record<EstadoSolicitud, { label: string; badge: string }> = {
+  nuevo:      { label: 'Nueva',       badge: 'bg-henko-greenblue text-henko-turquoise' },
+  revisando:  { label: 'Revisando',   badge: 'bg-henko-yellow text-yellow-900' },
+  entrevista: { label: 'Entrevista',  badge: 'bg-henko-purple text-white' },
+  descartado: { label: 'Descartado',  badge: 'bg-black/5 text-gray-500' },
+  contratado: { label: 'Contratado',  badge: 'bg-henko-turquoise text-white' },
+}
+
+function EstadoDropdownSol({ estado, onChange }: { estado: EstadoSolicitud; onChange: (v: EstadoSolicitud) => void }) {
+  const [open, setOpen] = useState(false)
+  const [pos, setPos] = useState({ top: 0, left: 0 })
+  const btnRef = useRef<HTMLButtonElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
+  const actual = ESTADO_META[estado]
+
+  useEffect(() => {
+    if (!open) return
+    const handler = (e: MouseEvent) => {
+      if (!btnRef.current?.contains(e.target as Node) && !menuRef.current?.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [open])
+
+  return (
+    <>
+      <button
+        ref={btnRef}
+        type="button"
+        onClick={e => {
+          e.stopPropagation()
+          if (btnRef.current) {
+            const r = btnRef.current.getBoundingClientRect()
+            setPos({ top: r.bottom + window.scrollY + 4, left: r.left + window.scrollX })
+          }
+          setOpen(v => !v)
+        }}
+        className={`inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-full font-bold cursor-pointer hover:opacity-80 transition-opacity ${actual.badge}`}
+      >
+        {actual.label}
+        <svg className="w-2.5 h-2.5 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      {open && (
+        <div ref={menuRef} className="fixed z-50 bg-white rounded-xl shadow-xl border border-gray-100 py-1 min-w-[130px]" style={{ top: pos.top, left: pos.left }}>
+          {(Object.entries(ESTADO_META) as [EstadoSolicitud, { label: string; badge: string }][]).map(([val, meta]) => (
+            <button
+              key={val}
+              type="button"
+              onClick={e => { e.stopPropagation(); setOpen(false); if (val !== estado) onChange(val) }}
+              className={`w-full text-left px-3 py-2 text-[11px] font-semibold flex items-center gap-2 transition-colors ${val === estado ? 'opacity-40 cursor-default' : 'hover:bg-gray-50'}`}
+            >
+              <span className={`w-2 h-2 rounded-full flex-shrink-0 ${meta.badge.split(' ')[0]}`} />
+              {meta.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </>
+  )
+}
+
 function OfertaCandidatos({
   solicitudes,
   onCambiarEstado,
+  onDescargarCv,
 }: {
   solicitudes: Solicitud[]
   onCambiarEstado: (id: string, estado: EstadoSolicitud) => void
+  onDescargarCv: (path: string) => void
 }) {
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const pagination = usePagination(solicitudes, 20)
+  const selected = selectedId ? solicitudes.find(s => s.id === selectedId) ?? null : null
+
+  useEffect(() => {
+    if (!selectedId) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setSelectedId(null) }
+    document.addEventListener('keydown', onKey)
+    document.body.style.overflow = 'hidden'
+    return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = '' }
+  }, [selectedId])
+
   if (solicitudes.length === 0) {
     return (
       <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm p-12 text-center">
@@ -393,82 +466,151 @@ function OfertaCandidatos({
   }
 
   return (
-    <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
-      {/* Cabecera tabla */}
-      <div className="hidden md:grid px-6 py-3.5 border-b border-gray-100 grid-cols-[1fr_1fr_160px_120px] text-[10px] tracking-widest text-gray-400 font-bold">
-        <span>CANDIDATO</span>
-        <span>CARGO ACTUAL</span>
-        <span>INSCRIPCIÓN</span>
-        <span>ESTADO</span>
-      </div>
+    <>
+      <div className="bg-white rounded-3xl border border-black/5 overflow-hidden">
+        <div className="hidden md:grid px-5 lg:px-7 py-3.5 border-b border-black/5 grid-cols-[2fr_1fr_1fr_1fr] text-[10px] tracking-widest text-gray-400 font-bold">
+          <span>CANDIDATO</span><span>INSCRIPCIÓN</span><span>CV</span><span>ESTADO</span>
+        </div>
 
-      {solicitudes.map(s => {
-        const inicial = s.nombre[0]?.toUpperCase() ?? '?'
-        const fecha = s.created_at
-          ? new Date(s.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })
-          : '—'
-
-        return (
-          <div key={s.id} className="border-b border-gray-50 last:border-0 hover:bg-henko-white/40 transition-colors">
-            {/* Desktop */}
-            <div className="hidden md:grid px-6 py-4 grid-cols-[1fr_1fr_160px_120px] items-center gap-4">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="w-9 h-9 rounded-xl bg-henko-turquoise/10 flex items-center justify-center text-henko-turquoise font-roxborough text-sm flex-shrink-0">
-                  {inicial}
-                </div>
-                <div className="min-w-0">
-                  <Link
-                    href={`/dashboard/candidatos/${s.candidato_id}`}
-                    className="text-sm font-semibold text-gray-800 hover:text-henko-turquoise transition-colors truncate block"
-                  >
-                    {s.nombre}
-                  </Link>
-                  <p className="text-[11px] text-gray-400 truncate">{s.email}</p>
-                </div>
-              </div>
-              <p className="text-sm text-gray-500 truncate">{s.cargo_actual ?? '—'}</p>
-              <p className="text-sm text-gray-400">{fecha}</p>
-              <EstadoSolSelect estado={s.estado} onChange={v => onCambiarEstado(s.id, v)} />
-            </div>
-
-            {/* Móvil */}
-            <div className="md:hidden px-5 py-4">
-              <div className="flex items-start justify-between gap-3 mb-1.5">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-8 h-8 rounded-lg bg-henko-turquoise/10 flex items-center justify-center text-henko-turquoise font-roxborough text-sm flex-shrink-0">
-                    {inicial}
-                  </div>
+        {pagination.paginated.map(s => {
+          const esNueva = s.estado === 'nuevo'
+          const fecha = s.created_at
+            ? new Date(s.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })
+            : '—'
+          return (
+            <div
+              key={s.id}
+              className={`border-b border-black/5 last:border-0 cursor-pointer transition-colors ${esNueva ? 'bg-henko-greenblue/10 hover:bg-henko-greenblue/20' : 'hover:bg-henko-white/40'}`}
+              onClick={() => setSelectedId(s.id)}
+            >
+              {/* Desktop */}
+              <div className="hidden md:grid px-5 lg:px-7 py-4 grid-cols-[2fr_1fr_1fr_1fr] items-center gap-3">
+                <div className="flex items-center gap-2 min-w-0">
+                  {esNueva && <span className="w-2 h-2 rounded-full bg-henko-turquoise flex-shrink-0" />}
                   <div className="min-w-0">
-                    <Link href={`/dashboard/candidatos/${s.candidato_id}`} className="text-sm font-semibold text-gray-800 hover:text-henko-turquoise">
+                    <Link
+                      href={`/dashboard/candidatos/${s.candidato_id}`}
+                      onClick={e => e.stopPropagation()}
+                      className="text-sm font-semibold truncate block hover:text-henko-turquoise hover:underline transition-colors"
+                    >
                       {s.nombre}
                     </Link>
                     <p className="text-[11px] text-gray-400">{s.email}</p>
                   </div>
                 </div>
-                <EstadoSolSelect estado={s.estado} onChange={v => onCambiarEstado(s.id, v)} />
+                <p className="text-xs text-gray-400">{fecha}</p>
+                <div onClick={e => e.stopPropagation()}>
+                  {s.cvPath ? (
+                    <button
+                      type="button"
+                      onClick={() => onDescargarCv(s.cvPath!)}
+                      className="w-8 h-8 rounded-lg bg-henko-turquoise/10 hover:bg-henko-turquoise/20 flex items-center justify-center transition-colors"
+                      title={s.cvNombre ?? 'Descargar CV'}
+                    >
+                      <svg className="w-4 h-4 text-henko-turquoise" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                      </svg>
+                    </button>
+                  ) : <span className="text-xs text-gray-300">—</span>}
+                </div>
+                <div onClick={e => e.stopPropagation()}>
+                  <EstadoDropdownSol estado={s.estado} onChange={v => onCambiarEstado(s.id, v)} />
+                </div>
               </div>
-              <p className="text-[11px] text-gray-400 pl-11">{fecha}</p>
+              {/* Móvil */}
+              <div className="md:hidden px-4 py-4">
+                <div className="flex items-start justify-between gap-3 mb-1">
+                  <div className="flex items-center gap-2 min-w-0">
+                    {esNueva && <span className="w-2 h-2 rounded-full bg-henko-turquoise flex-shrink-0 mt-1" />}
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold truncate">{s.nombre}</p>
+                      <p className="text-[11px] text-gray-400">{s.email} · {fecha}</p>
+                    </div>
+                  </div>
+                  <div onClick={e => e.stopPropagation()}>
+                    <EstadoDropdownSol estado={s.estado} onChange={v => onCambiarEstado(s.id, v)} />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )
+        })}
+
+        <TablePagination
+          page={pagination.page} pageSize={pagination.pageSize} total={pagination.total}
+          totalPages={pagination.totalPages} from={pagination.from} to={pagination.to}
+          onPageChange={pagination.setPage} onPageSizeChange={pagination.setPageSize}
+        />
+      </div>
+
+      {/* Drawer detalle solicitud */}
+      {selected && (
+        <div className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-sm" onClick={() => setSelectedId(null)}>
+          <div className="relative h-full w-full max-w-lg bg-white flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-8 py-5 border-b border-black/5 sticky top-0 bg-white z-10">
+              <div>
+                <p className="font-roxborough text-xl text-gray-900">{selected.nombre}</p>
+                <p className="text-[11px] text-gray-400 mt-0.5">
+                  {selected.created_at ? new Date(selected.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' }) : ''}
+                </p>
+              </div>
+              <button type="button" onClick={() => setSelectedId(null)} className="w-9 h-9 rounded-full hover:bg-black/5 flex items-center justify-center text-gray-400 hover:text-gray-700 transition-colors">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-8 py-6 space-y-6">
+              <div>
+                <p className="text-[10px] tracking-[0.14em] text-henko-turquoise font-bold mb-2">ESTADO</p>
+                <EstadoDropdownSol estado={selected.estado} onChange={v => onCambiarEstado(selected.id, v)} />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-[10px] tracking-[0.14em] text-henko-turquoise font-bold mb-1">EMAIL</p>
+                  <p className="text-sm text-gray-800">{selected.email}</p>
+                </div>
+                {selected.telefono && (
+                  <div>
+                    <p className="text-[10px] tracking-[0.14em] text-henko-turquoise font-bold mb-1">TELÉFONO</p>
+                    <p className="text-sm text-gray-800">{selected.telefono}</p>
+                  </div>
+                )}
+              </div>
+              {selected.cvPath && (
+                <div>
+                  <p className="text-[10px] tracking-[0.14em] text-henko-turquoise font-bold mb-2">CURRÍCULUM</p>
+                  <button
+                    type="button"
+                    onClick={() => onDescargarCv(selected.cvPath!)}
+                    className="inline-flex items-center gap-2 text-sm text-henko-turquoise font-semibold hover:underline"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                    </svg>
+                    {selected.cvNombre || 'Descargar CV'}
+                  </button>
+                </div>
+              )}
+              {selected.mensaje && (
+                <div>
+                  <p className="text-[10px] tracking-[0.14em] text-henko-turquoise font-bold mb-2">MENSAJE DEL CANDIDATO</p>
+                  <p className="text-sm text-gray-700 leading-relaxed bg-gray-50 rounded-xl px-4 py-3 whitespace-pre-wrap">{selected.mensaje}</p>
+                </div>
+              )}
+            </div>
+
+            <div className="px-8 py-5 border-t border-black/5 bg-white">
+              <Link
+                href={`/dashboard/candidatos/${selected.candidato_id}`}
+                className="w-full inline-flex items-center justify-center gap-2 bg-henko-turquoise text-white px-6 py-3 rounded-full text-sm font-semibold hover:bg-henko-turquoise-light hover:shadow-lg transition-all"
+              >
+                Ver perfil completo →
+              </Link>
             </div>
           </div>
-        )
-      })}
-    </div>
-  )
-}
-
-// ─── Selector estado solicitud ────────────────────────────────────────────────
-
-function EstadoSolSelect({ estado, onChange }: { estado: EstadoSolicitud; onChange: (v: EstadoSolicitud) => void }) {
-  const ESTADOS: EstadoSolicitud[] = ['nuevo', 'revisando', 'entrevista', 'descartado', 'contratado']
-  return (
-    <div onClick={e => e.stopPropagation()}>
-      <CustomSelect
-        value={estado}
-        onChange={v => onChange(v as EstadoSolicitud)}
-        options={ESTADOS.map(e => ({ value: e, label: SOL_LABEL[e] }))}
-        className="w-full"
-      />
-    </div>
+        </div>
+      )}
+    </>
   )
 }
 
