@@ -104,14 +104,8 @@ export default function AdminSolicitudes({ solicitudes, ofertas }: Props) {
     { label: 'Descartadas',   val: solicitudesConOverrides.filter(s => s.estado === 'descartado').length, bg: 'bg-[#f2ebe5]' },
   ]
 
-  async function abrirDetalle(s: SolicitudView) {
+  function abrirDetalle(s: SolicitudView) {
     setSelectedId(s.id)
-    // Auto-cambio: nuevo → revisando al abrir
-    if (s.estado === 'nuevo') {
-      setOverrides(prev => ({ ...prev, [s.id]: 'revisando' }))
-      await cambiarEstadoSolicitud(s.id, 'revisando')
-      router.refresh()
-    }
   }
 
   async function cambiarEstado(id: string, estado: EstadoSolicitud) {
