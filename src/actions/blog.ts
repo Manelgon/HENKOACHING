@@ -53,39 +53,46 @@ async function generarSlugUnico(base: string, exceptId?: string): Promise<string
 // CREAR ARTÍCULO (borrador por defecto)
 // =============================================================================
 export async function crearArticulo(input: Partial<BlogPostInput>): Promise<ActionResult<{ id: string; slug: string }>> {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: 'No autenticado' }
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: 'No autenticado' }
 
-  const titulo = (input.titulo ?? 'Sin título').trim() || 'Sin título'
-  const slug = await generarSlugUnico(input.slug?.trim() || titulo)
+    const titulo = (input.titulo ?? 'Sin título').trim() || 'Sin título'
+    const slug = await generarSlugUnico(input.slug?.trim() || titulo)
 
-  const { data: nuevo, error } = await supabase
-    .from('blog_posts')
-    .insert({
-      titulo,
-      slug,
-      contenido: input.contenido ?? '<p></p>',
-      extracto: input.extracto ?? null,
-      categoria_id: input.categoria_id ?? null,
-      estado: 'borrador',
-      autor_id: user.id,
-      tiempo_lectura: 1,
+    const { data: nuevo, error } = await supabase
+      .from('blog_posts')
+      .insert({
+        titulo,
+        slug,
+        contenido: input.contenido ?? '<p></p>',
+        extracto: input.extracto ?? null,
+        categoria_id: input.categoria_id ?? null,
+        estado: 'borrador',
+        autor_id: user.id,
+        tiempo_lectura: 1,
+      })
+      .select('id, slug')
+      .single()
+
+    if (error) return { error: error.message }
+    if (!nuevo) return { error: 'No se pudo crear el artículo (sin datos)' }
+
+    await logAction({
+      accion: 'blog.crear',
+      recursoTipo: 'blog_post',
+      recursoId: nuevo.id,
+      recursoLabel: titulo,
     })
-    .select('id, slug')
-    .single()
 
-  if (error) return { error: error.message }
-
-  await logAction({
-    accion: 'blog.crear',
-    recursoTipo: 'blog_post',
-    recursoId: nuevo.id,
-    recursoLabel: titulo,
-  })
-
-  revalidarRutasBlog(nuevo.slug)
-  return { ok: true, data: { id: nuevo.id, slug: nuevo.slug } }
+    revalidarRutasBlog(nuevo.slug)
+    return { ok: true, data: { id: nuevo.id, slug: nuevo.slug } }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    console.error('[crearArticulo] Error no capturado:', msg)
+    return { error: `Error interno: ${msg}` }
+  }
 }
 
 // =============================================================================
@@ -158,64 +165,76 @@ export async function guardarArticulo(id: string, input: unknown): Promise<Actio
 // CAMBIAR ESTADO (publicar / despublicar / archivar)
 // =============================================================================
 export async function cambiarEstadoArticulo(id: string, nuevoEstado: EstadoPost): Promise<ActionResult> {
-  const supabase = await createClient()
+  try {
+    const supabase = await createClient()
 
-  const { data: actual } = await supabase
-    .from('blog_posts')
-    .select('slug, estado, titulo, fecha_publicacion')
-    .eq('id', id)
-    .single()
-  if (!actual) return { error: 'Artículo no encontrado' }
+    const { data: actual } = await supabase
+      .from('blog_posts')
+      .select('slug, estado, titulo, fecha_publicacion')
+      .eq('id', id)
+      .single()
+    if (!actual) return { error: 'Artículo no encontrado' }
 
-  const updates: { estado: EstadoPost; fecha_publicacion?: string } = { estado: nuevoEstado }
-  if (nuevoEstado === 'publicado' && !actual.fecha_publicacion) {
-    updates.fecha_publicacion = new Date().toISOString()
+    const updates: { estado: EstadoPost; fecha_publicacion?: string } = { estado: nuevoEstado }
+    if (nuevoEstado === 'publicado' && !actual.fecha_publicacion) {
+      updates.fecha_publicacion = new Date().toISOString()
+    }
+
+    const { error } = await supabase.from('blog_posts').update(updates).eq('id', id)
+    if (error) return { error: error.message }
+
+    await logAction({
+      accion: 'blog.cambiar_estado',
+      recursoTipo: 'blog_post',
+      recursoId: id,
+      recursoLabel: actual.titulo,
+      metadata: { de: actual.estado, a: nuevoEstado },
+    })
+
+    revalidarRutasBlog(actual.slug)
+    return { ok: true }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    console.error('[cambiarEstadoArticulo] Error no capturado:', msg)
+    return { error: `Error interno: ${msg}` }
   }
-
-  const { error } = await supabase.from('blog_posts').update(updates).eq('id', id)
-  if (error) return { error: error.message }
-
-  await logAction({
-    accion: 'blog.cambiar_estado',
-    recursoTipo: 'blog_post',
-    recursoId: id,
-    recursoLabel: actual.titulo,
-    metadata: { de: actual.estado, a: nuevoEstado },
-  })
-
-  revalidarRutasBlog(actual.slug)
-  return { ok: true }
 }
 
 // =============================================================================
 // ELIMINAR (soft delete)
 // =============================================================================
 export async function eliminarArticulo(id: string): Promise<ActionResult> {
-  const supabase = await createClient()
+  try {
+    const supabase = await createClient()
 
-  const { data: actual } = await supabase
-    .from('blog_posts')
-    .select('slug, titulo')
-    .eq('id', id)
-    .single()
-  if (!actual) return { error: 'Artículo no encontrado' }
+    const { data: actual } = await supabase
+      .from('blog_posts')
+      .select('slug, titulo')
+      .eq('id', id)
+      .single()
+    if (!actual) return { error: 'Artículo no encontrado' }
 
-  const { error } = await supabase
-    .from('blog_posts')
-    .update({ deleted_at: new Date().toISOString(), estado: 'archivado' })
-    .eq('id', id)
+    const { error } = await supabase
+      .from('blog_posts')
+      .update({ deleted_at: new Date().toISOString(), estado: 'archivado' })
+      .eq('id', id)
 
-  if (error) return { error: error.message }
+    if (error) return { error: error.message }
 
-  await logAction({
-    accion: 'blog.eliminar',
-    recursoTipo: 'blog_post',
-    recursoId: id,
-    recursoLabel: actual.titulo,
-  })
+    await logAction({
+      accion: 'blog.eliminar',
+      recursoTipo: 'blog_post',
+      recursoId: id,
+      recursoLabel: actual.titulo,
+    })
 
-  revalidarRutasBlog(actual.slug)
-  return { ok: true }
+    revalidarRutasBlog(actual.slug)
+    return { ok: true }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    console.error('[eliminarArticulo] Error no capturado:', msg)
+    return { error: `Error interno: ${msg}` }
+  }
 }
 
 // =============================================================================
