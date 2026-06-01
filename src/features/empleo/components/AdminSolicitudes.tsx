@@ -196,7 +196,13 @@ export default function AdminSolicitudes({ solicitudes, ofertas }: Props) {
                 <div className="flex items-center gap-2 min-w-0">
                   {esNueva && <span className="w-2 h-2 rounded-full bg-henko-turquoise flex-shrink-0" />}
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold truncate">{s.candidato}</p>
+                    <Link
+                      href={`/dashboard/candidatos/${s.candidatoId}`}
+                      onClick={e => e.stopPropagation()}
+                      className="text-sm font-semibold truncate block hover:text-henko-turquoise hover:underline transition-colors"
+                    >
+                      {s.candidato}
+                    </Link>
                     <p className="text-[11px] text-gray-400">{s.email} · {s.fecha}</p>
                   </div>
                 </div>
@@ -212,7 +218,13 @@ export default function AdminSolicitudes({ solicitudes, ofertas }: Props) {
                   <div className="min-w-0 flex items-center gap-2">
                     {esNueva && <span className="w-2 h-2 rounded-full bg-henko-turquoise flex-shrink-0 mt-1" />}
                     <div>
-                      <p className="text-sm font-semibold truncate">{s.candidato}</p>
+                      <Link
+                        href={`/dashboard/candidatos/${s.candidatoId}`}
+                        onClick={e => e.stopPropagation()}
+                        className="text-sm font-semibold truncate block hover:text-henko-turquoise transition-colors"
+                      >
+                        {s.candidato}
+                      </Link>
                       <p className="text-[11px] text-gray-400 truncate">{s.email} · {s.fecha}</p>
                     </div>
                   </div>
