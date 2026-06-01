@@ -129,7 +129,7 @@ export async function getCandidatoPerfil(userId: string): Promise<CandidatoPerfi
     admin.from('candidato_idiomas').select('*').eq('candidato_id', userId),
     admin.from('cvs').select('*').eq('candidato_id', userId).is('deleted_at', null).order('es_principal', { ascending: false }),
     admin.from('solicitudes').select('id,estado,mensaje,created_at,oferta_id,ofertas(titulo)').eq('candidato_id', userId).order('created_at', { ascending: false }),
-    admin.from('candidato_notas').select('id,contenido,created_at,autor_id,profiles:autor_id(nombre,apellidos)').eq('candidato_id', userId).order('created_at', { ascending: false }),
+    admin.from('candidato_notas').select('id,contenido,created_at,autor_id,profiles!candidato_notas_autor_id_fkey(nombre,apellidos)').eq('candidato_id', userId).order('created_at', { ascending: false }),
   ])
 
   if (!profile) return null
@@ -246,7 +246,7 @@ export async function getNotasCandidato(candidatoId: string) {
   const admin = createAdminClient()
   const { data } = await admin
     .from('candidato_notas')
-    .select('id, contenido, created_at, autor_id, profiles:autor_id(nombre, apellidos)')
+    .select('id, contenido, created_at, autor_id, profiles!candidato_notas_autor_id_fkey(nombre, apellidos)')
     .eq('candidato_id', candidatoId)
     .order('created_at', { ascending: false })
 

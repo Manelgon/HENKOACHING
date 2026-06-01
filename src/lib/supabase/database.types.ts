@@ -7,8 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
@@ -89,18 +87,9 @@ export type Database = {
         Relationships: []
       }
       blog_post_tags: {
-        Row: {
-          post_id: string
-          tag_id: number
-        }
-        Insert: {
-          post_id: string
-          tag_id: number
-        }
-        Update: {
-          post_id?: string
-          tag_id?: number
-        }
+        Row: { post_id: string; tag_id: number }
+        Insert: { post_id: string; tag_id: number }
+        Update: { post_id?: string; tag_id?: number }
         Relationships: [
           {
             foreignKeyName: "blog_post_tags_post_id_fkey"
@@ -216,24 +205,9 @@ export type Database = {
         ]
       }
       blog_tags: {
-        Row: {
-          created_at: string | null
-          id: number
-          nombre: string
-          slug: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: number
-          nombre: string
-          slug: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: number
-          nombre?: string
-          slug?: string
-        }
+        Row: { created_at: string | null; id: number; nombre: string; slug: string }
+        Insert: { created_at?: string | null; id?: number; nombre: string; slug: string }
+        Update: { created_at?: string | null; id?: number; nombre?: string; slug?: string }
         Relationships: []
       }
       candidato_educacion: {
@@ -356,6 +330,48 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "candidato_profiles"
             referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      candidato_notas: {
+        Row: {
+          autor_id: string | null
+          candidato_id: string
+          contenido: string
+          created_at: string | null
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          autor_id?: string | null
+          candidato_id: string
+          contenido: string
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+        }
+        Update: {
+          autor_id?: string | null
+          candidato_id?: string
+          contenido?: string
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "candidato_notas_autor_id_fkey"
+            columns: ["autor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "candidato_notas_candidato_id_fkey"
+            columns: ["candidato_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -603,9 +619,7 @@ export type Database = {
           nombre: string
           origen: string | null
           proxima_sesion: string | null
-          servicio_contratado:
-            | Database["public"]["Enums"]["servicio_contratado"]
-            | null
+          servicio_contratado: Database["public"]["Enums"]["servicio_contratado"] | null
           slug: string | null
           tarifa: Database["public"]["Enums"]["tarifa_tipo"] | null
           telefono: string | null
@@ -634,9 +648,7 @@ export type Database = {
           nombre: string
           origen?: string | null
           proxima_sesion?: string | null
-          servicio_contratado?:
-            | Database["public"]["Enums"]["servicio_contratado"]
-            | null
+          servicio_contratado?: Database["public"]["Enums"]["servicio_contratado"] | null
           slug?: string | null
           tarifa?: Database["public"]["Enums"]["tarifa_tipo"] | null
           telefono?: string | null
@@ -665,9 +677,7 @@ export type Database = {
           nombre?: string
           origen?: string | null
           proxima_sesion?: string | null
-          servicio_contratado?:
-            | Database["public"]["Enums"]["servicio_contratado"]
-            | null
+          servicio_contratado?: Database["public"]["Enums"]["servicio_contratado"] | null
           slug?: string | null
           tarifa?: Database["public"]["Enums"]["tarifa_tipo"] | null
           telefono?: string | null
@@ -1536,9 +1546,7 @@ export type Database = {
         Row: {
           cambiado_por: string | null
           created_at: string | null
-          estado_anterior:
-            | Database["public"]["Enums"]["estado_solicitud"]
-            | null
+          estado_anterior: Database["public"]["Enums"]["estado_solicitud"] | null
           estado_nuevo: Database["public"]["Enums"]["estado_solicitud"]
           id: string
           nota: string | null
@@ -1547,9 +1555,7 @@ export type Database = {
         Insert: {
           cambiado_por?: string | null
           created_at?: string | null
-          estado_anterior?:
-            | Database["public"]["Enums"]["estado_solicitud"]
-            | null
+          estado_anterior?: Database["public"]["Enums"]["estado_solicitud"] | null
           estado_nuevo: Database["public"]["Enums"]["estado_solicitud"]
           id?: string
           nota?: string | null
@@ -1558,9 +1564,7 @@ export type Database = {
         Update: {
           cambiado_por?: string | null
           created_at?: string | null
-          estado_anterior?:
-            | Database["public"]["Enums"]["estado_solicitud"]
-            | null
+          estado_anterior?: Database["public"]["Enums"]["estado_solicitud"] | null
           estado_nuevo?: Database["public"]["Enums"]["estado_solicitud"]
           id?: string
           nota?: string | null
@@ -1859,7 +1863,7 @@ export type Database = {
           tiempo_lectura?: number | null
           titulo?: string | null
           updated_at?: string | null
-          vistas?: number | null
+          vistas?: string | null
         }
         Update: {
           autor_id?: string | null
@@ -1879,7 +1883,7 @@ export type Database = {
           tiempo_lectura?: number | null
           titulo?: string | null
           updated_at?: string | null
-          vistas?: number | null
+          vistas?: string | null
         }
         Relationships: [
           {
@@ -2048,68 +2052,30 @@ export type Database = {
       }
     }
     Functions: {
+      auto_transicionar_solicitudes_nuevo: { Args: never; Returns: number }
       calcular_tiempo_lectura: { Args: { contenido: string }; Returns: number }
       candidatos_inactivos_a_purgar: {
         Args: { meses: number }
-        Returns: {
-          avatar_url: string
-          email: string
-          user_id: string
-        }[]
+        Returns: { avatar_url: string; email: string; user_id: string }[]
       }
       is_admin: { Args: never; Returns: boolean }
       is_candidato: { Args: never; Returns: boolean }
       is_recruiter: { Args: never; Returns: boolean }
       next_numero_factura:
-        | {
-            Args: never
-            Returns: {
-              anio: number
-              correlativo: number
-              numero: string
-              serie: string
-            }[]
-          }
-        | {
-            Args: { serie_input?: string }
-            Returns: {
-              anio: number
-              correlativo: number
-              numero: string
-              serie: string
-            }[]
-          }
+        | { Args: never; Returns: { anio: number; correlativo: number; numero: string; serie: string }[] }
+        | { Args: { serie_input?: string }; Returns: { anio: number; correlativo: number; numero: string; serie: string }[] }
       slugify: { Args: { "": string }; Returns: string }
     }
     Enums: {
       estado_cliente: "activo" | "pausado" | "finalizado"
-      estado_factura:
-        | "pendiente"
-        | "pagada"
-        | "vencida"
-        | "devuelta"
-        | "anulada"
+      estado_factura: "pendiente" | "pagada" | "vencida" | "devuelta" | "anulada"
       estado_lead: "nuevo" | "pendiente" | "contactado" | "descartado"
       estado_oferta: "borrador" | "publicada" | "pausada" | "cerrada"
       estado_post: "borrador" | "publicado" | "archivado"
-      estado_solicitud:
-        | "nuevo"
-        | "revisando"
-        | "entrevista"
-        | "descartado"
-        | "contratado"
-      forma_pago:
-        | "transferencia"
-        | "efectivo"
-        | "bizum"
-        | "tarjeta"
-        | "domiciliacion"
+      estado_solicitud: "nuevo" | "revisando" | "entrevista" | "descartado" | "contratado"
+      forma_pago: "transferencia" | "efectivo" | "bizum" | "tarjeta" | "domiciliacion"
       nivel_idioma: "A1" | "A2" | "B1" | "B2" | "C1" | "C2" | "Nativo"
-      servicio_contratado:
-        | "operaciones"
-        | "reclutamiento"
-        | "liderazgo"
-        | "integral"
+      servicio_contratado: "operaciones" | "reclutamiento" | "liderazgo" | "integral"
       tarifa_tipo: "mensual" | "proyecto" | "sesion"
       tipo_cliente: "particular" | "empresa"
       tipo_lead: "contacto_general" | "consulta_servicio"
@@ -2122,100 +2088,63 @@ export type Database = {
 }
 
 type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
-
 type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
+  TableName extends DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
   ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
-      Row: infer R
-    }
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends { Row: infer R }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-        Row: infer R
-      }
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] & DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends { Row: infer R }
       ? R
       : never
     : never
 
 export type TablesInsert<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
+  DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"] | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Insert: infer I
-    }
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends { Insert: infer I }
     ? I
     : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Insert: infer I
-      }
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends { Insert: infer I }
       ? I
       : never
     : never
 
 export type TablesUpdate<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
+  DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"] | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Update: infer U
-    }
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends { Update: infer U }
     ? U
     : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Update: infer U
-      }
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends { Update: infer U }
       ? U
       : never
     : never
 
 export type Enums<
-  DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema["Enums"]
-    | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
+  DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"] | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
-> = DefaultSchemaEnumNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
+> = DefaultSchemaEnumNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
   ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
@@ -2225,18 +2154,29 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
-> = PublicCompositeTypeNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
+> = PublicCompositeTypeNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
   ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
+
+// Convenience type aliases
+export type NivelIdioma = Database["public"]["Enums"]["nivel_idioma"]
+export type EstadoCliente = Database["public"]["Enums"]["estado_cliente"]
+export type EstadoFactura = Database["public"]["Enums"]["estado_factura"]
+export type EstadoLead = Database["public"]["Enums"]["estado_lead"]
+export type EstadoOferta = Database["public"]["Enums"]["estado_oferta"]
+export type EstadoPost = Database["public"]["Enums"]["estado_post"]
+export type EstadoSolicitud = Database["public"]["Enums"]["estado_solicitud"]
+export type FormaPago = Database["public"]["Enums"]["forma_pago"]
+export type ServicioContratado = Database["public"]["Enums"]["servicio_contratado"]
+export type TarifaTipo = Database["public"]["Enums"]["tarifa_tipo"]
+export type TipoCliente = Database["public"]["Enums"]["tipo_cliente"]
+export type TipoLead = Database["public"]["Enums"]["tipo_lead"]
+export type UserRole = Database["public"]["Enums"]["user_role"]
 
 export const Constants = {
   public: {
@@ -2246,27 +2186,10 @@ export const Constants = {
       estado_lead: ["nuevo", "pendiente", "contactado", "descartado"],
       estado_oferta: ["borrador", "publicada", "pausada", "cerrada"],
       estado_post: ["borrador", "publicado", "archivado"],
-      estado_solicitud: [
-        "nuevo",
-        "revisando",
-        "entrevista",
-        "descartado",
-        "contratado",
-      ],
-      forma_pago: [
-        "transferencia",
-        "efectivo",
-        "bizum",
-        "tarjeta",
-        "domiciliacion",
-      ],
+      estado_solicitud: ["nuevo", "revisando", "entrevista", "descartado", "contratado"],
+      forma_pago: ["transferencia", "efectivo", "bizum", "tarjeta", "domiciliacion"],
       nivel_idioma: ["A1", "A2", "B1", "B2", "C1", "C2", "Nativo"],
-      servicio_contratado: [
-        "operaciones",
-        "reclutamiento",
-        "liderazgo",
-        "integral",
-      ],
+      servicio_contratado: ["operaciones", "reclutamiento", "liderazgo", "integral"],
       tarifa_tipo: ["mensual", "proyecto", "sesion"],
       tipo_cliente: ["particular", "empresa"],
       tipo_lead: ["contacto_general", "consulta_servicio"],
@@ -2274,15 +2197,3 @@ export const Constants = {
     },
   },
 } as const
-
-// Aliases de compatibilidad con el código existente
-export type NivelIdioma = Database['public']['Enums']['nivel_idioma']
-export type EstadoCliente = Database['public']['Enums']['estado_cliente']
-export type EstadoLead = Database['public']['Enums']['estado_lead']
-export type UserRole = Database['public']['Enums']['user_role']
-export type EstadoSolicitud = Database['public']['Enums']['estado_solicitud']
-export type EstadoPost = Database['public']['Enums']['estado_post']
-export type ServicioContratado = Database['public']['Enums']['servicio_contratado']
-export type TarifaTipo = Database['public']['Enums']['tarifa_tipo']
-export type TipoCliente = Database['public']['Enums']['tipo_cliente']
-export type TipoLead = Database['public']['Enums']['tipo_lead']

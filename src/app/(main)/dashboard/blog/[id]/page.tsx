@@ -1,8 +1,6 @@
 import { notFound } from 'next/navigation'
-import dynamicImport from 'next/dynamic'
 import { createClient } from '@/lib/supabase/server'
-
-const BlogEditor = dynamicImport(() => import('@/features/blog/components/BlogEditor'), { ssr: false })
+import BlogEditorClient from '@/features/blog/components/BlogEditorClient'
 
 export const metadata = {
   title: 'Editar artículo — Henkoaching',
@@ -30,5 +28,5 @@ export default async function EditarArticuloPage({ params }: { params: Promise<{
 
   if (!post) notFound()
 
-  return <BlogEditor post={post} categorias={categorias ?? []} />
+  return <BlogEditorClient post={post} categorias={categorias ?? []} />
 }
