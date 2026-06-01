@@ -10,9 +10,9 @@ export type OfertaInput = {
   empresa_nombre: string
   empresa_oculta: boolean
   ubicacion: string
-  modalidad_id: number
-  jornada_id: number
-  sector_id: number
+  modalidad_id: number | null
+  jornada_id: number | null
+  sector_id: number | null
   salario_texto: string
   reporta_a: string
   contrato: string
