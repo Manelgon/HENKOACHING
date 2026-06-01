@@ -62,6 +62,11 @@ export default async function DashboardOfertasPage() {
 
   return (
     <div className="w-full">
+      <div className="mb-8 md:mb-10">
+        <h1 className="font-roxborough text-2xl md:text-3xl text-gray-900 mb-2">Ofertas de empleo</h1>
+        <p className="font-raleway text-gray-500 font-light">Publica y gestiona las ofertas del portal de empleo de Henkoaching.</p>
+      </div>
+
       <AdminOfertas
         ofertas={ofertasView}
         sectores={sectores ?? []}

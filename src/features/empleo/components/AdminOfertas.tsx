@@ -230,8 +230,7 @@ export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas,
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <p className="font-raleway font-bold text-henko-turquoise tracking-[0.14em] uppercase text-[11px] mb-1.5">Portal empleo</p>
-          <h2 className="font-roxborough text-2xl text-gray-900">Ofertas publicadas</h2>
+            <h2 className="font-roxborough text-2xl text-gray-900">Ofertas publicadas</h2>
         </div>
         <button
           type="button"
