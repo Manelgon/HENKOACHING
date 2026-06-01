@@ -8,6 +8,7 @@ export type EmailMessage = {
 }
 
 export type EmailDetail = EmailMessage & {
+  to: string
   bodyHtml: string | null
   bodyText: string | null
 }

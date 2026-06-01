@@ -131,6 +131,7 @@ export async function leerMensaje(creds: ImapCredentials, uid: number, mailbox =
   try {
     await client.mailboxOpen(mailbox)
     let msgMeta: EmailMessage | null = null
+    let msgTo = '(desconocido)'
     for await (const msg of client.fetch(String(uid), {
       uid: true, flags: true, envelope: true, internalDate: true,
     }, { uid: true })) {
@@ -138,6 +139,11 @@ export async function leerMensaje(creds: ImapCredentials, uid: number, mailbox =
       const fromStr = fromAddr
         ? `${fromAddr.name ? fromAddr.name + ' ' : ''}<${fromAddr.address}>`
         : '(desconocido)'
+      const toAddrs = msg.envelope?.to ?? []
+      msgTo = toAddrs
+        .map((a: { name?: string; address?: string }) => a.name ? `${a.name} <${a.address}>` : (a.address ?? ''))
+        .filter(Boolean)
+        .join(', ') || '(desconocido)'
       msgMeta = {
         uid: msg.uid,
         from: fromStr,
@@ -168,7 +174,7 @@ export async function leerMensaje(creds: ImapCredentials, uid: number, mailbox =
     }
 
     await client.messageFlagsAdd(String(uid), ['\\Seen'], { uid: true })
-    return { ...msgMeta, bodyHtml, bodyText }
+    return { ...msgMeta, to: msgTo, bodyHtml, bodyText }
   } finally {
     await safeLogout(client)
   }

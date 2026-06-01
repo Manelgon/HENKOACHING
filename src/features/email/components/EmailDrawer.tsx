@@ -73,9 +73,10 @@ export default function EmailDrawer({ email, onClose, onReply, onNewEmail }: Pro
           {/* Metadatos */}
           <div className="bg-gray-50 rounded-2xl p-5 space-y-2.5 font-raleway text-sm">
             <MetaField label="De">
-              <a href={`mailto:${replyTo}`} className="text-henko-turquoise hover:underline break-all">
-                {email.from}
-              </a>
+              <span className="text-gray-700 break-all">{email.from}</span>
+            </MetaField>
+            <MetaField label="Para">
+              <span className="text-gray-700 break-all">{email.to}</span>
             </MetaField>
             <MetaField label="Fecha">{fecha}</MetaField>
             <MetaField label="Asunto">{email.subject || '(Sin asunto)'}</MetaField>
