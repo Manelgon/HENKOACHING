@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { crearOferta, actualizarOferta, cambiarEstadoOferta, eliminarOferta } from '@/actions/ofertas'
+import { crearOferta, cambiarEstadoOferta } from '@/actions/ofertas'
 import { useAction, useConfirm } from '@/shared/feedback/FeedbackContext'
 import { TablePagination, usePagination } from '@/components/TablePagination'
 import CustomSelect from '@/shared/components/CustomSelect'
@@ -172,59 +172,23 @@ export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas,
 
   const pagination = usePagination(filtradas, 20)
 
-  // ── Drawer state ─────────────────────────────────────────────────────────
-  // 'closed' | 'nueva' | 'detalle' | 'editar'
-  const [drawerMode, setDrawerMode] = useState<'closed' | 'nueva' | 'detalle' | 'editar'>('closed')
-  const [activoId, setActivoId] = useState<string | null>(null)
+  // ── Drawer state (solo para crear nueva oferta) ───────────────────────────
+  const [drawerMode, setDrawerMode] = useState<'closed' | 'nueva'>('closed')
   const [error, setError] = useState<string | null>(null)
   const [draft, setDraft] = useState<Draft>(emptyDraft(sectores, modalidades, jornadas))
 
-  const ofertaActiva = activoId ? ofertas.find(o => o.id === activoId) ?? null : null
   const drawerAbierto = drawerMode !== 'closed'
 
   const update = <K extends keyof Draft>(k: K, v: Draft[K]) => setDraft(d => ({ ...d, [k]: v }))
 
-  function abrirDetalle(o: OfertaView) {
-    setActivoId(o.id)
-    setDrawerMode('detalle')
-    setError(null)
-  }
-
   function abrirNueva() {
-    setActivoId(null)
     setDraft(emptyDraft(sectores, modalidades, jornadas))
     setError(null)
     setDrawerMode('nueva')
   }
 
-  function abrirEditar(o: OfertaView) {
-    setActivoId(o.id)
-    setError(null)
-    setDraft({
-      titulo: o.titulo,
-      empresa: o.empresa,
-      empresa_oculta: o.empresa_oculta,
-      ubicacion: o.ubicacion,
-      modalidad_id: o.modalidad_id ?? modalidades[0]?.id ?? 0,
-      jornada_id: o.jornada_id ?? jornadas[0]?.id ?? 0,
-      sector_id: o.sector_id ?? sectores[0]?.id ?? 0,
-      salario_texto: o.salario_texto,
-      reporta_a: o.reporta_a,
-      contrato: o.contrato,
-      descripcion: o.descripcion,
-      funciones: o.funciones.join('\n'),
-      requisitos: o.requisitos.join('\n'),
-      competencias: o.competencias.join('\n'),
-      ofrecemos: o.ofrecemos.join('\n'),
-      estado: o.estado,
-      fecha_expiracion: o.fecha_expiracion ?? '',
-    })
-    setDrawerMode('editar')
-  }
-
   function cerrar() {
     setDrawerMode('closed')
-    setActivoId(null)
     setError(null)
     setDraft(emptyDraft(sectores, modalidades, jornadas))
   }
@@ -254,25 +218,14 @@ export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas,
       estado: draft.estado,
       fecha_expiracion: draft.fecha_expiracion || null,
     }
-    const esNueva = drawerMode === 'nueva'
     const result = await runAction(
-      esNueva ? 'Publicando oferta' : 'Guardando cambios',
-      () => esNueva ? crearOferta(input) : actualizarOferta(activoId!, input),
-      { successMessage: esNueva ? 'Oferta publicada' : 'Cambios guardados' },
+      'Publicando oferta',
+      () => crearOferta(input),
+      { successMessage: 'Oferta publicada' },
     )
     if (!result.ok) { setError(result.error); return }
     cerrar()
     router.refresh()
-  }
-
-  const toggleEstado = async (o: OfertaView) => {
-    const nuevoEstado = o.estado === 'publicada' ? 'cerrada' : 'publicada'
-    const result = await runAction(
-      nuevoEstado === 'publicada' ? `Activando "${o.titulo}"` : `Cerrando "${o.titulo}"`,
-      () => cambiarEstadoOferta(o.id, nuevoEstado),
-      { successMessage: nuevoEstado === 'publicada' ? 'Oferta activada' : 'Oferta cerrada' },
-    )
-    if (result.ok) router.refresh()
   }
 
   const cambiarEstadoConConfirm = async (o: OfertaView, nuevoEstado: OfertaView['estado']) => {
@@ -362,7 +315,7 @@ export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas,
           <div
             key={o.id}
             className="border-b border-black/5 last:border-0 hover:bg-henko-white/40 transition-colors cursor-pointer"
-            onClick={() => abrirDetalle(o)}
+            onClick={() => router.push(`/dashboard/ofertas/${o.id}`)}
           >
             {/* Desktop */}
             <div className="hidden md:grid px-5 lg:px-7 py-4 grid-cols-[3fr_2fr_1fr_1fr] items-center">
@@ -408,108 +361,46 @@ export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas,
         />
       </div>
 
-      {/* Drawer */}
+      {/* Drawer — solo crear nueva oferta */}
       {drawerAbierto && (
         <div className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-sm" onClick={cerrar}>
           <div
             className="relative h-full w-full max-w-2xl bg-white flex flex-col shadow-2xl"
             onClick={e => e.stopPropagation()}
           >
-            {/* Header sticky */}
             <div className="flex items-center justify-between px-8 py-5 border-b border-black/5 bg-white sticky top-0 z-10">
-              <h2 className="font-roxborough text-2xl text-gray-900">
-                {drawerMode === 'nueva' ? 'Nueva oferta' : drawerMode === 'editar' ? 'Editar oferta' : ofertaActiva?.titulo ?? ''}
-              </h2>
-              <div className="flex items-center gap-3">
-                {drawerMode === 'detalle' && ofertaActiva && (
-                  <>
-                    <a
-                      href={`/api/dashboard/ofertas/${ofertaActiva.id}/pdf`}
-                      target="_blank"
-                      rel="noopener"
-                      className="text-xs text-gray-500 font-semibold hover:text-henko-turquoise px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-colors"
-                      onClick={e => e.stopPropagation()}
-                    >
-                      PDF
-                    </a>
-                    <button
-                      type="button"
-                      onClick={() => abrirEditar(ofertaActiva)}
-                      className="inline-flex items-center gap-1.5 bg-henko-turquoise text-white px-4 py-1.5 rounded-full text-xs font-semibold hover:bg-henko-turquoise-light transition-all"
-                    >
-                      Editar
-                    </button>
-                  </>
-                )}
-                <button type="button" onClick={cerrar} aria-label="Cerrar" className="w-9 h-9 rounded-full hover:bg-black/5 flex items-center justify-center text-gray-400 hover:text-gray-700 transition-colors">
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" /></svg>
-                </button>
-              </div>
+              <h2 className="font-roxborough text-2xl text-gray-900">Nueva oferta</h2>
+              <button type="button" onClick={cerrar} aria-label="Cerrar" className="w-9 h-9 rounded-full hover:bg-black/5 flex items-center justify-center text-gray-400 hover:text-gray-700 transition-colors">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
             </div>
-
-            {/* Body */}
             <div className="flex-1 overflow-y-auto px-8 py-6">
-              {/* ── DETALLE ── */}
-              {drawerMode === 'detalle' && ofertaActiva && (
-                <DetalleOferta
-                  oferta={ofertaActiva}
-                  onToggleEstado={() => toggleEstado(ofertaActiva)}
-                  onBorrar={() => borrar(ofertaActiva)}
-                />
-              )}
-
-              {/* ── FORM (nueva o editar) ── */}
-              {(drawerMode === 'nueva' || drawerMode === 'editar') && (
-                <FormOferta
-                  draft={draft}
-                  update={update}
-                  sectores={sectores}
-                  modalidades={modalidades}
-                  jornadas={jornadas}
-                  empresas={empresas}
-                  error={error}
-                />
-              )}
+              <FormOferta
+                draft={draft}
+                update={update}
+                sectores={sectores}
+                modalidades={modalidades}
+                jornadas={jornadas}
+                empresas={empresas}
+                error={error}
+              />
             </div>
-
-            {/* Footer */}
-            {(drawerMode === 'nueva' || drawerMode === 'editar') && (
-              <div className="flex gap-3 px-8 py-5 border-t border-black/5 bg-white">
-                <button
-                  type="button"
-                  onClick={drawerMode === 'editar' ? () => { setDrawerMode('detalle'); setError(null) } : cerrar}
-                  className="inline-flex items-center justify-center gap-2 bg-transparent border-2 border-henko-turquoise text-henko-turquoise px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-henko-turquoise hover:text-white transition-all"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="button"
-                  onClick={save}
-                  className="flex-1 inline-flex items-center justify-center gap-2 bg-henko-turquoise text-white px-6 py-3 rounded-full text-sm font-semibold hover:bg-henko-turquoise-light hover:shadow-lg transition-all"
-                >
-                  {drawerMode === 'nueva' ? 'Publicar oferta' : 'Guardar cambios'}
-                </button>
-              </div>
-            )}
-
-            {drawerMode === 'detalle' && ofertaActiva && (
-              <div className="flex gap-3 px-8 py-5 border-t border-black/5 bg-white">
-                <button
-                  type="button"
-                  onClick={() => toggleEstado(ofertaActiva)}
-                  className="inline-flex items-center justify-center gap-2 bg-transparent border-2 border-gray-200 text-gray-600 px-5 py-2.5 rounded-full text-sm font-semibold hover:border-gray-400 transition-all"
-                >
-                  {ofertaActiva.estado === 'publicada' ? 'Cerrar oferta' : 'Activar oferta'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => borrar(ofertaActiva)}
-                  className="inline-flex items-center justify-center gap-2 bg-transparent border-2 border-red-200 text-red-500 px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-red-50 transition-all"
-                >
-                  Eliminar
-                </button>
-              </div>
-            )}
+            <div className="flex gap-3 px-8 py-5 border-t border-black/5 bg-white">
+              <button
+                type="button"
+                onClick={cerrar}
+                className="inline-flex items-center justify-center gap-2 bg-transparent border-2 border-henko-turquoise text-henko-turquoise px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-henko-turquoise hover:text-white transition-all"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={save}
+                className="flex-1 inline-flex items-center justify-center gap-2 bg-henko-turquoise text-white px-6 py-3 rounded-full text-sm font-semibold hover:bg-henko-turquoise-light hover:shadow-lg transition-all"
+              >
+                Publicar oferta
+              </button>
+            </div>
           </div>
         </div>
       )}
