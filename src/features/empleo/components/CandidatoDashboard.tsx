@@ -36,8 +36,8 @@ import { useAction, useConfirm } from '@/shared/feedback/FeedbackContext'
 type Tab = 'solicitudes' | 'empleos' | 'perfil' | 'trayectoria' | 'preferencias'
 
 const ESTADO_META: Record<EstadoSolicitud, { label: string; badge: string; desc: string }> = {
-  nuevo:      { label: 'Solicitud recibida',        badge: 'bg-henko-turquoise/10 text-henko-turquoise',  desc: 'Tu solicitud ha llegado correctamente. Estamos revisando los candidatos.' },
-  revisando:  { label: 'Solicitud recibida',        badge: 'bg-henko-turquoise/10 text-henko-turquoise',  desc: 'Tu solicitud ha llegado correctamente. Estamos revisando los candidatos.' },
+  nuevo:      { label: 'Solicitud recibida',        badge: 'bg-henko-turquoise/10 text-henko-turquoise',  desc: 'Tu solicitud ha llegado correctamente. Nos pondremos en contacto contigo si avanzas.' },
+  revisando:  { label: 'CV en revisión',            badge: 'bg-amber-50 text-amber-700',                  desc: 'Estamos revisando tu perfil y CV. Te avisaremos cuando haya novedades.' },
   entrevista: { label: 'En proceso de selección',   badge: 'bg-emerald-50 text-emerald-700',              desc: 'Tu perfil ha despertado interés. Pronto nos pondremos en contacto contigo.' },
   descartado: { label: 'Proceso finalizado',        badge: 'bg-gray-100 text-gray-500',                   desc: 'En esta ocasión no hemos avanzado con tu candidatura. Sigue aplicando a otras ofertas.' },
   contratado: { label: '¡Seleccionado/a!',          badge: 'bg-emerald-500 text-white',                   desc: '¡Enhorabuena! Has sido seleccionado/a para este puesto.' },
