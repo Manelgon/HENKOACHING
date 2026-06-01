@@ -18,7 +18,7 @@ export default async function DashboardSolicitudesPage() {
         candidato_id, oferta_id, cv_id,
         ofertas(id, titulo),
         cvs(id, nombre_archivo, storage_path),
-        profiles:candidato_id(nombre, apellidos, email, telefono)
+        candidato_profiles:candidato_id(profiles(nombre, apellidos, email, telefono))
       `)
       .order('created_at', { ascending: false }),
     supabase
@@ -31,7 +31,8 @@ export default async function DashboardSolicitudesPage() {
   const solicitudesView = (solicitudes ?? []).map((s) => {
     const oferta = s.ofertas as unknown as { id: string; titulo: string } | null
     const cv = s.cvs as unknown as { id: string; nombre_archivo: string; storage_path: string } | null
-    const profile = s.profiles as unknown as { nombre: string | null; apellidos: string | null; email: string; telefono: string | null } | null
+    const candidatoProfile = s.candidato_profiles as unknown as { profiles: { nombre: string | null; apellidos: string | null; email: string; telefono: string | null } | null } | null
+    const profile = candidatoProfile?.profiles ?? null
     return {
       id: s.id,
       estado: s.estado,
