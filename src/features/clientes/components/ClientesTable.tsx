@@ -18,6 +18,7 @@ export type ClienteRow = {
   email: string | null
   telefono: string | null
   empresa: string | null
+  nif_cif: string | null
   servicio_contratado: ServicioContratado | null
   importe: number | null
   tarifa: 'mensual' | 'proyecto' | 'sesion' | null
@@ -49,7 +50,7 @@ export default function ClientesTable({ clientes }: { clientes: ClienteRow[] }) 
       if (filtros.estado !== 'todos' && c.estado !== filtros.estado) return false
       if (filtros.servicio !== 'todos' && c.servicio_contratado !== filtros.servicio) return false
       if (q) {
-        const hay = `${c.nombre} ${c.email ?? ''} ${c.empresa ?? ''} ${c.telefono ?? ''} ${c.ubicacion ?? ''}`.toLowerCase()
+        const hay = `${c.nombre} ${c.email ?? ''} ${c.empresa ?? ''} ${c.telefono ?? ''} ${c.ubicacion ?? ''} ${c.nif_cif ?? ''}`.toLowerCase()
         if (!hay.includes(q)) return false
       }
       return true
@@ -133,8 +134,12 @@ export default function ClientesTable({ clientes }: { clientes: ClienteRow[] }) 
             <div className="col-span-3">
               <SortHeader label="Nombre" sortKey="nombre" activeSortKey={sortKey} sortDir={sortDir} onSort={(k) => toggleSort(k as keyof ClienteRow)} />
             </div>
-            <span className="col-span-2 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Empresa / Ubic.</span>
-            <span className="col-span-2 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Servicio</span>
+            <div className="col-span-2">
+              <SortHeader label="Ubicación" sortKey="ubicacion" activeSortKey={sortKey} sortDir={sortDir} onSort={(k) => toggleSort(k as keyof ClienteRow)} />
+            </div>
+            <div className="col-span-2">
+              <SortHeader label="Servicio" sortKey="servicio_contratado" activeSortKey={sortKey} sortDir={sortDir} onSort={(k) => toggleSort(k as keyof ClienteRow)} />
+            </div>
             <div className="col-span-2">
               <SortHeader label="Importe" sortKey="importe" activeSortKey={sortKey} sortDir={sortDir} onSort={(k) => toggleSort(k as keyof ClienteRow)} />
             </div>
@@ -160,16 +165,20 @@ export default function ClientesTable({ clientes }: { clientes: ClienteRow[] }) 
               >
                 {/* Desktop */}
                 <div className="hidden md:grid grid-cols-12 gap-4 px-6 lg:px-8 py-4 items-center">
-                  <span className="col-span-3 font-raleway font-semibold text-gray-900 truncate inline-flex items-center gap-2">
-                    {c.nombre}
-                    {c.tipo === 'empresa' && (
-                      <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-raleway font-bold uppercase tracking-wider bg-henko-turquoise/10 text-henko-turquoise">
-                        Empresa
-                      </span>
-                    )}
-                  </span>
+                  <div className="col-span-3 min-w-0">
+                    <span className="font-raleway font-semibold text-gray-900 truncate inline-flex items-center gap-2">
+                      {c.nombre}
+                      {c.tipo === 'empresa' && (
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-raleway font-bold uppercase tracking-wider bg-henko-turquoise/10 text-henko-turquoise">
+                          Empresa
+                        </span>
+                      )}
+                    </span>
+                    {c.email && <p className="font-raleway text-xs text-gray-400 truncate">{c.email}</p>}
+                    {c.telefono && <p className="font-raleway text-xs text-gray-400 truncate">{c.telefono}</p>}
+                  </div>
                   <span className="col-span-2 font-raleway text-sm text-gray-600 truncate">
-                    {c.tipo === 'empresa' ? (c.ubicacion ?? '—') : (c.empresa ?? '—')}
+                    {c.ubicacion ?? '—'}
                   </span>
                   <span className="col-span-2 font-raleway text-sm text-gray-600 truncate">{getServicioLabel(c.servicio_contratado)}</span>
                   <span className="col-span-2 font-raleway text-sm text-gray-700">{formatImporte(c.importe, c.tarifa)}</span>
@@ -185,21 +194,25 @@ export default function ClientesTable({ clientes }: { clientes: ClienteRow[] }) 
                 {/* Móvil */}
                 <div className="md:hidden px-4 py-4">
                   <div className="flex items-start justify-between gap-3 mb-1">
-                    <p className="font-raleway font-semibold text-gray-900 text-sm truncate inline-flex items-center gap-1.5">
-                      {c.nombre}
-                      {c.tipo === 'empresa' && (
-                        <span className="inline-flex items-center px-1 py-0.5 rounded text-[9px] font-bold uppercase bg-henko-turquoise/10 text-henko-turquoise flex-shrink-0">
-                          Empresa
-                        </span>
-                      )}
-                    </p>
+                    <div>
+                      <p className="font-raleway font-semibold text-gray-900 text-sm truncate inline-flex items-center gap-1.5">
+                        {c.nombre}
+                        {c.tipo === 'empresa' && (
+                          <span className="inline-flex items-center px-1 py-0.5 rounded text-[9px] font-bold uppercase bg-henko-turquoise/10 text-henko-turquoise flex-shrink-0">
+                            Empresa
+                          </span>
+                        )}
+                      </p>
+                      {c.email && <p className="font-raleway text-[11px] text-gray-400 truncate">{c.email}</p>}
+                      {c.telefono && <p className="font-raleway text-[11px] text-gray-400 truncate">{c.telefono}</p>}
+                    </div>
                     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-raleway font-semibold flex-shrink-0 ${estado.bg} ${estado.color}`}>
                       <span className={`w-1 h-1 rounded-full ${estado.dot}`} />
                       {estado.label}
                     </span>
                   </div>
-                  {(c.tipo === 'empresa' ? c.ubicacion : c.empresa) && (
-                    <p className="font-raleway text-xs text-gray-500 truncate mb-1">{c.tipo === 'empresa' ? c.ubicacion : c.empresa}</p>
+                  {c.ubicacion && (
+                    <p className="font-raleway text-xs text-gray-500 truncate mb-1">{c.ubicacion}</p>
                   )}
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] text-gray-400 font-raleway">{getServicioLabel(c.servicio_contratado)}</span>
