@@ -31,6 +31,7 @@ type SolicitudView = {
   ofertaTitulo: string
   cvNombre: string | null
   cvPath: string | null
+  cargo: string
 }
 
 type Props = {
@@ -247,8 +248,8 @@ export default function AdminSolicitudes({ solicitudes, ofertas }: Props) {
 
       {/* Tabla */}
       <div className="bg-white rounded-3xl border border-black/5 overflow-hidden">
-        <div className="hidden md:grid px-5 lg:px-7 py-3.5 border-b border-black/5 grid-cols-[2fr_2fr_1fr_1fr_1fr] text-[10px] tracking-widest text-gray-400 font-bold">
-          <span>CANDIDATO</span><span>OFERTA</span><span>FECHA</span><span>CV</span><span>ESTADO</span>
+        <div className="hidden md:grid px-5 lg:px-7 py-3.5 border-b border-black/5 grid-cols-[2fr_1.5fr_1.5fr_1fr_1fr_1fr] text-[10px] tracking-widest text-gray-400 font-bold">
+          <span>CANDIDATO</span><span>CARGO</span><span>OFERTA</span><span>FECHA</span><span>CV</span><span>ESTADO</span>
         </div>
         {filtradas.length === 0 && (
           <div className="px-5 md:px-7 py-12 text-center text-gray-400 text-sm">No hay solicitudes para mostrar.</div>
@@ -262,7 +263,7 @@ export default function AdminSolicitudes({ solicitudes, ofertas }: Props) {
               className={`border-b border-black/5 last:border-0 transition-colors ${esNueva ? 'bg-henko-greenblue/10' : ''}`}
             >
               {/* Desktop */}
-              <div className="hidden md:grid px-5 lg:px-7 py-4 grid-cols-[2fr_2fr_1fr_1fr_1fr] items-center gap-3">
+              <div className="hidden md:grid px-5 lg:px-7 py-4 grid-cols-[2fr_1.5fr_1.5fr_1fr_1fr_1fr] items-center gap-3">
                 <div className="flex items-center gap-2 min-w-0">
                   {esNueva && <span className="w-2 h-2 rounded-full bg-henko-turquoise flex-shrink-0" />}
                   <div className="min-w-0">
@@ -276,6 +277,7 @@ export default function AdminSolicitudes({ solicitudes, ofertas }: Props) {
                     <p className="text-[11px] text-gray-400">{s.email}</p>
                   </div>
                 </div>
+                <p className="text-sm text-gray-500 truncate">{s.cargo || '—'}</p>
                 <p className="text-sm text-gray-600 truncate">{s.ofertaTitulo}</p>
                 <p className="text-xs text-gray-400">{s.fecha}</p>
                 <div>
