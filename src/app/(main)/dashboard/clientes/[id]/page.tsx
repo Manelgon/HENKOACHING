@@ -13,7 +13,6 @@ export default async function ClienteFichaPage({ params }: { params: Promise<{ i
     .from('clientes')
     .select('*')
     .eq('id', id)
-    .is('deleted_at', null)
     .single()
 
   if (!cliente) notFound()

@@ -276,12 +276,16 @@ export async function cambiarEstadoCliente(id: string, nuevoEstado: EstadoClient
 // =============================================================================
 export async function eliminarCliente(id: string) {
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'No autenticado' }
 
   const { data: actual } = await supabase
     .from('clientes')
     .select('nombre, email')
     .eq('id', id)
     .single()
+
+  if (!actual) return { error: 'Cliente no encontrado' }
 
   const { error } = await supabase
     .from('clientes')
@@ -294,10 +298,47 @@ export async function eliminarCliente(id: string) {
     accion: 'cliente.eliminar',
     recursoTipo: 'cliente',
     recursoId: id,
-    recursoLabel: actual ? `${actual.nombre} <${actual.email}>` : id,
+    recursoLabel: `${actual.nombre} <${actual.email}>`,
   })
 
   revalidatePath('/dashboard/clientes')
+  revalidatePath(`/dashboard/clientes/${id}`)
+  return { ok: true }
+}
+
+// =============================================================================
+// RESTAURAR (deshacer soft delete)
+// =============================================================================
+export async function restaurarCliente(id: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'No autenticado' }
+
+  const { data: actual } = await supabase
+    .from('clientes')
+    .select('nombre, email')
+    .eq('id', id)
+    .not('deleted_at', 'is', null)
+    .single()
+
+  if (!actual) return { error: 'Cliente no encontrado o no está eliminado' }
+
+  const { error } = await supabase
+    .from('clientes')
+    .update({ deleted_at: null })
+    .eq('id', id)
+
+  if (error) return { error: error.message }
+
+  await logAction({
+    accion: 'cliente.restaurar',
+    recursoTipo: 'cliente',
+    recursoId: id,
+    recursoLabel: `${actual.nombre} <${actual.email}>`,
+  })
+
+  revalidatePath('/dashboard/clientes')
+  revalidatePath(`/dashboard/clientes/${id}`)
   return { ok: true }
 }
 

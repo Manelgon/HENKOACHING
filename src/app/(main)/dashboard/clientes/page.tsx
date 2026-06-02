@@ -11,7 +11,7 @@ export default async function ClientesPage() {
   const supabase = await createClient()
   const { data: clientes } = await supabase
     .from('clientes')
-    .select('id, tipo, nombre, email, telefono, empresa, nif_cif, servicio_contratado, importe, tarifa, estado, proxima_sesion, fecha_inicio, fecha_conversion, origen, slug, ubicacion')
+    .select('id, tipo, nombre, email, telefono, empresa, nif_cif, servicio_contratado, estado, proxima_sesion, fecha_inicio, fecha_conversion, origen, slug, ubicacion')
     .is('deleted_at', null)
     .order('created_at', { ascending: false })
 

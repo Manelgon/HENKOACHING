@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAction, useConfirm } from '@/shared/feedback/FeedbackContext'
-import { cambiarEstadoCliente, eliminarCliente } from '@/actions/clientes'
+import { cambiarEstadoCliente, eliminarCliente, restaurarCliente } from '@/actions/clientes'
 import ClienteFicha, { type Cliente } from './ClienteFicha'
 import ClienteNotas from './ClienteNotas'
 import ClienteArchivos from './ClienteArchivos'
@@ -84,6 +84,7 @@ export default function ClienteDetalleLayout({ cliente, notas, archivos, factura
 
   async function handleEstado(nuevo: EstadoCliente) {
     setEstadoOpen(false)
+    if (!!cliente.deleted_at) return
     await runAction('Cambiando estado', () => cambiarEstadoCliente(cliente.id, nuevo), { silentSuccess: true })
     router.refresh()
   }
@@ -91,7 +92,7 @@ export default function ClienteDetalleLayout({ cliente, notas, archivos, factura
   async function handleEliminar() {
     const ok = await confirm({
       title: 'Eliminar cliente',
-      description: '¿Eliminar este cliente? Esta acción no se puede deshacer.',
+      description: '¿Eliminar este cliente? Podrás restaurarlo desde su ficha.',
       confirmLabel: 'Eliminar',
       variant: 'danger',
     })
@@ -100,8 +101,44 @@ export default function ClienteDetalleLayout({ cliente, notas, archivos, factura
     if (result.ok) router.push('/dashboard/clientes')
   }
 
+  async function handleRestaurar() {
+    const ok = await confirm({
+      title: 'Restaurar cliente',
+      description: '¿Restaurar este cliente? Volverá a aparecer en la lista.',
+      confirmLabel: 'Restaurar',
+      variant: 'default',
+    })
+    if (!ok) return
+    const result = await runAction('Restaurando cliente', () => restaurarCliente(cliente.id), { successMessage: 'Cliente restaurado' })
+    if (result.ok) router.refresh()
+  }
+
+  const eliminado = !!cliente.deleted_at
+
   return (
     <div>
+      {/* ── BANNER ELIMINADO ────────────────────────────────────────────── */}
+      {eliminado && (
+        <div className="flex items-center justify-between gap-3 bg-amber-50 border border-amber-200 rounded-2xl px-5 py-3 mb-4">
+          <div className="flex items-center gap-2 font-raleway text-sm text-amber-700">
+            <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+            </svg>
+            Este cliente está eliminado y no aparece en la lista.
+          </div>
+          <button
+            type="button"
+            onClick={handleRestaurar}
+            className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-600 text-white text-xs font-semibold font-raleway hover:bg-amber-700 transition-colors"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3" />
+            </svg>
+            Restaurar
+          </button>
+        </div>
+      )}
+
       {/* ── HEADER ──────────────────────────────────────────────────────── */}
       <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm p-6 md:p-8 mb-6">
         <div className="flex items-start gap-5">

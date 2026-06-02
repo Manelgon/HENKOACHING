@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { TablePagination, usePagination } from '@/components/TablePagination'
 import type { EstadoCliente, ServicioContratado, TipoCliente } from '@/lib/supabase/database.types'
-import { ESTADOS_CLIENTE, SERVICIOS, formatImporte, getEstadoClienteMeta, getServicioLabel } from './estados'
+import { ESTADOS_CLIENTE, SERVICIOS, getEstadoClienteMeta, getServicioLabel } from './estados'
 import NewClienteModal from './NewClienteModal'
 import CustomSelect from '@/shared/components/CustomSelect'
 import { useSortable } from '@/shared/hooks/useSortable'
@@ -20,8 +20,6 @@ export type ClienteRow = {
   empresa: string | null
   nif_cif: string | null
   servicio_contratado: ServicioContratado | null
-  importe: number | null
-  tarifa: 'mensual' | 'proyecto' | 'sesion' | null
   estado: EstadoCliente
   proxima_sesion: string | null
   fecha_inicio: string | null
@@ -134,16 +132,12 @@ export default function ClientesTable({ clientes }: { clientes: ClienteRow[] }) 
             <div className="col-span-3">
               <SortHeader label="Nombre" sortKey="nombre" activeSortKey={sortKey} sortDir={sortDir} onSort={(k) => toggleSort(k as keyof ClienteRow)} />
             </div>
-            <div className="col-span-2">
-              <SortHeader label="Ubicación" sortKey="ubicacion" activeSortKey={sortKey} sortDir={sortDir} onSort={(k) => toggleSort(k as keyof ClienteRow)} />
-            </div>
+            <span className="col-span-2 font-raleway text-[10px] font-bold text-gray-400 uppercase tracking-widest self-center">NIF / CIF</span>
+            <span className="col-span-1 font-raleway text-[10px] font-bold text-gray-400 uppercase tracking-widest self-center">Ubic.</span>
             <div className="col-span-2">
               <SortHeader label="Servicio" sortKey="servicio_contratado" activeSortKey={sortKey} sortDir={sortDir} onSort={(k) => toggleSort(k as keyof ClienteRow)} />
             </div>
-            <div className="col-span-2">
-              <SortHeader label="Importe" sortKey="importe" activeSortKey={sortKey} sortDir={sortDir} onSort={(k) => toggleSort(k as keyof ClienteRow)} />
-            </div>
-            <div className="col-span-2">
+            <div className="col-span-3">
               <SortHeader label="Estado" sortKey="estado" activeSortKey={sortKey} sortDir={sortDir} onSort={(k) => toggleSort(k as keyof ClienteRow)} />
             </div>
             <div className="col-span-1">
@@ -177,12 +171,10 @@ export default function ClientesTable({ clientes }: { clientes: ClienteRow[] }) 
                     {c.email && <p className="font-raleway text-xs text-gray-400 truncate">{c.email}</p>}
                     {c.telefono && <p className="font-raleway text-xs text-gray-400 truncate">{c.telefono}</p>}
                   </div>
-                  <span className="col-span-2 font-raleway text-sm text-gray-600 truncate">
-                    {c.ubicacion ?? '—'}
-                  </span>
+                  <span className="col-span-2 font-raleway text-sm text-gray-600 truncate font-mono">{c.nif_cif ?? '—'}</span>
+                  <span className="col-span-1 font-raleway text-sm text-gray-600 truncate">{c.ubicacion ?? '—'}</span>
                   <span className="col-span-2 font-raleway text-sm text-gray-600 truncate">{getServicioLabel(c.servicio_contratado)}</span>
-                  <span className="col-span-2 font-raleway text-sm text-gray-700">{formatImporte(c.importe, c.tarifa)}</span>
-                  <span className="col-span-2">
+                  <span className="col-span-3">
                     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-raleway font-semibold ${estado.bg} ${estado.color}`}>
                       <span className={`w-1.5 h-1.5 rounded-full ${estado.dot}`} />
                       {estado.label}
@@ -216,7 +208,6 @@ export default function ClientesTable({ clientes }: { clientes: ClienteRow[] }) 
                   )}
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] text-gray-400 font-raleway">{getServicioLabel(c.servicio_contratado)}</span>
-                    <span className="text-[11px] text-gray-700 font-raleway font-semibold">{formatImporte(c.importe, c.tarifa)}</span>
                   </div>
                 </div>
               </Link>

@@ -47,6 +47,7 @@ export type Cliente = {
   logo_url: string | null
   descripcion: string | null
   ubicacion: string | null
+  deleted_at: string | null
 }
 
 export default function ClienteFicha({ cliente }: { cliente: Cliente }) {
