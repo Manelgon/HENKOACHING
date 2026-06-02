@@ -18,8 +18,7 @@ export default async function DashboardSolicitudesPage() {
         candidato_id, oferta_id, cv_id,
         ofertas(id, titulo),
         cvs(id, nombre_archivo, storage_path),
-        candidato_profiles:candidato_id(cargo_actual, profiles(nombre, apellidos, email, telefono)),
-        candidato_experiencias:candidato_id(cargo, empresa, hasta)
+        candidato_profiles:candidato_id(cargo_actual, profiles(nombre, apellidos, email, telefono))
       `)
       .order('created_at', { ascending: false }),
     supabase
@@ -34,9 +33,7 @@ export default async function DashboardSolicitudesPage() {
     const cv = s.cvs as unknown as { id: string; nombre_archivo: string; storage_path: string } | null
     const candidatoProfile = s.candidato_profiles as unknown as { cargo_actual: string | null; profiles: { nombre: string | null; apellidos: string | null; email: string; telefono: string | null } | null } | null
     const profile = candidatoProfile?.profiles ?? null
-    const exps = (s.candidato_experiencias as unknown as { cargo: string; empresa: string; hasta: string | null }[] | null) ?? []
-    const expActual = exps.find(e => !e.hasta) ?? exps[0] ?? null
-    const cargo = candidatoProfile?.cargo_actual ?? (expActual ? `${expActual.cargo} · ${expActual.empresa}` : null)
+    const cargo = candidatoProfile?.cargo_actual ?? null
     return {
       id: s.id,
       estado: s.estado,
