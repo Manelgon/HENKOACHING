@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, forwardRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { crearOferta, cambiarEstadoOferta } from '@/actions/ofertas'
 import { useAction, useConfirm } from '@/shared/feedback/FeedbackContext'
@@ -137,23 +137,39 @@ function EstadoDropdown({ estado, onChange }: { estado: OfertaView['estado']; on
   )
 }
 
+type TabOferta = 'todos' | OfertaView['estado']
+
+const TABS_OFERTA: { value: TabOferta; label: string; dot?: string }[] = [
+  { value: 'todos',     label: 'Todas' },
+  { value: 'publicada', label: 'Activa',   dot: 'bg-henko-turquoise' },
+  { value: 'borrador',  label: 'Borrador', dot: 'bg-yellow-400' },
+  { value: 'pausada',   label: 'Pausada',  dot: 'bg-orange-400' },
+  { value: 'cerrada',   label: 'Cerrada',  dot: 'bg-gray-400' },
+]
+
 export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas, empresas }: Props) {
   const router = useRouter()
   const runAction = useAction()
   const confirm = useConfirm()
 
   // ── Filtros ──────────────────────────────────────────────────────────────
+  const [tabEstado, setTabEstado] = useState<TabOferta>('todos')
   const [busqueda, setBusqueda] = useState('')
-  const [filtroEstado, setFiltroEstado] = useState<string>('todos')
+
+  const counts = useMemo(() => {
+    const c: Record<TabOferta, number> = { todos: ofertas.length, publicada: 0, borrador: 0, pausada: 0, cerrada: 0 }
+    for (const o of ofertas) c[o.estado]++
+    return c
+  }, [ofertas])
 
   const filtradas = useMemo(() => {
     const q = busqueda.trim().toLowerCase()
     return ofertas.filter(o => {
-      if (filtroEstado !== 'todos' && o.estado !== filtroEstado) return false
+      if (tabEstado !== 'todos' && o.estado !== tabEstado) return false
       if (q && !o.titulo.toLowerCase().includes(q) && !o.empresa.toLowerCase().includes(q)) return false
       return true
     })
-  }, [ofertas, busqueda, filtroEstado])
+  }, [ofertas, busqueda, tabEstado])
 
   const pagination = usePagination(filtradas, 20)
 
@@ -242,7 +258,21 @@ export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas,
 
   return (
     <div>
-      {/* Toolbar: búsqueda + filtro + botón nueva oferta */}
+      {/* Tabs estado */}
+      <div className="flex items-center gap-1 overflow-x-auto mb-6 border-b border-gray-200" style={{ scrollSnapType: 'x proximity' }}>
+        {TABS_OFERTA.map(t => (
+          <TabButton
+            key={t.value}
+            active={tabEstado === t.value}
+            onClick={() => setTabEstado(t.value)}
+            label={t.label}
+            count={counts[t.value]}
+            dotColor={t.dot}
+          />
+        ))}
+      </div>
+
+      {/* Toolbar: búsqueda + botón nueva oferta */}
       <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm px-4 md:px-6 py-4 mb-6">
         <div className="flex flex-wrap gap-3 items-center">
           <input
@@ -251,18 +281,6 @@ export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas,
             value={busqueda}
             onChange={e => setBusqueda(e.target.value)}
             className="flex-1 min-w-[180px] px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 font-raleway text-sm outline-none focus:border-henko-turquoise focus:bg-white transition-colors"
-          />
-          <CustomSelect
-            value={filtroEstado}
-            onChange={(v) => setFiltroEstado(v)}
-            options={[
-              { value: 'todos', label: 'Todos los estados' },
-              { value: 'publicada', label: 'Activa' },
-              { value: 'borrador', label: 'Borrador' },
-              { value: 'pausada', label: 'Pausada' },
-              { value: 'cerrada', label: 'Cerrada' },
-            ]}
-            className="min-w-[160px]"
           />
           <button
             type="button"
@@ -540,3 +558,28 @@ function SelectField({ label, value, onChange, options }: { label: string; value
     </div>
   )
 }
+
+const TabButton = forwardRef<HTMLButtonElement, { active: boolean; onClick: () => void; label: string; count: number; dotColor?: string }>(
+  function TabButton({ active, onClick, label, count, dotColor }, ref) {
+    return (
+      <button
+        ref={ref}
+        type="button"
+        onClick={onClick}
+        style={{ scrollSnapAlign: 'start' }}
+        className={`relative px-3 md:px-4 py-3 font-raleway text-sm font-semibold transition-colors whitespace-nowrap flex items-center gap-1.5 flex-shrink-0 ${
+          active ? 'text-henko-turquoise' : 'text-gray-400 hover:text-gray-600'
+        }`}
+      >
+        {dotColor && <span className={`w-1.5 h-1.5 rounded-full ${dotColor}`} />}
+        {label}
+        <span className={`text-xs font-normal px-1.5 py-0.5 rounded-full ${
+          active ? 'bg-henko-turquoise/10 text-henko-turquoise' : 'bg-gray-100 text-gray-400'
+        }`}>
+          {count}
+        </span>
+        {active && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-henko-turquoise rounded-full" />}
+      </button>
+    )
+  }
+)
