@@ -1,10 +1,9 @@
 import { redirect } from 'next/navigation'
-import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getCompanySettings } from '@/lib/company-settings'
-import RegistroAcciones from '@/features/verifactu/components/RegistroAcciones'
 import BackupButton from '@/features/verifactu/components/BackupButton'
+import RegistrosVerifactuTable from '@/features/verifactu/components/RegistrosVerifactuTable'
 import { getVerifactuEntorno } from '@/lib/verifactu/env'
 
 export const metadata = {
@@ -13,19 +12,10 @@ export const metadata = {
 
 export const dynamic = 'force-dynamic'
 
-const PAGE_SIZE = 25
-
 type TipoFiltro = 'todos' | 'alta' | 'anulacion'
 type EstadoEnvio = 'pendiente' | 'enviado' | 'aceptado' | 'rechazado' | 'error'
 type EstadoFiltro = 'todos' | EstadoEnvio
 
-const ESTADO_LABEL: Record<EstadoEnvio, { texto: string; clase: string }> = {
-  pendiente:  { texto: 'Pendiente', clase: 'bg-gray-100 text-gray-700' },
-  enviado:    { texto: 'Enviado',   clase: 'bg-blue-50 text-blue-700' },
-  aceptado:   { texto: 'Aceptado',  clase: 'bg-emerald-50 text-emerald-700' },
-  rechazado:  { texto: 'Rechazado', clase: 'bg-red-50 text-red-700' },
-  error:      { texto: 'Error',     clase: 'bg-orange-50 text-orange-700' },
-}
 
 type RegistroLista = {
   id: string
@@ -62,7 +52,6 @@ export default async function VerifactuPage({
     sp.estado === 'pendiente' || sp.estado === 'enviado' || sp.estado === 'aceptado' ||
     sp.estado === 'rechazado' || sp.estado === 'error' ? sp.estado : 'todos'
   const q = (sp.q ?? '').trim()
-  const page = Math.max(1, Number.parseInt(sp.page ?? '1', 10) || 1)
 
   const settings = await getCompanySettings()
   const admin = createAdminClient()
@@ -105,25 +94,8 @@ export default async function VerifactuPage({
   if (estadoFiltro !== 'todos') query = query.eq('estado_envio', estadoFiltro)
   if (q) query = query.ilike('numero_factura', `%${q}%`)
 
-  const from = (page - 1) * PAGE_SIZE
-  const to = from + PAGE_SIZE - 1
-  const { data: registrosRaw, count: registrosCount } = await query.range(from, to)
+  const { data: registrosRaw } = await query
   const registros = (registrosRaw as RegistroLista[] | null) ?? []
-  const totalPaginas = Math.max(1, Math.ceil((registrosCount ?? 0) / PAGE_SIZE))
-
-  function urlConFiltros(overrides: Partial<{ tipo: string; estado: string; q: string; page: number }>) {
-    const params = new URLSearchParams()
-    const tipo = overrides.tipo ?? (tipoFiltro !== 'todos' ? tipoFiltro : '')
-    const estado = overrides.estado ?? (estadoFiltro !== 'todos' ? estadoFiltro : '')
-    const qVal = overrides.q ?? q
-    const pageVal = overrides.page ?? page
-    if (tipo) params.set('tipo', tipo)
-    if (estado) params.set('estado', estado)
-    if (qVal) params.set('q', qVal)
-    if (pageVal && pageVal > 1) params.set('page', String(pageVal))
-    const qs = params.toString()
-    return qs ? `/dashboard/verifactu?${qs}` : '/dashboard/verifactu'
-  }
 
   return (
     <div className="w-full max-w-5xl">
@@ -186,148 +158,55 @@ export default async function VerifactuPage({
       </section>
 
       {/* Lista de registros */}
-      <section className="bg-white rounded-[2rem] border border-gray-100 shadow-sm p-6 md:p-8 mb-6">
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-5">
+      <section className="mb-6">
+        <div className="flex items-center justify-between gap-3 mb-4">
           <div>
             <h2 className="font-roxborough text-xl text-gray-900 mb-1">Registros encadenados</h2>
             <p className="font-raleway text-xs text-gray-500">
-              {registrosCount ?? 0} resultado{(registrosCount ?? 0) === 1 ? '' : 's'}
+              {registros.length} resultado{registros.length === 1 ? '' : 's'}
               {(tipoFiltro !== 'todos' || estadoFiltro !== 'todos' || q) && ' (filtrado)'}
             </p>
           </div>
         </div>
 
         {/* Filtros */}
-        <form method="GET" className="grid grid-cols-1 md:grid-cols-[1fr_auto_auto_auto] gap-2 mb-5">
-          <input
-            type="text"
-            name="q"
-            defaultValue={q}
-            placeholder="Buscar por nº factura…"
-            className="px-3 py-2 rounded-xl border border-gray-200 bg-white font-raleway text-sm outline-none focus:border-henko-turquoise"
-          />
-          <select
-            name="tipo"
-            defaultValue={tipoFiltro === 'todos' ? '' : tipoFiltro}
-            className="px-3 py-2 rounded-xl border border-gray-200 bg-white font-raleway text-sm outline-none focus:border-henko-turquoise"
-          >
-            <option value="">Todos los tipos</option>
-            <option value="alta">Alta</option>
-            <option value="anulacion">Anulación</option>
-          </select>
-          <select
-            name="estado"
-            defaultValue={estadoFiltro === 'todos' ? '' : estadoFiltro}
-            className="px-3 py-2 rounded-xl border border-gray-200 bg-white font-raleway text-sm outline-none focus:border-henko-turquoise"
-          >
-            <option value="">Todos los estados</option>
-            <option value="pendiente">Pendiente</option>
-            <option value="enviado">Enviado</option>
-            <option value="aceptado">Aceptado</option>
-            <option value="rechazado">Rechazado</option>
-            <option value="error">Error</option>
-          </select>
-          <button
-            type="submit"
-            className="px-4 py-2 rounded-xl bg-henko-turquoise text-white font-raleway font-semibold text-sm hover:bg-henko-turquoise-light"
-          >
-            Filtrar
-          </button>
-        </form>
-
-        {registros.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-gray-200 px-4 py-10 text-center">
-            <p className="font-raleway text-sm text-gray-500">
-              No hay registros que coincidan con los filtros.
-            </p>
+        <form method="GET" className="bg-white rounded-[2rem] border border-gray-100 shadow-sm px-4 md:px-6 py-4 mb-4">
+          <div className="flex flex-wrap gap-3 items-center">
+            <input
+              type="text"
+              name="q"
+              defaultValue={q}
+              placeholder="Buscar por nº factura…"
+              className="flex-1 min-w-[180px] px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 font-raleway text-sm outline-none focus:border-henko-turquoise focus:bg-white transition-colors"
+            />
+            <select name="tipo" defaultValue={tipoFiltro === 'todos' ? '' : tipoFiltro}
+              className="px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 font-raleway text-sm outline-none focus:border-henko-turquoise">
+              <option value="">Todos los tipos</option>
+              <option value="alta">Alta</option>
+              <option value="anulacion">Anulación</option>
+            </select>
+            <select name="estado" defaultValue={estadoFiltro === 'todos' ? '' : estadoFiltro}
+              className="px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 font-raleway text-sm outline-none focus:border-henko-turquoise">
+              <option value="">Todos los estados</option>
+              <option value="pendiente">Pendiente</option>
+              <option value="enviado">Enviado</option>
+              <option value="aceptado">Aceptado</option>
+              <option value="rechazado">Rechazado</option>
+              <option value="error">Error</option>
+            </select>
+            <button type="submit"
+              className="px-5 py-2.5 rounded-full bg-henko-turquoise text-white font-raleway font-semibold text-sm hover:bg-henko-turquoise-light transition-all">
+              Filtrar
+            </button>
             {(tipoFiltro !== 'todos' || estadoFiltro !== 'todos' || q) && (
-              <Link
-                href="/dashboard/verifactu"
-                className="inline-block mt-3 font-raleway text-xs text-henko-turquoise hover:underline"
-              >
-                Limpiar filtros
-              </Link>
+              <a href="/dashboard/verifactu" className="font-raleway text-xs text-gray-400 hover:text-henko-turquoise transition-colors">
+                Limpiar
+              </a>
             )}
           </div>
-        ) : (
-          <div className="overflow-x-auto -mx-2">
-            <table className="w-full font-raleway text-sm">
-              <thead>
-                <tr className="text-left text-[10px] font-bold uppercase tracking-widest text-gray-400 border-b border-gray-100">
-                  <th className="px-2 py-2 w-16">Nº</th>
-                  <th className="px-2 py-2">Fecha / hora</th>
-                  <th className="px-2 py-2">Tipo</th>
-                  <th className="px-2 py-2">Factura</th>
-                  <th className="px-2 py-2">Huella</th>
-                  <th className="px-2 py-2">Envío AEAT</th>
-                  <th className="px-2 py-2 text-right">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {registros.map((r) => {
-                  const estadoMeta = ESTADO_LABEL[r.estado_envio]
-                  const fecha = new Date(r.fecha_hora_generacion).toLocaleString('es-ES', {
-                    day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
-                  })
-                  return (
-                    <tr key={r.id} className="border-b border-gray-50 hover:bg-henko-cream/30">
-                      <td className="px-2 py-3 font-mono text-gray-700">{r.num_registro}</td>
-                      <td className="px-2 py-3 text-gray-600 whitespace-nowrap">{fecha}</td>
-                      <td className="px-2 py-3">
-                        <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold ${r.tipo === 'anulacion' ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-700'}`}>
-                          {r.tipo === 'anulacion' ? 'Anulación' : 'Alta'}
-                        </span>
-                      </td>
-                      <td className="px-2 py-3 font-mono text-gray-700 text-xs">{r.numero_factura}</td>
-                      <td className="px-2 py-3 font-mono text-[10px] text-gray-500" title={r.huella}>
-                        {r.huella.slice(0, 12)}…
-                      </td>
-                      <td className="px-2 py-3">
-                        <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold ${estadoMeta.clase}`} title={r.ultimo_error ?? undefined}>
-                          {estadoMeta.texto}
-                        </span>
-                      </td>
-                      <td className="px-2 py-3">
-                        <RegistroAcciones
-                          registroId={r.id}
-                          numeroFactura={r.numero_factura}
-                          estadoEnvio={r.estado_envio}
-                        />
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
+        </form>
 
-        {/* Paginación */}
-        {totalPaginas > 1 && (
-          <div className="flex items-center justify-between mt-5 pt-4 border-t border-gray-100">
-            <p className="font-raleway text-xs text-gray-500">
-              Página {page} de {totalPaginas}
-            </p>
-            <div className="flex gap-2">
-              {page > 1 && (
-                <Link
-                  href={urlConFiltros({ page: page - 1 })}
-                  className="px-3 py-1.5 rounded-lg bg-white border border-gray-200 font-raleway text-xs font-semibold text-gray-700 hover:bg-gray-50"
-                >
-                  ← Anterior
-                </Link>
-              )}
-              {page < totalPaginas && (
-                <Link
-                  href={urlConFiltros({ page: page + 1 })}
-                  className="px-3 py-1.5 rounded-lg bg-white border border-gray-200 font-raleway text-xs font-semibold text-gray-700 hover:bg-gray-50"
-                >
-                  Siguiente →
-                </Link>
-              )}
-            </div>
-          </div>
-        )}
+        <RegistrosVerifactuTable registros={registros} />
       </section>
 
     </div>
