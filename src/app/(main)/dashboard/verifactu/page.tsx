@@ -3,7 +3,6 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getCompanySettings } from '@/lib/company-settings'
-import ConfigVerifactuForm from '@/features/verifactu/components/ConfigVerifactuForm'
 import RegistroAcciones from '@/features/verifactu/components/RegistroAcciones'
 import BackupButton from '@/features/verifactu/components/BackupButton'
 import { getVerifactuEntorno } from '@/lib/verifactu/env'
@@ -331,28 +330,6 @@ export default async function VerifactuPage({
         )}
       </section>
 
-      {/* Configuración */}
-      <ConfigVerifactuForm
-        initial={{
-          verifactu_productor_nombre: settings.verifactu_productor_nombre,
-          verifactu_productor_nif: settings.verifactu_productor_nif,
-          verifactu_sistema_nombre: settings.verifactu_sistema_nombre,
-          verifactu_sistema_id: settings.verifactu_sistema_id,
-          verifactu_version: settings.verifactu_version,
-          verifactu_numero_instalacion: settings.verifactu_numero_instalacion,
-        }}
-        emisorNombre={settings.emisor_nombre}
-        emisorNif={settings.emisor_nif}
-      />
-
-      <section className="mt-8 rounded-2xl border border-gray-100 bg-gray-50 p-5 text-xs text-gray-500 font-raleway leading-relaxed">
-        <p className="font-semibold text-gray-700 mb-2">Notas técnicas</p>
-        <ul className="space-y-1 list-disc pl-5">
-          <li>Las facturas emitidas son inmutables (RD 1007/2023, art. 8). Para corregir importes o datos del cliente, emite una rectificativa o un abono desde Facturas.</li>
-          <li>Cada nueva factura genera un registro encadenado por SHA-256 con el anterior. La cadena se puede inspeccionar registro a registro descargando el XML desde el detalle de cada factura.</li>
-          <li>El envío automático a la Agencia Tributaria requiere certificado FNMT y se activa en una fase posterior.</li>
-        </ul>
-      </section>
     </div>
   )
 }
