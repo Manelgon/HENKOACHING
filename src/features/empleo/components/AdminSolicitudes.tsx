@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect, useRef } from 'react'
+import { useState, useMemo, useEffect, useRef, forwardRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { cambiarEstadoSolicitud, getCvUrl } from '@/actions/solicitudes'
@@ -10,13 +10,24 @@ import { TablePagination, usePagination } from '@/components/TablePagination'
 import { createClient } from '@/lib/supabase/client'
 import CustomSelect from '@/shared/components/CustomSelect'
 
-const ESTADO_META: Record<EstadoSolicitud, { label: string; badge: string }> = {
-  nuevo:      { label: 'Nueva',       badge: 'bg-henko-greenblue text-henko-turquoise' },
-  revisando:  { label: 'Revisando',   badge: 'bg-henko-yellow text-yellow-900' },
-  entrevista: { label: 'Entrevista',  badge: 'bg-henko-purple text-white' },
-  descartado: { label: 'Descartado',  badge: 'bg-black/5 text-gray-500' },
-  contratado: { label: 'Contratado',  badge: 'bg-henko-turquoise text-white' },
+const ESTADO_META: Record<EstadoSolicitud, { label: string; badge: string; dot: string }> = {
+  nuevo:      { label: 'Nueva',       badge: 'bg-henko-greenblue text-henko-turquoise', dot: 'bg-henko-turquoise' },
+  revisando:  { label: 'Revisando',   badge: 'bg-henko-yellow text-yellow-900',         dot: 'bg-yellow-400' },
+  entrevista: { label: 'Entrevista',  badge: 'bg-henko-purple text-white',              dot: 'bg-henko-purple' },
+  descartado: { label: 'Descartado',  badge: 'bg-black/5 text-gray-500',                dot: 'bg-gray-400' },
+  contratado: { label: 'Contratado',  badge: 'bg-henko-turquoise text-white',           dot: 'bg-henko-turquoise' },
 }
+
+type TabEstado = 'todas' | EstadoSolicitud
+
+const TABS: { value: TabEstado; label: string; dot?: string }[] = [
+  { value: 'todas',      label: 'Todas' },
+  { value: 'nuevo',      label: 'Nueva',      dot: 'bg-henko-turquoise' },
+  { value: 'revisando',  label: 'Revisando',  dot: 'bg-yellow-400' },
+  { value: 'entrevista', label: 'Entrevista', dot: 'bg-henko-purple' },
+  { value: 'descartado', label: 'Descartado', dot: 'bg-gray-400' },
+  { value: 'contratado', label: 'Contratado', dot: 'bg-henko-turquoise' },
+]
 
 type SolicitudView = {
   id: string
@@ -111,6 +122,7 @@ function EstadoDropdown({ estado, onChange }: { estado: EstadoSolicitud; onChang
 export default function AdminSolicitudes({ solicitudes, ofertas }: Props) {
   const router = useRouter()
   const runAction = useAction()
+  const [tabEstado, setTabEstado] = useState<TabEstado>('todas')
   const [filtroOferta, setFiltroOferta] = useState<string>('todas')
   const [busqueda, setBusqueda] = useState('')
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -148,9 +160,16 @@ export default function AdminSolicitudes({ solicitudes, ofertas }: Props) {
     [solicitudes, overrides],
   )
 
+  const counts = useMemo(() => {
+    const c: Record<TabEstado, number> = { todas: solicitudesConOverrides.length, nuevo: 0, revisando: 0, entrevista: 0, descartado: 0, contratado: 0 }
+    for (const s of solicitudesConOverrides) c[s.estado as EstadoSolicitud]++
+    return c
+  }, [solicitudesConOverrides])
+
   const filtradas = useMemo(() => {
     const q = busqueda.trim().toLowerCase()
     return solicitudesConOverrides.filter(s => {
+      if (tabEstado !== 'todas' && s.estado !== tabEstado) return false
       if (filtroOferta !== 'todas' && s.ofertaId !== filtroOferta) return false
       if (q) {
         const hay = `${s.candidato} ${s.email} ${s.telefono} ${s.mensaje}`.toLowerCase()
@@ -158,7 +177,7 @@ export default function AdminSolicitudes({ solicitudes, ofertas }: Props) {
       }
       return true
     })
-  }, [solicitudesConOverrides, filtroOferta, busqueda])
+  }, [solicitudesConOverrides, tabEstado, filtroOferta, busqueda])
 
   const pagination = usePagination(filtradas, 20)
 
@@ -221,6 +240,20 @@ export default function AdminSolicitudes({ solicitudes, ofertas }: Props) {
             <p className={`text-3xl font-roxborough ${(s as { light?: boolean }).light ? 'text-white' : 'text-gray-900'}`}>{s.val}</p>
             <p className={`text-xs mt-0.5 ${(s as { light?: boolean }).light ? 'text-white/75' : 'text-gray-500'}`}>{s.label}</p>
           </div>
+        ))}
+      </div>
+
+      {/* Tabs estado */}
+      <div className="flex items-center gap-1 overflow-x-auto mb-6 border-b border-gray-200" style={{ scrollSnapType: 'x proximity' }}>
+        {TABS.map(t => (
+          <TabButton
+            key={t.value}
+            active={tabEstado === t.value}
+            onClick={() => setTabEstado(t.value)}
+            label={t.label}
+            count={counts[t.value]}
+            dotColor={t.dot}
+          />
         ))}
       </div>
 
@@ -416,3 +449,28 @@ function InfoField({ label, value }: { label: string; value: string }) {
     </div>
   )
 }
+
+const TabButton = forwardRef<HTMLButtonElement, { active: boolean; onClick: () => void; label: string; count: number; dotColor?: string }>(
+  function TabButton({ active, onClick, label, count, dotColor }, ref) {
+    return (
+      <button
+        ref={ref}
+        type="button"
+        onClick={onClick}
+        style={{ scrollSnapAlign: 'start' }}
+        className={`relative px-3 md:px-4 py-3 font-raleway text-sm font-semibold transition-colors whitespace-nowrap flex items-center gap-1.5 flex-shrink-0 ${
+          active ? 'text-henko-turquoise' : 'text-gray-400 hover:text-gray-600'
+        }`}
+      >
+        {dotColor && <span className={`w-1.5 h-1.5 rounded-full ${dotColor}`} />}
+        {label}
+        <span className={`text-xs font-normal px-1.5 py-0.5 rounded-full ${
+          active ? 'bg-henko-turquoise/10 text-henko-turquoise' : 'bg-gray-100 text-gray-400'
+        }`}>
+          {count}
+        </span>
+        {active && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-henko-turquoise rounded-full" />}
+      </button>
+    )
+  }
+)
