@@ -516,7 +516,6 @@ function emptyDraft(sectores: Catalogo[], modalidades: Catalogo[], jornadas: Cat
     salario_texto: '', reporta_a: '', contrato: '', descripcion: '',
     funciones: '', requisitos: '', competencias: '', ofrecemos: '',
     fecha_expiracion: '',
-    modalidad_id: 0, jornada_id: 0, sector_id: 0,
   }
 }
 
