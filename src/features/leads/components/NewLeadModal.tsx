@@ -45,7 +45,7 @@ export default function NewLeadModal({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setEnviado(true)
-    if (!form.nombre.trim() || !form.email.trim() || !form.mensaje.trim() || !form.estado) return
+    if (!form.nombre.trim() || !form.email.trim() || !form.estado) return
 
     const result = await runAction(
       'Creando lead',
@@ -125,11 +125,11 @@ export default function NewLeadModal({
           </div>
 
           <div>
-            <label className={labelClass}>MENSAJE / NOTAS *</label>
+            <label className={labelClass}>MENSAJE / NOTAS</label>
             <textarea
               rows={5}
               placeholder="¿Qué te dijo? ¿Qué necesita?"
-              className={(enviado && !form.mensaje.trim() ? inputError : inputClass) + ' resize-y leading-relaxed'}
+              className={inputClass + ' resize-y leading-relaxed'}
               value={form.mensaje}
               onChange={(e) => setForm({ ...form, mensaje: e.target.value })}
             />
