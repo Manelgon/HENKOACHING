@@ -276,7 +276,7 @@ export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas,
 
       {/* Tabla */}
       <div className="bg-white rounded-3xl border border-black/5 overflow-hidden">
-        <div className="hidden md:grid px-5 lg:px-7 py-3.5 border-b border-black/5 grid-cols-[2fr_1.5fr_1fr_1fr_56px_88px_100px] text-[10px] tracking-widest text-gray-400 font-bold">
+        <div className="hidden md:grid px-5 lg:px-7 py-3.5 border-b border-black/5 grid-cols-[2fr_1.5fr_1fr_0.7fr_70px_100px_110px] text-[10px] tracking-widest text-gray-400 font-bold">
           <span>OFERTA</span><span>EMPRESA</span><span>SECTOR</span><span>MODALIDAD</span><span>CAND.</span><span>EXPIRA</span><span>ESTADO</span>
         </div>
         {filtradas.length === 0 && (
@@ -291,7 +291,7 @@ export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas,
             onClick={() => router.push(`/dashboard/ofertas/${o.id}`)}
           >
             {/* Desktop */}
-            <div className="hidden md:grid px-5 lg:px-7 py-4 grid-cols-[2fr_1.5fr_1fr_1fr_56px_88px_100px] items-center gap-2">
+            <div className="hidden md:grid px-5 lg:px-7 py-4 grid-cols-[2fr_1.5fr_1fr_0.7fr_70px_100px_110px] items-center gap-2">
               <div className="min-w-0">
                 <p className="text-sm font-semibold truncate">{o.titulo}</p>
                 <p className="text-[11px] text-gray-400">{o.fecha}{o.ubicacion ? ` · ${o.ubicacion}` : ''}</p>
