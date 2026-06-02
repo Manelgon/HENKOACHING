@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAction, useConfirm } from '@/shared/feedback/FeedbackContext'
-import { guardarAjustes, subirImagenEmisor, quitarImagenEmisor, type AjustesInput } from '@/actions/ajustes'
+import { guardarAjustes, subirImagenEmisor, quitarImagenEmisor, subirRatFirmado, quitarRatFirmado, type AjustesInput } from '@/actions/ajustes'
 import type { CompanySettings } from '@/lib/company-settings'
 
 type Props = {
@@ -13,9 +13,11 @@ type Props = {
   headerUrl: string | null
   footerUrl: string | null
   sobreMiUrl: string | null
+  ratFirmadoUrl: string | null
+  ratFirmadoAt: string | null
 }
 
-export default function AjustesForm({ settings, logoUrl, firmaUrl, headerUrl, footerUrl, sobreMiUrl }: Props) {
+export default function AjustesForm({ settings, logoUrl, firmaUrl, headerUrl, footerUrl, sobreMiUrl, ratFirmadoUrl, ratFirmadoAt }: Props) {
   const router = useRouter()
   const runAction = useAction()
   const confirm = useConfirm()
@@ -235,6 +237,18 @@ export default function AjustesForm({ settings, logoUrl, firmaUrl, headerUrl, fo
         </div>
       </Section>
 
+      {/* RGPD — RAT */}
+      <Section
+        title="Documentación RGPD"
+        description="Registro de Actividades de Tratamiento (RAT). Descárgalo, imprímelo, fírmalo a mano y sube el PDF firmado aquí para tenerlo archivado."
+      >
+        <RatPanel
+          ratFirmadoUrl={ratFirmadoUrl}
+          ratFirmadoAt={ratFirmadoAt}
+          onChange={() => router.refresh()}
+        />
+      </Section>
+
       <div className="flex justify-end gap-3 pt-2">
         <button
           type="submit"
@@ -263,6 +277,151 @@ export default function AjustesForm({ settings, logoUrl, firmaUrl, headerUrl, fo
         }
       `}</style>
     </form>
+  )
+}
+
+function RatPanel({
+  ratFirmadoUrl,
+  ratFirmadoAt,
+  onChange,
+}: {
+  ratFirmadoUrl: string | null
+  ratFirmadoAt: string | null
+  onChange: () => void
+}) {
+  const runAction = useAction()
+  const confirm = useConfirm()
+  const inputRef = useRef<HTMLInputElement>(null)
+  const [uploading, setUploading] = useState(false)
+
+  async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    const fd = new FormData()
+    fd.append('file', file)
+    const r = await runAction('Subiendo RAT firmado', () => subirRatFirmado(fd), {
+      successMessage: 'RAT firmado guardado',
+    })
+    setUploading(false)
+    e.target.value = ''
+    if (r.ok) onChange()
+  }
+
+  async function onQuitar() {
+    const ok = await confirm({
+      title: 'Quitar RAT firmado',
+      description: '¿Eliminar el RAT firmado guardado? Seguirás teniendo el borrador para volver a descargarlo.',
+      confirmLabel: 'Quitar',
+      variant: 'danger',
+    })
+    if (!ok) return
+    const r = await runAction('Quitando RAT firmado', () => quitarRatFirmado(), {
+      successMessage: 'RAT eliminado',
+    })
+    if (r.ok) onChange()
+  }
+
+  const fechaFormateada = ratFirmadoAt
+    ? new Date(ratFirmadoAt).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })
+    : null
+
+  return (
+    <div className="space-y-5">
+      {/* Paso 1: descargar borrador */}
+      <div className="flex items-start gap-4 p-4 bg-blue-50 rounded-2xl border border-blue-100">
+        <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm shrink-0 mt-0.5">1</div>
+        <div className="flex-1">
+          <p className="font-raleway text-sm font-semibold text-gray-800 mb-0.5">Descarga el RAT como PDF</p>
+          <p className="font-raleway text-xs text-gray-500 mb-3">Se abrirá una página lista para imprimir. Usa Ctrl+P → Guardar como PDF (o envíalo directamente a la impresora).</p>
+          <a
+            href="/api/rat-pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white border border-blue-200 text-sm font-raleway font-semibold text-blue-700 hover:bg-blue-50 transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+            </svg>
+            Abrir RAT para imprimir
+          </a>
+        </div>
+      </div>
+
+      {/* Paso 2: firmar (instrucción) */}
+      <div className="flex items-start gap-4 p-4 bg-amber-50 rounded-2xl border border-amber-100">
+        <div className="w-8 h-8 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center font-bold text-sm shrink-0 mt-0.5">2</div>
+        <div>
+          <p className="font-raleway text-sm font-semibold text-gray-800 mb-0.5">Imprímelo, pon la fecha y fírmalo a mano</p>
+          <p className="font-raleway text-xs text-gray-500">Guarda una copia física en tu archivo de empresa. Solo tendrás que sacarlo si la AEPD inspecciona.</p>
+        </div>
+      </div>
+
+      {/* Paso 3: subir el firmado */}
+      <div className="flex items-start gap-4 p-4 bg-green-50 rounded-2xl border border-green-100">
+        <div className="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center font-bold text-sm shrink-0 mt-0.5">3</div>
+        <div className="flex-1">
+          <p className="font-raleway text-sm font-semibold text-gray-800 mb-0.5">Sube el PDF firmado (escaneado o foto clara)</p>
+          <p className="font-raleway text-xs text-gray-500 mb-3">Quedará archivado de forma segura en Supabase. Solo tú tienes acceso.</p>
+
+          {uploading ? (
+            <span className="font-raleway text-sm text-gray-500">Subiendo…</span>
+          ) : ratFirmadoUrl ? (
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-2 px-3 py-2 bg-white rounded-xl border border-green-200">
+                <svg className="w-4 h-4 text-green-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="font-raleway text-xs font-semibold text-green-700">
+                  Firmado el {fechaFormateada}
+                </span>
+              </div>
+              <a
+                href={ratFirmadoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3 py-2 rounded-xl bg-white border border-gray-200 text-xs font-raleway font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                Ver / Descargar
+              </a>
+              <button
+                type="button"
+                onClick={() => inputRef.current?.click()}
+                className="px-3 py-2 rounded-xl bg-white border border-gray-200 text-xs font-raleway font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                Reemplazar
+              </button>
+              <button
+                type="button"
+                onClick={onQuitar}
+                className="px-3 py-2 rounded-xl bg-red-50 text-red-500 text-xs font-raleway font-semibold hover:bg-red-100 transition-colors"
+              >
+                Quitar
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => inputRef.current?.click()}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-henko-turquoise text-white text-sm font-raleway font-semibold hover:bg-henko-turquoise-light transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+              </svg>
+              Subir RAT firmado (PDF)
+            </button>
+          )}
+        </div>
+      </div>
+
+      <input
+        ref={inputRef}
+        type="file"
+        accept="application/pdf"
+        className="hidden"
+        onChange={onFile}
+      />
+    </div>
   )
 }
 

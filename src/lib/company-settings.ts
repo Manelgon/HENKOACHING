@@ -32,6 +32,9 @@ export type CompanySettings = {
   verifactu_sistema_id: string
   verifactu_version: string
   verifactu_numero_instalacion: string
+  // RGPD — RAT firmado
+  rat_firmado_path: string | null
+  rat_firmado_at: string | null
 }
 
 const DEFAULTS: CompanySettings = {
@@ -64,6 +67,8 @@ const DEFAULTS: CompanySettings = {
   verifactu_sistema_id: 'HK',
   verifactu_version: '1.0',
   verifactu_numero_instalacion: 'HK-01',
+  rat_firmado_path: null,
+  rat_firmado_at: null,
 }
 
 export async function getCompanySettings(): Promise<CompanySettings> {

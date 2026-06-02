@@ -131,6 +131,70 @@ export async function subirImagenEmisor(formData: FormData) {
   return { ok: true, url: signed?.signedUrl ?? null, path: storagePath }
 }
 
+export async function subirRatFirmado(formData: FormData) {
+  const auth = await requireAdmin()
+  if ('error' in auth) return { error: auth.error }
+
+  const file = formData.get('file') as File | null
+  if (!file) return { error: 'Falta el archivo' }
+
+  if (file.type !== 'application/pdf') return { error: 'Solo se admiten archivos PDF' }
+  if (file.size > 10 * 1024 * 1024) return { error: 'El PDF no puede superar 10MB' }
+
+  const storagePath = 'company/rat-firmado.pdf'
+  const buffer = await file.arrayBuffer()
+
+  const admin = createAdminClient()
+
+  const { error: uploadError } = await admin.storage
+    .from('doc-assets')
+    .upload(storagePath, buffer, { contentType: 'application/pdf', upsert: true })
+
+  if (uploadError) return { error: uploadError.message }
+
+  const { error: dbError } = await admin
+    .from('company_settings' as never)
+    .update({ rat_firmado_path: storagePath, rat_firmado_at: new Date().toISOString() } as never)
+    .eq('id', 1)
+
+  if (dbError) return { error: dbError.message }
+
+  await logAction({
+    accion: 'ajustes.subir_rat_firmado',
+    recursoTipo: 'company_settings',
+    recursoId: '1',
+    metadata: { path: storagePath },
+  })
+
+  revalidatePath('/dashboard/ajustes')
+  return { ok: true }
+}
+
+export async function quitarRatFirmado() {
+  const auth = await requireAdmin()
+  if ('error' in auth) return { error: auth.error }
+
+  const admin = createAdminClient()
+
+  await admin.storage.from('doc-assets').remove(['company/rat-firmado.pdf'])
+
+  const { error } = await admin
+    .from('company_settings' as never)
+    .update({ rat_firmado_path: null, rat_firmado_at: null } as never)
+    .eq('id', 1)
+
+  if (error) return { error: error.message }
+
+  await logAction({
+    accion: 'ajustes.quitar_rat_firmado',
+    recursoTipo: 'company_settings',
+    recursoId: '1',
+  })
+
+  revalidatePath('/dashboard/ajustes')
+  return { ok: true }
+}
+
 export async function quitarImagenEmisor(tipo: 'logo' | 'firma' | 'header' | 'footer' | 'sobre_mi') {
   const auth = await requireAdmin()
   if ('error' in auth) return { error: auth.error }
