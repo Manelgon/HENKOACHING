@@ -45,7 +45,7 @@ export default async function DashboardPage() {
       .from('solicitudes')
       .select(`
         id, created_at, estado,
-        candidato_profiles:candidato_id(profiles:user_id(nombre, apellidos, email)),
+        candidato_profiles:candidato_id(profiles(nombre, apellidos, email)),
         ofertas(titulo)
       `)
       .order('created_at', { ascending: false })
