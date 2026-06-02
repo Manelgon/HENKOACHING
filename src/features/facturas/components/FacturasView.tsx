@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAction, useConfirm } from '@/shared/feedback/FeedbackContext'
 import { TablePagination, usePagination } from '@/components/TablePagination'
+import { useSortable } from '@/shared/hooks/useSortable'
+import SortHeader from '@/shared/components/SortHeader'
 import { actualizarFacturaNoFiscal, cambiarEstadoFactura, eliminarFactura, getFacturaPdfUrl, getVerifactuXml } from '@/actions/facturas'
 import { ESTADOS_FACTURA, getEstadoMeta, isVencida, type EstadoFactura } from './estados'
 import NuevaFacturaModal from './NuevaFacturaModal'
@@ -78,7 +80,9 @@ export default function FacturasView({ facturas, clientes, serieDefault, emisorL
     })
   }, [conEstadoCalculado, tab, busqueda])
 
-  const pagination = usePagination(filtered, 20)
+  type FacturaCalc = (typeof filtered)[0]
+  const { sorted, sortKey, sortDir, toggleSort } = useSortable<FacturaCalc>(filtered, 'fecha_emision', 'desc')
+  const pagination = usePagination(sorted, 20)
 
   // Facturas que pueden ser rectificadas/abonadas: no sean ya rectificativas/abonos ni anuladas
   const facturasRectificables = useMemo(
@@ -252,12 +256,12 @@ export default function FacturasView({ facturas, clientes, serieDefault, emisorL
       ) : (
         <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
           {/* Header desktop */}
-          <div className="hidden md:grid grid-cols-12 gap-4 px-6 lg:px-8 py-4 border-b border-gray-100 bg-gray-50">
-            <span className="col-span-2 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Nº</span>
-            <span className="col-span-3 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Cliente</span>
-            <span className="col-span-2 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Estado</span>
-            <span className="col-span-2 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Emisión</span>
-            <span className="col-span-2 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest text-right">Total</span>
+          <div className="hidden md:grid grid-cols-12 gap-4 px-6 lg:px-8 py-4 border-b border-gray-100 bg-gray-50 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">
+            <div className="col-span-2"><SortHeader label="Nº" sortKey="numero" activeSortKey={sortKey as string} sortDir={sortDir} onSort={k => toggleSort(k as keyof FacturaCalc)} /></div>
+            <div className="col-span-3"><SortHeader label="Cliente" sortKey="cliente_nombre" activeSortKey={sortKey as string} sortDir={sortDir} onSort={k => toggleSort(k as keyof FacturaCalc)} /></div>
+            <div className="col-span-2"><SortHeader label="Estado" sortKey="estado" activeSortKey={sortKey as string} sortDir={sortDir} onSort={k => toggleSort(k as keyof FacturaCalc)} /></div>
+            <div className="col-span-2"><SortHeader label="Emisión" sortKey="fecha_emision" activeSortKey={sortKey as string} sortDir={sortDir} onSort={k => toggleSort(k as keyof FacturaCalc)} /></div>
+            <div className="col-span-2 flex justify-end"><SortHeader label="Total" sortKey="total" activeSortKey={sortKey as string} sortDir={sortDir} onSort={k => toggleSort(k as keyof FacturaCalc)} /></div>
             <span className="col-span-1" />
           </div>
 
