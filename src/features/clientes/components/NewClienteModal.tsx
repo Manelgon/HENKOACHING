@@ -33,11 +33,11 @@ export default function NewClienteModal({
     servicio_contratado: '' as ServicioContratado | '',
     fecha_inicio: '',
     importe: '',
-    tarifa: 'mensual' as TarifaTipo,
+    tarifa: '' as TarifaTipo | '',
     proxima_sesion: '',
     linkedin_url: '',
     web_url: '',
-    estado: 'activo' as EstadoCliente,
+    estado: '' as EstadoCliente | '',
     origen: '',
     slug: '',
     logo_url: '',
@@ -79,11 +79,11 @@ export default function NewClienteModal({
         servicio_contratado: (form.servicio_contratado || null) as ServicioContratado | null,
         fecha_inicio: form.fecha_inicio || null,
         importe: form.importe ? parseFloat(form.importe) : null,
-        tarifa: form.tarifa,
+        tarifa: (form.tarifa || 'mensual') as TarifaTipo,
         proxima_sesion: form.proxima_sesion || null,
         linkedin_url: form.linkedin_url || null,
         web_url: form.web_url || null,
-        estado: form.estado,
+        estado: (form.estado || 'activo') as EstadoCliente,
         origen: form.origen || 'panel',
         slug: esEmpresa ? (form.slug || null) : null,
         logo_url: esEmpresa ? (form.logo_url || null) : null,
@@ -199,6 +199,7 @@ export default function NewClienteModal({
                       value={form.tarifa}
                       onChange={(v) => setForm({ ...form, tarifa: v as TarifaTipo })}
                       options={TARIFAS}
+                      placeholder="Selecciona…"
                     />
                     <Field label="PRÓXIMA SESIÓN" type="datetime-local" value={form.proxima_sesion} onChange={(v) => setForm({ ...form, proxima_sesion: v })} />
                     <Select
@@ -206,6 +207,7 @@ export default function NewClienteModal({
                       value={form.estado}
                       onChange={(v) => setForm({ ...form, estado: v as EstadoCliente })}
                       options={ESTADOS_CLIENTE.map((e) => ({ value: e.value, label: e.label }))}
+                      placeholder="Selecciona…"
                     />
                   </div>
                   <button
