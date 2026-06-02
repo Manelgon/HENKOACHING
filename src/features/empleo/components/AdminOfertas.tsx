@@ -51,7 +51,7 @@ type Draft = {
   requisitos: string
   competencias: string
   ofrecemos: string
-  estado: 'borrador' | 'publicada' | 'pausada' | 'cerrada'
+  estado: '' | 'borrador' | 'publicada' | 'pausada' | 'cerrada'
   fecha_expiracion: string
 }
 
@@ -195,8 +195,8 @@ export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas,
   }
 
   const save = async () => {
-    if (!draft.titulo.trim() || !draft.empresa.trim() || !draft.descripcion.trim()) {
-      setError('Título, empresa y descripción son obligatorios')
+    if (!draft.titulo.trim() || !draft.empresa.trim() || !draft.descripcion.trim() || !draft.estado || !draft.modalidad_id || !draft.jornada_id) {
+      setError('Título, empresa, descripción, estado, modalidad y jornada son obligatorios')
       return
     }
     setError(null)
@@ -468,6 +468,7 @@ function FormOferta({
           value={draft.estado}
           onChange={(v) => update('estado', v as Draft['estado'])}
           options={[
+            { value: '', label: '— Seleccionar estado —' },
             { value: 'borrador', label: 'Borrador (no visible)' },
             { value: 'publicada', label: 'Publicada' },
             { value: 'pausada', label: 'Pausada' },
@@ -508,13 +509,14 @@ function FormOferta({
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function emptyDraft(sectores: Catalogo[], modalidades: Catalogo[], jornadas: Catalogo[]): Draft {
   return {
-    titulo: '', empresa: '', empresa_oculta: false, ubicacion: '',
+    titulo: '', empresa: '', empresa_oculta: false, ubicacion: '', estado: '' as const,
     modalidad_id: 0,
     jornada_id: 0,
     sector_id: 0,
     salario_texto: '', reporta_a: '', contrato: '', descripcion: '',
     funciones: '', requisitos: '', competencias: '', ofrecemos: '',
-    estado: 'publicada', fecha_expiracion: '',
+    fecha_expiracion: '',
+    modalidad_id: 0, jornada_id: 0, sector_id: 0,
   }
 }
 
