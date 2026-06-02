@@ -19,7 +19,9 @@ export default async function LoginPage() {
       .select('role')
       .eq('id', user.id)
       .single()
-    redirect(profile?.role === 'candidato' ? '/candidato/dashboard' : '/dashboard')
+    if (profile?.role === 'candidato') redirect('/candidato/dashboard')
+    if (profile?.role === 'empresa') redirect('/empresa/dashboard')
+    redirect('/dashboard')
   }
 
   return (

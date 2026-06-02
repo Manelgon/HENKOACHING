@@ -606,6 +606,7 @@ export type Database = {
           creado_por: string | null
           created_at: string | null
           deleted_at: string | null
+          owner_user_id: string | null
           descripcion: string | null
           direccion_fiscal: string | null
           email: string | null
@@ -650,6 +651,7 @@ export type Database = {
           nif_cif?: string | null
           nombre: string
           origen?: string | null
+          owner_user_id?: string | null
           proxima_sesion?: string | null
           servicio_contratado?: Database["public"]["Enums"]["servicio_contratado"] | null
           slug?: string | null
@@ -679,6 +681,7 @@ export type Database = {
           nif_cif?: string | null
           nombre?: string
           origen?: string | null
+          owner_user_id?: string | null
           proxima_sesion?: string | null
           servicio_contratado?: Database["public"]["Enums"]["servicio_contratado"] | null
           slug?: string | null

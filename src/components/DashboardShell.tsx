@@ -24,10 +24,11 @@ type Props = {
   sections: NavSection[]
   userEmail: string
   userInitial: string
+  homeHref?: string
   children: React.ReactNode
 }
 
-export default function DashboardShell({ sections, userEmail, userInitial, children }: Props) {
+export default function DashboardShell({ sections, userEmail, userInitial, homeHref = '/dashboard', children }: Props) {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
   const unreadCount = useEmailStore((s) => s.unreadCount)
@@ -93,7 +94,7 @@ export default function DashboardShell({ sections, userEmail, userInitial, child
         }`}
       >
         <div className="p-6 border-b border-gray-100">
-          <Link href="/dashboard" className="flex items-center gap-3">
+          <Link href={homeHref} className="flex items-center gap-3">
             <Image src="/hk.png" alt="Henkoaching" width={80} height={50} className="object-contain w-10 h-auto" />
             <span className="font-roxborough text-lg text-gray-900">Henkoaching</span>
           </Link>
@@ -194,7 +195,7 @@ export default function DashboardShell({ sections, userEmail, userInitial, child
 
       <div className="flex-1 flex flex-col min-w-0 lg:ml-64">
         <div className="sticky top-0 z-20 lg:hidden flex items-center gap-3 px-4 h-14 bg-white/90 backdrop-blur border-b border-gray-100">
-          <Link href="/dashboard" className="flex items-center gap-2">
+          <Link href={homeHref} className="flex items-center gap-2">
             <Image src="/hk.png" alt="Henkoaching" width={60} height={38} className="object-contain w-7 h-auto" />
             <span className="font-roxborough text-base text-gray-900">Henkoaching</span>
           </Link>
