@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import ClientesTable from '@/features/clientes/components/ClientesTable'
+import ClientesTable, { type ClienteRow } from '@/features/clientes/components/ClientesTable'
 
 export const metadata = {
   title: 'Clientes — Henkoaching',
@@ -11,7 +11,7 @@ export default async function ClientesPage() {
   const supabase = await createClient()
   const { data: clientes } = await supabase
     .from('clientes')
-    .select('id, tipo, nombre, email, telefono, empresa, servicio_contratado, importe, tarifa, estado, proxima_sesion, fecha_inicio, fecha_conversion, origen, slug, ubicacion')
+    .select('id, tipo, nombre, email, telefono, empresa, nif_cif, servicio_contratado, importe, tarifa, estado, proxima_sesion, fecha_inicio, fecha_conversion, origen, slug, ubicacion')
     .is('deleted_at', null)
     .order('created_at', { ascending: false })
 
@@ -22,7 +22,7 @@ export default async function ClientesPage() {
         <p className="font-raleway text-gray-500 font-light">Tu cartera de clientes activos, en pausa o finalizados.</p>
       </div>
 
-      <ClientesTable clientes={clientes ?? []} />
+      <ClientesTable clientes={(clientes ?? []) as unknown as ClienteRow[]} />
     </div>
   )
 }
