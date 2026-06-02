@@ -33,13 +33,13 @@ type Filtros = {
   busqueda: string
 }
 
-type Tab = EstadoLead | 'archivados'
+type Tab = 'todos' | EstadoLead | 'archivados'
 
 export default function LeadsTable({ leads }: { leads: LeadRow[] }) {
   const router = useRouter()
   const runAction = useAction()
   const confirm = useConfirm()
-  const [tab, setTab] = useState<Tab>('nuevo')
+  const [tab, setTab] = useState<Tab>('todos')
   const [filtros, setFiltros] = useState<Filtros>({ origen: 'todos', busqueda: '' })
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [showNew, setShowNew] = useState(false)
@@ -60,6 +60,7 @@ export default function LeadsTable({ leads }: { leads: LeadRow[] }) {
   // Contadores por pestaña
   const counts = useMemo(() => {
     const c: Record<Tab, number> = {
+      todos: 0,
       nuevo: 0,
       pendiente: 0,
       contactado: 0,
@@ -68,7 +69,7 @@ export default function LeadsTable({ leads }: { leads: LeadRow[] }) {
     }
     for (const l of leads) {
       if (l.archivado) c.archivados++
-      else c[l.estado]++
+      else { c[l.estado]++; c.todos++ }
     }
     return c
   }, [leads])
@@ -109,6 +110,8 @@ export default function LeadsTable({ leads }: { leads: LeadRow[] }) {
       // Tab: archivados o estado específico
       if (tab === 'archivados') {
         if (!l.archivado) return false
+      } else if (tab === 'todos') {
+        if (l.archivado) return false
       } else {
         if (l.archivado) return false
         if (l.estado !== tab) return false
@@ -243,6 +246,13 @@ export default function LeadsTable({ leads }: { leads: LeadRow[] }) {
           className="flex items-center gap-1 overflow-x-auto flex-1 min-w-0 scrollbar-thin scroll-smooth"
           style={{ scrollSnapType: 'x proximity', WebkitOverflowScrolling: 'touch' }}
         >
+          <TabButton
+            ref={tab === 'todos' ? activeTabRef : undefined}
+            active={tab === 'todos'}
+            onClick={() => setTab('todos')}
+            label="Todos"
+            count={counts.todos}
+          />
           {ESTADOS_LEAD.map((e) => (
             <TabButton
               key={e.value}
