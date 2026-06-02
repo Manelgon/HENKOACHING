@@ -17,7 +17,7 @@ export default function SortHeader({ label, sortKey, activeSortKey, sortDir, onS
     <button
       type="button"
       onClick={() => onSort(sortKey)}
-      className={`inline-flex items-center gap-1 hover:text-henko-turquoise transition-colors group ${isActive ? 'text-henko-turquoise' : ''} ${className}`}
+      className={`inline-flex items-center gap-1 font-raleway text-[10px] font-bold uppercase tracking-widest transition-colors group ${isActive ? 'text-henko-turquoise' : 'text-gray-400 hover:text-henko-turquoise'} ${className}`}
     >
       {label}
       <span className={`flex flex-col leading-none transition-colors ${isActive ? 'text-henko-turquoise' : 'text-gray-300 group-hover:text-gray-400'}`}>
