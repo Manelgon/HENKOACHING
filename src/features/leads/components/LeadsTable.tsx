@@ -333,8 +333,12 @@ export default function LeadsTable({ leads }: { leads: LeadRow[] }) {
             <div className="col-span-3">
               <SortHeader label="Email" sortKey="email" activeSortKey={sortKey} sortDir={sortDir} onSort={(k) => toggleSort(k as keyof LeadRow)} />
             </div>
-            <span className="col-span-2 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Estado</span>
-            <span className="col-span-2 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Origen</span>
+            <div className="col-span-2">
+              <SortHeader label="Estado" sortKey="estado" activeSortKey={sortKey} sortDir={sortDir} onSort={(k) => toggleSort(k as keyof LeadRow)} />
+            </div>
+            <div className="col-span-2">
+              <SortHeader label="Origen" sortKey="origen" activeSortKey={sortKey} sortDir={sortDir} onSort={(k) => toggleSort(k as keyof LeadRow)} />
+            </div>
             <div className="col-span-2">
               <SortHeader label="Fecha" sortKey="created_at" activeSortKey={sortKey} sortDir={sortDir} onSort={(k) => toggleSort(k as keyof LeadRow)} />
             </div>
