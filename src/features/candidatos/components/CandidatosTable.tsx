@@ -6,6 +6,8 @@ import { TablePagination, usePagination } from '@/components/TablePagination'
 import { getCvSignedUrl } from '@/actions/candidatos-admin'
 import type { CandidatoRow } from '../types'
 import CustomSelect from '@/shared/components/CustomSelect'
+import { useSortable } from '@/shared/hooks/useSortable'
+import SortHeader from '@/shared/components/SortHeader'
 
 function formatDate(d: string | null) {
   if (!d) return '—'
@@ -78,7 +80,8 @@ export default function CandidatosTable({ candidatos }: { candidatos: CandidatoR
     })
   }, [candidatos, busqueda, filtroSolicitudes, filtroJornada, filtroModalidad, filtroCv, filtroExp])
 
-  const pagination = usePagination(filtered, 20)
+  const { sorted, sortKey, sortDir, toggleSort } = useSortable<CandidatoRow>(filtered, 'created_at', 'desc')
+  const pagination = usePagination(sorted, 20)
 
   function resetFiltros() {
     setFiltroJornada('')
@@ -179,13 +182,13 @@ export default function CandidatosTable({ candidatos }: { candidatos: CandidatoR
         <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
           {/* Cabecera */}
           <div className="hidden lg:grid grid-cols-12 gap-3 px-6 py-3 border-b border-gray-100 bg-gray-50/80">
-            <span className="col-span-3 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Candidato</span>
+            <SortHeader label="Candidato" sortKey="nombre" activeSortKey={sortKey} sortDir={sortDir} onSort={k => toggleSort(k as keyof CandidatoRow)} className="col-span-3" />
             <span className="col-span-2 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Contacto</span>
             <span className="col-span-2 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Cargo / Ubicación</span>
             <span className="col-span-2 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Preferencias</span>
             <span className="col-span-1 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest text-center">CV</span>
-            <span className="col-span-1 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest text-center">Sol.</span>
-            <span className="col-span-1 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Registro</span>
+            <SortHeader label="Sol." sortKey="solicitudes_count" activeSortKey={sortKey} sortDir={sortDir} onSort={k => toggleSort(k as keyof CandidatoRow)} className="col-span-1 justify-center" />
+            <SortHeader label="Registro" sortKey="created_at" activeSortKey={sortKey} sortDir={sortDir} onSort={k => toggleSort(k as keyof CandidatoRow)} className="col-span-1" />
           </div>
 
           {pagination.paginated.map((c) => (

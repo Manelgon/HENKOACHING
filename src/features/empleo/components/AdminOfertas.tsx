@@ -6,6 +6,8 @@ import { crearOferta, cambiarEstadoOferta } from '@/actions/ofertas'
 import { useAction, useConfirm } from '@/shared/feedback/FeedbackContext'
 import { TablePagination, usePagination } from '@/components/TablePagination'
 import CustomSelect from '@/shared/components/CustomSelect'
+import { useSortable } from '@/shared/hooks/useSortable'
+import SortHeader from '@/shared/components/SortHeader'
 
 type Catalogo = { id: number; nombre: string; slug: string }
 
@@ -171,7 +173,8 @@ export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas,
     })
   }, [ofertas, busqueda, tabEstado])
 
-  const pagination = usePagination(filtradas, 20)
+  const { sorted, sortKey, sortDir, toggleSort } = useSortable<OfertaView>(filtradas, 'fecha', 'desc')
+  const pagination = usePagination(sorted, 20)
 
   // ── Drawer state (solo para crear nueva oferta) ───────────────────────────
   const [drawerMode, setDrawerMode] = useState<'closed' | 'nueva'>('closed')
@@ -295,7 +298,13 @@ export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas,
       {/* Tabla */}
       <div className="bg-white rounded-3xl border border-black/5 overflow-hidden">
         <div className="hidden md:grid px-5 lg:px-7 py-3.5 border-b border-black/5 grid-cols-[2fr_1.5fr_1fr_0.7fr_70px_100px_110px] text-[10px] tracking-widest text-gray-400 font-bold">
-          <span>OFERTA</span><span>EMPRESA</span><span>SECTOR</span><span>MODALIDAD</span><span>CAND.</span><span>EXPIRA</span><span>ESTADO</span>
+          <SortHeader label="OFERTA" sortKey="titulo" activeSortKey={sortKey} sortDir={sortDir} onSort={k => toggleSort(k as keyof OfertaView)} />
+          <SortHeader label="EMPRESA" sortKey="empresa" activeSortKey={sortKey} sortDir={sortDir} onSort={k => toggleSort(k as keyof OfertaView)} />
+          <SortHeader label="SECTOR" sortKey="sector_nombre" activeSortKey={sortKey} sortDir={sortDir} onSort={k => toggleSort(k as keyof OfertaView)} />
+          <span>MODALIDAD</span>
+          <SortHeader label="CAND." sortKey="candidatos_count" activeSortKey={sortKey} sortDir={sortDir} onSort={k => toggleSort(k as keyof OfertaView)} />
+          <SortHeader label="EXPIRA" sortKey="fecha_expiracion" activeSortKey={sortKey} sortDir={sortDir} onSort={k => toggleSort(k as keyof OfertaView)} />
+          <span>ESTADO</span>
         </div>
         {filtradas.length === 0 && (
           <div className="px-5 md:px-7 py-12 text-center text-gray-400 text-sm">

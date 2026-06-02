@@ -9,6 +9,8 @@ import { cambiarEstadoArticulo, eliminarArticulo } from '@/actions/blog'
 import type { EstadoPost, BlogPostListItem } from '../types'
 import { ESTADOS_BLOG, getEstadoMeta } from './estados'
 import CustomSelect from '@/shared/components/CustomSelect'
+import { useSortable } from '@/shared/hooks/useSortable'
+import SortHeader from '@/shared/components/SortHeader'
 
 type Tab = EstadoPost
 
@@ -57,7 +59,8 @@ export default function BlogTable({ posts, categorias }: Props) {
     })
   }, [posts, filtros, tab])
 
-  const pagination = usePagination(filtered, 20)
+  const { sorted, sortKey, sortDir, toggleSort } = useSortable<BlogPostListItem>(filtered, 'created_at', 'desc')
+  const pagination = usePagination(sorted, 20)
 
   async function cambiarEstado(id: string, estado: EstadoPost) {
     const result = await runAction(
@@ -156,10 +159,10 @@ export default function BlogTable({ posts, categorias }: Props) {
       ) : (
         <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
           <div className="hidden md:grid grid-cols-12 gap-4 px-6 lg:px-8 py-4 border-b border-gray-100 bg-gray-50">
-            <span className="col-span-5 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Título</span>
+            <SortHeader label="Título" sortKey="titulo" activeSortKey={sortKey} sortDir={sortDir} onSort={(k) => toggleSort(k as keyof BlogPostListItem)} className="col-span-5 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest" />
             <span className="col-span-2 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Categoría</span>
-            <span className="col-span-2 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Estado</span>
-            <span className="col-span-2 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Fecha</span>
+            <SortHeader label="Estado" sortKey="estado" activeSortKey={sortKey} sortDir={sortDir} onSort={(k) => toggleSort(k as keyof BlogPostListItem)} className="col-span-2 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest" />
+            <SortHeader label="Fecha" sortKey="created_at" activeSortKey={sortKey} sortDir={sortDir} onSort={(k) => toggleSort(k as keyof BlogPostListItem)} className="col-span-2 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest" />
             <span className="col-span-1 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest text-right">Acciones</span>
           </div>
 

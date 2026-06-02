@@ -9,6 +9,8 @@ import { useAction } from '@/shared/feedback/FeedbackContext'
 import { TablePagination, usePagination } from '@/components/TablePagination'
 import { createClient } from '@/lib/supabase/client'
 import CustomSelect from '@/shared/components/CustomSelect'
+import { useSortable } from '@/shared/hooks/useSortable'
+import SortHeader from '@/shared/components/SortHeader'
 
 const ESTADO_META: Record<EstadoSolicitud, { label: string; badge: string; dot: string }> = {
   nuevo:      { label: 'Nueva',       badge: 'bg-henko-greenblue text-henko-turquoise', dot: 'bg-henko-turquoise' },
@@ -179,7 +181,8 @@ export default function AdminSolicitudes({ solicitudes, ofertas }: Props) {
     })
   }, [solicitudesConOverrides, tabEstado, filtroOferta, busqueda])
 
-  const pagination = usePagination(filtradas, 20)
+  const { sorted, sortKey, sortDir, toggleSort } = useSortable<SolicitudView>(filtradas, 'fecha', 'desc')
+  const pagination = usePagination(sorted, 20)
 
   const selected = useMemo(
     () => selectedId ? solicitudesConOverrides.find(s => s.id === selectedId) ?? null : null,
@@ -282,7 +285,12 @@ export default function AdminSolicitudes({ solicitudes, ofertas }: Props) {
       {/* Tabla */}
       <div className="bg-white rounded-3xl border border-black/5 overflow-hidden">
         <div className="hidden md:grid px-5 lg:px-7 py-3.5 border-b border-black/5 grid-cols-[2fr_1.5fr_1.5fr_1fr_1fr_1fr] text-[10px] tracking-widest text-gray-400 font-bold">
-          <span>CANDIDATO</span><span>CARGO</span><span>OFERTA</span><span>FECHA</span><span>CV</span><span>ESTADO</span>
+          <SortHeader label="CANDIDATO" sortKey="candidato" activeSortKey={sortKey} sortDir={sortDir} onSort={k => toggleSort(k as keyof SolicitudView)} />
+          <SortHeader label="CARGO" sortKey="cargo" activeSortKey={sortKey} sortDir={sortDir} onSort={k => toggleSort(k as keyof SolicitudView)} />
+          <SortHeader label="OFERTA" sortKey="ofertaTitulo" activeSortKey={sortKey} sortDir={sortDir} onSort={k => toggleSort(k as keyof SolicitudView)} />
+          <SortHeader label="FECHA" sortKey="fecha" activeSortKey={sortKey} sortDir={sortDir} onSort={k => toggleSort(k as keyof SolicitudView)} />
+          <span>CV</span>
+          <span>ESTADO</span>
         </div>
         {filtradas.length === 0 && (
           <div className="px-5 md:px-7 py-12 text-center text-gray-400 text-sm">No hay solicitudes para mostrar.</div>

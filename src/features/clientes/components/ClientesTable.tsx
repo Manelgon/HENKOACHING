@@ -8,6 +8,8 @@ import type { EstadoCliente, ServicioContratado, TipoCliente } from '@/lib/supab
 import { ESTADOS_CLIENTE, SERVICIOS, formatImporte, getEstadoClienteMeta, getServicioLabel } from './estados'
 import NewClienteModal from './NewClienteModal'
 import CustomSelect from '@/shared/components/CustomSelect'
+import { useSortable } from '@/shared/hooks/useSortable'
+import SortHeader from '@/shared/components/SortHeader'
 
 export type ClienteRow = {
   id: string
@@ -54,7 +56,8 @@ export default function ClientesTable({ clientes }: { clientes: ClienteRow[] }) 
     })
   }, [clientes, filtros])
 
-  const pagination = usePagination(filtered, 20)
+  const { sorted, sortKey, sortDir, toggleSort } = useSortable(filtered, 'nombre')
+  const pagination = usePagination(sorted, 20)
 
   return (
     <>
@@ -127,12 +130,20 @@ export default function ClientesTable({ clientes }: { clientes: ClienteRow[] }) 
         <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
           {/* Cabecera desktop */}
           <div className="hidden md:grid grid-cols-12 gap-4 px-6 lg:px-8 py-4 border-b border-gray-100 bg-gray-50">
-            <span className="col-span-3 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Nombre</span>
+            <div className="col-span-3">
+              <SortHeader label="Nombre" sortKey="nombre" activeSortKey={sortKey} sortDir={sortDir} onSort={(k) => toggleSort(k as keyof ClienteRow)} />
+            </div>
             <span className="col-span-2 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Empresa / Ubic.</span>
             <span className="col-span-2 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Servicio</span>
-            <span className="col-span-2 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Importe</span>
-            <span className="col-span-2 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Estado</span>
-            <span className="col-span-1 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Próx.</span>
+            <div className="col-span-2">
+              <SortHeader label="Importe" sortKey="importe" activeSortKey={sortKey} sortDir={sortDir} onSort={(k) => toggleSort(k as keyof ClienteRow)} />
+            </div>
+            <div className="col-span-2">
+              <SortHeader label="Estado" sortKey="estado" activeSortKey={sortKey} sortDir={sortDir} onSort={(k) => toggleSort(k as keyof ClienteRow)} />
+            </div>
+            <div className="col-span-1">
+              <SortHeader label="Próx." sortKey="proxima_sesion" activeSortKey={sortKey} sortDir={sortDir} onSort={(k) => toggleSort(k as keyof ClienteRow)} />
+            </div>
           </div>
 
           {pagination.paginated.map((c) => {

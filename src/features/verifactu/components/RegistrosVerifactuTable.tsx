@@ -1,6 +1,8 @@
 'use client'
 
 import { TablePagination, usePagination } from '@/components/TablePagination'
+import { useSortable } from '@/shared/hooks/useSortable'
+import SortHeader from '@/shared/components/SortHeader'
 import RegistroAcciones from './RegistroAcciones'
 
 type EstadoEnvio = 'pendiente' | 'enviado' | 'aceptado' | 'rechazado' | 'error'
@@ -25,7 +27,8 @@ type Registro = {
 }
 
 export default function RegistrosVerifactuTable({ registros }: { registros: Registro[] }) {
-  const pagination = usePagination(registros, 20)
+  const { sorted, sortKey, sortDir, toggleSort } = useSortable<Registro>(registros, 'num_registro', 'desc')
+  const pagination = usePagination(sorted, 20)
 
   if (registros.length === 0) {
     return (
@@ -39,12 +42,12 @@ export default function RegistrosVerifactuTable({ registros }: { registros: Regi
     <div className="bg-white rounded-3xl border border-black/5 overflow-hidden">
       {/* Cabecera */}
       <div className="hidden md:grid px-4 py-3.5 border-b border-black/5 grid-cols-[56px_160px_80px_120px_140px_100px_80px] text-[10px] tracking-widest text-gray-400 font-bold">
-        <span>Nº</span>
-        <span>FECHA / HORA</span>
+        <SortHeader label="Nº" sortKey="num_registro" activeSortKey={sortKey} sortDir={sortDir} onSort={k => toggleSort(k as keyof Registro)} />
+        <SortHeader label="FECHA / HORA" sortKey="fecha_hora_generacion" activeSortKey={sortKey} sortDir={sortDir} onSort={k => toggleSort(k as keyof Registro)} />
         <span>TIPO</span>
-        <span>FACTURA</span>
+        <SortHeader label="FACTURA" sortKey="numero_factura" activeSortKey={sortKey} sortDir={sortDir} onSort={k => toggleSort(k as keyof Registro)} />
         <span>HUELLA</span>
-        <span>ENVÍO AEAT</span>
+        <SortHeader label="ENVÍO AEAT" sortKey="estado_envio" activeSortKey={sortKey} sortDir={sortDir} onSort={k => toggleSort(k as keyof Registro)} />
         <span className="text-right">ACCIONES</span>
       </div>
 

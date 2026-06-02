@@ -11,6 +11,8 @@ import LeadDrawer from './LeadDrawer'
 import NewLeadModal from './NewLeadModal'
 import ConvertirClienteModal from './ConvertirClienteModal'
 import CustomSelect from '@/shared/components/CustomSelect'
+import { useSortable } from '@/shared/hooks/useSortable'
+import SortHeader from '@/shared/components/SortHeader'
 
 export type LeadRow = {
   id: string
@@ -126,7 +128,8 @@ export default function LeadsTable({ leads }: { leads: LeadRow[] }) {
     })
   }, [leadsConOverrides, filtros, tab])
 
-  const pagination = usePagination(filtered, 20)
+  const { sorted, sortKey, sortDir, toggleSort } = useSortable<LeadRow>(filtered, 'created_at', 'desc')
+  const pagination = usePagination(sorted, 20)
 
   const origenesPresentes = useMemo(() => {
     const set = new Set<string>()
@@ -324,11 +327,17 @@ export default function LeadsTable({ leads }: { leads: LeadRow[] }) {
         <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
           {/* Cabecera desktop */}
           <div className="hidden md:grid grid-cols-12 gap-4 px-6 lg:px-8 py-4 border-b border-gray-100 bg-gray-50">
-            <span className="col-span-3 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Nombre</span>
-            <span className="col-span-3 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Email</span>
+            <div className="col-span-3">
+              <SortHeader label="Nombre" sortKey="nombre" activeSortKey={sortKey} sortDir={sortDir} onSort={(k) => toggleSort(k as keyof LeadRow)} />
+            </div>
+            <div className="col-span-3">
+              <SortHeader label="Email" sortKey="email" activeSortKey={sortKey} sortDir={sortDir} onSort={(k) => toggleSort(k as keyof LeadRow)} />
+            </div>
             <span className="col-span-2 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Estado</span>
             <span className="col-span-2 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Origen</span>
-            <span className="col-span-2 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Fecha</span>
+            <div className="col-span-2">
+              <SortHeader label="Fecha" sortKey="created_at" activeSortKey={sortKey} sortDir={sortDir} onSort={(k) => toggleSort(k as keyof LeadRow)} />
+            </div>
           </div>
 
           {pagination.paginated.map((l) => {
