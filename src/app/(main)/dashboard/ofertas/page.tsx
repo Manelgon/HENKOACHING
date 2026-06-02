@@ -20,7 +20,8 @@ export default async function DashboardOfertasPage() {
         clientes(nombre),
         sectores(nombre),
         modalidades(nombre),
-        jornadas(nombre)
+        jornadas(nombre),
+        solicitudes(id)
       `)
       .is('deleted_at', null)
       .order('created_at', { ascending: false }),
@@ -58,6 +59,7 @@ export default async function DashboardOfertasPage() {
     sector_nombre: (o.sectores as unknown as { nombre: string } | null)?.nombre ?? '',
     modalidad_nombre: (o.modalidades as unknown as { nombre: string } | null)?.nombre ?? '',
     jornada_nombre: (o.jornadas as unknown as { nombre: string } | null)?.nombre ?? '',
+    candidatos_count: ((o.solicitudes as unknown as { id: string }[] | null) ?? []).length,
   }))
 
   return (

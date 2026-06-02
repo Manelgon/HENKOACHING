@@ -32,6 +32,7 @@ type OfertaView = {
   sector_nombre: string
   modalidad_nombre: string
   jornada_nombre: string
+  candidatos_count: number
 }
 
 type Draft = {
@@ -275,8 +276,8 @@ export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas,
 
       {/* Tabla */}
       <div className="bg-white rounded-3xl border border-black/5 overflow-hidden">
-        <div className="hidden md:grid px-5 lg:px-7 py-3.5 border-b border-black/5 grid-cols-[3fr_2fr_1fr_1fr] text-[10px] tracking-widest text-gray-400 font-bold">
-          <span>OFERTA</span><span>EMPRESA</span><span>MODALIDAD</span><span>ESTADO</span>
+        <div className="hidden md:grid px-5 lg:px-7 py-3.5 border-b border-black/5 grid-cols-[2fr_1.5fr_1fr_1fr_56px_88px_100px] text-[10px] tracking-widest text-gray-400 font-bold">
+          <span>OFERTA</span><span>EMPRESA</span><span>SECTOR</span><span>MODALIDAD</span><span>CAND.</span><span>EXPIRA</span><span>ESTADO</span>
         </div>
         {filtradas.length === 0 && (
           <div className="px-5 md:px-7 py-12 text-center text-gray-400 text-sm">
@@ -290,34 +291,56 @@ export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas,
             onClick={() => router.push(`/dashboard/ofertas/${o.id}`)}
           >
             {/* Desktop */}
-            <div className="hidden md:grid px-5 lg:px-7 py-4 grid-cols-[3fr_2fr_1fr_1fr] items-center">
-              <div>
-                <p className="text-sm font-semibold">{o.titulo}</p>
-                <p className="text-[11px] text-gray-400">{o.fecha}</p>
+            <div className="hidden md:grid px-5 lg:px-7 py-4 grid-cols-[2fr_1.5fr_1fr_1fr_56px_88px_100px] items-center gap-2">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold truncate">{o.titulo}</p>
+                <p className="text-[11px] text-gray-400">{o.fecha}{o.ubicacion ? ` · ${o.ubicacion}` : ''}</p>
               </div>
-              <span className="text-sm text-gray-600 inline-flex items-center gap-1.5">
-                {o.empresa}
-                {o.empresa_oculta && (
-                  <span className="text-[9px] font-bold tracking-wider text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">OCULTA</span>
-                )}
+              <div className="min-w-0">
+                <span className="text-sm text-gray-600 inline-flex items-center gap-1.5 truncate">
+                  {o.empresa}
+                  {o.empresa_oculta && (
+                    <span className="text-[9px] font-bold tracking-wider text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded flex-shrink-0">OCULTA</span>
+                  )}
+                </span>
+              </div>
+              <span className="text-xs text-gray-500 truncate">{o.sector_nombre || '—'}</span>
+              <span className="text-xs text-gray-500 truncate">{o.modalidad_nombre || '—'}</span>
+              <span className={`text-xs font-semibold text-center ${o.candidatos_count > 0 ? 'text-henko-turquoise' : 'text-gray-300'}`}>
+                {o.candidatos_count}
               </span>
-              <span className="text-xs text-gray-500">{o.modalidad_nombre}</span>
+              <span className="text-xs text-gray-400">
+                {o.fecha_expiracion
+                  ? (() => {
+                      const dias = Math.ceil((new Date(o.fecha_expiracion).getTime() - Date.now()) / 86400000)
+                      return dias < 0
+                        ? <span className="text-red-400">Expirada</span>
+                        : dias <= 7
+                        ? <span className="text-orange-400">{o.fecha_expiracion}</span>
+                        : o.fecha_expiracion
+                    })()
+                  : '—'}
+              </span>
               <div onClick={e => e.stopPropagation()}>
                 <EstadoDropdown estado={o.estado} onChange={nuevoEstado => cambiarEstadoConConfirm(o, nuevoEstado)} />
               </div>
             </div>
             {/* Móvil */}
             <div className="md:hidden px-4 py-4">
-              <div className="flex items-start justify-between gap-3 mb-2">
+              <div className="flex items-start justify-between gap-3 mb-1.5">
                 <div className="min-w-0">
                   <p className="text-sm font-semibold truncate">{o.titulo}</p>
-                  <p className="text-[11px] text-gray-400">{o.empresa} · {o.fecha}</p>
+                  <p className="text-[11px] text-gray-400">{o.empresa}{o.ubicacion ? ` · ${o.ubicacion}` : ''}</p>
                 </div>
                 <div onClick={e => e.stopPropagation()}>
                   <EstadoDropdown estado={o.estado} onChange={nuevoEstado => cambiarEstadoConConfirm(o, nuevoEstado)} />
                 </div>
               </div>
-              <p className="text-[11px] text-gray-400">{o.modalidad_nombre}</p>
+              <div className="flex items-center gap-2 flex-wrap">
+                {o.sector_nombre && <span className="text-[10px] text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">{o.sector_nombre}</span>}
+                {o.modalidad_nombre && <span className="text-[10px] text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">{o.modalidad_nombre}</span>}
+                {o.candidatos_count > 0 && <span className="text-[10px] text-henko-turquoise font-semibold">{o.candidatos_count} candidato{o.candidatos_count !== 1 ? 's' : ''}</span>}
+              </div>
             </div>
           </div>
         ))}
