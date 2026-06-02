@@ -236,14 +236,19 @@ export default function CandidatosTable({ candidatos }: { candidatos: CandidatoR
                 </div>
 
                 {/* Preferencias */}
-                <div className="col-span-2 flex flex-wrap gap-1">
-                  {c.tipo_jornada && (
-                    <span className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded font-raleway">{c.tipo_jornada}</span>
+                <div className="col-span-2 flex flex-col gap-1">
+                  {c.cargo_actual && (
+                    <p className="font-raleway text-xs text-gray-700 truncate">{c.cargo_actual}</p>
                   )}
-                  {c.modalidad_trabajo && (
-                    <span className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded font-raleway">{c.modalidad_trabajo}</span>
-                  )}
-                  {!c.tipo_jornada && !c.modalidad_trabajo && <span className="font-raleway text-xs text-gray-300">—</span>}
+                  <div className="flex flex-wrap gap-1">
+                    {c.tipo_jornada && (
+                      <span className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded font-raleway">{c.tipo_jornada}</span>
+                    )}
+                    {c.modalidad_trabajo && (
+                      <span className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded font-raleway">{c.modalidad_trabajo}</span>
+                    )}
+                    {!c.cargo_actual && !c.tipo_jornada && !c.modalidad_trabajo && <span className="font-raleway text-xs text-gray-300">—</span>}
+                  </div>
                 </div>
 
                 {/* CV */}
