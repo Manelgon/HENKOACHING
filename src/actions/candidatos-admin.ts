@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { logAction } from '@/lib/audit/log-action'
 import type { CandidatoRow, CandidatoPerfil } from '@/features/candidatos/types'
 
 async function requireAdmin() {
@@ -265,22 +266,38 @@ export async function crearNotaCandidato(candidatoId: string, contenido: string)
   if ('error' in auth) return { error: auth.error }
 
   const admin = createAdminClient()
-  const { error } = await admin.from('candidato_notas').insert({
+  const { data: nota, error } = await admin.from('candidato_notas').insert({
     candidato_id: candidatoId,
     autor_id: auth.user.id,
     contenido: contenido.trim(),
-  })
+  }).select('id').single()
   if (error) return { error: error.message }
+
+  await logAction({
+    accion: 'candidato.nota_crear',
+    recursoTipo: 'candidato',
+    recursoId: candidatoId,
+    metadata: { nota_id: nota?.id },
+  })
+
   return { ok: true }
 }
 
-export async function eliminarNotaCandidato(notaId: string) {
+export async function eliminarNotaCandidato(notaId: string, candidatoId?: string) {
   const auth = await requireAdmin()
   if ('error' in auth) return { error: auth.error }
 
   const admin = createAdminClient()
   const { error } = await admin.from('candidato_notas').delete().eq('id', notaId)
   if (error) return { error: error.message }
+
+  await logAction({
+    accion: 'candidato.nota_eliminar',
+    recursoTipo: 'candidato',
+    recursoId: candidatoId ?? null,
+    metadata: { nota_id: notaId },
+  })
+
   return { ok: true }
 }
 
@@ -300,13 +317,21 @@ export async function vincularCandidatoAOferta(candidatoId: string, ofertaId: st
     .maybeSingle()
   if (existe) return { error: 'Este candidato ya está vinculado a esa oferta' }
 
-  const { error } = await admin.from('solicitudes').insert({
+  const { data: sol, error } = await admin.from('solicitudes').insert({
     candidato_id: candidatoId,
     oferta_id: ofertaId,
     estado: 'revisando',
     mensaje: null,
-  })
+  }).select('id').single()
   if (error) return { error: error.message }
+
+  await logAction({
+    accion: 'solicitud.crear_admin',
+    recursoTipo: 'solicitud',
+    recursoId: sol?.id ?? null,
+    metadata: { candidato_id: candidatoId, oferta_id: ofertaId },
+  })
+
   return { ok: true }
 }
 
@@ -317,11 +342,20 @@ export async function archivarCandidato(candidatoId: string) {
   if ('error' in auth) return { error: auth.error }
 
   const admin = createAdminClient()
+  const { data: profile } = await admin.from('profiles').select('email').eq('id', candidatoId).maybeSingle()
   const { error } = await admin
     .from('profiles')
     .update({ deleted_at: new Date().toISOString() })
     .eq('id', candidatoId)
   if (error) return { error: error.message }
+
+  await logAction({
+    accion: 'candidato.archivar',
+    recursoTipo: 'candidato',
+    recursoId: candidatoId,
+    recursoLabel: (profile as { email?: string } | null)?.email ?? null,
+  })
+
   return { ok: true }
 }
 
@@ -330,10 +364,19 @@ export async function restaurarCandidato(candidatoId: string) {
   if ('error' in auth) return { error: auth.error }
 
   const admin = createAdminClient()
+  const { data: profile } = await admin.from('profiles').select('email').eq('id', candidatoId).maybeSingle()
   const { error } = await admin
     .from('profiles')
     .update({ deleted_at: null })
     .eq('id', candidatoId)
   if (error) return { error: error.message }
+
+  await logAction({
+    accion: 'candidato.restaurar',
+    recursoTipo: 'candidato',
+    recursoId: candidatoId,
+    recursoLabel: (profile as { email?: string } | null)?.email ?? null,
+  })
+
   return { ok: true }
 }
