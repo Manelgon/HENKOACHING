@@ -27,7 +27,7 @@ type FormaPago = 'transferencia' | 'efectivo' | 'bizum' | 'tarjeta' | 'domicilia
 const DEFAULTS = {
   iva: 21,
   irpf: 0,
-  formaPago: 'transferencia' as FormaPago,
+  formaPago: '' as FormaPago | '',
   diasVencimiento: 30,
 }
 
@@ -68,7 +68,7 @@ export default function NuevaFacturaModal({ clientes, facturasRectificables, ser
   const [fechaVencimiento, setFechaVencimiento] = useState<string>(diasDespues(hoy, DEFAULTS.diasVencimiento))
   const [ivaPct, setIvaPct] = useState<number>(DEFAULTS.iva)
   const [irpfPct, setIrpfPct] = useState<number>(DEFAULTS.irpf)
-  const [formaPago, setFormaPago] = useState<FormaPago>(DEFAULTS.formaPago)
+  const [formaPago, setFormaPago] = useState<FormaPago | ''>(DEFAULTS.formaPago)
   const [notas, setNotas] = useState<string>('')
 
   const [tipoFactura, setTipoFactura] = useState<TipoFactura>(tipoInicial)
@@ -151,7 +151,7 @@ export default function NuevaFacturaModal({ clientes, facturasRectificables, ser
       fecha_vencimiento: fechaVencimiento || null,
       iva_porcentaje: ivaPct,
       irpf_porcentaje: irpfPct,
-      forma_pago: formaPago,
+      forma_pago: (formaPago || 'transferencia') as FormaPago,
       notas: notas.trim() || null,
       lineas: lineas.map((l) => ({
         concepto: l.concepto.trim(),
@@ -420,7 +420,7 @@ export default function NuevaFacturaModal({ clientes, facturasRectificables, ser
               <CustomSelect
                 value={formaPago}
                 onChange={(v) => setFormaPago(v as FormaPago)}
-                options={FORMAS_PAGO}
+                options={[{ value: '', label: 'Selecciona…' }, ...FORMAS_PAGO]}
                 className="w-full"
               />
             </Field>
