@@ -15,7 +15,16 @@ import {
 import { createClient } from '@/lib/supabase/client'
 import { signout } from '@/actions/auth'
 import { getCvUrl, aplicarAOferta } from '@/actions/solicitudes'
+import { getOfertaDetalleAction } from '@/actions/ofertas'
 import type { EstadoSolicitud } from '@/lib/supabase/database.types'
+
+type OfertaDetalleView = {
+  id: string; slug: string; titulo: string; empresa: string; empresaOculta: boolean
+  ubicacion: string; modalidad: string; jornada: string; sector: string
+  salario: string; fecha: string; contrato: string; reportaA: string
+  descripcion: string; funciones: string[]; requisitos: string[]
+  competencias: string[]; ofrecemos: string[]
+}
 
 type OfertaItem = {
   id: string
@@ -33,7 +42,7 @@ type OfertaItem = {
 }
 import { useAction, useConfirm } from '@/shared/feedback/FeedbackContext'
 
-type Tab = 'solicitudes' | 'empleos' | 'perfil' | 'trayectoria' | 'preferencias'
+type Tab = 'panel' | 'empleos' | 'solicitudes' | 'perfil' | 'trayectoria' | 'preferencias'
 
 const ESTADO_META: Record<EstadoSolicitud, { label: string; badge: string; desc: string }> = {
   nuevo:      { label: 'Solicitud recibida',        badge: 'bg-henko-turquoise/10 text-henko-turquoise',  desc: 'Tu solicitud ha llegado correctamente. Nos pondremos en contacto contigo si avanzas.' },
@@ -44,8 +53,9 @@ const ESTADO_META: Record<EstadoSolicitud, { label: string; badge: string; desc:
 }
 
 const NAV: { id: Tab; label: string }[] = [
-  { id: 'solicitudes',  label: 'Mis solicitudes' },
+  { id: 'panel',        label: 'Mi panel' },
   { id: 'empleos',      label: 'Ofertas de empleo' },
+  { id: 'solicitudes',  label: 'Mis solicitudes' },
   { id: 'perfil',       label: 'Mi perfil' },
   { id: 'trayectoria',  label: 'Trayectoria' },
   { id: 'preferencias', label: 'Preferencias' },
@@ -55,9 +65,11 @@ type SolicitudView = {
   id: string
   estado: EstadoSolicitud
   fecha: string
+  fechaEstado?: string | null
   ofertaSlug: string
   ofertaTitulo: string
   empresa: string
+  ofertaEstado?: string | null
 }
 
 type PerfilView = {
@@ -126,7 +138,7 @@ function calcCompletion(data: CompletionData) {
 }
 
 export default function CandidatoDashboard({ perfil, completion, cv, solicitudes, ofertas, aplicadas, experiencias, educacion, idiomas, preferencias }: Props) {
-  const [tab, setTab] = useState<Tab>('solicitudes')
+  const [tab, setTab] = useState<Tab>('panel')
   const [open, setOpen] = useState(false)
   const iniciales = `${perfil.nombre[0] ?? ''}${perfil.apellidos[0] ?? ''}`.toUpperCase() || 'CD'
   const pct = calcCompletion(completion)
@@ -271,8 +283,9 @@ export default function CandidatoDashboard({ perfil, completion, cv, solicitudes
         </div>
 
         <main className="flex-1 px-5 py-6 md:p-12 overflow-y-auto">
-          {tab === 'solicitudes'  && <TabSolicitudes solicitudes={solicitudes} completion={completion} pct={pct} onGoTab={goTab} />}
+          {tab === 'panel'        && <TabPanel nombre={perfil.nombre} solicitudes={solicitudes} ofertas={ofertas} completion={completion} pct={pct} onGoTab={goTab} />}
           {tab === 'empleos'      && <TabEmpleos ofertas={ofertas} aplicadas={aplicadas} />}
+          {tab === 'solicitudes'  && <TabSolicitudes solicitudes={solicitudes} />}
           {tab === 'perfil'       && <TabPerfil perfil={perfil} completion={completion} cv={cv} />}
           {tab === 'trayectoria'  && <TabTrayectoria experiencias={experiencias} educacion={educacion} idiomas={idiomas} />}
           {tab === 'preferencias' && <TabPreferencias preferencias={preferencias} />}
@@ -286,16 +299,144 @@ function Eyebrow({ children }: { children: React.ReactNode }) {
   return <p className="font-raleway font-bold text-henko-turquoise tracking-[0.18em] uppercase text-[11px] mb-2">{children}</p>
 }
 
-function TabSolicitudes({ solicitudes, completion, pct, onGoTab }: { solicitudes: SolicitudView[]; completion: CompletionData; pct: number; onGoTab: (t: Tab) => void }) {
-  const pendientes = COMPLETION_ITEMS.filter(i => !completion[i.key])
+function SolicitudCard({ s, archivada }: { s: SolicitudView; archivada?: boolean }) {
+  const meta = ESTADO_META[s.estado]
+  const ofertaCerrada = s.ofertaEstado === 'cerrada'
+  const ofertaPausada = s.ofertaEstado === 'pausada'
+
+  return (
+    <div className={`bg-white rounded-2xl px-8 py-6 border shadow-sm ${archivada ? 'border-gray-100 opacity-75' : 'border-henko-turquoise/15'}`}>
+      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+        <div className="flex-1 min-w-0">
+          <p className={`font-roxborough text-lg mb-0.5 ${archivada ? 'text-gray-500' : 'text-gray-900'}`}>{s.ofertaTitulo}</p>
+          <p className="text-xs text-gray-400 mb-3">
+            {s.empresa} · Aplicado el {s.fecha}
+            {s.fechaEstado && s.fechaEstado !== s.fecha && (
+              <span className="ml-1.5 text-gray-500 font-medium">· Estado actualizado el {s.fechaEstado}</span>
+            )}
+          </p>
+          {archivada ? (
+            <p className="text-xs text-gray-400 leading-relaxed italic">Esta oferta ya no está activa. Tu candidatura quedó registrada.</p>
+          ) : (
+            <p className="text-xs text-gray-500 leading-relaxed">{meta.desc}</p>
+          )}
+        </div>
+        <div className="flex items-center gap-3 md:flex-col md:items-end md:gap-2 flex-shrink-0">
+          {archivada ? (
+            <span className="text-[11px] px-3.5 py-1 rounded-full font-bold whitespace-nowrap bg-gray-100 text-gray-400">
+              {ofertaCerrada ? 'Oferta cerrada' : 'Oferta pausada'}
+            </span>
+          ) : (
+            <span className={`text-[11px] px-3.5 py-1 rounded-full font-bold whitespace-nowrap ${meta.badge}`}>
+              {meta.label}
+            </span>
+          )}
+          {!archivada && s.ofertaSlug && (
+            <Link
+              href={`/empleo/${s.ofertaSlug}`}
+              className="text-xs text-henko-turquoise font-semibold hover:underline whitespace-nowrap"
+            >
+              Ver oferta →
+            </Link>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function TabSolicitudes({ solicitudes }: { solicitudes: SolicitudView[] }) {
+  const [subTab, setSubTab] = useState<'activas' | 'archivadas'>('activas')
+
+  const activas = solicitudes.filter(s => !s.ofertaEstado || s.ofertaEstado === 'publicada')
+  const archivadas = solicitudes.filter(s => s.ofertaEstado === 'pausada' || s.ofertaEstado === 'cerrada')
+
+  const listaMostrada = subTab === 'archivadas' ? archivadas : activas
 
   return (
     <div>
       <Eyebrow>Mi área</Eyebrow>
       <h2 className="font-roxborough text-2xl md:text-3xl text-gray-900 mb-6">Mis solicitudes</h2>
 
-      {pct < 100 && (
-        <div className="mb-8 bg-white rounded-2xl border border-henko-turquoise/20 shadow-sm p-6">
+      {solicitudes.length > 0 && (
+        <div className="flex gap-2 mb-5">
+          <button
+            type="button"
+            onClick={() => setSubTab('activas')}
+            className={`text-xs px-4 py-1.5 rounded-full font-semibold transition-colors ${subTab === 'activas' ? 'bg-henko-turquoise text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+          >
+            Activas ({activas.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => archivadas.length > 0 ? setSubTab('archivadas') : undefined}
+            disabled={archivadas.length === 0}
+            className={`text-xs px-4 py-1.5 rounded-full font-semibold transition-colors ${subTab === 'archivadas' ? 'bg-gray-700 text-white' : archivadas.length === 0 ? 'bg-gray-100 text-gray-300 cursor-default' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+          >
+            Archivadas ({archivadas.length})
+          </button>
+        </div>
+      )}
+
+      {listaMostrada.length === 0 ? (
+        <div className="bg-white rounded-2xl px-9 py-12 border border-henko-turquoise/15 shadow-sm max-w-xl text-center">
+          <p className="font-roxborough text-xl mb-2">Aún no has aplicado a ninguna oferta</p>
+          <p className="text-sm text-gray-500 mb-6">Explora las ofertas disponibles y aplica con un click</p>
+          <Link
+            href="/empleo"
+            className="inline-flex items-center gap-2 bg-henko-turquoise text-white px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-henko-turquoise-light hover:shadow-lg transition-all"
+          >
+            Ver ofertas
+          </Link>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-3.5">
+          {listaMostrada.map((s) => (
+            <SolicitudCard key={s.id} s={s} archivada={subTab === 'archivadas'} />
+          ))}
+        </div>
+      )}
+
+      <div className="mt-7">
+        <Link
+          href="/empleo"
+          className="inline-flex items-center gap-2 bg-transparent border-2 border-henko-turquoise text-henko-turquoise px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-henko-turquoise hover:text-white transition-all"
+        >
+          Ver más ofertas →
+        </Link>
+      </div>
+    </div>
+  )
+}
+
+function TabPanel({ nombre, solicitudes, ofertas, completion, pct, onGoTab }: { nombre: string; solicitudes: SolicitudView[]; ofertas: OfertaItem[]; completion: CompletionData; pct: number; onGoTab: (t: Tab) => void }) {
+  const solicitudesRecientes = solicitudes.slice(0, 3)
+  const ofertasRecientes = ofertas.slice(0, 3)
+
+  return (
+    <div className="flex flex-col gap-8">
+      <div>
+        <Eyebrow>Bienvenida</Eyebrow>
+        <h2 className="font-roxborough text-2xl md:text-3xl text-gray-900">
+          Hola, {nombre}
+        </h2>
+        <p className="text-sm text-gray-500 mt-1">Aquí tienes un resumen de tu actividad.</p>
+      </div>
+
+      {/* Perfil */}
+      {pct >= 100 ? (
+        <div className="bg-emerald-50 rounded-2xl border border-emerald-200 shadow-sm p-5 flex items-center gap-4">
+          <div className="flex-shrink-0 w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center">
+            <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+          </div>
+          <div>
+            <p className="font-semibold text-emerald-800 text-sm">¡Perfil completo!</p>
+            <p className="text-xs text-emerald-600 mt-0.5">Tienes todas las secciones rellenas. Eso te da máxima visibilidad frente a los reclutadores.</p>
+          </div>
+          <span className="ml-auto text-2xl font-bold font-roxborough text-emerald-600">100%</span>
+        </div>
+      ) : (
+        <div className="bg-white rounded-2xl border border-henko-turquoise/20 shadow-sm p-6">
           <div className="flex items-center justify-between mb-3">
             <div>
               <p className="font-semibold text-gray-900 text-sm">Completa tu perfil para destacar</p>
@@ -329,60 +470,205 @@ function TabSolicitudes({ solicitudes, completion, pct, onGoTab }: { solicitudes
         </div>
       )}
 
-
-      {solicitudes.length === 0 ? (
-        <div className="bg-white rounded-2xl px-9 py-12 border border-henko-turquoise/15 shadow-sm max-w-xl text-center">
-          <p className="font-roxborough text-xl mb-2">Aún no has aplicado a ninguna oferta</p>
-          <p className="text-sm text-gray-500 mb-6">Explora las ofertas disponibles y aplica con un click</p>
-          <Link
-            href="/empleo"
-            className="inline-flex items-center gap-2 bg-henko-turquoise text-white px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-henko-turquoise-light hover:shadow-lg transition-all"
-          >
-            Ver ofertas
-          </Link>
+      {/* Solicitudes recientes */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-roxborough text-lg text-gray-900">Mis solicitudes recientes</h3>
+          <button type="button" onClick={() => onGoTab('solicitudes')} className="text-xs text-henko-turquoise font-semibold hover:underline">Ver todas →</button>
         </div>
-      ) : (
-        <div className="flex flex-col gap-3.5">
-          {solicitudes.map((s) => {
-            const meta = ESTADO_META[s.estado]
-            return (
-              <div
-                key={s.id}
-                className="bg-white rounded-2xl px-8 py-6 border border-henko-turquoise/15 shadow-sm"
-              >
-                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+        {solicitudesRecientes.length === 0 ? (
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-6 py-8 text-center">
+            <p className="text-sm text-gray-400">Aún no has aplicado a ninguna oferta.</p>
+            <button type="button" onClick={() => onGoTab('empleos')} className="mt-3 text-xs text-henko-turquoise font-semibold hover:underline">Ver ofertas disponibles →</button>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2.5">
+            {solicitudesRecientes.map(s => {
+              const meta = ESTADO_META[s.estado]
+              const archivada = s.ofertaEstado === 'pausada' || s.ofertaEstado === 'cerrada'
+              return (
+                <div key={s.id} className="bg-white rounded-2xl border border-henko-turquoise/15 shadow-sm px-6 py-4 flex items-center gap-4">
                   <div className="flex-1 min-w-0">
-                    <p className="font-roxborough text-lg mb-0.5">{s.ofertaTitulo}</p>
-                    <p className="text-xs text-gray-400 mb-3">{s.empresa} · Aplicado el {s.fecha}</p>
-                    <p className="text-xs text-gray-500 leading-relaxed">{meta.desc}</p>
+                    <p className="font-semibold text-sm text-gray-900 truncate">{s.ofertaTitulo}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">{s.empresa} · {s.fecha}</p>
                   </div>
-                  <div className="flex items-center gap-3 md:flex-col md:items-end md:gap-2 flex-shrink-0">
-                    <span className={`text-[11px] px-3.5 py-1 rounded-full font-bold whitespace-nowrap ${meta.badge}`}>
-                      {meta.label}
-                    </span>
-                    {s.ofertaSlug && (
-                      <Link
-                        href={`/empleo/${s.ofertaSlug}`}
-                        className="text-xs text-henko-turquoise font-semibold hover:underline whitespace-nowrap"
-                      >
-                        Ver oferta →
-                      </Link>
-                    )}
+                  <span className={`text-[11px] px-3 py-1 rounded-full font-bold whitespace-nowrap flex-shrink-0 ${archivada ? 'bg-gray-100 text-gray-400' : meta.badge}`}>
+                    {archivada ? (s.ofertaEstado === 'cerrada' ? 'Oferta cerrada' : 'Oferta pausada') : meta.label}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Ofertas recientes */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-roxborough text-lg text-gray-900">Nuevas ofertas de empleo</h3>
+          <button type="button" onClick={() => onGoTab('empleos')} className="text-xs text-henko-turquoise font-semibold hover:underline">Ver todas →</button>
+        </div>
+        {ofertasRecientes.length === 0 ? (
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-6 py-8 text-center">
+            <p className="text-sm text-gray-400">No hay ofertas activas en este momento.</p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2.5">
+            {ofertasRecientes.map(o => (
+              <div key={o.id} className="bg-white rounded-2xl border border-henko-turquoise/15 shadow-sm px-6 py-4 flex items-center gap-4">
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-sm text-gray-900 truncate">{o.titulo}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">{o.empresa} · {o.ubicacion}</p>
+                  <div className="flex flex-wrap gap-1.5 mt-1.5">
+                    {[o.modalidad, o.jornada].filter(Boolean).map((tag, i) => (
+                      <span key={i} className="text-[10px] px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-500 font-medium">{tag}</span>
+                    ))}
+                    {o.salario && <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-henko-turquoise/10 text-henko-turquoise font-semibold">{o.salario}</span>}
                   </div>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => onGoTab('empleos')}
+                  className="flex-shrink-0 text-xs text-henko-turquoise font-semibold hover:underline whitespace-nowrap"
+                >
+                  Ver →
+                </button>
               </div>
-            )
-          })}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
 
-      <div className="mt-7">
-        <Link
-          href="/empleo"
-          className="inline-flex items-center gap-2 bg-transparent border-2 border-henko-turquoise text-henko-turquoise px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-henko-turquoise hover:text-white transition-all"
-        >
-          Ver más ofertas →
-        </Link>
+function OfertaDrawer({ oferta, yaAplicado, onClose, onAplicar }: { oferta: OfertaDetalleView; yaAplicado: boolean; onClose: () => void; onAplicar: (id: string) => void }) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', onKey)
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.body.style.overflow = ''
+    }
+  }, [onClose])
+
+  return (
+    <div className="fixed inset-0 z-50 flex justify-end">
+      <button type="button" aria-label="Cerrar" onClick={onClose} className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+      <div className="relative z-10 w-full max-w-xl bg-white flex flex-col h-full shadow-2xl overflow-hidden">
+        {/* Header */}
+        <div className="flex items-start justify-between px-7 pt-7 pb-5 border-b border-gray-100 flex-shrink-0">
+          <div className="flex-1 min-w-0 pr-4">
+            <p className="font-roxborough text-xl text-gray-900 leading-tight">{oferta.titulo}</p>
+            <p className="text-xs text-gray-400 mt-1">{oferta.empresa}{oferta.ubicacion ? ` · ${oferta.ubicacion}` : ''}</p>
+            <div className="flex flex-wrap gap-1.5 mt-2.5">
+              {[oferta.modalidad, oferta.jornada, oferta.sector].filter(Boolean).map((tag, i) => (
+                <span key={i} className="text-[10px] px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium">{tag}</span>
+              ))}
+              {oferta.salario && <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-henko-turquoise/10 text-henko-turquoise font-semibold">{oferta.salario}</span>}
+            </div>
+          </div>
+          <button type="button" onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors flex-shrink-0">
+            <svg className="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto px-7 py-6 space-y-6">
+          {oferta.descripcion && (
+            <div>
+              <p className="text-[11px] font-bold text-henko-turquoise tracking-widest uppercase mb-2">Descripción</p>
+              <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{oferta.descripcion}</p>
+            </div>
+          )}
+          {oferta.funciones.length > 0 && (
+            <div>
+              <p className="text-[11px] font-bold text-henko-turquoise tracking-widest uppercase mb-2">Funciones principales</p>
+              <ul className="space-y-1.5">
+                {oferta.funciones.map((f, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
+                    <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-henko-turquoise flex-shrink-0" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {oferta.requisitos.length > 0 && (
+            <div>
+              <p className="text-[11px] font-bold text-henko-turquoise tracking-widest uppercase mb-2">Requisitos</p>
+              <ul className="space-y-1.5">
+                {oferta.requisitos.map((r, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
+                    <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-henko-turquoise flex-shrink-0" />
+                    {r}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {oferta.competencias.length > 0 && (
+            <div>
+              <p className="text-[11px] font-bold text-henko-turquoise tracking-widest uppercase mb-2">Competencias clave</p>
+              <ul className="space-y-1.5">
+                {oferta.competencias.map((c, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
+                    <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-henko-turquoise flex-shrink-0" />
+                    {c}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {oferta.ofrecemos.length > 0 && (
+            <div>
+              <p className="text-[11px] font-bold text-henko-turquoise tracking-widest uppercase mb-2">Qué ofrecemos</p>
+              <ul className="space-y-1.5">
+                {oferta.ofrecemos.map((o, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
+                    <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0" />
+                    {o}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {(oferta.contrato || oferta.reportaA) && (
+            <div className="grid grid-cols-2 gap-4 pt-2 border-t border-gray-100">
+              {oferta.contrato && (
+                <div>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Tipo de contrato</p>
+                  <p className="text-sm text-gray-700">{oferta.contrato}</p>
+                </div>
+              )}
+              {oferta.reportaA && (
+                <div>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Reporta a</p>
+                  <p className="text-sm text-gray-700">{oferta.reportaA}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Footer CTA */}
+        <div className="flex-shrink-0 px-7 py-5 border-t border-gray-100 bg-white">
+          {yaAplicado ? (
+            <div className="flex items-center gap-2 text-sm text-henko-turquoise font-semibold">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+              Ya has enviado tu solicitud para esta oferta
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => onAplicar(oferta.id)}
+              className="w-full bg-henko-turquoise text-white py-3 rounded-2xl text-sm font-bold hover:bg-henko-turquoise-light hover:shadow-lg transition-all"
+            >
+              Solicitar esta oferta
+            </button>
+          )}
+        </div>
       </div>
     </div>
   )
@@ -393,6 +679,8 @@ function TabEmpleos({ ofertas, aplicadas }: { ofertas: OfertaItem[]; aplicadas: 
   const runAction = useAction()
   const [busqueda, setBusqueda] = useState('')
   const [aplicadasLocal, setAplicadasLocal] = useState<Set<string>>(new Set(aplicadas))
+  const [drawer, setDrawer] = useState<OfertaDetalleView | null>(null)
+  const [loadingSlug, setLoadingSlug] = useState<string | null>(null)
 
   const filtradas = useMemo(() => {
     const q = busqueda.trim().toLowerCase()
@@ -413,12 +701,29 @@ function TabEmpleos({ ofertas, aplicadas }: { ofertas: OfertaItem[]; aplicadas: 
     )
     if (result.ok) {
       setAplicadasLocal(prev => new Set([...prev, ofertaId]))
+      if (drawer?.id === ofertaId) setDrawer(prev => prev ? { ...prev } : null)
       router.refresh()
     }
   }
 
+  async function abrirDetalle(slug: string) {
+    setLoadingSlug(slug)
+    const detalle = await getOfertaDetalleAction(slug)
+    setLoadingSlug(null)
+    if (detalle) setDrawer(detalle as OfertaDetalleView)
+  }
+
   return (
     <div>
+      {drawer && (
+        <OfertaDrawer
+          oferta={drawer}
+          yaAplicado={aplicadasLocal.has(drawer.id)}
+          onClose={() => setDrawer(null)}
+          onAplicar={(id) => aplicar(id)}
+        />
+      )}
+
       <Eyebrow>Portal de empleo</Eyebrow>
       <h2 className="font-roxborough text-2xl md:text-3xl text-gray-900 mb-6">Ofertas disponibles</h2>
 
@@ -445,8 +750,13 @@ function TabEmpleos({ ofertas, aplicadas }: { ofertas: OfertaItem[]; aplicadas: 
         <div className="flex flex-col gap-4">
           {filtradas.map(o => {
             const yaAplicado = aplicadasLocal.has(o.id)
+            const cargando = loadingSlug === o.slug
             return (
-              <div key={o.id} className="bg-white rounded-2xl border border-henko-turquoise/15 shadow-sm px-7 py-6">
+              <div
+                key={o.id}
+                className="bg-white rounded-2xl border border-henko-turquoise/15 shadow-sm px-7 py-6 cursor-pointer hover:border-henko-turquoise/40 hover:shadow-md transition-all"
+                onClick={() => abrirDetalle(o.slug)}
+              >
                 <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <p className="font-roxborough text-lg text-gray-900 mb-0.5">{o.titulo}</p>
@@ -460,7 +770,7 @@ function TabEmpleos({ ofertas, aplicadas }: { ofertas: OfertaItem[]; aplicadas: 
                       )}
                     </div>
                   </div>
-                  <div className="flex-shrink-0 flex flex-col items-start md:items-end gap-2">
+                  <div className="flex-shrink-0 flex flex-col items-start md:items-end gap-2" onClick={e => e.stopPropagation()}>
                     {yaAplicado ? (
                       <span className="inline-flex items-center gap-1.5 text-[11px] px-4 py-1.5 rounded-full bg-henko-turquoise/10 text-henko-turquoise font-bold">
                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
@@ -469,13 +779,17 @@ function TabEmpleos({ ofertas, aplicadas }: { ofertas: OfertaItem[]; aplicadas: 
                     ) : (
                       <button
                         type="button"
-                        onClick={() => aplicar(o.id)}
+                        onClick={(e) => { e.stopPropagation(); aplicar(o.id) }}
                         className="inline-flex items-center gap-2 bg-henko-turquoise text-white px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-henko-turquoise-light hover:shadow-lg transition-all"
                       >
                         Solicitar
                       </button>
                     )}
-                    <p className="text-[10px] text-gray-400">{o.fecha}</p>
+                    {cargando ? (
+                      <span className="text-[10px] text-gray-400 animate-pulse">Cargando...</span>
+                    ) : (
+                      <p className="text-[10px] text-gray-400">{o.fecha}</p>
+                    )}
                   </div>
                 </div>
               </div>

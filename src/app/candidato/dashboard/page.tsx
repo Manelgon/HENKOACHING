@@ -103,15 +103,19 @@ export default async function CandidatoDashboardPage() {
           id: string
           slug: string
           titulo: string
+          estado: string | null
           clientes: { nombre: string } | null
         } | null
+        const fmt = (d: string | null) => d ? new Date(d).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) : ''
         return {
           id: s.id,
           estado: s.estado,
-          fecha: s.created_at ? new Date(s.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) : '',
+          fecha: fmt(s.created_at),
+          fechaEstado: s.estado !== 'nuevo' && s.updated_at ? fmt(s.updated_at) : null,
           ofertaSlug: oferta?.slug ?? '',
           ofertaTitulo: oferta?.titulo ?? '',
           empresa: oferta?.clientes?.nombre ?? '',
+          ofertaEstado: oferta?.estado ?? null,
         }
       })}
     />

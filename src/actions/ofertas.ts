@@ -3,6 +3,11 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { logAction } from '@/lib/audit/log-action'
+import { getOfertaPorSlug } from '@/features/empleo/queries'
+
+export async function getOfertaDetalleAction(slug: string) {
+  return getOfertaPorSlug(slug)
+}
 
 export type OfertaInput = {
   id?: string

@@ -1,7 +1,9 @@
 'use client'
 
+import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import type { OfertaDetalle as OfertaDetalleType } from '@/features/empleo/queries'
+import { aplicarAOferta } from '@/actions/solicitudes'
 
 type Props = {
   oferta: OfertaDetalleType
@@ -10,7 +12,21 @@ type Props = {
   isLoggedIn: boolean
 }
 
-export default function OfertaDetalle({ oferta: o, yaAplicado, isCandidato, isLoggedIn }: Props) {
+export default function OfertaDetalle({ oferta: o, yaAplicado: yaAplicadoInicial, isCandidato, isLoggedIn }: Props) {
+  const [aplicado, setAplicado] = useState(yaAplicadoInicial)
+  const [error, setError] = useState<string | null>(null)
+  const [isPending, startTransition] = useTransition()
+
+  function solicitar() {
+    startTransition(async () => {
+      const result = await aplicarAOferta(o.id)
+      if (result.ok) {
+        setAplicado(true)
+      } else {
+        setError(result.error ?? 'Error al enviar la solicitud')
+      }
+    })
+  }
 
   return (
     <div className="bg-white pt-28 pb-24 font-raleway">
@@ -128,7 +144,7 @@ export default function OfertaDetalle({ oferta: o, yaAplicado, isCandidato, isLo
           <aside className="lg:sticky lg:top-24">
             <div className="bg-white border border-henko-turquoise/15 shadow-sm rounded-3xl p-8 mb-4">
               {o.fecha && <p className="text-xs text-gray-400 mb-5">Publicada el {o.fecha}</p>}
-              {yaAplicado ? (
+              {aplicado ? (
                 <div className="text-center py-5">
                   <div className="w-12 h-12 rounded-full bg-henko-turquoise/15 flex items-center justify-center mx-auto mb-3">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1f8f9b" strokeWidth="2.5">
@@ -148,14 +164,17 @@ export default function OfertaDetalle({ oferta: o, yaAplicado, isCandidato, isLo
                 </div>
               ) : isLoggedIn && isCandidato ? (
                 <div className="flex flex-col gap-2.5">
-                  <Link
-                    href="/candidato/dashboard"
-                    className="w-full inline-flex items-center justify-center gap-2 bg-henko-turquoise text-white px-6 py-3 rounded-full text-sm font-semibold hover:bg-henko-turquoise-light hover:shadow-lg transition-all"
+                  <button
+                    type="button"
+                    onClick={solicitar}
+                    disabled={isPending}
+                    className="w-full inline-flex items-center justify-center gap-2 bg-henko-turquoise text-white px-6 py-3 rounded-full text-sm font-semibold hover:bg-henko-turquoise-light hover:shadow-lg transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    Solicitar desde mi panel →
-                  </Link>
-                  <p className="text-[11px] leading-relaxed text-gray-400 mt-1">
-                    Gestiona todas tus candidaturas desde tu área personal.
+                    {isPending ? 'Enviando…' : 'Solicitar esta oferta'}
+                  </button>
+                  {error && <p className="text-xs text-red-500 text-center">{error}</p>}
+                  <p className="text-[11px] leading-relaxed text-gray-400 mt-1 text-center">
+                    Tu CV y perfil se enviarán automáticamente.
                   </p>
                 </div>
               ) : (

@@ -137,7 +137,7 @@ export async function cambiarEstadoSolicitud(solicitudId: string, estado: Estado
 
   const { error } = await supabase
     .from('solicitudes')
-    .update({ estado })
+    .update({ estado, updated_at: new Date().toISOString() })
     .eq('id', solicitudId)
 
   if (error) return { error: error.message }

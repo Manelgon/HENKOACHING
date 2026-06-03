@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export const EMPRESA_CONFIDENCIAL = 'Empresa confidencial'
 
@@ -39,7 +40,7 @@ const formatDate = (iso: string | null) => {
 }
 
 export async function getOfertasPublicadas(): Promise<OfertaListing[]> {
-  const supabase = await createClient()
+  const supabase = createAdminClient()
 
   const { data, error } = await supabase
     .from('ofertas')
@@ -77,7 +78,7 @@ export async function getOfertasPublicadas(): Promise<OfertaListing[]> {
 }
 
 export async function getOfertaPorSlug(slug: string): Promise<OfertaDetalle | null> {
-  const supabase = await createClient()
+  const supabase = createAdminClient()
 
   const { data } = await supabase
     .from('ofertas')
@@ -91,6 +92,7 @@ export async function getOfertaPorSlug(slug: string): Promise<OfertaDetalle | nu
       jornadas(nombre)
     `)
     .eq('slug', slug)
+    .eq('estado', 'publicada')
     .is('deleted_at', null)
     .maybeSingle()
 
@@ -172,11 +174,11 @@ export async function getMisSolicitudes(userId: string) {
   const { data } = await supabase
     .from('solicitudes')
     .select(`
-      id, estado, created_at,
-      ofertas(id, slug, titulo, clientes(nombre))
+      id, estado, created_at, updated_at,
+      ofertas(id, slug, titulo, estado, clientes(nombre))
     `)
     .eq('candidato_id', userId)
-    .order('created_at', { ascending: false })
+    .order('updated_at', { ascending: false, nullsFirst: false })
 
   return data ?? []
 }
