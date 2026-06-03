@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useCallback, useEffect, useMemo } from 'react'
-import { listarEmailsBandeja, leerEmailBandeja, listarCarpetasImap } from '@/actions/email'
-import { useAction } from '@/shared/feedback/FeedbackContext'
+import { listarEmailsBandeja, leerEmailBandeja, listarCarpetasImap, eliminarEmailsBandeja } from '@/actions/email'
+import { useAction, useConfirm } from '@/shared/feedback/FeedbackContext'
 import EmailDrawer from './EmailDrawer'
 import ComposeDrawer from './ComposeDrawer'
 import FallosPanel from './FallosPanel'
@@ -24,6 +24,7 @@ const FOLDER_ICONS: Record<FolderType, string> = {
 
 export default function BandejaInbox({ hasImapConfig }: Props) {
   const runAction = useAction()
+  const confirm = useConfirm()
   const [mensajes, setMensajes] = useState<EmailMessage[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [selected, setSelected] = useState<EmailDetail | null>(null)
@@ -34,6 +35,7 @@ export default function BandejaInbox({ hasImapConfig }: Props) {
   const [composeDefaults, setComposeDefaults] = useState<{ to?: string; subject?: string; bodyHtml?: string } | null>(null)
   const [folders, setFolders] = useState<ImapFolder[]>([])
   const [activeFolder, setActiveFolder] = useState<ImapFolder>({ path: 'INBOX', label: 'Recibidos', type: 'inbox', unread: 0 })
+  const [seleccionados, setSeleccionados] = useState<Set<number>>(new Set())
 
   const [activeView, setActiveView] = useState<'imap' | 'fallos'>('imap')
 
@@ -117,6 +119,52 @@ export default function BandejaInbox({ hasImapConfig }: Props) {
     setMensajes(null)
     setBusqueda('')
     setFiltroLeido('todos')
+    setSeleccionados(new Set())
+  }
+
+  function toggleSeleccion(uid: number, e: React.MouseEvent) {
+    e.stopPropagation()
+    setSeleccionados((prev) => {
+      const next = new Set(prev)
+      if (next.has(uid)) next.delete(uid); else next.add(uid)
+      return next
+    })
+  }
+
+  function toggleTodos() {
+    const uidsEnPagina = pagination.paginated.map((m) => m.uid)
+    const todosMarcados = uidsEnPagina.every((uid) => seleccionados.has(uid))
+    if (todosMarcados) {
+      setSeleccionados((prev) => {
+        const next = new Set(prev)
+        uidsEnPagina.forEach((uid) => next.delete(uid))
+        return next
+      })
+    } else {
+      setSeleccionados((prev) => {
+        const next = new Set(prev)
+        uidsEnPagina.forEach((uid) => next.add(uid))
+        return next
+      })
+    }
+  }
+
+  async function eliminarSeleccionados() {
+    const uids = Array.from(seleccionados)
+    const ok = await confirm({
+      title: `Eliminar ${uids.length} correo${uids.length !== 1 ? 's' : ''}`,
+      description: 'Esta acción es irreversible. Los mensajes se eliminarán del servidor.',
+      confirmLabel: 'Eliminar',
+      variant: 'danger',
+    })
+    if (!ok) return
+    const r = await runAction('Eliminando correos', () => eliminarEmailsBandeja(uids, activeFolder.path), {
+      successMessage: `${uids.length} correo${uids.length !== 1 ? 's' : ''} eliminado${uids.length !== 1 ? 's' : ''}`,
+    })
+    if (r.ok) {
+      setSeleccionados(new Set())
+      setMensajes((prev) => prev ? prev.filter((m) => !uids.includes(m.uid)) : prev)
+    }
   }
 
   if (!hasImapConfig) {
@@ -349,23 +397,69 @@ export default function BandejaInbox({ hasImapConfig }: Props) {
             </div>
           ) : (
             <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
-              <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-3 border-b border-gray-100 bg-gray-50/80">
-                <span className="col-span-4 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">De</span>
+              {/* Barra de acción en masa */}
+              {seleccionados.size > 0 && (
+                <div className="flex items-center gap-3 px-6 py-3 bg-henko-turquoise/5 border-b border-henko-turquoise/20">
+                  <span className="font-raleway text-sm font-semibold text-henko-turquoise">
+                    {seleccionados.size} seleccionado{seleccionados.size !== 1 ? 's' : ''}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={eliminarSeleccionados}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-50 text-red-600 font-raleway text-xs font-semibold hover:bg-red-100 transition-colors"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Eliminar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSeleccionados(new Set())}
+                    className="font-raleway text-xs text-gray-400 hover:text-gray-600 transition-colors ml-auto"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              )}
+
+              {/* Cabecera columnas */}
+              <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-3 border-b border-gray-100 bg-gray-50/80 items-center">
+                <div className="col-span-1 flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={pagination.paginated.length > 0 && pagination.paginated.every((m) => seleccionados.has(m.uid))}
+                    onChange={toggleTodos}
+                    className="w-4 h-4 rounded text-henko-turquoise focus:ring-henko-turquoise cursor-pointer"
+                    title="Seleccionar todos"
+                  />
+                </div>
+                <span className="col-span-3 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">De</span>
                 <span className="col-span-6 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Asunto</span>
                 <span className="col-span-2 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Fecha</span>
               </div>
 
               {pagination.paginated.map((msg) => {
                 const isLoadingMsg = loadingUid === msg.uid
+                const isSelected = seleccionados.has(msg.uid)
                 return (
-                  <div key={msg.uid} className={`border-b border-gray-100 last:border-0 ${!msg.seen ? 'bg-henko-greenblue/10' : ''}`}>
+                  <div key={msg.uid} className={`border-b border-gray-100 last:border-0 ${isSelected ? 'bg-henko-turquoise/5' : !msg.seen ? 'bg-henko-greenblue/10' : ''}`}>
+                    {/* Desktop */}
                     <div
                       role="button" tabIndex={0}
                       onClick={() => loadingUid === null && abrirEmail(msg.uid)}
                       onKeyDown={(e) => e.key === 'Enter' && loadingUid === null && abrirEmail(msg.uid)}
                       className={`hidden md:grid grid-cols-12 gap-4 px-6 py-3.5 items-center transition-colors ${isLoadingMsg ? 'opacity-60 cursor-wait' : 'cursor-pointer hover:bg-gray-50'}`}
                     >
-                      <span className="col-span-4 font-raleway font-semibold text-gray-900 truncate flex items-center gap-2 text-sm">
+                      <div className="col-span-1" onClick={(e) => toggleSeleccion(msg.uid, e)}>
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => {/* controlled via onClick */}}
+                          className="w-4 h-4 rounded text-henko-turquoise focus:ring-henko-turquoise cursor-pointer"
+                        />
+                      </div>
+                      <span className="col-span-3 font-raleway font-semibold text-gray-900 truncate flex items-center gap-2 text-sm">
                         {isLoadingMsg ? (
                           <svg className="w-3.5 h-3.5 animate-spin text-henko-turquoise flex-shrink-0" fill="none" viewBox="0 0 24 24">
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -378,20 +472,31 @@ export default function BandejaInbox({ hasImapConfig }: Props) {
                       <span className="col-span-2 font-raleway text-xs text-gray-400">{formatDate(msg.date)}</span>
                     </div>
 
-                    <div
-                      role="button" tabIndex={0}
-                      onClick={() => loadingUid === null && abrirEmail(msg.uid)}
-                      onKeyDown={(e) => e.key === 'Enter' && loadingUid === null && abrirEmail(msg.uid)}
-                      className={`md:hidden px-4 py-4 transition-colors ${isLoadingMsg ? 'opacity-60 cursor-wait' : 'cursor-pointer hover:bg-gray-50'}`}
-                    >
-                      <div className="flex items-start justify-between gap-3 mb-1">
-                        <p className="font-raleway font-semibold text-gray-900 text-sm flex items-center min-w-0 gap-1.5 truncate">
-                          {!msg.seen && <span className="w-2 h-2 rounded-full bg-henko-turquoise flex-shrink-0" />}
-                          <span className="truncate">{msg.from}</span>
-                        </p>
-                        <span className="font-raleway text-xs text-gray-400 flex-shrink-0">{formatDate(msg.date)}</span>
+                    {/* Móvil */}
+                    <div className={`md:hidden px-4 py-4 transition-colors flex items-start gap-3 ${isLoadingMsg ? 'opacity-60 cursor-wait' : ''}`}>
+                      <div className="pt-0.5" onClick={(e) => toggleSeleccion(msg.uid, e)}>
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => {/* controlled via onClick */}}
+                          className="w-4 h-4 rounded text-henko-turquoise focus:ring-henko-turquoise cursor-pointer"
+                        />
                       </div>
-                      <p className={`font-raleway text-xs truncate ${!msg.seen ? 'font-medium text-gray-700' : 'text-gray-500'}`}>{msg.subject}</p>
+                      <div
+                        role="button" tabIndex={0}
+                        onClick={() => loadingUid === null && abrirEmail(msg.uid)}
+                        onKeyDown={(e) => e.key === 'Enter' && loadingUid === null && abrirEmail(msg.uid)}
+                        className="flex-1 min-w-0 cursor-pointer"
+                      >
+                        <div className="flex items-start justify-between gap-3 mb-1">
+                          <p className="font-raleway font-semibold text-gray-900 text-sm flex items-center min-w-0 gap-1.5 truncate">
+                            {!msg.seen && <span className="w-2 h-2 rounded-full bg-henko-turquoise flex-shrink-0" />}
+                            <span className="truncate">{msg.from}</span>
+                          </p>
+                          <span className="font-raleway text-xs text-gray-400 flex-shrink-0">{formatDate(msg.date)}</span>
+                        </div>
+                        <p className={`font-raleway text-xs truncate ${!msg.seen ? 'font-medium text-gray-700' : 'text-gray-500'}`}>{msg.subject}</p>
+                      </div>
                     </div>
                   </div>
                 )

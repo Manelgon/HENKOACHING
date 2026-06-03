@@ -125,6 +125,18 @@ export async function listarMensajes(creds: ImapCredentials, mailbox = 'INBOX', 
   return messages
 }
 
+export async function eliminarMensajes(creds: ImapCredentials, uids: number[], mailbox = 'INBOX'): Promise<void> {
+  if (uids.length === 0) return
+  const client = buildClient(creds)
+  await client.connect()
+  try {
+    await client.mailboxOpen(mailbox, { readOnly: false })
+    await client.messageDelete(uids.join(','), { uid: true })
+  } finally {
+    await safeLogout(client)
+  }
+}
+
 export async function leerMensaje(creds: ImapCredentials, uid: number, mailbox = 'INBOX'): Promise<EmailDetail | null> {
   const client = buildClient(creds)
   await client.connect()

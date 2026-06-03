@@ -17,11 +17,20 @@ type Props = {
   ratFirmadoAt: string | null
 }
 
+const TABS = [
+  { key: 'fiscal',      label: 'Datos fiscales' },
+  { key: 'imagenes',    label: 'Imágenes' },
+  { key: 'facturacion', label: 'Facturación' },
+  { key: 'rgpd',        label: 'RGPD' },
+] as const
+
+type TabKey = typeof TABS[number]['key']
+
 export default function AjustesForm({ settings, logoUrl, firmaUrl, headerUrl, footerUrl, sobreMiUrl, ratFirmadoUrl, ratFirmadoAt }: Props) {
   const router = useRouter()
   const runAction = useAction()
-  const confirm = useConfirm()
 
+  const [tab, setTab] = useState<TabKey>('fiscal')
   const [datos, setDatos] = useState<AjustesInput>({
     emisor_nombre: settings.emisor_nombre,
     emisor_nif: settings.emisor_nif,
@@ -48,214 +57,206 @@ export default function AjustesForm({ settings, logoUrl, firmaUrl, headerUrl, fo
     if (r.ok) router.refresh()
   }
 
+  const showSave = tab === 'fiscal' || tab === 'facturacion'
+
   return (
-    <form onSubmit={onSubmit} className="space-y-8">
-      {/* DATOS FISCALES */}
-      <Section title="Datos fiscales del emisor" description="Aparecen como datos del emisor en cada factura.">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Field label="Nombre / razón social" required>
-            <input
-              type="text"
-              required
-              value={datos.emisor_nombre}
-              onChange={(e) => set('emisor_nombre', e.target.value)}
-              placeholder="Jennifer Cervera Henkoaching S.L."
-              className="input"
-            />
-          </Field>
-          <Field label="NIF / CIF" required>
-            <input
-              type="text"
-              required
-              value={datos.emisor_nif}
-              onChange={(e) => set('emisor_nif', e.target.value)}
-              placeholder="B12345678"
-              className="input"
-            />
-          </Field>
-          <Field label="Dirección" wide>
-            <input
-              type="text"
-              value={datos.emisor_direccion}
-              onChange={(e) => set('emisor_direccion', e.target.value)}
-              placeholder="Calle Ejemplo, 12, 3ºA"
-              className="input"
-            />
-          </Field>
-          <Field label="Código postal">
-            <input
-              type="text"
-              value={datos.emisor_cp}
-              onChange={(e) => set('emisor_cp', e.target.value)}
-              placeholder="07001"
-              className="input"
-            />
-          </Field>
-          <Field label="Ciudad">
-            <input
-              type="text"
-              value={datos.emisor_ciudad}
-              onChange={(e) => set('emisor_ciudad', e.target.value)}
-              placeholder="Palma de Mallorca"
-              className="input"
-            />
-          </Field>
-          <Field label="Provincia">
-            <input
-              type="text"
-              value={datos.emisor_provincia}
-              onChange={(e) => set('emisor_provincia', e.target.value)}
-              placeholder="Islas Baleares"
-              className="input"
-            />
-          </Field>
-          <Field label="País">
-            <input
-              type="text"
-              value={datos.emisor_pais}
-              onChange={(e) => set('emisor_pais', e.target.value)}
-              placeholder="España"
-              className="input"
-            />
-          </Field>
-          <Field label="Email">
-            <input
-              type="email"
-              value={datos.emisor_email}
-              onChange={(e) => set('emisor_email', e.target.value)}
-              placeholder="info@henkoaching.com"
-              className="input"
-            />
-          </Field>
-          <Field label="Teléfono">
-            <input
-              type="tel"
-              value={datos.emisor_telefono}
-              onChange={(e) => set('emisor_telefono', e.target.value)}
-              placeholder="+34 600 000 000"
-              className="input"
-            />
-          </Field>
-          <Field label="Web">
-            <input
-              type="url"
-              value={datos.emisor_web}
-              onChange={(e) => set('emisor_web', e.target.value)}
-              placeholder="https://henkoaching.com"
-              className="input"
-            />
-          </Field>
-          <Field label="IBAN" wide>
-            <input
-              type="text"
-              value={datos.emisor_iban}
-              onChange={(e) => set('emisor_iban', e.target.value)}
-              placeholder="ES00 0000 0000 0000 0000 0000"
-              className="input font-mono tracking-wide"
-            />
-            <p className="text-xs text-gray-400 mt-1 font-raleway">Se mostrará como nº de cuenta para ingresos en facturas.</p>
-          </Field>
+    <form onSubmit={onSubmit}>
+      {/* Tarjeta única con pestañas */}
+      <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
+        {/* Tab bar */}
+        <div className="flex border-b border-gray-100 px-6 pt-5 gap-1">
+          {TABS.map((t) => (
+            <button
+              key={t.key}
+              type="button"
+              onClick={() => setTab(t.key)}
+              className={`px-4 py-2 rounded-t-xl font-raleway text-sm font-semibold transition-colors ${
+                tab === t.key
+                  ? 'bg-gray-50 text-henko-turquoise border border-b-0 border-gray-100'
+                  : 'text-gray-400 hover:text-gray-700'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
         </div>
-      </Section>
 
-      {/* IMÁGENES CORPORATIVAS */}
-      <Section
-        title="Imágenes corporativas"
-        description="Logo y firma se imprimen en cada PDF. La cabecera y el pie (opcionales) son banners panorámicos arriba y abajo del documento."
-      >
-        <div className="space-y-6">
-          <ImagenUploader
-            tipo="header"
-            label="Cabecera de PDFs"
-            hint="Banner panorámico arriba del documento. Opcional. Recomendado 1200×200px."
-            url={headerUrl}
-            wide
-            onChange={() => router.refresh()}
-          />
-          <ImagenUploader
-            tipo="footer"
-            label="Pie de documento"
-            hint="Banner panorámico abajo del documento. Opcional. Recomendado 1200×150px."
-            url={footerUrl}
-            wide
-            onChange={() => router.refresh()}
-          />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <ImagenUploader
-              tipo="logo"
-              label="Logo"
-              hint="Aparece en la esquina del PDF si no hay cabecera. PNG transparente recomendado."
-              url={logoUrl}
-              onChange={() => router.refresh()}
-            />
-            <ImagenUploader
-              tipo="firma"
-              label="Firma"
-              hint="Imagen de firma (escaneada o digital) que aparece al pie de las facturas."
-              url={firmaUrl}
-              onChange={() => router.refresh()}
-            />
+        {/* Contenido de la pestaña activa */}
+        <div className="p-6 md:p-8">
+
+          {/* ── Datos fiscales ── */}
+          {tab === 'fiscal' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Field label="Nombre / razón social" required>
+                <input
+                  type="text"
+                  required
+                  value={datos.emisor_nombre}
+                  onChange={(e) => set('emisor_nombre', e.target.value)}
+                  placeholder="Jennifer Cervera Henkoaching S.L."
+                  className="input"
+                />
+              </Field>
+              <Field label="NIF / CIF" required>
+                <input
+                  type="text"
+                  required
+                  value={datos.emisor_nif}
+                  onChange={(e) => set('emisor_nif', e.target.value)}
+                  placeholder="B12345678"
+                  className="input"
+                />
+              </Field>
+              <Field label="Dirección" wide>
+                <input
+                  type="text"
+                  value={datos.emisor_direccion}
+                  onChange={(e) => set('emisor_direccion', e.target.value)}
+                  placeholder="Calle Ejemplo, 12, 3ºA"
+                  className="input"
+                />
+              </Field>
+              <Field label="Código postal">
+                <input
+                  type="text"
+                  value={datos.emisor_cp}
+                  onChange={(e) => set('emisor_cp', e.target.value)}
+                  placeholder="07001"
+                  className="input"
+                />
+              </Field>
+              <Field label="Ciudad">
+                <input
+                  type="text"
+                  value={datos.emisor_ciudad}
+                  onChange={(e) => set('emisor_ciudad', e.target.value)}
+                  placeholder="Palma de Mallorca"
+                  className="input"
+                />
+              </Field>
+              <Field label="Provincia">
+                <input
+                  type="text"
+                  value={datos.emisor_provincia}
+                  onChange={(e) => set('emisor_provincia', e.target.value)}
+                  placeholder="Islas Baleares"
+                  className="input"
+                />
+              </Field>
+              <Field label="País">
+                <input
+                  type="text"
+                  value={datos.emisor_pais}
+                  onChange={(e) => set('emisor_pais', e.target.value)}
+                  placeholder="España"
+                  className="input"
+                />
+              </Field>
+              <Field label="Email">
+                <input
+                  type="email"
+                  value={datos.emisor_email}
+                  onChange={(e) => set('emisor_email', e.target.value)}
+                  placeholder="info@henkoaching.com"
+                  className="input"
+                />
+              </Field>
+              <Field label="Teléfono">
+                <input
+                  type="tel"
+                  value={datos.emisor_telefono}
+                  onChange={(e) => set('emisor_telefono', e.target.value)}
+                  placeholder="+34 600 000 000"
+                  className="input"
+                />
+              </Field>
+              <Field label="Web">
+                <input
+                  type="url"
+                  value={datos.emisor_web}
+                  onChange={(e) => set('emisor_web', e.target.value)}
+                  placeholder="https://henkoaching.com"
+                  className="input"
+                />
+              </Field>
+              <Field label="IBAN" wide>
+                <input
+                  type="text"
+                  value={datos.emisor_iban}
+                  onChange={(e) => set('emisor_iban', e.target.value)}
+                  placeholder="ES00 0000 0000 0000 0000 0000"
+                  className="input font-mono tracking-wide"
+                />
+                <p className="text-xs text-gray-400 mt-1 font-raleway">Se mostrará como nº de cuenta para ingresos en facturas.</p>
+              </Field>
+            </div>
+          )}
+
+          {/* ── Imágenes ── */}
+          {tab === 'imagenes' && (
+            <div className="space-y-8">
+              <div>
+                <p className="font-roxborough text-lg text-gray-800 mb-1">PDFs y facturas</p>
+                <p className="font-raleway text-sm text-gray-400 font-light mb-5">Logo y firma se imprimen en cada PDF. La cabecera y el pie son banners panorámicos opcionales.</p>
+                <div className="space-y-6">
+                  <ImagenUploader tipo="header" label="Cabecera de PDFs" hint="Banner panorámico arriba del documento. Recomendado 1200×200px." url={headerUrl} wide onChange={() => router.refresh()} />
+                  <ImagenUploader tipo="footer" label="Pie de documento" hint="Banner panorámico abajo del documento. Recomendado 1200×150px." url={footerUrl} wide onChange={() => router.refresh()} />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <ImagenUploader tipo="logo" label="Logo" hint="Aparece en la esquina del PDF si no hay cabecera. PNG transparente recomendado." url={logoUrl} onChange={() => router.refresh()} />
+                    <ImagenUploader tipo="firma" label="Firma" hint="Imagen de firma que aparece al pie de las facturas." url={firmaUrl} onChange={() => router.refresh()} />
+                  </div>
+                </div>
+              </div>
+              <div className="border-t border-gray-100 pt-8">
+                <p className="font-roxborough text-lg text-gray-800 mb-1">Web pública</p>
+                <p className="font-raleway text-sm text-gray-400 font-light mb-5">Imágenes que aparecen en las páginas públicas del sitio.</p>
+                <ImagenUploader tipo="sobre_mi" label="Foto Sobre mí" hint="Sección «Sobre mí» de la web. Recomendado vertical 800×1000px. PNG o JPG." url={sobreMiUrl} onChange={() => router.refresh()} />
+              </div>
+            </div>
+          )}
+
+          {/* ── Facturación ── */}
+          {tab === 'facturacion' && (
+            <div className="space-y-4">
+              <p className="font-raleway text-sm text-gray-400 font-light mb-2">El IVA, IRPF, forma de pago y vencimiento se eligen en cada factura por separado.</p>
+              <Field label="Formato del número de factura">
+                <label className="flex items-center gap-2 py-2.5 font-raleway text-sm text-gray-700">
+                  <input
+                    type="checkbox"
+                    checked={datos.prefijo_anio}
+                    onChange={(e) => set('prefijo_anio', e.target.checked)}
+                    className="w-4 h-4 rounded text-henko-turquoise focus:ring-henko-turquoise"
+                  />
+                  Incluir año (ej: F2026-0001)
+                </label>
+                <p className="text-xs text-gray-400 font-raleway">
+                  La serie (prefijo) se elige en cada factura. Si lo desactivas: correlativo continuo tipo F00001.
+                </p>
+              </Field>
+            </div>
+          )}
+
+          {/* ── RGPD ── */}
+          {tab === 'rgpd' && (
+            <div>
+              <p className="font-raleway text-sm text-gray-400 font-light mb-6">Registro de Actividades de Tratamiento (RAT). Descárgalo, fírmalo a mano y sube el PDF firmado para tenerlo archivado.</p>
+              <RatPanel ratFirmadoUrl={ratFirmadoUrl} ratFirmadoAt={ratFirmadoAt} onChange={() => router.refresh()} />
+            </div>
+          )}
+
+        </div>
+
+        {/* Footer con botón guardar (solo en pestañas con form) */}
+        {showSave && (
+          <div className="flex justify-end px-6 md:px-8 py-4 border-t border-gray-100 bg-gray-50/50">
+            <button
+              type="submit"
+              className="px-6 py-2.5 rounded-xl bg-henko-turquoise text-white font-raleway font-semibold text-sm hover:bg-henko-turquoise-light transition-colors"
+            >
+              Guardar cambios
+            </button>
           </div>
-        </div>
-      </Section>
-
-      {/* IMÁGENES DE LA WEB PÚBLICA */}
-      <Section
-        title="Imágenes de la web"
-        description="Imágenes que aparecen en las páginas públicas del sitio."
-      >
-        <ImagenUploader
-          tipo="sobre_mi"
-          label="Foto Sobre mí"
-          hint="Aparece en la sección «Sobre mí» de la web. Recomendado vertical 800×1000px. PNG o JPG."
-          url={sobreMiUrl}
-          onChange={() => router.refresh()}
-        />
-      </Section>
-
-      {/* OPCIONES DE LA FACTURA (global) */}
-      <Section
-        title="Opciones globales de la factura"
-        description="Cosas que aplican a todas las facturas. El IVA, IRPF, forma de pago y vencimiento se eligen en cada factura por separado."
-      >
-        <div className="grid grid-cols-1 gap-4">
-          <Field label="Formato del número de factura">
-            <label className="flex items-center gap-2 py-2.5 font-raleway text-sm text-gray-700">
-              <input
-                type="checkbox"
-                checked={datos.prefijo_anio}
-                onChange={(e) => set('prefijo_anio', e.target.checked)}
-                className="w-4 h-4 rounded text-henko-turquoise focus:ring-henko-turquoise"
-              />
-              Incluir año (ej: F2026-0001)
-            </label>
-            <p className="text-xs text-gray-400 font-raleway">
-              La serie (prefijo) se elige en cada factura. Si lo desactivas: correlativo continuo tipo F00001.
-            </p>
-          </Field>
-
-        </div>
-      </Section>
-
-      {/* RGPD — RAT */}
-      <Section
-        title="Documentación RGPD"
-        description="Registro de Actividades de Tratamiento (RAT). Descárgalo, imprímelo, fírmalo a mano y sube el PDF firmado aquí para tenerlo archivado."
-      >
-        <RatPanel
-          ratFirmadoUrl={ratFirmadoUrl}
-          ratFirmadoAt={ratFirmadoAt}
-          onChange={() => router.refresh()}
-        />
-      </Section>
-
-      <div className="flex justify-end gap-3 pt-2">
-        <button
-          type="submit"
-          className="px-6 py-2.5 rounded-xl bg-henko-turquoise text-white font-raleway font-semibold text-sm hover:bg-henko-turquoise-light transition-colors"
-        >
-          Guardar cambios
-        </button>
+        )}
       </div>
 
       <style jsx>{`
@@ -425,15 +426,6 @@ function RatPanel({
   )
 }
 
-function Section({ title, description, children }: { title: string; description?: string; children: React.ReactNode }) {
-  return (
-    <section className="bg-white rounded-[2rem] border border-gray-100 shadow-sm p-6 md:p-8">
-      <h2 className="font-roxborough text-xl text-gray-900 mb-1">{title}</h2>
-      {description && <p className="font-raleway text-gray-500 text-sm font-light mb-6">{description}</p>}
-      {children}
-    </section>
-  )
-}
 
 function Field({ label, required, wide, children }: { label: string; required?: boolean; wide?: boolean; children: React.ReactNode }) {
   return (

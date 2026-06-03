@@ -559,6 +559,28 @@ export async function leerEmailBandeja(uid: number, mailbox = 'INBOX') {
   }
 }
 
+export async function eliminarEmailsBandeja(uids: number[], mailbox = 'INBOX') {
+  const auth = await requireAdmin()
+  if ('error' in auth) return { error: auth.error }
+
+  const { imap, config } = await getDecryptedPasswords()
+  if (!config?.imap_host || !imap) return { error: 'Sin credenciales IMAP.' }
+
+  try {
+    const { eliminarMensajes } = await import('@/features/email/services/imap')
+    await eliminarMensajes({
+      host: config.imap_host as string,
+      port: (config.imap_port as number) ?? 993,
+      encryption: (config.imap_encryption as 'ssl' | 'starttls' | 'none') ?? 'ssl',
+      user: config.imap_user as string,
+      password: imap,
+    }, uids, mailbox)
+    return { ok: true }
+  } catch (e) {
+    return { error: `Error IMAP: ${String(e)}` }
+  }
+}
+
 export type EnviarEmailInput = {
   to: string
   subject: string
