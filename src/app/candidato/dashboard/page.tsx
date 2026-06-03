@@ -94,10 +94,10 @@ export default async function CandidatoDashboardPage() {
         pretensionSalarial: candProfile?.pretension_salarial ?? '',
       }}
       ofertas={ofertas}
-      aplicadas={new Set(solicitudes.map((s) => {
+      aplicadas={new Map(solicitudes.flatMap((s) => {
         const oferta = s.ofertas as unknown as { id: string } | null
-        return oferta?.id ?? ''
-      }).filter(Boolean))}
+        return oferta?.id ? [[oferta.id, s.estado]] : []
+      }))}
       solicitudes={solicitudes.map((s) => {
         const oferta = s.ofertas as unknown as {
           id: string

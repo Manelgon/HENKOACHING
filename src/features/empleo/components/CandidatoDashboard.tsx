@@ -112,7 +112,7 @@ type Props = {
   cv: CvView
   solicitudes: SolicitudView[]
   ofertas: OfertaItem[]
-  aplicadas: Set<string>
+  aplicadas: Map<string, EstadoSolicitud>
   experiencias: ExperienciaView[]
   educacion: EducacionView[]
   idiomas: IdiomaView[]
@@ -674,11 +674,11 @@ function OfertaDrawer({ oferta, yaAplicado, onClose, onAplicar }: { oferta: Ofer
   )
 }
 
-function TabEmpleos({ ofertas, aplicadas }: { ofertas: OfertaItem[]; aplicadas: Set<string> }) {
+function TabEmpleos({ ofertas, aplicadas }: { ofertas: OfertaItem[]; aplicadas: Map<string, EstadoSolicitud> }) {
   const router = useRouter()
   const runAction = useAction()
   const [busqueda, setBusqueda] = useState('')
-  const [aplicadasLocal, setAplicadasLocal] = useState<Set<string>>(new Set(aplicadas))
+  const [aplicadasLocal, setAplicadasLocal] = useState<Map<string, EstadoSolicitud>>(new Map(aplicadas))
   const [drawer, setDrawer] = useState<OfertaDetalleView | null>(null)
   const [loadingSlug, setLoadingSlug] = useState<string | null>(null)
 
@@ -700,7 +700,7 @@ function TabEmpleos({ ofertas, aplicadas }: { ofertas: OfertaItem[]; aplicadas: 
       { successMessage: '¡Solicitud enviada!' },
     )
     if (result.ok) {
-      setAplicadasLocal(prev => new Set([...prev, ofertaId]))
+      setAplicadasLocal(prev => new Map([...prev, [ofertaId, 'nuevo' as EstadoSolicitud]]))
       if (drawer?.id === ofertaId) setDrawer(prev => prev ? { ...prev } : null)
       router.refresh()
     }
@@ -772,9 +772,9 @@ function TabEmpleos({ ofertas, aplicadas }: { ofertas: OfertaItem[]; aplicadas: 
                   </div>
                   <div className="flex-shrink-0 flex flex-col items-start md:items-end gap-2" onClick={e => e.stopPropagation()}>
                     {yaAplicado ? (
-                      <span className="inline-flex items-center gap-1.5 text-[11px] px-4 py-1.5 rounded-full bg-henko-turquoise/10 text-henko-turquoise font-bold">
+                      <span className={`inline-flex items-center gap-1.5 text-[11px] px-4 py-1.5 rounded-full font-bold ${ESTADO_META[aplicadasLocal.get(o.id)!].badge}`}>
                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
-                        Solicitud enviada
+                        {ESTADO_META[aplicadasLocal.get(o.id)!].label}
                       </span>
                     ) : (
                       <button
