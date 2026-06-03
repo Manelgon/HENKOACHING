@@ -1,7 +1,9 @@
-const HEADER = (siteUrl: string) => `
+const LOGO_URL = 'https://henkoaching.com/henkologo.png'
+
+const HEADER = (_siteUrl: string) => `
   <tr>
     <td style="padding:36px 48px 28px;border-bottom:1px solid #ede9e4;text-align:center;">
-      <img src="${siteUrl}/henkologo.png" width="180" alt="HenKoaching" style="display:block;margin:0 auto;max-width:180px;">
+      <img src="${LOGO_URL}" width="180" alt="HenKoaching" style="display:block;margin:0 auto;max-width:180px;">
     </td>
   </tr>`
 

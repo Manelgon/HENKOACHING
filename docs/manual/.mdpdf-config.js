@@ -1,0 +1,267 @@
+module.exports = {
+  stylesheet: [],
+  css: `
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 11px;
+      line-height: 1.65;
+      color: #1a1a1a;
+      background: #fff;
+      padding: 0;
+    }
+
+    /* PAGE BREAKS — evitar huérfanas y viudas */
+    p, li { orphans: 4; widows: 4; }
+
+    h2 { page-break-before: always; page-break-after: avoid; }
+    h2:first-of-type { page-break-before: avoid; }
+    h3 { page-break-after: avoid; page-break-inside: avoid; }
+    h4 { page-break-after: avoid; page-break-inside: avoid; }
+
+    /* Mantener heading pegado al contenido siguiente */
+    h2 + p, h2 + ul, h2 + ol, h2 + table, h2 + blockquote { page-break-before: avoid; }
+    h3 + p, h3 + ul, h3 + ol, h3 + table, h3 + blockquote { page-break-before: avoid; }
+    h4 + p, h4 + ul, h4 + ol, h4 + table, h4 + blockquote { page-break-before: avoid; }
+
+    /* Bloques que no se deben partir */
+    table { page-break-inside: avoid; }
+    pre   { page-break-inside: avoid; }
+    blockquote { page-break-inside: avoid; }
+    li    { page-break-inside: avoid; }
+    img   { page-break-inside: avoid; page-break-after: avoid; }
+
+    /* COVER / HEADER AREA */
+    body > h1:first-of-type {
+      background: linear-gradient(135deg, #0d9488 0%, #0f766e 50%, #134e4a 100%);
+      color: white;
+      font-size: 26px;
+      font-weight: 700;
+      padding: 48px 40px 24px;
+      margin: -40px -40px 0 -40px;
+      letter-spacing: -0.5px;
+    }
+
+    /* BLOCKQUOTE (subtitle/meta) */
+    body > blockquote:first-of-type {
+      background: #f0fdfa;
+      border-left: none;
+      border-top: 3px solid #0d9488;
+      padding: 16px 40px 20px;
+      margin: 0 -40px 32px -40px;
+      font-size: 10.5px;
+      color: #374151;
+    }
+    body > blockquote:first-of-type p { margin: 3px 0; }
+    body > blockquote:first-of-type strong { color: #0f766e; }
+
+    /* HEADINGS */
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #0f172a;
+      margin: 28px 0 12px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #0d9488;
+      letter-spacing: -0.3px;
+    }
+
+    h2 {
+      font-size: 16px;
+      font-weight: 700;
+      color: #0f766e;
+      margin: 32px 0 10px;
+      padding: 10px 16px;
+      background: #f0fdfa;
+      border-left: 4px solid #0d9488;
+      border-radius: 0 6px 6px 0;
+    }
+
+    h3 {
+      font-size: 13px;
+      font-weight: 600;
+      color: #134e4a;
+      margin: 20px 0 8px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid #ccfbf1;
+    }
+
+    h4 {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #0f766e;
+      margin: 16px 0 6px;
+    }
+
+    /* PARAGRAPHS */
+    p { margin: 6px 0 10px; color: #374151; }
+
+    /* LISTS */
+    ul, ol {
+      margin: 8px 0 12px 20px;
+      color: #374151;
+    }
+    li { margin: 3px 0; line-height: 1.6; }
+    li > ul, li > ol { margin-top: 3px; }
+
+    /* CODE */
+    code {
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 9.5px;
+      color: #0f766e;
+    }
+    pre {
+      background: #0f172a;
+      border-radius: 8px;
+      padding: 14px 18px;
+      margin: 12px 0;
+      overflow: hidden;
+    }
+    pre code {
+      background: none;
+      border: none;
+      padding: 0;
+      color: #7dd3fc;
+      font-size: 9.5px;
+      line-height: 1.7;
+    }
+
+    /* TABLES */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0 16px;
+      font-size: 10px;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    thead tr {
+      background: #0d9488;
+      color: white;
+    }
+    thead th {
+      padding: 9px 12px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 9.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    tbody tr:nth-child(even) { background: #f0fdfa; }
+    tbody tr:nth-child(odd) { background: #ffffff; }
+    tbody tr:hover { background: #ccfbf1; }
+    td {
+      padding: 8px 12px;
+      border-bottom: 1px solid #e2e8f0;
+      color: #374151;
+      vertical-align: top;
+    }
+    td:first-child { font-weight: 500; color: #0f172a; }
+
+    /* BLOCKQUOTES */
+    blockquote {
+      border-left: 3px solid #f59e0b;
+      background: #fffbeb;
+      padding: 10px 14px;
+      margin: 10px 0;
+      border-radius: 0 6px 6px 0;
+      color: #92400e;
+      font-size: 10.5px;
+    }
+    blockquote p { color: #92400e; margin: 0; }
+    blockquote strong { color: #78350f; }
+
+    /* HORIZONTAL RULES */
+    hr {
+      border: none;
+      border-top: 1px solid #e2e8f0;
+      margin: 24px 0;
+    }
+
+    /* IMAGES */
+    img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+      margin: 8px 0 12px;
+      display: block;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    /* INDEX / TOC STYLING */
+    body > ul:first-of-type {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 16px 16px 16px 36px;
+      margin-bottom: 24px;
+      columns: 2;
+      column-gap: 24px;
+    }
+    body > ul:first-of-type li { font-size: 10px; color: #0f766e; margin: 3px 0; }
+    body > ul:first-of-type a { color: #0f766e; text-decoration: none; }
+    body > ul:first-of-type a:hover { text-decoration: underline; }
+
+    /* FOOTER */
+    @page {
+      margin: 40px 40px 50px 40px;
+      @bottom-center {
+        content: "Henkoaching — Manual de Usuario — " counter(page) " / " counter(pages);
+        font-size: 9px;
+        color: #9ca3af;
+        font-family: 'Inter', sans-serif;
+      }
+    }
+
+    /* STRONG */
+    strong { color: #0f172a; font-weight: 600; }
+
+    /* LINKS */
+    a { color: #0d9488; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* STEP NUMBERS in lists */
+    ol { counter-reset: steps; list-style: none; margin-left: 0; padding-left: 0; }
+    ol li {
+      counter-increment: steps;
+      padding-left: 28px;
+      position: relative;
+      margin: 5px 0;
+    }
+    ol li::before {
+      content: counter(steps);
+      position: absolute;
+      left: 0;
+      top: 1px;
+      width: 18px;
+      height: 18px;
+      background: #0d9488;
+      color: white;
+      border-radius: 50%;
+      font-size: 9px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      line-height: 18px;
+    }
+  `,
+  pdf_options: {
+    format: 'A4',
+    printBackground: true,
+    margin: { top: '40px', right: '40px', bottom: '50px', left: '40px' },
+  },
+  launch_options: {
+    args: ['--no-sandbox', '--disable-setuid-sandbox']
+  }
+};
