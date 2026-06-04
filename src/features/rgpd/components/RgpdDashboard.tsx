@@ -59,33 +59,53 @@ function isCompleted(doc: RgpdDocumento): boolean {
   return true
 }
 
+const PDF_URLS: Partial<Record<RgpdDocId, string>> = {
+  ropa: '/api/rat-pdf',
+  runbook: '/api/runbook-pdf',
+}
+
 function DocCard({ doc, onClick }: { doc: RgpdDocumento; onClick: () => void }) {
   const done = isCompleted(doc)
+  const pdfUrl = PDF_URLS[doc.id]
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="w-full text-left px-5 py-4 bg-white rounded-2xl border border-gray-200 hover:border-henko-turquoise hover:shadow-md transition-all group flex items-center gap-4"
-    >
-      <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors ${done ? 'bg-green-100 text-green-600' : 'bg-amber-100 text-amber-600'} group-hover:bg-henko-turquoise/10 group-hover:text-henko-turquoise`}>
-        {DOC_ICONS[doc.id]}
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="font-raleway text-sm font-semibold text-gray-800 leading-snug">{doc.titulo}</p>
-        <p className="font-raleway text-xs text-gray-400 leading-relaxed truncate">{doc.descripcion}</p>
-        {doc.actualizado_at && (
-          <p className="font-raleway text-[10px] text-gray-400 mt-0.5">
-            Actualizado {new Date(doc.actualizado_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}
-          </p>
-        )}
-      </div>
-      <span className={`text-[10px] font-bold font-raleway px-2 py-1 rounded-lg shrink-0 ${done ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
-        {done ? 'Completado' : 'Pendiente'}
-      </span>
-      <svg className="w-4 h-4 text-gray-300 shrink-0 group-hover:text-henko-turquoise transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-      </svg>
-    </button>
+    <div className="w-full bg-white rounded-2xl border border-gray-200 hover:border-henko-turquoise hover:shadow-md transition-all group flex items-center gap-4 px-5 py-4">
+      <button type="button" onClick={onClick} className="flex items-center gap-4 flex-1 min-w-0 text-left">
+        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors ${done ? 'bg-green-100 text-green-600' : 'bg-amber-100 text-amber-600'} group-hover:bg-henko-turquoise/10 group-hover:text-henko-turquoise`}>
+          {DOC_ICONS[doc.id]}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-raleway text-sm font-semibold text-gray-800 leading-snug">{doc.titulo}</p>
+          <p className="font-raleway text-xs text-gray-400 leading-relaxed truncate">{doc.descripcion}</p>
+          {doc.actualizado_at && (
+            <p className="font-raleway text-[10px] text-gray-400 mt-0.5">
+              Actualizado {new Date(doc.actualizado_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}
+            </p>
+          )}
+        </div>
+        <span className={`text-[10px] font-bold font-raleway px-2 py-1 rounded-lg shrink-0 ${done ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+          {done ? 'Completado' : 'Pendiente'}
+        </span>
+      </button>
+      {pdfUrl && (
+        <a
+          href={pdfUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Descargar PDF"
+          onClick={e => e.stopPropagation()}
+          className="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-henko-turquoise hover:bg-henko-turquoise/10 transition-colors"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+          </svg>
+        </a>
+      )}
+      <button type="button" onClick={onClick} className="shrink-0">
+        <svg className="w-4 h-4 text-gray-300 group-hover:text-henko-turquoise transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+    </div>
   )
 }
 

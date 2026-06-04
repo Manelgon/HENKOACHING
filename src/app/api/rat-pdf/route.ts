@@ -29,9 +29,11 @@ export async function GET() {
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: Georgia, 'Times New Roman', serif; font-size: 11pt; color: #111; background: #fff; }
   .page { max-width: 800px; margin: 0 auto; padding: 40px 50px; }
+  .logo-header { margin-bottom: 28px; padding-bottom: 20px; border-bottom: 2px solid #1f8f9b; }
+  .logo-header img { height: 48px; object-fit: contain; }
   h1 { font-size: 16pt; font-weight: bold; margin-bottom: 4px; }
   .subtitle { font-size: 9pt; color: #555; font-style: italic; margin-bottom: 16px; }
-  .meta { font-size: 9pt; color: #444; margin-bottom: 24px; border-bottom: 2px solid #111; padding-bottom: 12px; }
+  .meta { font-size: 9pt; color: #444; margin-bottom: 24px; border-bottom: 1px solid #ddd; padding-bottom: 12px; }
   h2 { font-size: 13pt; font-weight: bold; margin: 24px 0 10px; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
   h3 { font-size: 11pt; font-weight: bold; margin: 16px 0 8px; }
   p { margin-bottom: 8px; line-height: 1.5; }
@@ -54,6 +56,9 @@ export async function GET() {
 <body>
 <button class="print-btn" onclick="window.print()">🖨 Imprimir / Guardar PDF</button>
 <div class="page">
+  <div class="logo-header">
+    <img src="https://henkoaching.com/henko-pdf-header.png" alt="Henkoaching" />
+  </div>
   <h1>Registro de Actividades de Tratamiento (RAT)</h1>
   <p class="subtitle">Documento obligatorio según el artículo 30 del Reglamento (UE) 2016/679 (RGPD) y artículo 31 de la LOPDGDD.</p>
   <div class="meta">
