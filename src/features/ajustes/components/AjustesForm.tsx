@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import { useAction, useConfirm } from '@/shared/feedback/FeedbackContext'
 import { guardarAjustes, subirImagenEmisor, quitarImagenEmisor, type AjustesInput } from '@/actions/ajustes'
 import type { CompanySettings } from '@/lib/company-settings'
-import MfaManager from './MfaManager'
 
 type Props = {
   settings: CompanySettings
@@ -22,7 +21,6 @@ const TABS = [
   { key: 'fiscal',      label: 'Datos fiscales' },
   { key: 'imagenes',    label: 'Imágenes' },
   { key: 'facturacion', label: 'Facturación' },
-  { key: 'seguridad',   label: 'Seguridad' },
 ] as const
 
 type TabKey = typeof TABS[number]['key']
@@ -237,8 +235,6 @@ export default function AjustesForm({ settings, logoUrl, firmaUrl, headerUrl, fo
             </div>
           )}
 
-          {/* ── Seguridad ── */}
-          {tab === 'seguridad' && <MfaManager />}
 
         </div>
 
