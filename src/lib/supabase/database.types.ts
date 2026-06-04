@@ -377,7 +377,9 @@ export type Database = {
       }
       candidato_profiles: {
         Row: {
+          acepto_privacidad_at: string | null
           cargo_actual: string | null
+          consent_text: string | null
           cp: string | null
           created_at: string | null
           disponibilidad: string | null
@@ -396,7 +398,9 @@ export type Database = {
           web_url: string | null
         }
         Insert: {
+          acepto_privacidad_at?: string | null
           cargo_actual?: string | null
+          consent_text?: string | null
           cp?: string | null
           created_at?: string | null
           disponibilidad?: string | null
@@ -415,7 +419,9 @@ export type Database = {
           web_url?: string | null
         }
         Update: {
+          acepto_privacidad_at?: string | null
           cargo_actual?: string | null
+          consent_text?: string | null
           cp?: string | null
           created_at?: string | null
           disponibilidad?: string | null
@@ -852,6 +858,42 @@ export type Database = {
           },
         ]
       }
+      derechos_arco: {
+        Row: {
+          created_at: string
+          descripcion: string
+          email: string
+          estado: 'pendiente' | 'en_proceso' | 'resuelta'
+          id: string
+          nombre: string
+          notas_admin: string | null
+          resolucion_at: string | null
+          tipo_derecho: 'acceso' | 'rectificacion' | 'supresion' | 'portabilidad' | 'oposicion' | 'limitacion'
+        }
+        Insert: {
+          created_at?: string
+          descripcion: string
+          email: string
+          estado?: 'pendiente' | 'en_proceso' | 'resuelta'
+          id?: string
+          nombre: string
+          notas_admin?: string | null
+          resolucion_at?: string | null
+          tipo_derecho: 'acceso' | 'rectificacion' | 'supresion' | 'portabilidad' | 'oposicion' | 'limitacion'
+        }
+        Update: {
+          created_at?: string
+          descripcion?: string
+          email?: string
+          estado?: 'pendiente' | 'en_proceso' | 'resuelta'
+          id?: string
+          nombre?: string
+          notas_admin?: string | null
+          resolucion_at?: string | null
+          tipo_derecho?: 'acceso' | 'rectificacion' | 'supresion' | 'portabilidad' | 'oposicion' | 'limitacion'
+        }
+        Relationships: []
+      }
       email_envios: {
         Row: {
           asunto: string
@@ -1260,6 +1302,7 @@ export type Database = {
           acepto_privacidad_at: string | null
           archivado: boolean | null
           asunto: string | null
+          consent_text: string | null
           creado_manualmente: boolean | null
           creado_por: string | null
           created_at: string | null
@@ -1280,6 +1323,7 @@ export type Database = {
           acepto_privacidad_at?: string | null
           archivado?: boolean | null
           asunto?: string | null
+          consent_text?: string | null
           creado_manualmente?: boolean | null
           creado_por?: string | null
           created_at?: string | null
@@ -1300,6 +1344,7 @@ export type Database = {
           acepto_privacidad_at?: string | null
           archivado?: boolean | null
           asunto?: string | null
+          consent_text?: string | null
           creado_manualmente?: boolean | null
           creado_por?: string | null
           created_at?: string | null
@@ -1518,6 +1563,36 @@ export type Database = {
           role?: Database["public"]["Enums"]["user_role"]
           telefono?: string | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      rgpd_documentos: {
+        Row: {
+          actualizado_at: string | null
+          actualizado_por: string | null
+          contenido: Json
+          created_at: string | null
+          descripcion: string | null
+          id: 'ropa' | 'runbook' | 'politica_ia' | 'formacion_ia' | 'dpia_checklist' | 'subencargados' | 'responsable_incidentes'
+          titulo: string
+        }
+        Insert: {
+          actualizado_at?: string | null
+          actualizado_por?: string | null
+          contenido?: Json
+          created_at?: string | null
+          descripcion?: string | null
+          id: 'ropa' | 'runbook' | 'politica_ia' | 'formacion_ia' | 'dpia_checklist' | 'subencargados' | 'responsable_incidentes'
+          titulo: string
+        }
+        Update: {
+          actualizado_at?: string | null
+          actualizado_por?: string | null
+          contenido?: Json
+          created_at?: string | null
+          descripcion?: string | null
+          id?: 'ropa' | 'runbook' | 'politica_ia' | 'formacion_ia' | 'dpia_checklist' | 'subencargados' | 'responsable_incidentes'
+          titulo?: string
         }
         Relationships: []
       }

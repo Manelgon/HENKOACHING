@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { listarEmailsFallidos, reintentarEmail } from '@/actions/email'
 import { useEmailStore } from '@/features/email/store/emailStore'
+import CheckCircleIcon from '@/shared/components/icons/CheckCircleIcon'
 import { contarEmailsFallidos } from '@/actions/email'
 import type { EmailFallido } from '@/actions/email'
 
@@ -70,9 +71,7 @@ export default function FallosPanel() {
         </div>
       ) : fallos.length === 0 ? (
         <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm px-6 py-16 text-center">
-          <svg className="w-10 h-10 text-green-300 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
+          <CheckCircleIcon className="w-10 h-10 text-green-300 mx-auto mb-3" />
           <p className="font-roxborough text-lg text-gray-400">Sin fallos recientes</p>
           <p className="font-raleway text-sm text-gray-400 mt-1">Todos los emails transaccionales se enviaron correctamente.</p>
         </div>

@@ -1,6 +1,7 @@
 'use client'
 
 import type { ConsentimientoRow } from '@/actions/rgpd'
+import CheckCircleIcon from '@/shared/components/icons/CheckCircleIcon'
 
 function exportCSV(rows: ConsentimientoRow[]) {
   const headers = ['Tipo', 'Nombre', 'Email', 'Fecha de consentimiento', 'Texto aceptado']
@@ -29,9 +30,7 @@ export default function ConsentimientosTable({ rows }: { rows: ConsentimientoRow
     return (
       <div className="py-16 text-center">
         <div className="w-12 h-12 mx-auto mb-4 rounded-2xl bg-gray-100 flex items-center justify-center">
-          <svg className="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
+          <CheckCircleIcon className="w-6 h-6 text-gray-400" />
         </div>
         <p className="font-raleway text-gray-500 text-sm">Sin consentimientos registrados todavía</p>
         <p className="font-raleway text-gray-400 text-xs mt-1">Aparecerán aquí cuando lleguen nuevas inscripciones o contactos</p>

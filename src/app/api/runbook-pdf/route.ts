@@ -1,29 +1,21 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { requireAdminHtml } from '@/lib/api/require-admin-html'
 import type { ContenidoRunbook } from '@/features/rgpd/types'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET() {
+export async function GET(request: Request) {
+  const auth = await requireAdminHtml(request)
+  if (!auth.ok) return auth.response
+
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.redirect('/login')
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .maybeSingle()
-
-  if (profile?.role !== 'admin') {
-    return new NextResponse('Sin permisos', { status: 403 })
-  }
 
   const { data: docRaw } = await supabase
-    .from('rgpd_documentos' as never)
+    .from('rgpd_documentos')
     .select('contenido, actualizado_at')
-    .eq('id' as never, 'runbook')
-    .maybeSingle() as { data: { contenido: Record<string, unknown>; actualizado_at: string | null } | null }
+    .eq('id', 'runbook')
+    .maybeSingle()
 
   const contenido = (docRaw?.contenido ?? {}) as Partial<ContenidoRunbook>
   const pasos = contenido.pasos ?? []

@@ -1,23 +1,11 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
+import { requireAdminHtml } from '@/lib/api/require-admin-html'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.redirect('/login')
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .maybeSingle()
-
-  if (profile?.role !== 'admin') {
-    return new NextResponse('Sin permisos', { status: 403 })
-  }
+export async function GET(request: Request) {
+  const auth = await requireAdminHtml(request)
+  if (!auth.ok) return auth.response
 
   const html = `<!DOCTYPE html>
 <html lang="es">

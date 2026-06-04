@@ -132,8 +132,8 @@ export async function signupCandidato(input: CandidatoSignupInput) {
       sectores_interes: input.sectores.length > 0 ? input.sectores : null,
       disponibilidad: input.disponibilidad || null,
       pretension_salarial: input.pretensionSalarial || null,
-      acepto_privacidad_at: new Date().toISOString() as never,
-      consent_text: (input.consentText || null) as never,
+      acepto_privacidad_at: new Date().toISOString(),
+      consent_text: input.consentText ?? null,
     })
     .eq('user_id', userId)
 

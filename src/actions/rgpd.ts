@@ -2,10 +2,12 @@
 
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { logAction } from '@/lib/audit/log-action'
 import { sendTransactional } from '@/lib/email/send'
 import { templateDerechoArcoConfirmacion } from '@/lib/email/templates/rgpd'
 import type { RgpdDocId, RgpdDocumento, DerechoArco } from '@/features/rgpd/types'
+import type { Json } from '@/lib/supabase/database.types'
 
 async function requireAdmin() {
   const supabase = await createClient()
@@ -25,7 +27,7 @@ async function requireAdmin() {
 export async function getRgpdDocumentos(): Promise<RgpdDocumento[]> {
   const { supabase } = await requireAdmin()
   const { data } = await supabase
-    .from('rgpd_documentos' as never)
+    .from('rgpd_documentos')
     .select('*')
     .order('created_at') as { data: RgpdDocumento[] | null }
   return data ?? []
@@ -38,12 +40,12 @@ export async function guardarDocumento(
   const { supabase, user } = await requireAdmin()
 
   const { error } = await supabase
-    .from('rgpd_documentos' as never)
+    .from('rgpd_documentos')
     .update({
-      contenido,
+      contenido: contenido as Json,
       actualizado_at: new Date().toISOString(),
       actualizado_por: user.email ?? '',
-    } as never)
+    })
     .eq('id', id)
 
   if (error) return { ok: false, error: (error as { message: string }).message }
@@ -61,7 +63,7 @@ export async function guardarDocumento(
 export async function getDerechosArco(): Promise<DerechoArco[]> {
   const { supabase } = await requireAdmin()
   const { data } = await supabase
-    .from('derechos_arco' as never)
+    .from('derechos_arco')
     .select('*')
     .order('created_at', { ascending: false }) as { data: DerechoArco[] | null }
   return data ?? []
@@ -74,13 +76,13 @@ export async function cambiarEstadoDerecho(
 ): Promise<{ ok: boolean; error?: string }> {
   const { supabase } = await requireAdmin()
 
-  const updates: Record<string, unknown> = { estado }
-  if (estado === 'resuelta') updates.resolucion_at = new Date().toISOString()
-  if (notas !== undefined) updates.notas_admin = notas || null
-
   const { error } = await supabase
-    .from('derechos_arco' as never)
-    .update(updates as never)
+    .from('derechos_arco')
+    .update({
+      estado,
+      ...(estado === 'resuelta' && { resolucion_at: new Date().toISOString() }),
+      ...(notas !== undefined && { notas_admin: notas || null }),
+    })
     .eq('id', id)
 
   if (error) return { ok: false, error: (error as { message: string }).message }
@@ -98,14 +100,14 @@ export async function cambiarEstadoDerecho(
 export async function crearDerechoArco(input: {
   nombre: string
   email: string
-  tipo_derecho: string
+  tipo_derecho: 'acceso' | 'rectificacion' | 'supresion' | 'portabilidad' | 'oposicion' | 'limitacion'
   descripcion: string
 }): Promise<{ ok: boolean; error?: string }> {
   const supabase = await createClient()
 
   const { error } = await supabase
-    .from('derechos_arco' as never)
-    .insert(input as never)
+    .from('derechos_arco')
+    .insert(input)
 
   if (error) return { ok: false, error: (error as { message: string }).message }
 
@@ -136,8 +138,7 @@ export type ConsentimientoRow = {
 }
 
 export async function getConsentimientos(): Promise<ConsentimientoRow[]> {
-  const { supabase } = await requireAdmin()
-  const { createAdminClient } = await import('@/lib/supabase/admin')
+  await requireAdmin()
   const admin = createAdminClient()
 
   type CandidatoConsent = {
@@ -154,21 +155,21 @@ export async function getConsentimientos(): Promise<ConsentimientoRow[]> {
 
   const [candidatosRes, leadsRes] = await Promise.all([
     admin
-      .from('candidato_profiles' as never)
+      .from('candidato_profiles')
       .select('acepto_privacidad_at, consent_text, profiles!inner(nombre, apellidos, email)')
-      .not('acepto_privacidad_at' as never, 'is', null)
-      .order('acepto_privacidad_at' as never, { ascending: false }),
-    supabase
+      .not('acepto_privacidad_at', 'is', null)
+      .order('acepto_privacidad_at', { ascending: false }),
+    admin
       .from('leads')
       .select('nombre, email, acepto_privacidad_at, consent_text')
-      .not('acepto_privacidad_at' as never, 'is', null)
-      .order('acepto_privacidad_at' as never, { ascending: false }),
+      .not('acepto_privacidad_at', 'is', null)
+      .order('acepto_privacidad_at', { ascending: false }),
   ])
 
-  const candidatosData = ((candidatosRes.data ?? []) as unknown as CandidatoConsent[])
-  const leadsData = ((leadsRes.data ?? []) as unknown as LeadConsent[])
+  if (candidatosRes.error) throw new Error('Error cargando consentimientos de candidatos: ' + candidatosRes.error.message)
+  if (leadsRes.error) throw new Error('Error cargando consentimientos de leads: ' + leadsRes.error.message)
 
-  const candidatos: ConsentimientoRow[] = candidatosData.map(c => ({
+  const candidatos: ConsentimientoRow[] = ((candidatosRes.data ?? []) as unknown as CandidatoConsent[]).map(c => ({
     tipo: 'candidato',
     nombre: [c.profiles.nombre, c.profiles.apellidos].filter(Boolean).join(' ') || c.profiles.email,
     email: c.profiles.email,
@@ -176,7 +177,7 @@ export async function getConsentimientos(): Promise<ConsentimientoRow[]> {
     consent_text: c.consent_text,
   }))
 
-  const leads: ConsentimientoRow[] = leadsData.map(l => ({
+  const leads: ConsentimientoRow[] = ((leadsRes.data ?? []) as unknown as LeadConsent[]).map(l => ({
     tipo: 'lead',
     nombre: l.nombre,
     email: l.email,

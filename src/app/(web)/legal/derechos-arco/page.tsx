@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useAction } from '@/shared/feedback/FeedbackContext'
+import CheckCircleIcon from '@/shared/components/icons/CheckCircleIcon'
 import { crearDerechoArco } from '@/actions/rgpd'
 
 const TIPOS = [
@@ -52,7 +53,7 @@ export default function DerechosArcoPage() {
 
     const result = await runAction(
       'Enviando solicitud',
-      () => crearDerechoArco(form),
+      () => crearDerechoArco(form as Parameters<typeof crearDerechoArco>[0]),
       { successMessage: 'Solicitud enviada correctamente' },
     )
     if (result.ok) setSent(true)
@@ -63,9 +64,7 @@ export default function DerechosArcoPage() {
       <main className="min-h-screen bg-henko-white flex items-center justify-center px-4 py-20">
         <div className="max-w-lg w-full text-center">
           <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-green-100 flex items-center justify-center">
-            <svg className="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+            <CheckCircleIcon className="w-8 h-8 text-green-600" />
           </div>
           <h1 className="font-roxborough text-2xl text-gray-900 mb-3">Solicitud recibida</h1>
           <p className="font-raleway text-gray-500 mb-2">

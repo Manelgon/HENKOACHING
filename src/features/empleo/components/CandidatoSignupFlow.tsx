@@ -6,8 +6,7 @@ import { useRouter } from 'next/navigation'
 import { signupCandidato, uploadCvPorAdmin, checkEmailCandidatoExiste, solicitarResetCandidato } from '@/actions/candidato'
 import { useAction } from '@/shared/feedback/FeedbackContext'
 import { FormError } from '@/components/FormError'
-
-const CONSENT_TEXT_CANDIDATO = 'He leído y acepto la política de privacidad y consiento el tratamiento de mis datos y de mi CV por Jennifer Cervera Alzate con la finalidad de gestionar mi candidatura en los procesos de selección publicados.'
+import { CONSENT_TEXT_CANDIDATO } from '@/shared/constants/consent'
 
 type StepCuentaErrors = { nombre?: string; apellidos?: string; email?: string; password?: string; privacidad?: string }
 

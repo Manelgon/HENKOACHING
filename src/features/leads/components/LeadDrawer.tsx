@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useAction, useConfirm } from '@/shared/feedback/FeedbackContext'
 import { crearNotaLead, eliminarNotaLead } from '@/actions/leads'
 import type { EstadoLead } from '@/lib/supabase/database.types'
+import CheckCircleIcon from '@/shared/components/icons/CheckCircleIcon'
 import { ESTADOS_LEAD, getEstadoMeta, getOrigenLabel } from './estados'
 import type { LeadRow } from './LeadsTable'
 
@@ -304,9 +305,7 @@ export default function LeadDrawer({
               <div className="space-y-2">
                 {lead.acepto_privacidad_at && (
                   <div className="flex items-center gap-2">
-                    <svg className="w-3.5 h-3.5 text-green-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
+                    <CheckCircleIcon className="w-3.5 h-3.5 text-green-500 shrink-0" />
                     <span className="font-raleway text-xs text-gray-500">
                       Aceptado el{' '}
                       <strong className="text-gray-700">

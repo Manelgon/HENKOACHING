@@ -41,8 +41,8 @@ export async function crearLead(input: {
     origen: 'web',
     acepto_privacidad: true,
     acepto_privacidad_at: new Date().toISOString(),
-    consent_text: input.consent_text || null,
-  } as never).select('id').single()
+    consent_text: input.consent_text ?? null,
+  }).select('id').single()
 
   if (error) return { error: error.message }
 

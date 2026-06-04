@@ -7,10 +7,9 @@ import PageHeader from '@/components/PageHeader'
 import { FormError } from '@/components/FormError'
 import { crearLead } from '@/actions/leads'
 import { useAction } from '@/shared/feedback/FeedbackContext'
+import { CONSENT_TEXT_CONTACTO } from '@/shared/constants/consent'
 
 type Errors = { nombre?: string; email?: string; mensaje?: string; privacidad?: string }
-
-const CONSENT_TEXT = 'He leído y acepto la política de privacidad y el tratamiento de mis datos.'
 
 export default function ContactoPage() {
   const runAction = useAction()
@@ -43,7 +42,7 @@ export default function ContactoPage() {
         mensaje: form.mensaje,
         servicio_interes: form.servicio || undefined,
         acepto_privacidad: aceptoPrivacidad,
-        consent_text: CONSENT_TEXT,
+        consent_text: CONSENT_TEXT_CONTACTO,
       }),
       { successMessage: 'Mensaje enviado' },
     )
