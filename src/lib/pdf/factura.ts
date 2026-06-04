@@ -506,7 +506,10 @@ export async function buildFacturaPdf(data: FacturaPdfData, emisor: EmisorPdf, a
 
   if (data.verifactu) {
     const qrImg = await tryEmbedImage(pdf, assets.qrBytes)
-    const qrSize = 62
+    // QR ocupa todo el alto disponible del bloque verifactu
+    const qrLinkSize = 7
+    const qrGap = 3
+    const qrSize = footerH + 12 - qrLinkSize - qrGap  // alto total menos enlace debajo
     if (qrImg) {
       page.drawImage(qrImg, { x: marginX, y: verifactuY, width: qrSize, height: qrSize })
     } else {
@@ -515,7 +518,12 @@ export async function buildFacturaPdf(data: FacturaPdfData, emisor: EmisorPdf, a
         borderColor: HENKO.border, borderWidth: 0.5, color: rgb(1, 1, 1),
       })
     }
+    // Enlace debajo del QR
+    drawText(page, data.verifactu.qrUrl, marginX, verifactuY - qrGap - qrLinkSize, {
+      font, size: qrLinkSize, color: HENKO.inkSoft,
+    })
 
+    // Texto informativo a la derecha del QR
     const textX = marginX + qrSize + 10
     const leyenda = data.verifactu.anulada
       ? 'Factura verificable · ANULADA'
@@ -527,9 +535,6 @@ export async function buildFacturaPdf(data: FacturaPdfData, emisor: EmisorPdf, a
       font, size: 7.5, color: HENKO.inkSoft,
     })
     drawText(page, `Huella: ${data.verifactu.huella.slice(0, 32)}…`, textX, verifactuY + qrSize - 34, {
-      font, size: 6.5, color: HENKO.inkSoft,
-    })
-    drawText(page, data.verifactu.qrUrl, textX, verifactuY + qrSize - 46, {
       font, size: 6.5, color: HENKO.inkSoft,
     })
   }

@@ -32,7 +32,7 @@ export default async function AjustesPage() {
   ])
 
   return (
-    <div className="w-full max-w-4xl">
+    <div className="w-full">
       <div className="mb-8 md:mb-10">
         <h1 className="font-roxborough text-2xl md:text-3xl text-gray-900 mb-2">Ajustes del emisor</h1>
         <p className="font-raleway text-gray-500 font-light">
