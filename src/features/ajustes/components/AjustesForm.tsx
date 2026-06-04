@@ -63,21 +63,23 @@ export default function AjustesForm({ settings, logoUrl, firmaUrl, headerUrl, fo
       {/* Tarjeta única con pestañas */}
       <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
         {/* Tab bar */}
-        <div className="flex border-b border-gray-100 px-6 pt-5 gap-1">
-          {TABS.map((t) => (
-            <button
-              key={t.key}
-              type="button"
-              onClick={() => setTab(t.key)}
-              className={`px-4 py-2 rounded-t-xl font-raleway text-sm font-semibold transition-colors ${
-                tab === t.key
-                  ? 'bg-gray-50 text-henko-turquoise border border-b-0 border-gray-100'
-                  : 'text-gray-400 hover:text-gray-700'
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
+        <div className="px-6 pt-5 pb-0 border-b border-gray-100">
+          <div className="flex gap-1 bg-gray-100 rounded-2xl p-1 w-fit mb-4">
+            {TABS.map((t) => (
+              <button
+                key={t.key}
+                type="button"
+                onClick={() => setTab(t.key)}
+                className={`px-4 py-2 rounded-xl font-raleway text-sm font-medium transition-colors ${
+                  tab === t.key
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Contenido de la pestaña activa */}
