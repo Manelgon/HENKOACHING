@@ -283,7 +283,7 @@ export default function CandidatoDashboard({ perfil, completion, cv, solicitudes
         </div>
 
         <main className="flex-1 px-5 py-6 md:p-12 overflow-y-auto">
-          {tab === 'panel'        && <TabPanel nombre={perfil.nombre} solicitudes={solicitudes} ofertas={ofertas} completion={completion} pct={pct} onGoTab={goTab} />}
+          {tab === 'panel'        && <TabPanel nombre={perfil.nombre} solicitudes={solicitudes} ofertas={ofertas} aplicadas={aplicadas} completion={completion} pct={pct} onGoTab={goTab} />}
           {tab === 'empleos'      && <TabEmpleos ofertas={ofertas} aplicadas={aplicadas} />}
           {tab === 'solicitudes'  && <TabSolicitudes solicitudes={solicitudes} />}
           {tab === 'perfil'       && <TabPerfil perfil={perfil} completion={completion} cv={cv} />}
@@ -409,9 +409,9 @@ function TabSolicitudes({ solicitudes }: { solicitudes: SolicitudView[] }) {
   )
 }
 
-function TabPanel({ nombre, solicitudes, ofertas, completion, pct, onGoTab }: { nombre: string; solicitudes: SolicitudView[]; ofertas: OfertaItem[]; completion: CompletionData; pct: number; onGoTab: (t: Tab) => void }) {
+function TabPanel({ nombre, solicitudes, ofertas, aplicadas, completion, pct, onGoTab }: { nombre: string; solicitudes: SolicitudView[]; ofertas: OfertaItem[]; aplicadas: Map<string, EstadoSolicitud>; completion: CompletionData; pct: number; onGoTab: (t: Tab) => void }) {
   const solicitudesRecientes = solicitudes.slice(0, 3)
-  const ofertasRecientes = ofertas.slice(0, 3)
+  const ofertasRecientes = ofertas.filter(o => !aplicadas.has(o.id)).slice(0, 3)
 
   return (
     <div className="flex flex-col gap-8">
