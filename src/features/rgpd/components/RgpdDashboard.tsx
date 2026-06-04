@@ -277,7 +277,7 @@ export default function RgpdDashboard({
       )}
 
       {/* Tabs */}
-      <div className="flex border-b border-gray-200 mb-6 overflow-x-auto">
+      <div className="flex items-end gap-1 border-b border-gray-200 mb-6">
         {([
           { id: 'documentos', label: 'Documentos normativos' },
           { id: 'solicitudes', label: 'Solicitudes de derechos' },
@@ -287,14 +287,15 @@ export default function RgpdDashboard({
             key={t.id}
             type="button"
             onClick={() => setTab(t.id)}
-            className={`px-4 py-2 font-raleway text-sm font-semibold transition-colors border-b-2 -mb-px whitespace-nowrap ${tab === t.id ? 'border-henko-turquoise text-henko-turquoise' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+            className={`relative px-4 py-3 font-raleway text-sm font-semibold transition-colors whitespace-nowrap flex items-center gap-1.5 ${tab === t.id ? 'text-henko-turquoise' : 'text-gray-400 hover:text-gray-600'}`}
           >
             {t.label}
             {t.id === 'solicitudes' && solicitudes.filter(s => s.estado === 'pendiente').length > 0 && (
-              <span className="ml-2 px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[10px] font-bold">
+              <span className="px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[10px] font-bold">
                 {solicitudes.filter(s => s.estado === 'pendiente').length}
               </span>
             )}
+            {tab === t.id && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-henko-turquoise rounded-full" />}
           </button>
         ))}
       </div>
