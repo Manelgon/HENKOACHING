@@ -1,6 +1,6 @@
 import Link from 'next/link'
 
-const ULTIMA_ACTUALIZACION = '15 de mayo de 2026'
+const ULTIMA_ACTUALIZACION = '4 de junio de 2026'
 
 export default function Legal() {
   return (
