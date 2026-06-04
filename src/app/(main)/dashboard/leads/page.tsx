@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import LeadsTable from '@/features/leads/components/LeadsTable'
+import type { LeadRow } from '@/features/leads/components/LeadsTable'
 
 export const metadata = {
   title: 'Leads — Henkoaching',
@@ -9,10 +10,10 @@ export const dynamic = 'force-dynamic'
 
 export default async function LeadsPage() {
   const supabase = await createClient()
-  const { data: leads } = await supabase
+  const { data: leadsRaw } = await supabase
     .from('leads')
-    .select('id, nombre, email, telefono, asunto, mensaje, servicio_interes, origen, estado, leido, archivado, creado_manualmente, created_at')
-    .order('created_at', { ascending: false })
+    .select('id, nombre, email, telefono, asunto, mensaje, servicio_interes, origen, estado, leido, archivado, creado_manualmente, created_at, acepto_privacidad_at, consent_text')
+    .order('created_at', { ascending: false }) as { data: LeadRow[] | null }
 
   return (
     <div className="w-full">
@@ -21,7 +22,7 @@ export default async function LeadsPage() {
         <p className="font-raleway text-gray-500 font-light">Gestiona tus contactos: del formulario web, redes sociales, llamadas o referencias.</p>
       </div>
 
-      <LeadsTable leads={leads ?? []} />
+      <LeadsTable leads={leadsRaw ?? []} />
     </div>
   )
 }

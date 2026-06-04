@@ -28,6 +28,8 @@ export type LeadRow = {
   archivado: boolean | null
   creado_manualmente: boolean | null
   created_at: string | null
+  acepto_privacidad_at: string | null
+  consent_text: string | null
 }
 
 type Filtros = {

@@ -375,6 +375,36 @@ export default function CandidatoDetalleLayout({ perfil, cvPrincipal, ofertas, o
         </div>
       )}
 
+      {/* Consentimiento RGPD */}
+      {(perfil.acepto_privacidad_at || perfil.consent_text) && (
+        <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm p-6">
+          <p className="font-raleway font-bold text-henko-turquoise tracking-[0.14em] uppercase text-[11px] mb-4">Consentimiento RGPD</p>
+          <div className="space-y-3">
+            {perfil.acepto_privacidad_at && (
+              <div className="flex items-center gap-2">
+                <svg className="w-4 h-4 text-green-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="font-raleway text-sm text-gray-600">
+                  Consentimiento prestado el{' '}
+                  <strong className="text-gray-800">
+                    {new Date(perfil.acepto_privacidad_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                  </strong>
+                </span>
+              </div>
+            )}
+            {perfil.consent_text && (
+              <p className="font-raleway text-xs text-gray-500 italic bg-gray-50 rounded-xl px-4 py-3 border border-gray-100">
+                &ldquo;{perfil.consent_text}&rdquo;
+              </p>
+            )}
+            {!perfil.acepto_privacidad_at && (
+              <p className="font-raleway text-xs text-gray-400 italic">Registro anterior a la implementación del registro de consentimiento.</p>
+            )}
+          </div>
+        </div>
+      )}
+
       {composeOpen && (
         <ComposeDrawer
           onClose={() => setComposeOpen(false)}

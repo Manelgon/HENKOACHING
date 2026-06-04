@@ -89,6 +89,8 @@ export type CandidatoPerfil = {
   tipo_contrato: string | null
   sectores_interes: string[] | null
   fecha_nacimiento: string | null
+  acepto_privacidad_at: string | null
+  consent_text: string | null
   archivado: boolean
   experiencias: Experiencia[]
   educacion: Educacion[]
