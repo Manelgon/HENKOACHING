@@ -142,6 +142,12 @@ export default function CandidatoLoginForm() {
               <FormError msg={errors.password} />
             </div>
 
+            <div className="flex justify-end mb-6">
+              <Link href="/candidato/forgot-password" className="text-xs text-henko-turquoise hover:underline">
+                ¿Olvidaste tu contraseña?
+              </Link>
+            </div>
+
             <button
               type="submit"
               className="w-full inline-flex items-center justify-center gap-2 bg-henko-turquoise text-white px-6 py-3.5 rounded-full text-sm font-semibold hover:bg-henko-turquoise-light hover:shadow-lg transition-all"

@@ -4,6 +4,8 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import DashboardShell, { type NavSection } from '@/components/DashboardShell'
 import EmailPoller from '@/features/email/components/EmailPoller'
 import CandidatosPoller from '@/features/candidatos/components/CandidatosPoller'
+import { FeedbackProvider } from '@/shared/feedback/FeedbackContext'
+import GlobalFeedback from '@/shared/feedback/GlobalFeedback'
 
 // Iconos fuera del componente para evitar el warning de key de React 19
 // (JSX creado dentro de arrays de props necesita keys; renderizar desde función lo evita)
@@ -106,7 +108,7 @@ export default async function MainLayout({ children }: { children: React.ReactNo
   }
 
   return (
-    <>
+    <FeedbackProvider>
       {isAdmin && <EmailPoller hasImapConfig={hasImapConfig} />}
       {isAdmin && <CandidatosPoller initialCount={candidatosNuevos ?? 0} />}
       <DashboardShell
@@ -116,6 +118,7 @@ export default async function MainLayout({ children }: { children: React.ReactNo
       >
         {children}
       </DashboardShell>
-    </>
+      <GlobalFeedback />
+    </FeedbackProvider>
   )
 }

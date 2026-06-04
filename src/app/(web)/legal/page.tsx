@@ -8,7 +8,7 @@ export default function Legal() {
       {/* Header */}
       <div className="bg-gradient-to-br from-gray-50 to-white border-b border-gray-100 py-16 md:py-20">
         <div className="max-w-4xl mx-auto px-4 md:px-8">
-          <Link href="/" className="inline-flex items-center text-henko-greenblue hover:text-henko-greenblue/80 text-sm font-raleway font-semibold mb-6 transition-colors">
+          <Link href="/" className="inline-flex items-center text-henko-turquoise hover:text-henko-turquoise/80 text-sm font-raleway font-semibold mb-6 transition-colors">
             ← Volver
           </Link>
           <h1 className="font-raleway text-3xl md:text-4xl font-bold text-gray-900 mb-4">Legal</h1>
@@ -30,7 +30,7 @@ export default function Legal() {
             <a
               key={section.id}
               href={`#${section.id}`}
-              className="px-4 py-3 rounded-lg border border-gray-200 hover:border-henko-greenblue hover:bg-henko-greenblue/5 text-gray-700 hover:text-henko-greenblue font-raleway text-sm font-semibold transition-all duration-300 text-center"
+              className="px-4 py-3 rounded-lg border border-gray-200 hover:border-henko-turquoise hover:bg-henko-turquoise/5 text-gray-700 hover:text-henko-turquoise font-raleway text-sm font-semibold transition-all duration-300 text-center"
             >
               {section.label}
             </a>
@@ -39,7 +39,7 @@ export default function Legal() {
 
         {/* Aviso Legal */}
         <section id="aviso-legal" className="mb-16 scroll-mt-20">
-          <h2 className="font-raleway text-3xl font-bold text-gray-900 mb-6 pb-4 border-b-2 border-henko-greenblue">
+          <h2 className="font-raleway text-3xl font-bold text-gray-900 mb-6 pb-4 border-b-2 border-henko-turquoise">
             Aviso Legal
           </h2>
           <div className="space-y-4 text-gray-700 font-raleway">
@@ -50,7 +50,7 @@ export default function Legal() {
               <p><strong>Titular:</strong> Jennifer Cervera Alzate</p>
               <p><strong>NIF:</strong> 43209692Y</p>
               <p><strong>Domicilio:</strong> Calle Pere Quintana 25, 07008 Palma de Mallorca, Illes Balears, España</p>
-              <p><strong>Email de contacto:</strong> <a href="mailto:info@henkoaching.com" className="text-henko-greenblue hover:underline">info@henkoaching.com</a></p>
+              <p><strong>Email de contacto:</strong> <a href="mailto:info@henkoaching.com" className="text-henko-turquoise hover:underline">info@henkoaching.com</a></p>
               <p><strong>Nombre comercial:</strong> Henkoaching</p>
             </div>
             <h3 className="text-lg font-bold text-gray-900 mt-6 mb-3">Objeto</h3>
@@ -90,7 +90,7 @@ export default function Legal() {
 
         {/* Política de Privacidad */}
         <section id="privacidad" className="mb-16 scroll-mt-20">
-          <h2 className="font-raleway text-3xl font-bold text-gray-900 mb-6 pb-4 border-b-2 border-henko-greenblue">
+          <h2 className="font-raleway text-3xl font-bold text-gray-900 mb-6 pb-4 border-b-2 border-henko-turquoise">
             Política de Privacidad
           </h2>
           <div className="space-y-4 text-gray-700 font-raleway">
@@ -103,7 +103,7 @@ export default function Legal() {
               <p><strong>Responsable:</strong> Jennifer Cervera Alzate</p>
               <p><strong>NIF:</strong> 43209692Y</p>
               <p><strong>Domicilio:</strong> Calle Pere Quintana 25, 07008 Palma de Mallorca, España</p>
-              <p><strong>Email para asuntos de privacidad:</strong> <a href="mailto:info@henkoaching.com" className="text-henko-greenblue hover:underline">info@henkoaching.com</a></p>
+              <p><strong>Email para asuntos de privacidad:</strong> <a href="mailto:info@henkoaching.com" className="text-henko-turquoise hover:underline">info@henkoaching.com</a></p>
             </div>
 
             <h3 className="text-lg font-bold text-gray-900 mt-6 mb-3">2. Finalidades del tratamiento</h3>
@@ -178,8 +178,8 @@ export default function Legal() {
                     <td className="p-3 border border-gray-200">Base de datos, autenticación y almacenamiento de archivos (CVs)</td>
                     <td className="p-3 border border-gray-200">UE — Irlanda (eu-west-1)</td>
                     <td className="p-3 border border-gray-200">
-                      <a href="https://supabase.com/dpa" target="_blank" rel="noopener noreferrer" className="text-henko-greenblue underline">DPA firmado</a>{' '}·{' '}
-                      <a href="https://supabase.com/privacy" target="_blank" rel="noopener noreferrer" className="text-henko-greenblue underline">Privacidad</a>
+                      <a href="https://supabase.com/dpa" target="_blank" rel="noopener noreferrer" className="text-henko-turquoise underline">DPA firmado</a>{' '}·{' '}
+                      <a href="https://supabase.com/privacy" target="_blank" rel="noopener noreferrer" className="text-henko-turquoise underline">Privacidad</a>
                     </td>
                   </tr>
                   <tr className="border border-gray-200 bg-gray-50/50">
@@ -187,8 +187,8 @@ export default function Legal() {
                     <td className="p-3 border border-gray-200">Alojamiento del sitio web y CDN</td>
                     <td className="p-3 border border-gray-200">EE. UU. — Cláusulas contractuales tipo (SCCs)</td>
                     <td className="p-3 border border-gray-200">
-                      <a href="https://vercel.com/legal/dpa" target="_blank" rel="noopener noreferrer" className="text-henko-greenblue underline">DPA firmado</a>{' '}·{' '}
-                      <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-henko-greenblue underline">Privacidad</a>
+                      <a href="https://vercel.com/legal/dpa" target="_blank" rel="noopener noreferrer" className="text-henko-turquoise underline">DPA firmado</a>{' '}·{' '}
+                      <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-henko-turquoise underline">Privacidad</a>
                     </td>
                   </tr>
                   <tr className="border border-gray-200">
@@ -196,8 +196,8 @@ export default function Legal() {
                     <td className="p-3 border border-gray-200">Envío de emails transaccionales (confirmaciones de registro, notificaciones de candidatura)</td>
                     <td className="p-3 border border-gray-200">España (UE)</td>
                     <td className="p-3 border border-gray-200">
-                      <a href="https://www.piensasolutions.com/legal/privacidad" target="_blank" rel="noopener noreferrer" className="text-henko-greenblue underline">DPA firmado</a>{' '}·{' '}
-                      <a href="https://www.piensasolutions.com/legal/privacidad" target="_blank" rel="noopener noreferrer" className="text-henko-greenblue underline">Privacidad</a>
+                      <a href="https://www.piensasolutions.com/legal/privacidad" target="_blank" rel="noopener noreferrer" className="text-henko-turquoise underline">DPA firmado</a>{' '}·{' '}
+                      <a href="https://www.piensasolutions.com/legal/privacidad" target="_blank" rel="noopener noreferrer" className="text-henko-turquoise underline">Privacidad</a>
                       {' '}— Empresa española sujeta a RGPD/LOPDGDD
                     </td>
                   </tr>
@@ -235,7 +235,7 @@ export default function Legal() {
             <div className="my-4 flex flex-col sm:flex-row gap-3">
               <Link
                 href="/legal/derechos-arco"
-                className="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-henko-greenblue text-white font-raleway font-semibold text-sm hover:bg-henko-greenblue/90 transition-colors"
+                className="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-henko-turquoise text-white font-raleway font-semibold text-sm hover:bg-henko-turquoise/90 transition-colors"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -244,7 +244,7 @@ export default function Legal() {
               </Link>
               <a
                 href="mailto:info@henkoaching.com"
-                className="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-henko-greenblue text-henko-greenblue font-raleway font-semibold text-sm hover:bg-henko-greenblue/5 transition-colors"
+                className="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-henko-turquoise text-henko-turquoise font-raleway font-semibold text-sm hover:bg-henko-turquoise/5 transition-colors"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -255,7 +255,7 @@ export default function Legal() {
             <p className="text-sm text-gray-500">Atenderemos tu solicitud en el plazo máximo de un mes conforme al art. 12 RGPD. Puede que solicitemos una copia de documento identificativo para verificar tu identidad.</p>
             <p>
               Si consideras que el tratamiento de tus datos no se ajusta a la normativa, puedes presentar una reclamación ante la <strong>Agencia Española de Protección de Datos</strong> (AEPD) a través de su sede electrónica:{' '}
-              <a href="https://www.aepd.es" target="_blank" rel="noopener noreferrer" className="text-henko-greenblue hover:underline font-semibold">www.aepd.es</a>.
+              <a href="https://www.aepd.es" target="_blank" rel="noopener noreferrer" className="text-henko-turquoise hover:underline font-semibold">www.aepd.es</a>.
             </p>
 
             <h3 className="text-lg font-bold text-gray-900 mt-6 mb-3">9. Seguridad</h3>
@@ -277,7 +277,7 @@ export default function Legal() {
 
         {/* Política de Cookies */}
         <section id="cookies" className="mb-16 scroll-mt-20">
-          <h2 className="font-raleway text-3xl font-bold text-gray-900 mb-6 pb-4 border-b-2 border-henko-greenblue">
+          <h2 className="font-raleway text-3xl font-bold text-gray-900 mb-6 pb-4 border-b-2 border-henko-turquoise">
             Política de Cookies
           </h2>
           <div className="space-y-4 text-gray-700 font-raleway">
@@ -326,17 +326,17 @@ export default function Legal() {
               Puedes configurar tu navegador para bloquear, eliminar o ser avisado cuando se instalen cookies. Ten en cuenta que desactivar las cookies técnicas puede impedir el correcto funcionamiento del área privada del sitio (login, dashboard de candidato, etc.).
             </p>
             <ul className="list-disc list-inside space-y-2 ml-2">
-              <li><a href="https://support.google.com/chrome/answer/95647" target="_blank" rel="noopener noreferrer" className="text-henko-greenblue hover:underline">Google Chrome</a></li>
-              <li><a href="https://support.mozilla.org/es/kb/proteccion-mejorada-contra-rastreo-firefox-escritorio" target="_blank" rel="noopener noreferrer" className="text-henko-greenblue hover:underline">Mozilla Firefox</a></li>
-              <li><a href="https://support.apple.com/es-es/guide/safari/sfri11471/mac" target="_blank" rel="noopener noreferrer" className="text-henko-greenblue hover:underline">Safari</a></li>
-              <li><a href="https://support.microsoft.com/es-es/microsoft-edge" target="_blank" rel="noopener noreferrer" className="text-henko-greenblue hover:underline">Microsoft Edge</a></li>
+              <li><a href="https://support.google.com/chrome/answer/95647" target="_blank" rel="noopener noreferrer" className="text-henko-turquoise hover:underline">Google Chrome</a></li>
+              <li><a href="https://support.mozilla.org/es/kb/proteccion-mejorada-contra-rastreo-firefox-escritorio" target="_blank" rel="noopener noreferrer" className="text-henko-turquoise hover:underline">Mozilla Firefox</a></li>
+              <li><a href="https://support.apple.com/es-es/guide/safari/sfri11471/mac" target="_blank" rel="noopener noreferrer" className="text-henko-turquoise hover:underline">Safari</a></li>
+              <li><a href="https://support.microsoft.com/es-es/microsoft-edge" target="_blank" rel="noopener noreferrer" className="text-henko-turquoise hover:underline">Microsoft Edge</a></li>
             </ul>
           </div>
         </section>
 
         {/* Declaración de Accesibilidad */}
         <section id="accesibilidad" className="mb-16 scroll-mt-20">
-          <h2 className="font-raleway text-3xl font-bold text-gray-900 mb-6 pb-4 border-b-2 border-henko-greenblue">
+          <h2 className="font-raleway text-3xl font-bold text-gray-900 mb-6 pb-4 border-b-2 border-henko-turquoise">
             Declaración de Accesibilidad
           </h2>
           <div className="space-y-4 text-gray-700 font-raleway">
@@ -361,9 +361,9 @@ export default function Legal() {
             <h3 className="text-lg font-bold text-gray-900 mt-6 mb-3">Reportar problemas de accesibilidad</h3>
             <p>
               Si encuentras problemas de accesibilidad mientras navegas este sitio, puedes contactarnos a través del{' '}
-              <Link href="/contacto" className="text-henko-greenblue hover:text-henko-greenblue/80 font-semibold transition-colors">formulario de contacto</Link>
+              <Link href="/contacto" className="text-henko-turquoise hover:text-henko-turquoise/80 font-semibold transition-colors">formulario de contacto</Link>
               {' '}o enviando un correo a{' '}
-              <a href="mailto:info@henkoaching.com" className="text-henko-greenblue hover:underline font-semibold">info@henkoaching.com</a>.
+              <a href="mailto:info@henkoaching.com" className="text-henko-turquoise hover:underline font-semibold">info@henkoaching.com</a>.
             </p>
           </div>
         </section>
@@ -372,7 +372,7 @@ export default function Legal() {
         <div className="mt-16 pt-8 border-t border-gray-200 text-center">
           <Link
             href="#aviso-legal"
-            className="inline-flex items-center justify-center border border-gray-300 hover:border-henko-greenblue bg-white hover:bg-henko-greenblue/5 rounded-full text-gray-900 hover:text-henko-greenblue text-xs font-bold tracking-widest uppercase px-6 py-3 transition-all duration-300"
+            className="inline-flex items-center justify-center border border-gray-300 hover:border-henko-turquoise bg-white hover:bg-henko-turquoise/5 rounded-full text-gray-900 hover:text-henko-turquoise text-xs font-bold tracking-widest uppercase px-6 py-3 transition-all duration-300"
           >
             ↑ Volver al inicio
           </Link>
