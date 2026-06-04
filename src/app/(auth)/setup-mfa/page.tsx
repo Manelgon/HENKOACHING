@@ -90,7 +90,7 @@ function SetupMfaContent() {
       return
     }
     setStep('done')
-    router.push('/dashboard')
+    window.location.replace('/dashboard')
   }
 
   return (
