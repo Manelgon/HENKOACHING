@@ -110,58 +110,55 @@ function SetupMfaContent() {
           <p className="text-gray-500 text-sm font-raleway">Cargando...</p>
         )}
 
-        {step === 'qr' && (
-          <>
-            <p className="text-gray-600 text-sm font-raleway mb-5">
-              Escanea el código QR con <strong>Google Authenticator</strong>, <strong>Authy</strong> u otra app autenticadora.
-            </p>
-            <div className="flex justify-center mb-4">
-              <canvas ref={canvasRef} className="rounded-xl border border-gray-200" />
-            </div>
-            {secret && (
-              <div className="bg-gray-50 rounded-xl px-4 py-3 mb-5 text-left">
-                <p className="text-xs text-gray-500 font-raleway mb-1">O introduce la clave manualmente:</p>
-                <code className="text-xs text-gray-800 break-all font-mono">{secret}</code>
-              </div>
+        {(step === 'qr' || step === 'code') && (
+          <form onSubmit={handleVerify} className="flex flex-col gap-4">
+            {step === 'qr' && (
+              <>
+                <p className="text-gray-600 text-sm font-raleway">
+                  Escanea el código QR con <strong>Google Authenticator</strong>, <strong>Authy</strong> u otra app autenticadora.
+                </p>
+                <div className="flex justify-center">
+                  <canvas ref={canvasRef} className="rounded-xl border border-gray-200" />
+                </div>
+                {secret && (
+                  <div className="bg-gray-50 rounded-xl px-4 py-3 text-left">
+                    <p className="text-xs text-gray-500 font-raleway mb-1">O introduce la clave manualmente:</p>
+                    <code className="text-xs text-gray-800 break-all font-mono">{secret}</code>
+                  </div>
+                )}
+                <p className="text-gray-500 text-xs font-raleway">Después de escanear, introduce el código de 6 dígitos:</p>
+              </>
             )}
-            <button
-              onClick={() => setStep('code')}
-              className="w-full px-5 py-3 rounded-xl bg-henko-greenblue text-white font-raleway font-semibold text-sm hover:bg-henko-greenblue/90 transition-colors"
-            >
-              Ya escaneé el código →
-            </button>
-          </>
-        )}
 
-        {step === 'code' && (
-          <>
-            <p className="text-gray-600 text-sm font-raleway mb-6">
-              {enroll
-                ? 'Introduce el código de 6 dígitos de tu app autenticadora para confirmar el registro.'
-                : 'Abre tu app autenticadora e introduce el código de 6 dígitos para acceder al panel.'}
-            </p>
-            <form onSubmit={handleVerify} className="flex flex-col gap-4">
-              <input
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9]{6}"
-                maxLength={6}
-                value={code}
-                onChange={e => setCode(e.target.value.replace(/\D/g, ''))}
-                placeholder="000000"
-                className="w-full text-center text-2xl tracking-widest font-mono border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-henko-greenblue/30"
-                autoFocus
-              />
-              {error && <p className="text-red-600 text-sm font-raleway">{error}</p>}
-              <button
-                type="submit"
-                disabled={loading || code.length !== 6}
-                className="w-full px-5 py-3 rounded-xl bg-henko-greenblue text-white font-raleway font-semibold text-sm hover:bg-henko-greenblue/90 transition-colors disabled:opacity-50"
-              >
-                {loading ? 'Verificando...' : 'Verificar y acceder'}
-              </button>
-            </form>
-          </>
+            {step === 'code' && (
+              <p className="text-gray-600 text-sm font-raleway">
+                Abre tu app autenticadora e introduce el código de 6 dígitos para acceder al panel.
+              </p>
+            )}
+
+            <input
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]{6}"
+              maxLength={6}
+              value={code}
+              onChange={e => {
+                const val = e.target.value.replace(/\D/g, '')
+                setCode(val)
+              }}
+              placeholder="000000"
+              className="w-full text-center text-2xl tracking-widest font-mono border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-henko-greenblue/30"
+              autoFocus={step === 'code'}
+            />
+            {error && <p className="text-red-600 text-sm font-raleway">{error}</p>}
+            <button
+              type="submit"
+              disabled={loading || code.length !== 6}
+              className="w-full px-5 py-3 rounded-xl bg-henko-greenblue text-white font-raleway font-semibold text-sm hover:bg-henko-greenblue/90 transition-colors disabled:opacity-50"
+            >
+              {loading ? 'Verificando...' : 'Verificar y acceder'}
+            </button>
+          </form>
         )}
 
         {step === 'done' && (
