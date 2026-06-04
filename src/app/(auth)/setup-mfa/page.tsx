@@ -43,8 +43,15 @@ function SetupMfaContent() {
       return
     }
 
-    // qr_code es un SVG ya renderizado — se inyecta directamente como inline SVG
-    setQrSvg(data.totp.qr_code)
+    // qr_code puede venir como data URL o como SVG puro — extraer solo el SVG
+    const raw = data.totp.qr_code
+    let svg = raw
+    if (raw.startsWith('data:image/svg+xml;utf-8,')) {
+      svg = decodeURIComponent(raw.slice('data:image/svg+xml;utf-8,'.length))
+    } else if (raw.startsWith('data:image/svg+xml;base64,')) {
+      svg = atob(raw.slice('data:image/svg+xml;base64,'.length))
+    }
+    setQrSvg(svg)
     setSecret(data.totp.secret)
     setFactorId(data.id)
     setStep('qr')
