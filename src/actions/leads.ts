@@ -20,6 +20,7 @@ export async function crearLead(input: {
   mensaje: string
   servicio_interes?: string
   acepto_privacidad: boolean
+  consent_text?: string
 }) {
   if (!input.nombre.trim() || !input.email.trim() || !input.mensaje.trim()) {
     return { error: 'Faltan campos obligatorios' }
@@ -40,6 +41,7 @@ export async function crearLead(input: {
     origen: 'web',
     acepto_privacidad: true,
     acepto_privacidad_at: new Date().toISOString(),
+    consent_text: input.consent_text || null,
   } as never).select('id').single()
 
   if (error) return { error: error.message }

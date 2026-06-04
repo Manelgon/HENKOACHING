@@ -7,6 +7,8 @@ import { signupCandidato, uploadCvPorAdmin, checkEmailCandidatoExiste, solicitar
 import { useAction } from '@/shared/feedback/FeedbackContext'
 import { FormError } from '@/components/FormError'
 
+const CONSENT_TEXT_CANDIDATO = 'He leído y acepto la política de privacidad y consiento el tratamiento de mis datos y de mi CV por Jennifer Cervera Alzate con la finalidad de gestionar mi candidatura en los procesos de selección publicados.'
+
 type StepCuentaErrors = { nombre?: string; apellidos?: string; email?: string; password?: string; privacidad?: string }
 
 type FormState = {
@@ -160,6 +162,7 @@ export default function CandidatoSignupFlow() {
         tipoJornada: '', modalidad: '', tipoContrato: '',
         sectores: [], disponibilidad: '', pretensionSalarial: '',
         experiencias: [], educacion: [], idiomas: [],
+        consentText: CONSENT_TEXT_CANDIDATO,
       }),
       { successMessage: 'Perfil creado' },
     )

@@ -30,6 +30,7 @@ export type CandidatoSignupInput = {
   experiencias: ExperienciaInput[]
   educacion: EducacionInput[]
   idiomas: IdiomaInput[]
+  consentText?: string
 }
 
 const NIVELES_VALIDOS: NivelIdioma[] = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'Nativo']
@@ -131,6 +132,8 @@ export async function signupCandidato(input: CandidatoSignupInput) {
       sectores_interes: input.sectores.length > 0 ? input.sectores : null,
       disponibilidad: input.disponibilidad || null,
       pretension_salarial: input.pretensionSalarial || null,
+      acepto_privacidad_at: new Date().toISOString() as never,
+      consent_text: (input.consentText || null) as never,
     })
     .eq('user_id', userId)
 

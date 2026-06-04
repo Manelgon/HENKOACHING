@@ -10,6 +10,8 @@ import { useAction } from '@/shared/feedback/FeedbackContext'
 
 type Errors = { nombre?: string; email?: string; mensaje?: string; privacidad?: string }
 
+const CONSENT_TEXT = 'He leído y acepto la política de privacidad y el tratamiento de mis datos.'
+
 export default function ContactoPage() {
   const runAction = useAction()
   const [form, setForm] = useState({ nombre: '', empresa: '', email: '', servicio: '', mensaje: '' })
@@ -41,6 +43,7 @@ export default function ContactoPage() {
         mensaje: form.mensaje,
         servicio_interes: form.servicio || undefined,
         acepto_privacidad: aceptoPrivacidad,
+        consent_text: CONSENT_TEXT,
       }),
       { successMessage: 'Mensaje enviado' },
     )
