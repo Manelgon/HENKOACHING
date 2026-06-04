@@ -379,6 +379,7 @@ export type Database = {
         Row: {
           acepto_privacidad_at: string | null
           cargo_actual: string | null
+          consent_confirmed_at: string | null
           consent_text: string | null
           cp: string | null
           created_at: string | null
@@ -400,6 +401,7 @@ export type Database = {
         Insert: {
           acepto_privacidad_at?: string | null
           cargo_actual?: string | null
+          consent_confirmed_at?: string | null
           consent_text?: string | null
           cp?: string | null
           created_at?: string | null
@@ -421,6 +423,7 @@ export type Database = {
         Update: {
           acepto_privacidad_at?: string | null
           cargo_actual?: string | null
+          consent_confirmed_at?: string | null
           consent_text?: string | null
           cp?: string | null
           created_at?: string | null

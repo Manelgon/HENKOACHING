@@ -196,7 +196,8 @@ export default function Legal() {
                     <td className="p-3 border border-gray-200">Envío de emails transaccionales (confirmaciones de registro, notificaciones de candidatura)</td>
                     <td className="p-3 border border-gray-200">España (UE)</td>
                     <td className="p-3 border border-gray-200">
-                      <a href="https://www.piensasolutions.com/legal/privacidad" target="_blank" rel="noopener noreferrer" className="text-henko-greenblue underline">Política de privacidad</a>
+                      <a href="https://www.piensasolutions.com/legal/privacidad" target="_blank" rel="noopener noreferrer" className="text-henko-greenblue underline">DPA firmado</a>{' '}·{' '}
+                      <a href="https://www.piensasolutions.com/legal/privacidad" target="_blank" rel="noopener noreferrer" className="text-henko-greenblue underline">Privacidad</a>
                       {' '}— Empresa española sujeta a RGPD/LOPDGDD
                     </td>
                   </tr>

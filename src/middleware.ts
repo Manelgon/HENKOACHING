@@ -2,6 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 const PROTECTED_PREFIXES = ['/dashboard', '/candidato/dashboard']
+const ADMIN_PREFIXES = ['/dashboard'] // Solo admins/recruiters requieren MFA
 const AUTH_ROUTES = ['/login', '/signup', '/forgot-password', '/check-email', '/update-password', '/candidato/login', '/candidato/signup']
 
 export async function middleware(request: NextRequest) {
@@ -33,6 +34,8 @@ export async function middleware(request: NextRequest) {
 
   const isProtected = PROTECTED_PREFIXES.some(p => pathname.startsWith(p))
   const isAuthRoute = AUTH_ROUTES.some(r => pathname === r)
+  const isAdminRoute = ADMIN_PREFIXES.some(p => pathname.startsWith(p))
+  const isSetupMfa = pathname === '/setup-mfa'
 
   if (isProtected && !user) {
     const loginUrl = pathname.startsWith('/candidato')
@@ -46,6 +49,29 @@ export async function middleware(request: NextRequest) {
       ? '/candidato/dashboard'
       : '/dashboard'
     return NextResponse.redirect(new URL(homeUrl, request.url))
+  }
+
+  // MFA obligatorio para rutas de admin — candidatos quedan exentos
+  if (user && isAdminRoute && !isSetupMfa) {
+    const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+
+    if (aalData) {
+      const { currentLevel, nextLevel } = aalData
+
+      // Tiene factores MFA enrollados pero aún no los ha verificado en esta sesión
+      if (nextLevel === 'aal2' && currentLevel !== 'aal2') {
+        return NextResponse.redirect(new URL('/setup-mfa', request.url))
+      }
+
+      // No tiene ningún factor MFA enrollado → forzar configuración
+      if (nextLevel === 'aal1' && currentLevel === 'aal1') {
+        const { data: factors } = await supabase.auth.mfa.listFactors()
+        const hasVerifiedFactor = (factors?.totp ?? []).some(f => f.status === 'verified')
+        if (!hasVerifiedFactor) {
+          return NextResponse.redirect(new URL('/setup-mfa?enroll=1', request.url))
+        }
+      }
+    }
   }
 
   return supabaseResponse

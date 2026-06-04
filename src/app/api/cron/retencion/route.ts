@@ -17,6 +17,7 @@ export const runtime = 'nodejs'
 
 const MESES_RETENCION_CANDIDATO = 12
 const MESES_RETENCION_LEAD = 24
+const MESES_RETENCION_EMAIL_ENVIOS = 12
 
 export async function GET(request: Request) {
   const authHeader = request.headers.get('authorization')
@@ -31,6 +32,7 @@ export async function GET(request: Request) {
   const candidatosEliminados = await purgarCandidatosInactivos(admin)
   const leadsEliminados = await purgarLeadsAntiguos(admin)
   const auditLogsPurgados = await purgarAuditLogsAntiguos(admin)
+  const emailEnviosPurgados = await purgarEmailEnviosAntiguos(admin)
 
   const ms = Date.now() - inicio
   await logAction({
@@ -40,6 +42,7 @@ export async function GET(request: Request) {
       candidatos_eliminados: candidatosEliminados.length,
       leads_eliminados: leadsEliminados,
       audit_logs_purgados: auditLogsPurgados,
+      email_envios_purgados: emailEnviosPurgados,
       duracion_ms: ms,
     },
   })
@@ -49,6 +52,7 @@ export async function GET(request: Request) {
     candidatos_eliminados: candidatosEliminados.length,
     leads_eliminados: leadsEliminados,
     audit_logs_purgados: auditLogsPurgados,
+    email_envios_purgados: emailEnviosPurgados,
     duracion_ms: ms,
   })
 }
@@ -168,6 +172,39 @@ async function purgarAuditLogsAntiguos(admin: AdminClient): Promise<number> {
     console.error('[cron-retencion] Error borrando audit_logs:', delErr.message)
     return 0
   }
+
+  return ids.length
+}
+
+async function purgarEmailEnviosAntiguos(admin: AdminClient): Promise<number> {
+  const limite = new Date()
+  limite.setMonth(limite.getMonth() - MESES_RETENCION_EMAIL_ENVIOS)
+
+  const { data: viejos, error: selErr } = await admin
+    .from('email_envios')
+    .select('id')
+    .lt('created_at', limite.toISOString())
+    .limit(1000)
+
+  if (selErr) {
+    console.error('[cron-retencion] Error listando email_envios:', selErr.message)
+    return 0
+  }
+
+  const ids = (viejos ?? []).map((e: { id: string }) => e.id)
+  if (ids.length === 0) return 0
+
+  const { error: delErr } = await admin.from('email_envios').delete().in('id', ids)
+  if (delErr) {
+    console.error('[cron-retencion] Error borrando email_envios:', delErr.message)
+    return 0
+  }
+
+  await logAction({
+    accion: 'rgpd.purga_email_envios',
+    recursoTipo: 'email_envios',
+    metadata: { eliminados: ids.length, motivo: `antiguedad_${MESES_RETENCION_EMAIL_ENVIOS}m` },
+  })
 
   return ids.length
 }

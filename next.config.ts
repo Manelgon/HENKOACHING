@@ -1,9 +1,37 @@
 import type { NextConfig } from 'next'
 
+const CSP = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob: https://cardgrqwqktjsssodtzp.supabase.co https://images.unsplash.com",
+  "font-src 'self'",
+  "connect-src 'self' https://cardgrqwqktjsssodtzp.supabase.co wss://cardgrqwqktjsssodtzp.supabase.co",
+  "frame-ancestors 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+].join('; ')
+
+const SECURITY_HEADERS = [
+  { key: 'X-Content-Type-Options', value: 'nosniff' },
+  { key: 'X-Frame-Options', value: 'DENY' },
+  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+  { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+  { key: 'Content-Security-Policy', value: CSP },
+]
+
 const nextConfig: NextConfig = {
   // Activa el MCP server en /_next/mcp (Next.js 16+)
   experimental: {
     mcpServer: true,
+  },
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: SECURITY_HEADERS,
+      },
+    ]
   },
   // TipTap/ProseMirror necesita transpilación explícita con Turbopack
   transpilePackages: [
