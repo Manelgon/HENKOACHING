@@ -60,13 +60,16 @@ function isCompleted(doc: RgpdDocumento): boolean {
 }
 
 const PDF_URLS: Partial<Record<RgpdDocId, string>> = {
-  ropa: '/api/rat-pdf',
   runbook: '/api/runbook-pdf',
 }
 
-function DocCard({ doc, onClick }: { doc: RgpdDocumento; onClick: () => void }) {
+function DocCard({ doc, onClick, ratFirmadoUrl }: { doc: RgpdDocumento; onClick: () => void; ratFirmadoUrl?: string | null }) {
   const done = isCompleted(doc)
-  const pdfUrl = PDF_URLS[doc.id]
+  const pdfUrl = done ? PDF_URLS[doc.id] : undefined
+
+  // Para el RoPA mostramos el PDF firmado subido (no el borrador generado)
+  const ropaFirmadaUrl = doc.id === 'ropa' ? ratFirmadoUrl : null
+
   return (
     <div className="w-full bg-white rounded-2xl border border-gray-200 hover:border-henko-turquoise hover:shadow-md transition-all group flex items-center gap-4 px-5 py-4">
       <button type="button" onClick={onClick} className="flex items-center gap-4 flex-1 min-w-0 text-left">
@@ -86,6 +89,8 @@ function DocCard({ doc, onClick }: { doc: RgpdDocumento; onClick: () => void }) 
           {done ? 'Completado' : 'Pendiente'}
         </span>
       </button>
+
+      {/* Botón PDF para documentos completados (Runbook, etc.) */}
       {pdfUrl && (
         <a
           href={pdfUrl}
@@ -100,6 +105,30 @@ function DocCard({ doc, onClick }: { doc: RgpdDocumento; onClick: () => void }) 
           </svg>
         </a>
       )}
+
+      {/* RoPA: PDF firmado subido o badge pendiente de firma */}
+      {doc.id === 'ropa' && done && (
+        ropaFirmadaUrl ? (
+          <a
+            href={ropaFirmadaUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Descargar RAT firmado"
+            onClick={e => e.stopPropagation()}
+            className="shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition-colors"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+            </svg>
+            <span className="font-raleway text-[10px] font-bold">RAT firmado</span>
+          </a>
+        ) : (
+          <span className="shrink-0 text-[10px] font-bold font-raleway px-2 py-1 rounded-lg bg-gray-100 text-gray-400">
+            Sin firmar
+          </span>
+        )
+      )}
+
       <button type="button" onClick={onClick} className="shrink-0">
         <svg className="w-4 h-4 text-gray-300 group-hover:text-henko-turquoise transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -273,7 +302,7 @@ export default function RgpdDashboard({
         <>
           <div className="flex flex-col gap-3 mb-6">
             {documentos.map(doc => (
-              <DocCard key={doc.id} doc={doc} onClick={() => setDocAbierto(doc.id)} />
+              <DocCard key={doc.id} doc={doc} onClick={() => setDocAbierto(doc.id)} ratFirmadoUrl={doc.id === 'ropa' ? ratFirmadoUrl : undefined} />
             ))}
           </div>
           <RatPanel
