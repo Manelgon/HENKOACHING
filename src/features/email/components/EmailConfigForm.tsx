@@ -84,7 +84,7 @@ export default function EmailConfigForm({ config }: Props) {
   return (
     <form onSubmit={onSubmit} className="space-y-6">
       {/* Tabs */}
-      <div className="flex gap-1 bg-gray-100 rounded-2xl p-1 w-fit">
+      <div className="flex items-end gap-1 border-b border-gray-200">
         <TabButton active={activeTab === 'credenciales'} onClick={() => setActiveTab('credenciales')}>
           Credenciales
         </TabButton>
@@ -562,11 +562,12 @@ function TabButton({ active, onClick, children }: { active: boolean; onClick: ()
     <button
       type="button"
       onClick={onClick}
-      className={`px-4 py-2 rounded-xl font-raleway text-sm font-medium transition-colors ${
-        active ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+      className={`relative px-4 py-3 font-raleway text-sm font-semibold transition-colors whitespace-nowrap ${
+        active ? 'text-henko-turquoise' : 'text-gray-400 hover:text-gray-600'
       }`}
     >
       {children}
+      {active && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-henko-turquoise rounded-full" />}
     </button>
   )
 }
