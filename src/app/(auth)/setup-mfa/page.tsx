@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import QRCode from 'qrcode'
 import { createBrowserClient } from '@supabase/ssr'
 
 function SetupMfaContent() {
@@ -9,14 +10,15 @@ function SetupMfaContent() {
   const searchParams = useSearchParams()
   const enroll = searchParams.get('enroll') === '1'
 
-  const [qrSvg, setQrSvg] = useState<string | null>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const enrolledRef = useRef(false)
+
   const [secret, setSecret] = useState<string | null>(null)
   const [factorId, setFactorId] = useState<string | null>(null)
   const [code, setCode] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState<'loading' | 'qr' | 'code' | 'done'>('loading')
-  const enrolledRef = useRef(false)
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -24,11 +26,9 @@ function SetupMfaContent() {
   )
 
   const initEnroll = useCallback(async () => {
-    // Guard contra React Strict Mode doble-invocación
     if (enrolledRef.current) return
     enrolledRef.current = true
 
-    // Limpiar todos los factores TOTP desde `all` (el campo `totp` puede estar vacío)
     const { data: existing } = await supabase.auth.mfa.listFactors()
     const totpFactors = (existing?.all ?? []).filter(f => f.factor_type === 'totp')
     for (const factor of totpFactors) {
@@ -43,18 +43,20 @@ function SetupMfaContent() {
       return
     }
 
-    // qr_code puede venir como data URL o como SVG puro — extraer solo el SVG
-    const raw = data.totp.qr_code
-    let svg = raw
-    if (raw.startsWith('data:image/svg+xml;utf-8,')) {
-      svg = decodeURIComponent(raw.slice('data:image/svg+xml;utf-8,'.length))
-    } else if (raw.startsWith('data:image/svg+xml;base64,')) {
-      svg = atob(raw.slice('data:image/svg+xml;base64,'.length))
-    }
-    setQrSvg(svg)
     setSecret(data.totp.secret)
     setFactorId(data.id)
     setStep('qr')
+
+    // Renderizar el QR en canvas usando la URI TOTP (más fiable para cámaras)
+    setTimeout(() => {
+      if (canvasRef.current) {
+        QRCode.toCanvas(canvasRef.current, data.totp.uri, {
+          width: 220,
+          margin: 2,
+          errorCorrectionLevel: 'M',
+        })
+      }
+    }, 50)
   }, [supabase])
 
   const initVerify = useCallback(async () => {
@@ -108,15 +110,14 @@ function SetupMfaContent() {
           <p className="text-gray-500 text-sm font-raleway">Cargando...</p>
         )}
 
-        {step === 'qr' && qrSvg && (
+        {step === 'qr' && (
           <>
             <p className="text-gray-600 text-sm font-raleway mb-5">
               Escanea el código QR con <strong>Google Authenticator</strong>, <strong>Authy</strong> u otra app autenticadora.
             </p>
-            <div
-              className="flex justify-center mb-4 [&>svg]:w-48 [&>svg]:h-48 [&>svg]:rounded-xl [&>svg]:border [&>svg]:border-gray-200"
-              dangerouslySetInnerHTML={{ __html: qrSvg }}
-            />
+            <div className="flex justify-center mb-4">
+              <canvas ref={canvasRef} className="rounded-xl border border-gray-200" />
+            </div>
             {secret && (
               <div className="bg-gray-50 rounded-xl px-4 py-3 mb-5 text-left">
                 <p className="text-xs text-gray-500 font-raleway mb-1">O introduce la clave manualmente:</p>
