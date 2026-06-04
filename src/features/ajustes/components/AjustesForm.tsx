@@ -60,26 +60,25 @@ export default function AjustesForm({ settings, logoUrl, firmaUrl, headerUrl, fo
 
   return (
     <form onSubmit={onSubmit}>
-      {/* Tarjeta única con pestañas */}
-      <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
-        {/* Tab bar */}
-        <div className="flex items-end gap-1 px-6 pt-5 border-b border-gray-200">
-          {TABS.map((t) => (
-            <button
-              key={t.key}
-              type="button"
-              onClick={() => setTab(t.key)}
-              className={`relative px-4 py-3 font-raleway text-sm font-semibold transition-colors whitespace-nowrap ${
-                tab === t.key ? 'text-henko-turquoise' : 'text-gray-400 hover:text-gray-600'
-              }`}
-            >
-              {t.label}
-              {tab === t.key && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-henko-turquoise rounded-full" />}
-            </button>
-          ))}
-        </div>
+      {/* Tab bar — fuera de la tarjeta */}
+      <div className="flex items-end gap-1 border-b border-gray-200 mb-6">
+        {TABS.map((t) => (
+          <button
+            key={t.key}
+            type="button"
+            onClick={() => setTab(t.key)}
+            className={`relative px-4 py-3 font-raleway text-sm font-semibold transition-colors whitespace-nowrap ${
+              tab === t.key ? 'text-henko-turquoise' : 'text-gray-400 hover:text-gray-600'
+            }`}
+          >
+            {t.label}
+            {tab === t.key && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-henko-turquoise rounded-full" />}
+          </button>
+        ))}
+      </div>
 
-        {/* Contenido de la pestaña activa */}
+      {/* Tarjeta con el contenido */}
+      <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
         <div className="p-6 md:p-8">
 
           {/* ── Datos fiscales ── */}

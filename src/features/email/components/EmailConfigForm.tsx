@@ -83,8 +83,8 @@ export default function EmailConfigForm({ config }: Props) {
 
   return (
     <form onSubmit={onSubmit} className="space-y-6">
-      {/* Tabs */}
-      <div className="flex items-end gap-1 border-b border-gray-200">
+      {/* Tabs — fuera de cualquier tarjeta */}
+      <div className="flex items-end gap-1 border-b border-gray-200 -mt-2">
         <TabButton active={activeTab === 'credenciales'} onClick={() => setActiveTab('credenciales')}>
           Credenciales
         </TabButton>
