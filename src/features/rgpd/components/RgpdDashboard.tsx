@@ -65,23 +65,26 @@ function DocCard({ doc, onClick }: { doc: RgpdDocumento; onClick: () => void }) 
     <button
       type="button"
       onClick={onClick}
-      className="w-full text-left p-5 bg-white rounded-2xl border border-gray-200 hover:border-henko-turquoise hover:shadow-md transition-all group"
+      className="w-full text-left px-5 py-4 bg-white rounded-2xl border border-gray-200 hover:border-henko-turquoise hover:shadow-md transition-all group flex items-center gap-4"
     >
-      <div className="flex items-start justify-between mb-3">
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors ${done ? 'bg-green-100 text-green-600' : 'bg-amber-100 text-amber-600'} group-hover:bg-henko-turquoise/10 group-hover:text-henko-turquoise`}>
-          {DOC_ICONS[doc.id]}
-        </div>
-        <span className={`text-[10px] font-bold font-raleway px-2 py-1 rounded-lg ${done ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
-          {done ? 'Completado' : 'Pendiente'}
-        </span>
+      <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors ${done ? 'bg-green-100 text-green-600' : 'bg-amber-100 text-amber-600'} group-hover:bg-henko-turquoise/10 group-hover:text-henko-turquoise`}>
+        {DOC_ICONS[doc.id]}
       </div>
-      <p className="font-raleway text-sm font-semibold text-gray-800 mb-1 leading-snug">{doc.titulo}</p>
-      <p className="font-raleway text-xs text-gray-400 leading-relaxed line-clamp-2">{doc.descripcion}</p>
-      {doc.actualizado_at && (
-        <p className="font-raleway text-[10px] text-gray-400 mt-3">
-          Actualizado {new Date(doc.actualizado_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}
-        </p>
-      )}
+      <div className="flex-1 min-w-0">
+        <p className="font-raleway text-sm font-semibold text-gray-800 leading-snug">{doc.titulo}</p>
+        <p className="font-raleway text-xs text-gray-400 leading-relaxed truncate">{doc.descripcion}</p>
+        {doc.actualizado_at && (
+          <p className="font-raleway text-[10px] text-gray-400 mt-0.5">
+            Actualizado {new Date(doc.actualizado_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}
+          </p>
+        )}
+      </div>
+      <span className={`text-[10px] font-bold font-raleway px-2 py-1 rounded-lg shrink-0 ${done ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+        {done ? 'Completado' : 'Pendiente'}
+      </span>
+      <svg className="w-4 h-4 text-gray-300 shrink-0 group-hover:text-henko-turquoise transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+      </svg>
     </button>
   )
 }
@@ -205,7 +208,7 @@ export default function RgpdDashboard({
   }
 
   return (
-    <div className="w-full max-w-4xl">
+    <div className="w-full">
       {/* Header */}
       <div className="mb-8">
         <h1 className="font-roxborough text-2xl md:text-3xl text-gray-900 mb-2">Cumplimiento RGPD</h1>
@@ -248,7 +251,7 @@ export default function RgpdDashboard({
       {/* Documentos grid */}
       {tab === 'documentos' && (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+          <div className="flex flex-col gap-3 mb-6">
             {documentos.map(doc => (
               <DocCard key={doc.id} doc={doc} onClick={() => setDocAbierto(doc.id)} />
             ))}
