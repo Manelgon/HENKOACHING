@@ -359,91 +359,103 @@ function EditDrawer({
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-end z-50">
-      <div className="bg-white w-full sm:max-w-md h-full overflow-y-auto p-5 sm:p-7 font-raleway">
-        <div className="flex justify-between items-start mb-6 gap-3">
+      <div className="bg-white w-full sm:max-w-md h-full overflow-y-auto font-raleway flex flex-col">
+
+        {/* Header */}
+        <div className="flex justify-between items-center px-6 py-5 border-b border-gray-100">
           <div className="min-w-0">
-            <p className="text-xs uppercase tracking-wider text-gray-400">Profile</p>
-            <h3 className="font-roxborough text-xl sm:text-2xl truncate">{profile.email}</h3>
+            <p className="text-xs text-gray-400 mb-0.5">Usuario</p>
+            <h3 className="font-raleway font-semibold text-gray-900 truncate">{profile.email}</h3>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-700 flex-shrink-0">✕</button>
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-colors flex-shrink-0">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
         </div>
 
-        <Section title="Datos">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Field label="Nombre" value={nombre} onChange={setNombre} />
-            <Field label="Apellidos" value={apellidos} onChange={setApellidos} />
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+
+          {/* Datos */}
+          <div className="space-y-3">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Datos</p>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Nombre" value={nombre} onChange={setNombre} />
+              <Field label="Apellidos" value={apellidos} onChange={setApellidos} />
+            </div>
+            <Field label="Teléfono" value={telefono} onChange={setTelefono} />
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Rol</label>
+              <CustomSelect value={role} onChange={(v) => setRole(v as UserRole)} options={ROLES.map((r) => ({ value: r, label: r }))} className="w-full" />
+            </div>
+            <div className="flex justify-end">
+              <button type="button" onClick={() => onUpdate({ nombre, apellidos, telefono, role })}
+                className="px-4 py-2 rounded-xl bg-henko-turquoise text-white text-sm font-medium hover:bg-henko-turquoise/90 transition-colors">
+                Guardar cambios
+              </button>
+            </div>
           </div>
-          <Field label="Teléfono" value={telefono} onChange={setTelefono} />
-          <div>
-            <label className="block text-xs text-gray-500 mb-1">Rol</label>
-            <CustomSelect
-              value={role}
-              onChange={(v) => setRole(v as UserRole)}
-              options={ROLES.map((r) => ({ value: r, label: r }))}
-              className="w-full"
-            />
+
+          <hr className="border-gray-100" />
+
+          {/* Email */}
+          <div className="space-y-3">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</p>
+            <Field label="Nuevo email" type="email" value={newEmail} onChange={setNewEmail} />
+            <div className="flex justify-end">
+              <button type="button" disabled={newEmail === profile.email} onClick={() => onChangeEmail(newEmail)}
+                className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-40">
+                Cambiar email
+              </button>
+            </div>
           </div>
-          <button
-            type="button"
-            onClick={() => onUpdate({ nombre, apellidos, telefono, role })}
-            className="w-full px-4 py-2.5 rounded-xl bg-henko-turquoise text-white text-sm font-medium disabled:opacity-50"
-          >
-            Guardar cambios
-          </button>
-        </Section>
 
-        <Section title="Email">
-          <Field label="Nuevo email" type="email" value={newEmail} onChange={setNewEmail} />
-          <button
-            type="button"
-            disabled={newEmail === profile.email}
-            onClick={() => onChangeEmail(newEmail)}
-            className="w-full px-4 py-2.5 rounded-xl bg-gray-900 text-white text-sm font-medium disabled:opacity-50"
-          >
-            Cambiar email
-          </button>
-        </Section>
+          <hr className="border-gray-100" />
 
-        <Section title="Contraseña">
-          <button
-            type="button"
-            onClick={onResetPassword}
-            className="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm font-medium hover:bg-gray-50 disabled:opacity-50"
-          >
-            Enviar email de recuperación
-          </button>
-        </Section>
+          {/* Contraseña */}
+          <div className="space-y-3">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Contraseña</p>
+            <div className="flex justify-end">
+              <button type="button" onClick={onResetPassword}
+                className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                Enviar email de recuperación
+              </button>
+            </div>
+          </div>
 
-        <Section title="Estado de la cuenta">
-          {profile.banned ? (
-            <button
-              type="button"
-                onClick={onReactivar}
-              className="w-full px-4 py-2.5 rounded-xl bg-green-600 text-white text-sm font-medium disabled:opacity-50"
-            >
-              Reactivar cuenta
-            </button>
-          ) : (
-            <button
-              type="button"
-                onClick={onDesactivar}
-              className="w-full px-4 py-2.5 rounded-xl bg-yellow-500 text-white text-sm font-medium disabled:opacity-50"
-            >
-              Desactivar cuenta
-            </button>
-          )}
-        </Section>
+          <hr className="border-gray-100" />
 
-        <Section title="Zona peligrosa">
-          <button
-            type="button"
-            onClick={onEliminar}
-            className="w-full px-4 py-2.5 rounded-xl bg-red-600 text-white text-sm font-medium disabled:opacity-50"
-          >
-            Eliminar permanentemente
-          </button>
-          <p className="text-xs text-gray-400 mt-2">Borra el usuario y todos sus datos relacionados (CVs, solicitudes, perfil).</p>
-        </Section>
+          {/* Cuenta y zona peligrosa */}
+          <div className="space-y-3">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Cuenta</p>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-700">{profile.banned ? 'Cuenta desactivada' : 'Cuenta activa'}</p>
+                <p className="text-xs text-gray-400">{profile.banned ? 'El usuario no puede iniciar sesión' : 'El usuario puede acceder con normalidad'}</p>
+              </div>
+              {profile.banned ? (
+                <button type="button" onClick={onReactivar}
+                  className="px-3 py-1.5 rounded-lg border border-green-200 text-green-700 text-xs font-medium hover:bg-green-50 transition-colors">
+                  Reactivar
+                </button>
+              ) : (
+                <button type="button" onClick={onDesactivar}
+                  className="px-3 py-1.5 rounded-lg border border-amber-200 text-amber-700 text-xs font-medium hover:bg-amber-50 transition-colors">
+                  Desactivar
+                </button>
+              )}
+            </div>
+            <div className="flex items-center justify-between pt-2">
+              <div>
+                <p className="text-sm font-medium text-red-600">Eliminar usuario</p>
+                <p className="text-xs text-gray-400">Borra todos sus datos permanentemente</p>
+              </div>
+              <button type="button" onClick={onEliminar}
+                className="px-3 py-1.5 rounded-lg border border-red-200 text-red-600 text-xs font-medium hover:bg-red-50 transition-colors">
+                Eliminar
+              </button>
+            </div>
+          </div>
+
+        </div>
       </div>
     </div>
   )
