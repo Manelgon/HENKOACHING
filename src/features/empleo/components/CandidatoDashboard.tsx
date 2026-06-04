@@ -678,20 +678,34 @@ function TabEmpleos({ ofertas, aplicadas }: { ofertas: OfertaItem[]; aplicadas: 
   const router = useRouter()
   const runAction = useAction()
   const [busqueda, setBusqueda] = useState('')
+  const [filtroModalidad, setFiltroModalidad] = useState<string | null>(null)
+  const [filtroJornada, setFiltroJornada] = useState<string | null>(null)
+  const [filtroSector, setFiltroSector] = useState<string | null>(null)
   const [aplicadasLocal, setAplicadasLocal] = useState<Map<string, EstadoSolicitud>>(new Map(aplicadas))
   const [drawer, setDrawer] = useState<OfertaDetalleView | null>(null)
   const [loadingSlug, setLoadingSlug] = useState<string | null>(null)
 
+  const modalidades = useMemo(() => [...new Set(ofertas.map(o => o.modalidad).filter(Boolean))].sort(), [ofertas])
+  const jornadas = useMemo(() => [...new Set(ofertas.map(o => o.jornada).filter(Boolean))].sort(), [ofertas])
+  const sectores = useMemo(() => [...new Set(ofertas.map(o => o.sector).filter(Boolean))].sort(), [ofertas])
+
+  const hayFiltros = filtroModalidad || filtroJornada || filtroSector
+
   const filtradas = useMemo(() => {
     const q = busqueda.trim().toLowerCase()
-    if (!q) return ofertas
-    return ofertas.filter(o =>
-      o.titulo.toLowerCase().includes(q) ||
-      o.empresa.toLowerCase().includes(q) ||
-      o.sector.toLowerCase().includes(q) ||
-      o.ubicacion.toLowerCase().includes(q)
-    )
-  }, [ofertas, busqueda])
+    return ofertas.filter(o => {
+      if (q && !(
+        o.titulo.toLowerCase().includes(q) ||
+        o.empresa.toLowerCase().includes(q) ||
+        o.sector.toLowerCase().includes(q) ||
+        o.ubicacion.toLowerCase().includes(q)
+      )) return false
+      if (filtroModalidad && o.modalidad !== filtroModalidad) return false
+      if (filtroJornada && o.jornada !== filtroJornada) return false
+      if (filtroSector && o.sector !== filtroSector) return false
+      return true
+    })
+  }, [ofertas, busqueda, filtroModalidad, filtroJornada, filtroSector])
 
   async function aplicar(ofertaId: string) {
     const result = await runAction(
@@ -727,7 +741,7 @@ function TabEmpleos({ ofertas, aplicadas }: { ofertas: OfertaItem[]; aplicadas: 
       <Eyebrow>Portal de empleo</Eyebrow>
       <h2 className="font-roxborough text-2xl md:text-3xl text-gray-900 mb-6">Ofertas disponibles</h2>
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-3.5 mb-6">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-3.5 mb-4">
         <input
           type="text"
           placeholder="Buscar por puesto, empresa, sector o ubicación…"
@@ -737,13 +751,49 @@ function TabEmpleos({ ofertas, aplicadas }: { ofertas: OfertaItem[]; aplicadas: 
         />
       </div>
 
+      {(modalidades.length > 0 || jornadas.length > 0 || sectores.length > 0) && (
+        <div className="flex flex-wrap gap-2 mb-6 items-center">
+          {modalidades.map(m => (
+            <button
+              key={m}
+              type="button"
+              onClick={() => setFiltroModalidad(prev => prev === m ? null : m)}
+              className={`text-xs px-3.5 py-1.5 rounded-full font-medium border transition-all ${filtroModalidad === m ? 'bg-henko-turquoise text-white border-henko-turquoise' : 'bg-white text-gray-600 border-gray-200 hover:border-henko-turquoise/50'}`}
+            >{m}</button>
+          ))}
+          {jornadas.map(j => (
+            <button
+              key={j}
+              type="button"
+              onClick={() => setFiltroJornada(prev => prev === j ? null : j)}
+              className={`text-xs px-3.5 py-1.5 rounded-full font-medium border transition-all ${filtroJornada === j ? 'bg-henko-turquoise text-white border-henko-turquoise' : 'bg-white text-gray-600 border-gray-200 hover:border-henko-turquoise/50'}`}
+            >{j}</button>
+          ))}
+          {sectores.map(s => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => setFiltroSector(prev => prev === s ? null : s)}
+              className={`text-xs px-3.5 py-1.5 rounded-full font-medium border transition-all ${filtroSector === s ? 'bg-henko-turquoise text-white border-henko-turquoise' : 'bg-white text-gray-600 border-gray-200 hover:border-henko-turquoise/50'}`}
+            >{s}</button>
+          ))}
+          {hayFiltros && (
+            <button
+              type="button"
+              onClick={() => { setFiltroModalidad(null); setFiltroJornada(null); setFiltroSector(null) }}
+              className="text-xs px-3 py-1.5 rounded-full font-medium text-gray-400 hover:text-gray-600 underline underline-offset-2 transition-colors"
+            >Limpiar filtros</button>
+          )}
+        </div>
+      )}
+
       {filtradas.length === 0 ? (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-6 py-16 text-center">
           <p className="font-roxborough text-xl text-gray-400 mb-2">
-            {ofertas.length === 0 ? 'No hay ofertas activas' : 'Ninguna oferta coincide con tu búsqueda'}
+            {ofertas.length === 0 ? 'No hay ofertas activas' : 'Ninguna oferta coincide con los filtros'}
           </p>
           <p className="text-sm text-gray-400">
-            {ofertas.length === 0 ? 'Vuelve pronto, publicamos nuevas oportunidades regularmente.' : 'Prueba con otras palabras.'}
+            {ofertas.length === 0 ? 'Vuelve pronto, publicamos nuevas oportunidades regularmente.' : 'Prueba quitando algún filtro o cambiando la búsqueda.'}
           </p>
         </div>
       ) : (
