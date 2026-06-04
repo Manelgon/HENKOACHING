@@ -11,7 +11,7 @@ export default async function MiCuentaPage() {
   if (!user) redirect('/login')
 
   return (
-    <div className="p-6 md:p-8 max-w-2xl">
+    <div className="w-full p-6 md:p-8">
       <h1 className="text-2xl font-bold text-gray-900 font-raleway mb-1">Mi cuenta</h1>
       <p className="text-sm text-gray-500 font-raleway mb-8">{user.email}</p>
       <MiCuentaForm currentEmail={user.email ?? ''} />
