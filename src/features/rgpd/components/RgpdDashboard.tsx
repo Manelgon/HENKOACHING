@@ -6,9 +6,11 @@ import { useAction, useConfirm } from '@/shared/feedback/FeedbackContext'
 import { subirRatFirmado, quitarRatFirmado } from '@/actions/ajustes'
 import DocumentoEditorDrawer from './DocumentoEditorDrawer'
 import DerechosArcoTable from './DerechosArcoTable'
+import ConsentimientosTable from './ConsentimientosTable'
 import type { RgpdDocId, RgpdDocumento, DerechoArco } from '@/features/rgpd/types'
+import type { ConsentimientoRow } from '@/actions/rgpd'
 
-type Tab = 'documentos' | 'solicitudes'
+type Tab = 'documentos' | 'solicitudes' | 'consentimientos'
 
 const DOC_ICONS: Record<RgpdDocId, React.ReactNode> = {
   ropa: (
@@ -232,11 +234,13 @@ function RatPanel({ ratFirmadoUrl, ratFirmadoAt, onChange }: { ratFirmadoUrl: st
 export default function RgpdDashboard({
   documentos: initialDocumentos,
   solicitudes,
+  consentimientos,
   ratFirmadoUrl,
   ratFirmadoAt,
 }: {
   documentos: RgpdDocumento[]
   solicitudes: DerechoArco[]
+  consentimientos: ConsentimientoRow[]
   ratFirmadoUrl: string | null
   ratFirmadoAt: string | null
 }) {
@@ -279,16 +283,20 @@ export default function RgpdDashboard({
       )}
 
       {/* Tabs */}
-      <div className="flex border-b border-gray-200 mb-6">
-        {(['documentos', 'solicitudes'] as Tab[]).map(t => (
+      <div className="flex border-b border-gray-200 mb-6 overflow-x-auto">
+        {([
+          { id: 'documentos', label: 'Documentos normativos' },
+          { id: 'solicitudes', label: 'Solicitudes de derechos' },
+          { id: 'consentimientos', label: 'Registro de consentimientos' },
+        ] as { id: Tab; label: string }[]).map(t => (
           <button
-            key={t}
+            key={t.id}
             type="button"
-            onClick={() => setTab(t)}
-            className={`px-4 py-2 font-raleway text-sm font-semibold transition-colors border-b-2 -mb-px ${tab === t ? 'border-henko-turquoise text-henko-turquoise' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+            onClick={() => setTab(t.id)}
+            className={`px-4 py-2 font-raleway text-sm font-semibold transition-colors border-b-2 -mb-px whitespace-nowrap ${tab === t.id ? 'border-henko-turquoise text-henko-turquoise' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
           >
-            {t === 'documentos' ? 'Documentos normativos' : 'Solicitudes de derechos'}
-            {t === 'solicitudes' && solicitudes.filter(s => s.estado === 'pendiente').length > 0 && (
+            {t.label}
+            {t.id === 'solicitudes' && solicitudes.filter(s => s.estado === 'pendiente').length > 0 && (
               <span className="ml-2 px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[10px] font-bold">
                 {solicitudes.filter(s => s.estado === 'pendiente').length}
               </span>
@@ -316,6 +324,11 @@ export default function RgpdDashboard({
       {/* Solicitudes ARCO */}
       {tab === 'solicitudes' && (
         <DerechosArcoTable initialData={solicitudes} />
+      )}
+
+      {/* Registro de consentimientos */}
+      {tab === 'consentimientos' && (
+        <ConsentimientosTable rows={consentimientos} />
       )}
 
       {/* Drawer editor */}

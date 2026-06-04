@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getCompanySettings, getSignedAssetUrl } from '@/lib/company-settings'
-import { getRgpdDocumentos, getDerechosArco } from '@/actions/rgpd'
+import { getRgpdDocumentos, getDerechosArco, getConsentimientos } from '@/actions/rgpd'
 import RgpdDashboard from '@/features/rgpd/components/RgpdDashboard'
 
 export const metadata = {
@@ -23,9 +23,10 @@ export default async function RgpdPage() {
 
   if (profile?.role !== 'admin') redirect('/dashboard')
 
-  const [documentos, solicitudes, settings] = await Promise.all([
+  const [documentos, solicitudes, consentimientos, settings] = await Promise.all([
     getRgpdDocumentos(),
     getDerechosArco(),
+    getConsentimientos(),
     getCompanySettings(),
   ])
 
@@ -35,6 +36,7 @@ export default async function RgpdPage() {
     <RgpdDashboard
       documentos={documentos}
       solicitudes={solicitudes}
+      consentimientos={consentimientos}
       ratFirmadoUrl={ratFirmadoUrl}
       ratFirmadoAt={settings.rat_firmado_at}
     />

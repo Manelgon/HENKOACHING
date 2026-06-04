@@ -19,18 +19,18 @@ export async function GET() {
     return new NextResponse('Sin permisos', { status: 403 })
   }
 
-  const { data: doc } = await supabase
-    .from('rgpd_documentos')
+  const { data: docRaw } = await supabase
+    .from('rgpd_documentos' as never)
     .select('contenido, actualizado_at')
-    .eq('id', 'runbook')
-    .maybeSingle()
+    .eq('id' as never, 'runbook')
+    .maybeSingle() as { data: { contenido: Record<string, unknown>; actualizado_at: string | null } | null }
 
-  const contenido = (doc?.contenido ?? {}) as Partial<ContenidoRunbook>
+  const contenido = (docRaw?.contenido ?? {}) as Partial<ContenidoRunbook>
   const pasos = contenido.pasos ?? []
   const contacto = contenido.contacto_responsable ?? 'Jennifer Cervera Alzate — info@henkoaching.com'
   const enlaceAepd = contenido.enlace_aepd ?? 'https://www.aepd.es/es/derechos-y-deberes/cumple-tus-deberes/medidas-de-cumplimiento/brechas-de-seguridad'
-  const fechaActualizacion = doc?.actualizado_at
-    ? new Date(doc.actualizado_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })
+  const fechaActualizacion = docRaw?.actualizado_at
+    ? new Date(docRaw.actualizado_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })
     : new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })
 
   const pasosHtml = pasos.length > 0

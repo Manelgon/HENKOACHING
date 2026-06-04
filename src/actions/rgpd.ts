@@ -126,3 +126,63 @@ export async function crearDerechoArco(input: {
 
   return { ok: true }
 }
+
+export type ConsentimientoRow = {
+  tipo: 'candidato' | 'lead'
+  nombre: string
+  email: string
+  fecha: string
+  consent_text: string | null
+}
+
+export async function getConsentimientos(): Promise<ConsentimientoRow[]> {
+  const { supabase } = await requireAdmin()
+  const { createAdminClient } = await import('@/lib/supabase/admin')
+  const admin = createAdminClient()
+
+  type CandidatoConsent = {
+    acepto_privacidad_at: string
+    consent_text: string | null
+    profiles: { nombre: string | null; apellidos: string | null; email: string }
+  }
+  type LeadConsent = {
+    nombre: string
+    email: string
+    acepto_privacidad_at: string
+    consent_text: string | null
+  }
+
+  const [candidatosRes, leadsRes] = await Promise.all([
+    admin
+      .from('candidato_profiles' as never)
+      .select('acepto_privacidad_at, consent_text, profiles!inner(nombre, apellidos, email)')
+      .not('acepto_privacidad_at' as never, 'is', null)
+      .order('acepto_privacidad_at' as never, { ascending: false }),
+    supabase
+      .from('leads')
+      .select('nombre, email, acepto_privacidad_at, consent_text')
+      .not('acepto_privacidad_at' as never, 'is', null)
+      .order('acepto_privacidad_at' as never, { ascending: false }),
+  ])
+
+  const candidatosData = ((candidatosRes.data ?? []) as unknown as CandidatoConsent[])
+  const leadsData = ((leadsRes.data ?? []) as unknown as LeadConsent[])
+
+  const candidatos: ConsentimientoRow[] = candidatosData.map(c => ({
+    tipo: 'candidato',
+    nombre: [c.profiles.nombre, c.profiles.apellidos].filter(Boolean).join(' ') || c.profiles.email,
+    email: c.profiles.email,
+    fecha: c.acepto_privacidad_at,
+    consent_text: c.consent_text,
+  }))
+
+  const leads: ConsentimientoRow[] = leadsData.map(l => ({
+    tipo: 'lead',
+    nombre: l.nombre,
+    email: l.email,
+    fecha: l.acepto_privacidad_at,
+    consent_text: l.consent_text,
+  }))
+
+  return [...candidatos, ...leads].sort((a, b) => b.fecha.localeCompare(a.fecha))
+}
