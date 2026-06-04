@@ -16,6 +16,7 @@ export default function EmailConfigForm({ config }: Props) {
   const router = useRouter()
   const runAction = useAction()
   const [activeTab, setActiveTab] = useState<Tab>('credenciales')
+  const [editingCredenciales, setEditingCredenciales] = useState(false)
   const [previewHtml, setPreviewHtml] = useState<string | null>(null)
 
   function openPreview(html: string) {
@@ -67,6 +68,8 @@ export default function EmailConfigForm({ config }: Props) {
   const set = <K extends keyof EmailConfigInput>(key: K, value: EmailConfigInput[K]) =>
     setDatos((prev) => ({ ...prev, [key]: value }))
 
+  const [savedDatos, setSavedDatos] = useState<EmailConfigInput>(() => ({ ...datos }))
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
     const r = await runAction('Guardando configuración de email', () => guardarEmailConfig(datos), {
@@ -77,9 +80,13 @@ export default function EmailConfigForm({ config }: Props) {
       if ('supabaseSyncError' in data && data.supabaseSyncError) {
         console.warn('Supabase sync warning:', data.supabaseSyncError)
       }
+      setSavedDatos({ ...datos })
+      setEditingCredenciales(false)
       router.refresh()
     }
   }
+
+  function cancelarCredenciales() { setDatos({ ...savedDatos }); setEditingCredenciales(false) }
 
   return (
     <form onSubmit={onSubmit} className="space-y-6">
@@ -97,136 +104,67 @@ export default function EmailConfigForm({ config }: Props) {
       {activeTab === 'credenciales' && (
         <div className="space-y-8">
           {/* SMTP */}
-          <Section
-            title="Configuración SMTP"
-            description="Servidor de envío de emails. Se usará para enviar notificaciones, verificaciones de cuenta y recuperación de contraseña."
-          >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Field label="Servidor SMTP" wide>
-                <input
-                  type="text"
-                  value={datos.smtp_host}
-                  onChange={(e) => set('smtp_host', e.target.value)}
-                  placeholder="mail.piensasolutions.com"
-                  className="input"
-                />
-              </Field>
-              <Field label="Puerto">
-                <input
-                  type="number"
-                  value={datos.smtp_port}
-                  onChange={(e) => set('smtp_port', Number(e.target.value))}
-                  placeholder="587"
-                  className="input"
-                />
-              </Field>
-              <Field label="Cifrado">
-                <CustomSelect
-                  value={datos.smtp_encryption}
-                  onChange={(v) => set('smtp_encryption', v as EmailConfigInput['smtp_encryption'])}
-                  options={[
-                    { value: 'starttls', label: 'STARTTLS (recomendado, puerto 587)' },
-                    { value: 'ssl', label: 'SSL/TLS (puerto 465)' },
-                    { value: 'none', label: 'Sin cifrado (no recomendado)' },
-                  ]}
-                  className="w-full"
-                />
-              </Field>
-              <Field label="Usuario SMTP">
-                <input
-                  type="text"
-                  value={datos.smtp_user}
-                  onChange={(e) => set('smtp_user', e.target.value)}
-                  placeholder="info@henkoaching.com"
-                  className="input"
-                />
-              </Field>
-              <Field label="Contraseña SMTP">
-                <input
-                  type="password"
-                  value={datos.smtp_password}
-                  onChange={(e) => set('smtp_password', e.target.value)}
-                  placeholder={config.hasSmtpPassword ? '••••••••  (dejar vacío para no cambiar)' : 'Contraseña del email'}
-                  className="input"
-                  autoComplete="new-password"
-                />
-              </Field>
-              <Field label="Nombre del remitente">
-                <input
-                  type="text"
-                  value={datos.smtp_from_name}
-                  onChange={(e) => set('smtp_from_name', e.target.value)}
-                  placeholder="Jennifer Cervera · Henkoaching"
-                  className="input"
-                />
-              </Field>
-            </div>
-
+          <Section title="Configuración SMTP" description="Servidor de envío de emails.">
+            {editingCredenciales ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Field label="Servidor SMTP" wide><input type="text" value={datos.smtp_host} onChange={(e) => set('smtp_host', e.target.value)} placeholder="mail.piensasolutions.com" className="input" /></Field>
+                <Field label="Puerto"><input type="number" value={datos.smtp_port} onChange={(e) => set('smtp_port', Number(e.target.value))} placeholder="587" className="input" /></Field>
+                <Field label="Cifrado">
+                  <CustomSelect value={datos.smtp_encryption} onChange={(v) => set('smtp_encryption', v as EmailConfigInput['smtp_encryption'])} options={[{ value: 'starttls', label: 'STARTTLS (puerto 587)' }, { value: 'ssl', label: 'SSL/TLS (puerto 465)' }, { value: 'none', label: 'Sin cifrado' }]} className="w-full" />
+                </Field>
+                <Field label="Usuario SMTP"><input type="text" value={datos.smtp_user} onChange={(e) => set('smtp_user', e.target.value)} placeholder="info@henkoaching.com" className="input" /></Field>
+                <Field label="Contraseña SMTP"><input type="password" value={datos.smtp_password} onChange={(e) => set('smtp_password', e.target.value)} placeholder={config.hasSmtpPassword ? '•••••••• (vacío = no cambiar)' : 'Contraseña'} className="input" autoComplete="new-password" /></Field>
+                <Field label="Nombre del remitente"><input type="text" value={datos.smtp_from_name} onChange={(e) => set('smtp_from_name', e.target.value)} placeholder="Jennifer Cervera · Henkoaching" className="input" /></Field>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                <ReadRow label="Servidor" value={datos.smtp_host} />
+                <ReadRow label="Puerto" value={String(datos.smtp_port || '')} />
+                <ReadRow label="Cifrado" value={datos.smtp_encryption} />
+                <ReadRow label="Usuario" value={datos.smtp_user} />
+                <ReadRow label="Contraseña" value={config.hasSmtpPassword ? '••••••••' : 'No configurada'} />
+                <ReadRow label="Remitente" value={datos.smtp_from_name} />
+              </div>
+            )}
             <div className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-100">
               <p className="font-raleway text-xs text-blue-700 font-semibold mb-1">Sincronización automática con Supabase</p>
-              <p className="font-raleway text-xs text-blue-600">
-                Al guardar, la configuración SMTP y los templates se aplicarán automáticamente en Supabase.
-              </p>
+              <p className="font-raleway text-xs text-blue-600">Al guardar, la configuración SMTP y los templates se aplicarán automáticamente.</p>
             </div>
           </Section>
 
           {/* IMAP */}
-          <Section
-            title="Configuración IMAP"
-            description="Servidor de recepción de emails. Permite ver la bandeja de entrada de info@henkoaching.com desde este panel."
-          >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Field label="Servidor IMAP" wide>
-                <input
-                  type="text"
-                  value={datos.imap_host}
-                  onChange={(e) => set('imap_host', e.target.value)}
-                  placeholder="mail.piensasolutions.com"
-                  className="input"
-                />
-              </Field>
-              <Field label="Puerto">
-                <input
-                  type="number"
-                  value={datos.imap_port}
-                  onChange={(e) => set('imap_port', Number(e.target.value))}
-                  placeholder="993"
-                  className="input"
-                />
-              </Field>
-              <Field label="Cifrado">
-                <CustomSelect
-                  value={datos.imap_encryption}
-                  onChange={(v) => set('imap_encryption', v as EmailConfigInput['imap_encryption'])}
-                  options={[
-                    { value: 'ssl', label: 'SSL/TLS (recomendado, puerto 993)' },
-                    { value: 'starttls', label: 'STARTTLS (puerto 143)' },
-                    { value: 'none', label: 'Sin cifrado (no recomendado)' },
-                  ]}
-                  className="w-full"
-                />
-              </Field>
-              <Field label="Usuario IMAP">
-                <input
-                  type="text"
-                  value={datos.imap_user}
-                  onChange={(e) => set('imap_user', e.target.value)}
-                  placeholder="info@henkoaching.com"
-                  className="input"
-                />
-              </Field>
-              <Field label="Contraseña IMAP">
-                <input
-                  type="password"
-                  value={datos.imap_password}
-                  onChange={(e) => set('imap_password', e.target.value)}
-                  placeholder={config.hasImapPassword ? '••••••••  (dejar vacío para no cambiar)' : 'Contraseña del email'}
-                  className="input"
-                  autoComplete="new-password"
-                />
-              </Field>
-            </div>
+          <Section title="Configuración IMAP" description="Servidor de recepción de emails. Permite ver la bandeja de entrada desde este panel.">
+            {editingCredenciales ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Field label="Servidor IMAP" wide><input type="text" value={datos.imap_host} onChange={(e) => set('imap_host', e.target.value)} placeholder="mail.piensasolutions.com" className="input" /></Field>
+                <Field label="Puerto"><input type="number" value={datos.imap_port} onChange={(e) => set('imap_port', Number(e.target.value))} placeholder="993" className="input" /></Field>
+                <Field label="Cifrado">
+                  <CustomSelect value={datos.imap_encryption} onChange={(v) => set('imap_encryption', v as EmailConfigInput['imap_encryption'])} options={[{ value: 'ssl', label: 'SSL/TLS (puerto 993)' }, { value: 'starttls', label: 'STARTTLS (puerto 143)' }, { value: 'none', label: 'Sin cifrado' }]} className="w-full" />
+                </Field>
+                <Field label="Usuario IMAP"><input type="text" value={datos.imap_user} onChange={(e) => set('imap_user', e.target.value)} placeholder="info@henkoaching.com" className="input" /></Field>
+                <Field label="Contraseña IMAP"><input type="password" value={datos.imap_password} onChange={(e) => set('imap_password', e.target.value)} placeholder={config.hasImapPassword ? '•••••••• (vacío = no cambiar)' : 'Contraseña'} className="input" autoComplete="new-password" /></Field>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                <ReadRow label="Servidor" value={datos.imap_host} />
+                <ReadRow label="Puerto" value={String(datos.imap_port || '')} />
+                <ReadRow label="Cifrado" value={datos.imap_encryption} />
+                <ReadRow label="Usuario" value={datos.imap_user} />
+                <ReadRow label="Contraseña" value={config.hasImapPassword ? '••••••••' : 'No configurada'} />
+              </div>
+            )}
           </Section>
+
+          <div className="flex justify-end gap-2 pt-2">
+            {editingCredenciales ? (
+              <>
+                <button type="button" onClick={cancelarCredenciales} className="px-4 py-2 rounded-xl border border-gray-200 text-sm text-gray-500 hover:bg-gray-50 transition-colors">Cancelar</button>
+                <button type="submit" className="px-5 py-2 rounded-xl bg-henko-turquoise text-white font-raleway font-semibold text-sm hover:bg-henko-turquoise/90 transition-colors">Guardar configuración</button>
+              </>
+            ) : (
+              <button type="button" onClick={() => setEditingCredenciales(true)} className="px-5 py-2 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors">Editar</button>
+            )}
+          </div>
         </div>
       )}
 
@@ -569,6 +507,15 @@ function TabButton({ active, onClick, children }: { active: boolean; onClick: ()
       {children}
       {active && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-henko-turquoise rounded-full" />}
     </button>
+  )
+}
+
+function ReadRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex flex-col gap-0.5">
+      <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">{label}</span>
+      <span className="text-gray-700 font-raleway text-sm">{value || <span className="text-gray-300 italic">—</span>}</span>
+    </div>
   )
 }
 

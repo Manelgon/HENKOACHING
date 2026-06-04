@@ -30,6 +30,8 @@ export default function AjustesForm({ settings, logoUrl, firmaUrl, headerUrl, fo
   const runAction = useAction()
 
   const [tab, setTab] = useState<TabKey>('fiscal')
+  const [editingFiscal, setEditingFiscal] = useState(false)
+  const [editingFacturacion, setEditingFacturacion] = useState(false)
   const [datos, setDatos] = useState<AjustesInput>({
     emisor_nombre: settings.emisor_nombre,
     emisor_nif: settings.emisor_nif,
@@ -48,18 +50,45 @@ export default function AjustesForm({ settings, logoUrl, firmaUrl, headerUrl, fo
   const set = <K extends keyof AjustesInput>(key: K, value: AjustesInput[K]) =>
     setDatos((prev) => ({ ...prev, [key]: value }))
 
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault()
+  const [savedDatos, setSavedDatos] = useState<AjustesInput>(() => ({
+    emisor_nombre: settings.emisor_nombre,
+    emisor_nif: settings.emisor_nif,
+    emisor_direccion: settings.emisor_direccion,
+    emisor_cp: settings.emisor_cp,
+    emisor_ciudad: settings.emisor_ciudad,
+    emisor_provincia: settings.emisor_provincia,
+    emisor_pais: settings.emisor_pais,
+    emisor_email: settings.emisor_email,
+    emisor_telefono: settings.emisor_telefono,
+    emisor_web: settings.emisor_web,
+    emisor_iban: settings.emisor_iban,
+    prefijo_anio: settings.prefijo_anio,
+  }))
+
+  async function guardar() {
     const r = await runAction('Guardando ajustes', () => guardarAjustes(datos), {
       successMessage: 'Ajustes guardados',
     })
-    if (r.ok) router.refresh()
+    if (r.ok) {
+      setSavedDatos({ ...datos })
+      setEditingFiscal(false)
+      setEditingFacturacion(false)
+      router.refresh()
+    }
   }
 
-  const showSave = tab === 'fiscal' || tab === 'facturacion' || tab === 'imagenes'
+  function cancelarFiscal() {
+    setDatos(prev => ({ ...prev, ...savedDatos }))
+    setEditingFiscal(false)
+  }
+
+  function cancelarFacturacion() {
+    setDatos(prev => ({ ...prev, prefijo_anio: savedDatos.prefijo_anio }))
+    setEditingFacturacion(false)
+  }
 
   return (
-    <form onSubmit={onSubmit}>
+    <form onSubmit={e => { e.preventDefault(); guardar() }}>
       {/* Tab bar — fuera de la tarjeta */}
       <div className="flex items-end gap-1 border-b border-gray-200 mb-6">
         {TABS.map((t) => (
@@ -83,110 +112,76 @@ export default function AjustesForm({ settings, logoUrl, firmaUrl, headerUrl, fo
 
           {/* ── Datos fiscales ── */}
           {tab === 'fiscal' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Field label="Nombre / razón social" required>
-                <input
-                  type="text"
-                  required
-                  value={datos.emisor_nombre}
-                  onChange={(e) => set('emisor_nombre', e.target.value)}
-                  placeholder="Jennifer Cervera Henkoaching S.L."
-                  className="input"
-                />
-              </Field>
-              <Field label="NIF / CIF" required>
-                <input
-                  type="text"
-                  required
-                  value={datos.emisor_nif}
-                  onChange={(e) => set('emisor_nif', e.target.value)}
-                  placeholder="B12345678"
-                  className="input"
-                />
-              </Field>
-              <Field label="Dirección" wide>
-                <input
-                  type="text"
-                  value={datos.emisor_direccion}
-                  onChange={(e) => set('emisor_direccion', e.target.value)}
-                  placeholder="Calle Ejemplo, 12, 3ºA"
-                  className="input"
-                />
-              </Field>
-              <Field label="Código postal">
-                <input
-                  type="text"
-                  value={datos.emisor_cp}
-                  onChange={(e) => set('emisor_cp', e.target.value)}
-                  placeholder="07001"
-                  className="input"
-                />
-              </Field>
-              <Field label="Ciudad">
-                <input
-                  type="text"
-                  value={datos.emisor_ciudad}
-                  onChange={(e) => set('emisor_ciudad', e.target.value)}
-                  placeholder="Palma de Mallorca"
-                  className="input"
-                />
-              </Field>
-              <Field label="Provincia">
-                <input
-                  type="text"
-                  value={datos.emisor_provincia}
-                  onChange={(e) => set('emisor_provincia', e.target.value)}
-                  placeholder="Islas Baleares"
-                  className="input"
-                />
-              </Field>
-              <Field label="País">
-                <input
-                  type="text"
-                  value={datos.emisor_pais}
-                  onChange={(e) => set('emisor_pais', e.target.value)}
-                  placeholder="España"
-                  className="input"
-                />
-              </Field>
-              <Field label="Email">
-                <input
-                  type="email"
-                  value={datos.emisor_email}
-                  onChange={(e) => set('emisor_email', e.target.value)}
-                  placeholder="info@henkoaching.com"
-                  className="input"
-                />
-              </Field>
-              <Field label="Teléfono">
-                <input
-                  type="tel"
-                  value={datos.emisor_telefono}
-                  onChange={(e) => set('emisor_telefono', e.target.value)}
-                  placeholder="+34 600 000 000"
-                  className="input"
-                />
-              </Field>
-              <Field label="Web">
-                <input
-                  type="url"
-                  value={datos.emisor_web}
-                  onChange={(e) => set('emisor_web', e.target.value)}
-                  placeholder="https://henkoaching.com"
-                  className="input"
-                />
-              </Field>
-              <Field label="IBAN" wide>
-                <input
-                  type="text"
-                  value={datos.emisor_iban}
-                  onChange={(e) => set('emisor_iban', e.target.value)}
-                  placeholder="ES00 0000 0000 0000 0000 0000"
-                  className="input font-mono tracking-wide"
-                />
-                <p className="text-xs text-gray-400 mt-1 font-raleway">Se mostrará como nº de cuenta para ingresos en facturas.</p>
-              </Field>
-            </div>
+            editingFiscal ? (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Field label="Nombre / razón social" required>
+                    <input type="text" required value={datos.emisor_nombre} onChange={(e) => set('emisor_nombre', e.target.value)} placeholder="Jennifer Cervera Henkoaching S.L." className="input" />
+                  </Field>
+                  <Field label="NIF / CIF" required>
+                    <input type="text" required value={datos.emisor_nif} onChange={(e) => set('emisor_nif', e.target.value)} placeholder="B12345678" className="input" />
+                  </Field>
+                  <Field label="Dirección" wide>
+                    <input type="text" value={datos.emisor_direccion} onChange={(e) => set('emisor_direccion', e.target.value)} placeholder="Calle Ejemplo, 12, 3ºA" className="input" />
+                  </Field>
+                  <Field label="Código postal">
+                    <input type="text" value={datos.emisor_cp} onChange={(e) => set('emisor_cp', e.target.value)} placeholder="07001" className="input" />
+                  </Field>
+                  <Field label="Ciudad">
+                    <input type="text" value={datos.emisor_ciudad} onChange={(e) => set('emisor_ciudad', e.target.value)} placeholder="Palma de Mallorca" className="input" />
+                  </Field>
+                  <Field label="Provincia">
+                    <input type="text" value={datos.emisor_provincia} onChange={(e) => set('emisor_provincia', e.target.value)} placeholder="Islas Baleares" className="input" />
+                  </Field>
+                  <Field label="País">
+                    <input type="text" value={datos.emisor_pais} onChange={(e) => set('emisor_pais', e.target.value)} placeholder="España" className="input" />
+                  </Field>
+                  <Field label="Email">
+                    <input type="email" value={datos.emisor_email} onChange={(e) => set('emisor_email', e.target.value)} placeholder="info@henkoaching.com" className="input" />
+                  </Field>
+                  <Field label="Teléfono">
+                    <input type="tel" value={datos.emisor_telefono} onChange={(e) => set('emisor_telefono', e.target.value)} placeholder="+34 600 000 000" className="input" />
+                  </Field>
+                  <Field label="Web">
+                    <input type="url" value={datos.emisor_web} onChange={(e) => set('emisor_web', e.target.value)} placeholder="https://henkoaching.com" className="input" />
+                  </Field>
+                  <Field label="IBAN" wide>
+                    <input type="text" value={datos.emisor_iban} onChange={(e) => set('emisor_iban', e.target.value)} placeholder="ES00 0000 0000 0000 0000 0000" className="input font-mono tracking-wide" />
+                    <p className="text-xs text-gray-400 mt-1 font-raleway">Se mostrará como nº de cuenta para ingresos en facturas.</p>
+                  </Field>
+                </div>
+                <div className="flex justify-end gap-2 pt-2">
+                  <button type="button" onClick={cancelarFiscal} className="px-4 py-2 rounded-xl border border-gray-200 text-sm text-gray-500 hover:bg-gray-50 transition-colors">Cancelar</button>
+                  <button type="submit" className="px-5 py-2 rounded-xl bg-henko-turquoise text-white font-raleway font-semibold text-sm hover:bg-henko-turquoise/90 transition-colors">Guardar cambios</button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3 text-sm">
+                  {[
+                    ['Nombre / razón social', datos.emisor_nombre],
+                    ['NIF / CIF', datos.emisor_nif],
+                    ['Dirección', datos.emisor_direccion],
+                    ['C.P.', datos.emisor_cp],
+                    ['Ciudad', datos.emisor_ciudad],
+                    ['Provincia', datos.emisor_provincia],
+                    ['País', datos.emisor_pais],
+                    ['Email', datos.emisor_email],
+                    ['Teléfono', datos.emisor_telefono],
+                    ['Web', datos.emisor_web],
+                    ['IBAN', datos.emisor_iban],
+                  ].map(([label, value]) => (
+                    <div key={label} className="flex flex-col gap-0.5">
+                      <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">{label}</span>
+                      <span className="text-gray-700 font-raleway">{value || <span className="text-gray-300 italic">—</span>}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex justify-end pt-2">
+                  <button type="button" onClick={() => setEditingFiscal(true)} className="px-5 py-2 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors">Editar</button>
+                </div>
+              </div>
+            )
           )}
 
           {/* ── Imágenes ── */}
@@ -214,39 +209,38 @@ export default function AjustesForm({ settings, logoUrl, firmaUrl, headerUrl, fo
 
           {/* ── Facturación ── */}
           {tab === 'facturacion' && (
-            <div className="space-y-4">
-              <p className="font-raleway text-sm text-gray-400 font-light mb-2">El IVA, IRPF, forma de pago y vencimiento se eligen en cada factura por separado.</p>
-              <Field label="Formato del número de factura">
-                <label className="flex items-center gap-2 py-2.5 font-raleway text-sm text-gray-700">
-                  <input
-                    type="checkbox"
-                    checked={datos.prefijo_anio}
-                    onChange={(e) => set('prefijo_anio', e.target.checked)}
-                    className="w-4 h-4 rounded text-henko-turquoise focus:ring-henko-turquoise"
-                  />
-                  Incluir año (ej: F2026-0001)
-                </label>
-                <p className="text-xs text-gray-400 font-raleway">
-                  La serie (prefijo) se elige en cada factura. Si lo desactivas: correlativo continuo tipo F00001.
-                </p>
-              </Field>
-            </div>
+            editingFacturacion ? (
+              <div className="space-y-4">
+                <p className="font-raleway text-sm text-gray-400 font-light">El IVA, IRPF, forma de pago y vencimiento se eligen en cada factura por separado.</p>
+                <Field label="Formato del número de factura">
+                  <label className="flex items-center gap-2 py-2.5 font-raleway text-sm text-gray-700">
+                    <input type="checkbox" checked={datos.prefijo_anio} onChange={(e) => set('prefijo_anio', e.target.checked)} className="w-4 h-4 rounded text-henko-turquoise focus:ring-henko-turquoise" />
+                    Incluir año (ej: F2026-0001)
+                  </label>
+                  <p className="text-xs text-gray-400 font-raleway">La serie (prefijo) se elige en cada factura. Si lo desactivas: correlativo continuo tipo F00001.</p>
+                </Field>
+                <div className="flex justify-end gap-2 pt-2">
+                  <button type="button" onClick={cancelarFacturacion} className="px-4 py-2 rounded-xl border border-gray-200 text-sm text-gray-500 hover:bg-gray-50 transition-colors">Cancelar</button>
+                  <button type="submit" className="px-5 py-2 rounded-xl bg-henko-turquoise text-white font-raleway font-semibold text-sm hover:bg-henko-turquoise/90 transition-colors">Guardar cambios</button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <p className="font-raleway text-sm text-gray-400 font-light">El IVA, IRPF, forma de pago y vencimiento se eligen en cada factura por separado.</p>
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Formato de número</span>
+                  <span className="text-sm text-gray-700 font-raleway">{datos.prefijo_anio ? 'Con año — ej: F2026-0001' : 'Sin año — ej: F00001'}</span>
+                </div>
+                <div className="flex justify-end pt-2">
+                  <button type="button" onClick={() => setEditingFacturacion(true)} className="px-5 py-2 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors">Editar</button>
+                </div>
+              </div>
+            )
           )}
 
 
         </div>
 
-        {/* Footer con botón guardar (solo en pestañas con form) */}
-        {showSave && (
-          <div className="flex justify-end px-6 md:px-8 py-4 border-t border-gray-100 bg-gray-50/50">
-            <button
-              type="submit"
-              className="px-6 py-2.5 rounded-xl bg-henko-turquoise text-white font-raleway font-semibold text-sm hover:bg-henko-turquoise-light transition-colors"
-            >
-              Guardar cambios
-            </button>
-          </div>
-        )}
       </div>
 
       <style jsx>{`
