@@ -1,8 +1,7 @@
 'use client'
 
-import { useEffect, useState, useCallback, Suspense } from 'react'
+import { useEffect, useState, useCallback, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import QRCode from 'qrcode'
 import { createBrowserClient } from '@supabase/ssr'
 
 function SetupMfaContent() {
@@ -10,13 +9,14 @@ function SetupMfaContent() {
   const searchParams = useSearchParams()
   const enroll = searchParams.get('enroll') === '1'
 
-  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
+  const [qrSvg, setQrSvg] = useState<string | null>(null)
   const [secret, setSecret] = useState<string | null>(null)
   const [factorId, setFactorId] = useState<string | null>(null)
   const [code, setCode] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState<'loading' | 'qr' | 'code' | 'done'>('loading')
+  const enrolledRef = useRef(false)
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -24,14 +24,27 @@ function SetupMfaContent() {
   )
 
   const initEnroll = useCallback(async () => {
+    // Guard contra React Strict Mode doble-invocación
+    if (enrolledRef.current) return
+    enrolledRef.current = true
+
+    // Limpiar todos los factores TOTP desde `all` (el campo `totp` puede estar vacío)
+    const { data: existing } = await supabase.auth.mfa.listFactors()
+    const totpFactors = (existing?.all ?? []).filter(f => f.factor_type === 'totp')
+    for (const factor of totpFactors) {
+      await supabase.auth.mfa.unenroll({ factorId: factor.id })
+    }
+
     const { data, error } = await supabase.auth.mfa.enroll({ factorType: 'totp' })
     if (error || !data) {
-      setError('No se pudo iniciar el registro MFA. Inténtalo de nuevo.')
+      enrolledRef.current = false
+      setError(`Error al iniciar MFA: ${error?.message ?? 'inténtalo de nuevo'}`)
       setStep('code')
       return
     }
-    const qrUrl = await QRCode.toDataURL(data.totp.qr_code)
-    setQrDataUrl(qrUrl)
+
+    // qr_code es un SVG ya renderizado — se inyecta directamente como inline SVG
+    setQrSvg(data.totp.qr_code)
     setSecret(data.totp.secret)
     setFactorId(data.id)
     setStep('qr')
@@ -44,7 +57,6 @@ function SetupMfaContent() {
       setFactorId(totp.id)
       setStep('code')
     } else {
-      // Factor no verificado: redirigir a enroll
       router.replace('/setup-mfa?enroll=1')
     }
   }, [supabase, router])
@@ -57,7 +69,7 @@ function SetupMfaContent() {
     }
   }, [enroll, initEnroll, initVerify])
 
-  const handleVerify = async (e: React.FormEvent) => {
+  const handleVerify = async (e: React.SyntheticEvent) => {
     e.preventDefault()
     if (!factorId || code.length !== 6) return
     setLoading(true)
@@ -89,15 +101,15 @@ function SetupMfaContent() {
           <p className="text-gray-500 text-sm font-raleway">Cargando...</p>
         )}
 
-        {step === 'qr' && qrDataUrl && (
+        {step === 'qr' && qrSvg && (
           <>
             <p className="text-gray-600 text-sm font-raleway mb-5">
               Escanea el código QR con <strong>Google Authenticator</strong>, <strong>Authy</strong> u otra app autenticadora.
             </p>
-            <div className="flex justify-center mb-4">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={qrDataUrl} alt="Código QR para autenticación" className="w-48 h-48 rounded-xl border border-gray-200" />
-            </div>
+            <div
+              className="flex justify-center mb-4 [&>svg]:w-48 [&>svg]:h-48 [&>svg]:rounded-xl [&>svg]:border [&>svg]:border-gray-200"
+              dangerouslySetInnerHTML={{ __html: qrSvg }}
+            />
             {secret && (
               <div className="bg-gray-50 rounded-xl px-4 py-3 mb-5 text-left">
                 <p className="text-xs text-gray-500 font-raleway mb-1">O introduce la clave manualmente:</p>
