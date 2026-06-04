@@ -61,7 +61,7 @@ function SetupMfaContent() {
 
   const initVerify = useCallback(async () => {
     const { data } = await supabase.auth.mfa.listFactors()
-    const totp = data?.totp?.find(f => f.status === 'verified')
+    const totp = (data?.all ?? []).find(f => f.factor_type === 'totp' && f.status === 'verified')
     if (totp) {
       setFactorId(totp.id)
       setStep('code')

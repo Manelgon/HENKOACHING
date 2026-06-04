@@ -70,7 +70,7 @@ export async function middleware(request: NextRequest) {
     // No tiene ningún factor MFA enrollado → forzar configuración
     if (nextLevel === 'aal1' && currentLevel === 'aal1') {
       const { data: factors } = await supabase.auth.mfa.listFactors()
-      const hasVerifiedFactor = (factors?.totp ?? []).some(f => f.status === 'verified')
+      const hasVerifiedFactor = (factors?.all ?? []).some(f => f.factor_type === 'totp' && f.status === 'verified')
       if (!hasVerifiedFactor) {
         return NextResponse.redirect(new URL('/setup-mfa?enroll=1', request.url))
       }
