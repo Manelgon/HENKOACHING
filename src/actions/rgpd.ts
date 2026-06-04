@@ -8,24 +8,17 @@ import { sendTransactional } from '@/lib/email/send'
 import { templateDerechoArcoConfirmacion } from '@/lib/email/templates/rgpd'
 import type { RgpdDocId, RgpdDocumento, DerechoArco } from '@/features/rgpd/types'
 import type { Json } from '@/lib/supabase/database.types'
+import { requireAdmin } from '@/lib/auth/require-admin'
 
-async function requireAdmin() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-
-  if (profile?.role !== 'admin') redirect('/dashboard')
-  return { supabase, user }
+async function requireAdminOrRedirect() {
+  const result = await requireAdmin()
+  if (!result.ok) redirect('/login')
+  return result
 }
 
 export async function getRgpdDocumentos(): Promise<RgpdDocumento[]> {
-  const { supabase } = await requireAdmin()
+  await requireAdminOrRedirect()
+  const supabase = await createClient()
   const { data } = await supabase
     .from('rgpd_documentos')
     .select('*')
@@ -37,14 +30,15 @@ export async function guardarDocumento(
   id: RgpdDocId,
   contenido: Record<string, unknown>,
 ): Promise<{ ok: boolean; error?: string }> {
-  const { supabase, user } = await requireAdmin()
+  const auth = await requireAdminOrRedirect()
+  const supabase = await createClient()
 
   const { error } = await supabase
     .from('rgpd_documentos')
     .update({
       contenido: contenido as Json,
       actualizado_at: new Date().toISOString(),
-      actualizado_por: user.email ?? '',
+      actualizado_por: auth.user.email ?? '',
     })
     .eq('id', id)
 
@@ -61,7 +55,8 @@ export async function guardarDocumento(
 }
 
 export async function getDerechosArco(): Promise<DerechoArco[]> {
-  const { supabase } = await requireAdmin()
+  await requireAdminOrRedirect()
+  const supabase = await createClient()
   const { data } = await supabase
     .from('derechos_arco')
     .select('*')
@@ -74,7 +69,8 @@ export async function cambiarEstadoDerecho(
   estado: 'pendiente' | 'en_proceso' | 'resuelta',
   notas?: string,
 ): Promise<{ ok: boolean; error?: string }> {
-  const { supabase } = await requireAdmin()
+  await requireAdminOrRedirect()
+  const supabase = await createClient()
 
   const { error } = await supabase
     .from('derechos_arco')
@@ -138,7 +134,7 @@ export type ConsentimientoRow = {
 }
 
 export async function getConsentimientos(): Promise<ConsentimientoRow[]> {
-  await requireAdmin()
+  await requireAdminOrRedirect()
   const admin = createAdminClient()
 
   type CandidatoConsent = {

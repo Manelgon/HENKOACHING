@@ -23,12 +23,18 @@ export default async function RgpdPage() {
 
   if (profile?.role !== 'admin') redirect('/dashboard')
 
-  const [documentos, solicitudes, consentimientos, settings] = await Promise.all([
+  const [documentos, solicitudes, settings] = await Promise.all([
     getRgpdDocumentos(),
     getDerechosArco(),
-    getConsentimientos(),
     getCompanySettings(),
   ])
+
+  let consentimientos: Awaited<ReturnType<typeof getConsentimientos>> = []
+  try {
+    consentimientos = await getConsentimientos()
+  } catch (err) {
+    console.error('[RgpdPage] Error cargando consentimientos:', err)
+  }
 
   const ratFirmadoUrl = await getSignedAssetUrl(settings.rat_firmado_path)
 

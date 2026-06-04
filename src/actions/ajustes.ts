@@ -1,24 +1,9 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { logAction } from '@/lib/audit/log-action'
-
-async function requireAdmin() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: 'No autenticado' as const }
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .maybeSingle()
-
-  if (!profile || profile.role !== 'admin') return { error: 'Sin permisos' as const }
-  return { user, profile }
-}
+import { requireAdmin } from '@/lib/auth/require-admin'
 
 export type AjustesInput = {
   emisor_nombre: string
@@ -37,7 +22,7 @@ export type AjustesInput = {
 
 export async function guardarAjustes(input: AjustesInput) {
   const auth = await requireAdmin()
-  if ('error' in auth) return { error: auth.error }
+  if (!auth.ok) return { error: auth.error }
 
   const admin = createAdminClient()
   const { error } = await admin
@@ -72,7 +57,7 @@ export async function guardarAjustes(input: AjustesInput) {
 
 export async function subirImagenEmisor(formData: FormData) {
   const auth = await requireAdmin()
-  if ('error' in auth) return { error: auth.error }
+  if (!auth.ok) return { error: auth.error }
 
   const file = formData.get('file') as File | null
   const tipo = formData.get('tipo') as string | null
@@ -133,7 +118,7 @@ export async function subirImagenEmisor(formData: FormData) {
 
 export async function subirRatFirmado(formData: FormData) {
   const auth = await requireAdmin()
-  if ('error' in auth) return { error: auth.error }
+  if (!auth.ok) return { error: auth.error }
 
   const file = formData.get('file') as File | null
   if (!file) return { error: 'Falta el archivo' }
@@ -172,7 +157,7 @@ export async function subirRatFirmado(formData: FormData) {
 
 export async function quitarRatFirmado() {
   const auth = await requireAdmin()
-  if ('error' in auth) return { error: auth.error }
+  if (!auth.ok) return { error: auth.error }
 
   const admin = createAdminClient()
 
@@ -197,7 +182,7 @@ export async function quitarRatFirmado() {
 
 export async function quitarImagenEmisor(tipo: 'logo' | 'firma' | 'header' | 'footer' | 'sobre_mi') {
   const auth = await requireAdmin()
-  if ('error' in auth) return { error: auth.error }
+  if (!auth.ok) return { error: auth.error }
 
   const admin = createAdminClient()
   const column = `${tipo}_path` as 'logo_path' | 'firma_path' | 'header_path' | 'footer_path' | 'sobre_mi_path'

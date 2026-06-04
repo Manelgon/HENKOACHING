@@ -13,11 +13,16 @@ export async function requireAdminHtml(request: Request): Promise<AdminHtmlResul
     return { ok: false, response: Response.redirect(loginUrl.toString(), 302) }
   }
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('role')
     .eq('id', user.id)
     .maybeSingle()
+
+  if (profileError) {
+    console.error('[requireAdminHtml] Error al leer profile:', profileError.message)
+    return { ok: false, response: new Response('Error interno', { status: 500 }) }
+  }
 
   if (profile?.role !== 'admin') {
     return { ok: false, response: new Response('Sin permisos', { status: 403 }) }

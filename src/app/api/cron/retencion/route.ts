@@ -29,10 +29,13 @@ export async function GET(request: Request) {
   const admin = createAdminClient()
   const inicio = Date.now()
 
-  const candidatosEliminados = await purgarCandidatosInactivos(admin)
-  const leadsEliminados = await purgarLeadsAntiguos(admin)
-  const auditLogsPurgados = await purgarAuditLogsAntiguos(admin)
-  const emailEnviosPurgados = await purgarEmailEnviosAntiguos(admin)
+  const [candidatosEliminados, leadsEliminados, auditLogsPurgados, emailEnviosPurgados] =
+    await Promise.all([
+      purgarCandidatosInactivos(admin),
+      purgarLeadsAntiguos(admin),
+      purgarAuditLogsAntiguos(admin),
+      purgarEmailEnviosAntiguos(admin),
+    ])
 
   const ms = Date.now() - inicio
   await logAction({
@@ -117,9 +120,16 @@ async function purgarCandidatosInactivos(admin: AdminClient): Promise<string[]> 
   return eliminados
 }
 
+// Calcula la fecha de corte restando N meses sin overflow (setMonth en día 31 puede dar mes incorrecto)
+function subMonthsSafe(months: number): Date {
+  const d = new Date()
+  d.setDate(1)
+  d.setMonth(d.getMonth() - months)
+  return d
+}
+
 async function purgarLeadsAntiguos(admin: AdminClient): Promise<number> {
-  const limite = new Date()
-  limite.setMonth(limite.getMonth() - MESES_RETENCION_LEAD)
+  const limite = subMonthsSafe(MESES_RETENCION_LEAD)
 
   const { data: leadsViejos, error: selErr } = await admin
     .from('leads')
@@ -150,8 +160,7 @@ async function purgarLeadsAntiguos(admin: AdminClient): Promise<number> {
 }
 
 async function purgarAuditLogsAntiguos(admin: AdminClient): Promise<number> {
-  const limite = new Date()
-  limite.setMonth(limite.getMonth() - 12)
+  const limite = subMonthsSafe(12)
 
   const { data: viejos, error: selErr } = await admin
     .from('audit_logs')
@@ -167,6 +176,10 @@ async function purgarAuditLogsAntiguos(admin: AdminClient): Promise<number> {
   const ids = (viejos ?? []).map((l: { id: string }) => l.id)
   if (ids.length === 0) return 0
 
+  if (ids.length === 1000) {
+    console.warn('[cron-retencion] audit_logs: se alcanzó el límite de 1000 filas — puede haber más pendientes')
+  }
+
   const { error: delErr } = await admin.from('audit_logs').delete().in('id', ids)
   if (delErr) {
     console.error('[cron-retencion] Error borrando audit_logs:', delErr.message)
@@ -177,8 +190,7 @@ async function purgarAuditLogsAntiguos(admin: AdminClient): Promise<number> {
 }
 
 async function purgarEmailEnviosAntiguos(admin: AdminClient): Promise<number> {
-  const limite = new Date()
-  limite.setMonth(limite.getMonth() - MESES_RETENCION_EMAIL_ENVIOS)
+  const limite = subMonthsSafe(MESES_RETENCION_EMAIL_ENVIOS)
 
   const { data: viejos, error: selErr } = await admin
     .from('email_envios')
@@ -193,6 +205,10 @@ async function purgarEmailEnviosAntiguos(admin: AdminClient): Promise<number> {
 
   const ids = (viejos ?? []).map((e: { id: string }) => e.id)
   if (ids.length === 0) return 0
+
+  if (ids.length === 1000) {
+    console.warn('[cron-retencion] email_envios: se alcanzó el límite de 1000 filas — puede haber más pendientes')
+  }
 
   const { error: delErr } = await admin.from('email_envios').delete().in('id', ids)
   if (delErr) {

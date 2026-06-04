@@ -1,19 +1,9 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { logAction } from '@/lib/audit/log-action'
 import type { CandidatoRow, CandidatoPerfil } from '@/features/candidatos/types'
-
-async function requireAdmin() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: 'No autenticado' as const }
-  const { data: profile } = await supabase
-    .from('profiles').select('role').eq('id', user.id).maybeSingle()
-  if (!profile || profile.role !== 'admin') return { error: 'Sin permisos' as const }
-  return { user, profile }
-}
+import { requireAdmin } from '@/lib/auth/require-admin'
 
 export async function getCandidatos(): Promise<CandidatoRow[]> {
   const admin = createAdminClient()
@@ -109,7 +99,7 @@ export async function getCandidatos(): Promise<CandidatoRow[]> {
 
 export async function getCandidatoPerfil(userId: string): Promise<CandidatoPerfil | null> {
   const auth = await requireAdmin()
-  if ('error' in auth) return null
+  if (!auth.ok) return null
 
   const admin = createAdminClient()
 
@@ -204,7 +194,7 @@ export async function getCandidatoPerfil(userId: string): Promise<CandidatoPerfi
 
 export async function contarCandidatosNuevos(): Promise<number> {
   const auth = await requireAdmin()
-  if ('error' in auth) return 0
+  if (!auth.ok) return 0
   const admin = createAdminClient()
   const { count } = await admin
     .from('profiles')
@@ -217,7 +207,7 @@ export async function contarCandidatosNuevos(): Promise<number> {
 
 export async function getCvSignedUrl(storagePath: string): Promise<string | null> {
   const auth = await requireAdmin()
-  if ('error' in auth) return null
+  if (!auth.ok) return null
   const admin = createAdminClient()
   const { data } = await admin.storage.from('cvs').createSignedUrl(storagePath, 600)
   return data?.signedUrl ?? null
@@ -227,7 +217,7 @@ export async function getCvSignedUrl(storagePath: string): Promise<string | null
 
 export async function resetearPasswordCandidato(candidatoId: string) {
   const auth = await requireAdmin()
-  if ('error' in auth) return { error: auth.error }
+  if (!auth.ok) return { error: auth.error }
 
   const admin = createAdminClient()
   const { data: profile } = await admin
@@ -245,7 +235,7 @@ export async function resetearPasswordCandidato(candidatoId: string) {
 
 export async function getNotasCandidato(candidatoId: string) {
   const auth = await requireAdmin()
-  if ('error' in auth) return []
+  if (!auth.ok) return []
 
   const admin = createAdminClient()
   const { data } = await admin
@@ -265,7 +255,7 @@ export async function getNotasCandidato(candidatoId: string) {
 
 export async function crearNotaCandidato(candidatoId: string, contenido: string) {
   const auth = await requireAdmin()
-  if ('error' in auth) return { error: auth.error }
+  if (!auth.ok) return { error: auth.error }
 
   const admin = createAdminClient()
   const { data: nota, error } = await admin.from('candidato_notas').insert({
@@ -287,7 +277,7 @@ export async function crearNotaCandidato(candidatoId: string, contenido: string)
 
 export async function eliminarNotaCandidato(notaId: string, candidatoId?: string) {
   const auth = await requireAdmin()
-  if ('error' in auth) return { error: auth.error }
+  if (!auth.ok) return { error: auth.error }
 
   const admin = createAdminClient()
   const { error } = await admin.from('candidato_notas').delete().eq('id', notaId)
@@ -307,7 +297,7 @@ export async function eliminarNotaCandidato(notaId: string, candidatoId?: string
 
 export async function vincularCandidatoAOferta(candidatoId: string, ofertaId: string) {
   const auth = await requireAdmin()
-  if ('error' in auth) return { error: auth.error }
+  if (!auth.ok) return { error: auth.error }
 
   const admin = createAdminClient()
 
@@ -341,7 +331,7 @@ export async function vincularCandidatoAOferta(candidatoId: string, ofertaId: st
 
 export async function archivarCandidato(candidatoId: string) {
   const auth = await requireAdmin()
-  if ('error' in auth) return { error: auth.error }
+  if (!auth.ok) return { error: auth.error }
 
   const admin = createAdminClient()
   const { data: profile } = await admin.from('profiles').select('email').eq('id', candidatoId).maybeSingle()
@@ -363,7 +353,7 @@ export async function archivarCandidato(candidatoId: string) {
 
 export async function restaurarCandidato(candidatoId: string) {
   const auth = await requireAdmin()
-  if ('error' in auth) return { error: auth.error }
+  if (!auth.ok) return { error: auth.error }
 
   const admin = createAdminClient()
   const { data: profile } = await admin.from('profiles').select('email').eq('id', candidatoId).maybeSingle()

@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-const PROTECTED_PREFIXES = ['/dashboard', '/candidato/dashboard']
+const PROTECTED_PREFIXES = ['/dashboard', '/candidato/dashboard', '/setup-mfa']
 const ADMIN_PREFIXES = ['/dashboard'] // Solo admins/recruiters requieren MFA
 const AUTH_ROUTES = ['/login', '/signup', '/forgot-password', '/check-email', '/update-password', '/candidato/login', '/candidato/signup']
 
@@ -53,23 +53,26 @@ export async function middleware(request: NextRequest) {
 
   // MFA obligatorio para rutas de admin — candidatos quedan exentos
   if (user && isAdminRoute && !isSetupMfa) {
-    const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+    const { data: aalData, error: aalError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
 
-    if (aalData) {
-      const { currentLevel, nextLevel } = aalData
+    // Fail-closed: si la API MFA no responde, no dejar pasar
+    if (aalError || !aalData) {
+      return NextResponse.redirect(new URL('/login', request.url))
+    }
 
-      // Tiene factores MFA enrollados pero aún no los ha verificado en esta sesión
-      if (nextLevel === 'aal2' && currentLevel !== 'aal2') {
-        return NextResponse.redirect(new URL('/setup-mfa', request.url))
-      }
+    const { currentLevel, nextLevel } = aalData
 
-      // No tiene ningún factor MFA enrollado → forzar configuración
-      if (nextLevel === 'aal1' && currentLevel === 'aal1') {
-        const { data: factors } = await supabase.auth.mfa.listFactors()
-        const hasVerifiedFactor = (factors?.totp ?? []).some(f => f.status === 'verified')
-        if (!hasVerifiedFactor) {
-          return NextResponse.redirect(new URL('/setup-mfa?enroll=1', request.url))
-        }
+    // Tiene factores MFA enrollados pero aún no los ha verificado en esta sesión
+    if (nextLevel === 'aal2' && currentLevel !== 'aal2') {
+      return NextResponse.redirect(new URL('/setup-mfa', request.url))
+    }
+
+    // No tiene ningún factor MFA enrollado → forzar configuración
+    if (nextLevel === 'aal1' && currentLevel === 'aal1') {
+      const { data: factors } = await supabase.auth.mfa.listFactors()
+      const hasVerifiedFactor = (factors?.totp ?? []).some(f => f.status === 'verified')
+      if (!hasVerifiedFactor) {
+        return NextResponse.redirect(new URL('/setup-mfa?enroll=1', request.url))
       }
     }
   }

@@ -1,27 +1,12 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { logAction } from '@/lib/audit/log-action'
 import { encryptText, decryptText } from '@/lib/crypto/encrypt'
 import { templateCandidaturaCandidato, templateCandidaturaAdmin } from '@/lib/email/templates/candidatura'
 import { templateLeadConfirmacion } from '@/lib/email/templates/lead'
-
-async function requireAdmin() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: 'No autenticado' as const }
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .maybeSingle()
-
-  if (!profile || profile.role !== 'admin') return { error: 'Sin permisos' as const }
-  return { user, profile }
-}
+import { requireAdmin } from '@/lib/auth/require-admin'
 
 export type EmailConfigInput = {
   smtp_host: string
@@ -387,7 +372,7 @@ export async function getEmailConfig(): Promise<EmailConfigPublic> {
 
 export async function guardarEmailConfig(input: EmailConfigInput) {
   const auth = await requireAdmin()
-  if ('error' in auth) return { error: auth.error }
+  if (!auth.ok) return { error: auth.error }
 
   const admin = createAdminClient()
 
@@ -487,7 +472,7 @@ async function getDecryptedPasswords(): Promise<{ smtp: string | null; imap: str
 
 export async function listarCarpetasImap() {
   const auth = await requireAdmin()
-  if ('error' in auth) return { error: auth.error }
+  if (!auth.ok) return { error: auth.error }
 
   const { imap, config } = await getDecryptedPasswords()
   if (!config?.imap_host || !imap) return { error: 'Sin credenciales IMAP.' }
@@ -509,7 +494,7 @@ export async function listarCarpetasImap() {
 
 export async function listarEmailsBandeja(mailbox = 'INBOX') {
   const auth = await requireAdmin()
-  if ('error' in auth) return { error: auth.error }
+  if (!auth.ok) return { error: auth.error }
 
   const { imap, config } = await getDecryptedPasswords()
 
@@ -534,7 +519,7 @@ export async function listarEmailsBandeja(mailbox = 'INBOX') {
 
 export async function leerEmailBandeja(uid: number, mailbox = 'INBOX') {
   const auth = await requireAdmin()
-  if ('error' in auth) return { error: auth.error }
+  if (!auth.ok) return { error: auth.error }
 
   const { imap, config } = await getDecryptedPasswords()
 
@@ -561,7 +546,7 @@ export async function leerEmailBandeja(uid: number, mailbox = 'INBOX') {
 
 export async function eliminarEmailsBandeja(uids: number[], mailbox = 'INBOX') {
   const auth = await requireAdmin()
-  if ('error' in auth) return { error: auth.error }
+  if (!auth.ok) return { error: auth.error }
 
   const { imap, config } = await getDecryptedPasswords()
   if (!config?.imap_host || !imap) return { error: 'Sin credenciales IMAP.' }
@@ -591,7 +576,7 @@ export type EnviarEmailInput = {
 
 export async function enviarEmail({ to, subject, bodyText, bodyHtml, attachments = [] }: EnviarEmailInput) {
   const auth = await requireAdmin()
-  if ('error' in auth) return { error: auth.error }
+  if (!auth.ok) return { error: auth.error }
 
   const { smtp, config } = await getDecryptedPasswords()
 
@@ -667,7 +652,7 @@ export async function contarEmailsFallidos(): Promise<number> {
 
 export async function reintentarEmail(id: string): Promise<{ ok: true } | { error: string }> {
   const auth = await requireAdmin()
-  if ('error' in auth) return { error: auth.error as string }
+  if (!auth.ok) return { error: auth.error as string }
 
   const admin = createAdminClient()
 

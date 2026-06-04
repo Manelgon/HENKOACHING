@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { requireAdmin } from '@/lib/auth/require-admin'
 
 type Result<T = undefined> = { ok: true; data?: T } | { error: string }
 
@@ -15,19 +16,6 @@ export type TestimonioInput = {
   fecha?: string
   orden?: number
   visible?: boolean
-}
-
-async function requireAdmin() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: 'No autenticado' as const }
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .maybeSingle()
-  if (!profile || profile.role !== 'admin') return { error: 'Sin permisos' as const }
-  return { supabase, user }
 }
 
 function revalidar() {
@@ -46,12 +34,12 @@ function validar(input: TestimonioInput): string | null {
 
 export async function crearTestimonio(input: TestimonioInput): Promise<Result<{ id: string }>> {
   const auth = await requireAdmin()
-  if ('error' in auth && auth.error) return { error: auth.error }
-  if (!('supabase' in auth)) return { error: 'No autorizado' }
+  if (!auth.ok) return { error: auth.error }
   const err = validar(input)
   if (err) return { error: err }
 
-  const { data, error } = await auth.supabase
+  const supabase = await createClient()
+  const { data, error } = await supabase
     .from('testimonios')
     .insert({
       texto: input.texto.trim(),
@@ -74,12 +62,12 @@ export async function crearTestimonio(input: TestimonioInput): Promise<Result<{ 
 
 export async function actualizarTestimonio(id: string, input: TestimonioInput): Promise<Result> {
   const auth = await requireAdmin()
-  if ('error' in auth && auth.error) return { error: auth.error }
-  if (!('supabase' in auth)) return { error: 'No autorizado' }
+  if (!auth.ok) return { error: auth.error }
   const err = validar(input)
   if (err) return { error: err }
 
-  const { error } = await auth.supabase
+  const supabase = await createClient()
+  const { error } = await supabase
     .from('testimonios')
     .update({
       texto: input.texto.trim(),
@@ -101,10 +89,10 @@ export async function actualizarTestimonio(id: string, input: TestimonioInput): 
 
 export async function eliminarTestimonio(id: string): Promise<Result> {
   const auth = await requireAdmin()
-  if ('error' in auth && auth.error) return { error: auth.error }
-  if (!('supabase' in auth)) return { error: 'No autorizado' }
+  if (!auth.ok) return { error: auth.error }
 
-  const { error } = await auth.supabase
+  const supabase = await createClient()
+  const { error } = await supabase
     .from('testimonios')
     .update({ deleted_at: new Date().toISOString(), visible: false })
     .eq('id', id)
@@ -116,10 +104,10 @@ export async function eliminarTestimonio(id: string): Promise<Result> {
 
 export async function alternarVisibilidad(id: string, visible: boolean): Promise<Result> {
   const auth = await requireAdmin()
-  if ('error' in auth && auth.error) return { error: auth.error }
-  if (!('supabase' in auth)) return { error: 'No autorizado' }
+  if (!auth.ok) return { error: auth.error }
 
-  const { error } = await auth.supabase
+  const supabase = await createClient()
+  const { error } = await supabase
     .from('testimonios')
     .update({ visible })
     .eq('id', id)

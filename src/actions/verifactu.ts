@@ -2,25 +2,10 @@
 
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
-import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { logAction } from '@/lib/audit/log-action'
 import { validarIdFiscal } from '@/lib/verifactu/nif'
-
-async function requireAdmin() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: 'No autenticado' as const }
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .maybeSingle()
-
-  if (!profile || profile.role !== 'admin') return { error: 'Sin permisos' as const }
-  return { user, profile }
-}
+import { requireAdmin } from '@/lib/auth/require-admin'
 
 // Validacion Zod: estos campos viajan al XML AEAT, un valor malformado
 // contamina permanentemente todos los registros posteriores.
@@ -40,7 +25,7 @@ export type ConfigVerifactuInput = z.input<typeof configVerifactuSchema>
 
 export async function guardarConfigVerifactu(input: ConfigVerifactuInput) {
   const auth = await requireAdmin()
-  if ('error' in auth) return { error: auth.error }
+  if (!auth.ok) return { error: auth.error }
 
   const parsed = configVerifactuSchema.safeParse(input)
   if (!parsed.success) {
@@ -76,7 +61,7 @@ export async function guardarConfigVerifactu(input: ConfigVerifactuInput) {
 // implementan en F4. Hasta entonces este botón solo resetea el estado.
 export async function reintentarEnvioVerifactu(registroId: string) {
   const auth = await requireAdmin()
-  if ('error' in auth) return { error: auth.error }
+  if (!auth.ok) return { error: auth.error }
 
   const admin = createAdminClient()
 
@@ -117,7 +102,7 @@ export async function reintentarEnvioVerifactu(registroId: string) {
 // =============================================================================
 export async function getRegistroVerifactu(registroId: string) {
   const auth = await requireAdmin()
-  if ('error' in auth) return { error: auth.error }
+  if (!auth.ok) return { error: auth.error }
 
   const admin = createAdminClient()
   const { data } = await admin
@@ -163,7 +148,7 @@ export async function getRegistroVerifactu(registroId: string) {
 // el hash global ya no cuadra.
 export async function exportarBackupVerifactu() {
   const auth = await requireAdmin()
-  if ('error' in auth) return { error: auth.error }
+  if (!auth.ok) return { error: auth.error }
 
   const admin = createAdminClient()
   const { data, error } = await admin

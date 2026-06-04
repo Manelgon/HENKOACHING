@@ -6,7 +6,7 @@ const CSP = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https://cardgrqwqktjsssodtzp.supabase.co https://images.unsplash.com",
   "font-src 'self'",
-  "connect-src 'self' https://cardgrqwqktjsssodtzp.supabase.co wss://cardgrqwqktjsssodtzp.supabase.co",
+  "connect-src 'self' https://cardgrqwqktjsssodtzp.supabase.co wss://cardgrqwqktjsssodtzp.supabase.co https://api.openrouter.ai",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",

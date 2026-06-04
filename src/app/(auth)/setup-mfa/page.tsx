@@ -1,12 +1,76 @@
 'use client'
 
-import { useSearchParams } from 'next/navigation'
-import Link from 'next/link'
-import { Suspense } from 'react'
+import { useEffect, useState, useCallback, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import QRCode from 'qrcode'
+import { createBrowserClient } from '@supabase/ssr'
 
 function SetupMfaContent() {
+  const router = useRouter()
   const searchParams = useSearchParams()
   const enroll = searchParams.get('enroll') === '1'
+
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
+  const [secret, setSecret] = useState<string | null>(null)
+  const [factorId, setFactorId] = useState<string | null>(null)
+  const [code, setCode] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [step, setStep] = useState<'loading' | 'qr' | 'code' | 'done'>('loading')
+
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+
+  const initEnroll = useCallback(async () => {
+    const { data, error } = await supabase.auth.mfa.enroll({ factorType: 'totp' })
+    if (error || !data) {
+      setError('No se pudo iniciar el registro MFA. Inténtalo de nuevo.')
+      setStep('code')
+      return
+    }
+    const qrUrl = await QRCode.toDataURL(data.totp.qr_code)
+    setQrDataUrl(qrUrl)
+    setSecret(data.totp.secret)
+    setFactorId(data.id)
+    setStep('qr')
+  }, [supabase])
+
+  const initVerify = useCallback(async () => {
+    const { data } = await supabase.auth.mfa.listFactors()
+    const totp = data?.totp?.find(f => f.status === 'verified')
+    if (totp) {
+      setFactorId(totp.id)
+      setStep('code')
+    } else {
+      // Factor no verificado: redirigir a enroll
+      router.replace('/setup-mfa?enroll=1')
+    }
+  }, [supabase, router])
+
+  useEffect(() => {
+    if (enroll) {
+      initEnroll()
+    } else {
+      initVerify()
+    }
+  }, [enroll, initEnroll, initVerify])
+
+  const handleVerify = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!factorId || code.length !== 6) return
+    setLoading(true)
+    setError(null)
+    const { error } = await supabase.auth.mfa.challengeAndVerify({ factorId, code })
+    setLoading(false)
+    if (error) {
+      setError('Código incorrecto. Comprueba tu app autenticadora e inténtalo de nuevo.')
+      return
+    }
+    setStep('done')
+    router.push('/dashboard')
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
@@ -18,43 +82,71 @@ function SetupMfaContent() {
         </div>
 
         <h1 className="text-xl font-bold text-gray-900 font-raleway mb-2">
-          {enroll ? 'Configura la verificación en dos pasos' : 'Verificación en dos pasos requerida'}
+          {enroll ? 'Configura la verificación en dos pasos' : 'Verificación en dos pasos'}
         </h1>
 
-        <p className="text-gray-600 text-sm font-raleway mb-6">
-          {enroll
-            ? 'El acceso al panel de administración requiere autenticación en dos factores (MFA). Necesitas configurar una app autenticadora antes de continuar.'
-            : 'Tu sesión requiere verificación adicional. Abre tu app autenticadora (Google Authenticator, Authy, etc.) e introduce el código para acceder al panel.'}
-        </p>
-
-        {enroll && (
-          <div className="bg-blue-50 rounded-xl p-4 mb-6 text-left">
-            <p className="text-sm font-semibold text-blue-800 font-raleway mb-2">Cómo configurarlo:</p>
-            <ol className="text-sm text-blue-700 font-raleway space-y-1 list-decimal list-inside">
-              <li>Cierra sesión y vuelve a entrar</li>
-              <li>En la pantalla de login, busca la opción «Configurar autenticación en dos pasos»</li>
-              <li>Escanea el código QR con Google Authenticator o Authy</li>
-              <li>Introduce el código de 6 dígitos para confirmar</li>
-            </ol>
-          </div>
+        {step === 'loading' && (
+          <p className="text-gray-500 text-sm font-raleway">Cargando...</p>
         )}
 
-        <div className="flex flex-col gap-3">
-          <Link
-            href="/login"
-            className="w-full px-5 py-3 rounded-xl bg-henko-greenblue text-white font-raleway font-semibold text-sm hover:bg-henko-greenblue/90 transition-colors"
-          >
-            Volver al inicio de sesión
-          </Link>
-          <a
-            href="https://supabase.com/docs/guides/auth/auth-mfa"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs text-gray-400 hover:text-gray-600 font-raleway transition-colors"
-          >
-            ¿Necesitas ayuda? Consulta la documentación →
-          </a>
-        </div>
+        {step === 'qr' && qrDataUrl && (
+          <>
+            <p className="text-gray-600 text-sm font-raleway mb-5">
+              Escanea el código QR con <strong>Google Authenticator</strong>, <strong>Authy</strong> u otra app autenticadora.
+            </p>
+            <div className="flex justify-center mb-4">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={qrDataUrl} alt="Código QR para autenticación" className="w-48 h-48 rounded-xl border border-gray-200" />
+            </div>
+            {secret && (
+              <div className="bg-gray-50 rounded-xl px-4 py-3 mb-5 text-left">
+                <p className="text-xs text-gray-500 font-raleway mb-1">O introduce la clave manualmente:</p>
+                <code className="text-xs text-gray-800 break-all font-mono">{secret}</code>
+              </div>
+            )}
+            <button
+              onClick={() => setStep('code')}
+              className="w-full px-5 py-3 rounded-xl bg-henko-greenblue text-white font-raleway font-semibold text-sm hover:bg-henko-greenblue/90 transition-colors"
+            >
+              Ya escaneé el código →
+            </button>
+          </>
+        )}
+
+        {step === 'code' && (
+          <>
+            <p className="text-gray-600 text-sm font-raleway mb-6">
+              {enroll
+                ? 'Introduce el código de 6 dígitos de tu app autenticadora para confirmar el registro.'
+                : 'Abre tu app autenticadora e introduce el código de 6 dígitos para acceder al panel.'}
+            </p>
+            <form onSubmit={handleVerify} className="flex flex-col gap-4">
+              <input
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]{6}"
+                maxLength={6}
+                value={code}
+                onChange={e => setCode(e.target.value.replace(/\D/g, ''))}
+                placeholder="000000"
+                className="w-full text-center text-2xl tracking-widest font-mono border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-henko-greenblue/30"
+                autoFocus
+              />
+              {error && <p className="text-red-600 text-sm font-raleway">{error}</p>}
+              <button
+                type="submit"
+                disabled={loading || code.length !== 6}
+                className="w-full px-5 py-3 rounded-xl bg-henko-greenblue text-white font-raleway font-semibold text-sm hover:bg-henko-greenblue/90 transition-colors disabled:opacity-50"
+              >
+                {loading ? 'Verificando...' : 'Verificar y acceder'}
+              </button>
+            </form>
+          </>
+        )}
+
+        {step === 'done' && (
+          <p className="text-green-600 text-sm font-raleway">Verificado. Redirigiendo al panel...</p>
+        )}
       </div>
     </div>
   )

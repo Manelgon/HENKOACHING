@@ -2,31 +2,16 @@
 
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
-import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { logAction } from '@/lib/audit/log-action'
 import { getCompanySettings, downloadAssetBytes } from '@/lib/company-settings'
 import { buildFacturaPdf, type FacturaPdfData, type EmisorPdf } from '@/lib/pdf/factura'
 import { registrarAlta, registrarAnulacion } from '@/lib/verifactu/registrar'
 import { generarQrPng } from '@/lib/verifactu/qr'
+import { requireAdmin } from '@/lib/auth/require-admin'
 
 type EstadoFactura = 'pendiente' | 'pagada' | 'vencida' | 'devuelta' | 'anulada'
 type FormaPago = 'transferencia' | 'efectivo' | 'bizum' | 'tarjeta' | 'domiciliacion'
-
-async function requireAdmin() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: 'No autenticado' as const }
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .maybeSingle()
-
-  if (!profile || profile.role !== 'admin') return { error: 'Sin permisos' as const }
-  return { user, profile }
-}
 
 export type LineaInput = {
   concepto: string
@@ -68,7 +53,7 @@ function calcularTotales(lineas: LineaInput[], ivaPct: number, irpfPct: number) 
 // =============================================================================
 export async function crearFactura(input: FacturaInput) {
   const auth = await requireAdmin()
-  if ('error' in auth) return { error: auth.error }
+  if (!auth.ok) return { error: auth.error }
 
   if (!input.cliente_id) return { error: 'Selecciona un cliente' }
   if (!input.lineas.length) return { error: 'Añade al menos una línea' }
@@ -340,7 +325,7 @@ export async function cambiarEstadoFactura(
   extras?: { motivo_devolucion?: string | null; fecha_pago?: string | null; forma_pago?: FormaPago | null },
 ) {
   const auth = await requireAdmin()
-  if ('error' in auth) return { error: auth.error }
+  if (!auth.ok) return { error: auth.error }
 
   const admin = createAdminClient()
   const updates: Record<string, unknown> = { estado }
@@ -419,7 +404,7 @@ const FacturaNoFiscalSchema = z.object({
 
 export async function actualizarFacturaNoFiscal(id: string, input: FacturaNoFiscalInput) {
   const auth = await requireAdmin()
-  if ('error' in auth) return { error: auth.error }
+  if (!auth.ok) return { error: auth.error }
 
   const parsed = FacturaNoFiscalSchema.safeParse(input)
   if (!parsed.success) {
@@ -470,7 +455,7 @@ export async function actualizarFacturaNoFiscal(id: string, input: FacturaNoFisc
 // =============================================================================
 export async function eliminarFactura(id: string) {
   const auth = await requireAdmin()
-  if ('error' in auth) return { error: auth.error }
+  if (!auth.ok) return { error: auth.error }
 
   const admin = createAdminClient()
 
@@ -510,7 +495,7 @@ export async function eliminarFactura(id: string) {
 // =============================================================================
 export async function getVerifactuXml(facturaId: string) {
   const auth = await requireAdmin()
-  if ('error' in auth) return { error: auth.error }
+  if (!auth.ok) return { error: auth.error }
 
   const admin = createAdminClient()
 
@@ -542,7 +527,7 @@ export async function getVerifactuXml(facturaId: string) {
 // =============================================================================
 export async function getFacturaPdfUrl(id: string) {
   const auth = await requireAdmin()
-  if ('error' in auth) return { error: auth.error }
+  if (!auth.ok) return { error: auth.error }
 
   const admin = createAdminClient()
 
