@@ -428,15 +428,17 @@ export default function EmailConfigForm({ config }: Props) {
         </div>
       )}
 
-      {/* Guardar */}
-      <div className="flex justify-end gap-3 pt-2">
-        <button
-          type="submit"
-          className="px-6 py-2.5 rounded-xl bg-henko-turquoise text-white font-raleway font-semibold text-sm hover:bg-henko-turquoise-light transition-colors"
-        >
-          {activeTab === 'templates' ? 'Guardar templates' : 'Guardar configuración'}
-        </button>
-      </div>
+      {/* Guardar — solo visible en el tab templates */}
+      {activeTab === 'templates' && (
+        <div className="flex justify-end gap-3 pt-2">
+          <button
+            type="submit"
+            className="px-6 py-2.5 rounded-xl bg-henko-turquoise text-white font-raleway font-semibold text-sm hover:bg-henko-turquoise-light transition-colors"
+          >
+            Guardar templates
+          </button>
+        </div>
+      )}
 
       {/* Modal preview */}
       {previewHtml !== null && (
