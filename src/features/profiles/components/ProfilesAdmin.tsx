@@ -351,11 +351,34 @@ function EditDrawer({
   onReactivar: () => void
   onEliminar: () => void
 }) {
+  const confirm = useConfirm()
+  const [editingDatos, setEditingDatos] = useState(false)
   const [nombre, setNombre] = useState(profile.nombre)
   const [apellidos, setApellidos] = useState(profile.apellidos)
   const [telefono, setTelefono] = useState(profile.telefono)
   const [role, setRole] = useState<UserRole>(profile.role)
+  const [editingEmail, setEditingEmail] = useState(false)
   const [newEmail, setNewEmail] = useState(profile.email)
+
+  const handleResetPassword = async () => {
+    const ok = await confirm({ description: `¿Enviar email de recuperación de contraseña a ${profile.email}?`, confirmLabel: 'Enviar' })
+    if (ok) onResetPassword()
+  }
+
+  const handleDesactivar = async () => {
+    const ok = await confirm({ description: `¿Desactivar la cuenta de ${profile.email}? El usuario no podrá iniciar sesión.`, confirmLabel: 'Desactivar', variant: 'danger' })
+    if (ok) onDesactivar()
+  }
+
+  const handleReactivar = async () => {
+    const ok = await confirm({ description: `¿Reactivar la cuenta de ${profile.email}?`, confirmLabel: 'Reactivar' })
+    if (ok) onReactivar()
+  }
+
+  const handleEliminar = async () => {
+    const ok = await confirm({ description: `¿Eliminar permanentemente a ${profile.email}? Se borrarán todos sus datos (CVs, solicitudes, perfil). Esta acción no se puede deshacer.`, confirmLabel: 'Eliminar', variant: 'danger' })
+    if (ok) onEliminar()
+  }
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-end z-50">
@@ -376,49 +399,100 @@ function EditDrawer({
 
           {/* Datos */}
           <div className="space-y-3">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Datos</p>
-            <div className="grid grid-cols-2 gap-3">
-              <Field label="Nombre" value={nombre} onChange={setNombre} />
-              <Field label="Apellidos" value={apellidos} onChange={setApellidos} />
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Datos</p>
+              {!editingDatos && (
+                <button type="button" onClick={() => setEditingDatos(true)}
+                  className="text-xs text-henko-turquoise font-medium hover:underline">
+                  Editar
+                </button>
+              )}
             </div>
-            <Field label="Teléfono" value={telefono} onChange={setTelefono} />
-            <div>
-              <label className="block text-xs text-gray-500 mb-1">Rol</label>
-              <CustomSelect value={role} onChange={(v) => setRole(v as UserRole)} options={ROLES.map((r) => ({ value: r, label: r }))} className="w-full" />
-            </div>
-            <div className="flex justify-end">
-              <button type="button" onClick={() => onUpdate({ nombre, apellidos, telefono, role })}
-                className="px-4 py-2 rounded-xl bg-henko-turquoise text-white text-sm font-medium hover:bg-henko-turquoise/90 transition-colors">
-                Guardar cambios
-              </button>
-            </div>
+
+            {editingDatos ? (
+              <>
+                <div className="grid grid-cols-2 gap-3">
+                  <Field label="Nombre" value={nombre} onChange={setNombre} />
+                  <Field label="Apellidos" value={apellidos} onChange={setApellidos} />
+                </div>
+                <Field label="Teléfono" value={telefono} onChange={setTelefono} />
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">Rol</label>
+                  <CustomSelect value={role} onChange={(v) => setRole(v as UserRole)} options={ROLES.map((r) => ({ value: r, label: r }))} className="w-full" />
+                </div>
+                <div className="flex justify-end gap-2">
+                  <button type="button" onClick={() => setEditingDatos(false)}
+                    className="px-4 py-2 rounded-xl border border-gray-200 text-sm text-gray-500 hover:bg-gray-50 transition-colors">
+                    Cancelar
+                  </button>
+                  <button type="button" onClick={() => { onUpdate({ nombre, apellidos, telefono, role }); setEditingDatos(false) }}
+                    className="px-4 py-2 rounded-xl bg-henko-turquoise text-white text-sm font-medium hover:bg-henko-turquoise/90 transition-colors">
+                    Guardar cambios
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="space-y-2 text-sm text-gray-700">
+                <div className="flex gap-2">
+                  <span className="text-gray-400 w-20 shrink-0">Nombre</span>
+                  <span>{[nombre, apellidos].filter(Boolean).join(' ') || '—'}</span>
+                </div>
+                <div className="flex gap-2">
+                  <span className="text-gray-400 w-20 shrink-0">Teléfono</span>
+                  <span>{telefono || '—'}</span>
+                </div>
+                <div className="flex gap-2">
+                  <span className="text-gray-400 w-20 shrink-0">Rol</span>
+                  <span className="capitalize">{role}</span>
+                </div>
+              </div>
+            )}
           </div>
 
           <hr className="border-gray-100" />
 
           {/* Email */}
           <div className="space-y-3">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</p>
-            <Field label="Nuevo email" type="email" value={newEmail} onChange={setNewEmail} />
-            <div className="flex justify-end">
-              <button type="button" disabled={newEmail === profile.email} onClick={() => onChangeEmail(newEmail)}
-                className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-40">
-                Cambiar email
-              </button>
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</p>
+              {!editingEmail && (
+                <button type="button" onClick={() => setEditingEmail(true)}
+                  className="text-xs text-henko-turquoise font-medium hover:underline">
+                  Cambiar
+                </button>
+              )}
             </div>
+            {editingEmail ? (
+              <>
+                <Field label="Nuevo email" type="email" value={newEmail} onChange={setNewEmail} />
+                <div className="flex justify-end gap-2">
+                  <button type="button" onClick={() => { setNewEmail(profile.email); setEditingEmail(false) }}
+                    className="px-4 py-2 rounded-xl border border-gray-200 text-sm text-gray-500 hover:bg-gray-50 transition-colors">
+                    Cancelar
+                  </button>
+                  <button type="button" disabled={newEmail === profile.email} onClick={() => { onChangeEmail(newEmail); setEditingEmail(false) }}
+                    className="px-4 py-2 rounded-xl bg-henko-turquoise text-white text-sm font-medium hover:bg-henko-turquoise/90 transition-colors disabled:opacity-40">
+                    Guardar email
+                  </button>
+                </div>
+              </>
+            ) : (
+              <p className="text-sm text-gray-700">{profile.email}</p>
+            )}
           </div>
 
           <hr className="border-gray-100" />
 
           {/* Contraseña */}
-          <div className="space-y-3">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Contraseña</p>
-            <div className="flex justify-end">
-              <button type="button" onClick={onResetPassword}
-                className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-                Enviar email de recuperación
-              </button>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-0.5">Contraseña</p>
+              <p className="text-xs text-gray-400">Envía un email para que el usuario restablezca su contraseña</p>
             </div>
+            <button type="button" onClick={handleResetPassword}
+              className="ml-4 shrink-0 px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors">
+              Recuperar
+            </button>
           </div>
 
           <hr className="border-gray-100" />
@@ -432,12 +506,12 @@ function EditDrawer({
                 <p className="text-xs text-gray-400">{profile.banned ? 'El usuario no puede iniciar sesión' : 'El usuario puede acceder con normalidad'}</p>
               </div>
               {profile.banned ? (
-                <button type="button" onClick={onReactivar}
+                <button type="button" onClick={handleReactivar}
                   className="px-3 py-1.5 rounded-lg border border-green-200 text-green-700 text-xs font-medium hover:bg-green-50 transition-colors">
                   Reactivar
                 </button>
               ) : (
-                <button type="button" onClick={onDesactivar}
+                <button type="button" onClick={handleDesactivar}
                   className="px-3 py-1.5 rounded-lg border border-amber-200 text-amber-700 text-xs font-medium hover:bg-amber-50 transition-colors">
                   Desactivar
                 </button>
@@ -448,7 +522,7 @@ function EditDrawer({
                 <p className="text-sm font-medium text-red-600">Eliminar usuario</p>
                 <p className="text-xs text-gray-400">Borra todos sus datos permanentemente</p>
               </div>
-              <button type="button" onClick={onEliminar}
+              <button type="button" onClick={handleEliminar}
                 className="px-3 py-1.5 rounded-lg border border-red-200 text-red-600 text-xs font-medium hover:bg-red-50 transition-colors">
                 Eliminar
               </button>
