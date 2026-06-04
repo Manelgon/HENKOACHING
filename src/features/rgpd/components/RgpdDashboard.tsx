@@ -49,13 +49,14 @@ const DOC_ICONS: Record<RgpdDocId, React.ReactNode> = {
   ),
 }
 
-// Los docs con contenido vacío (formacion_ia recién creada) no se consideran completados
+// Los docs con contenido vacío (formacion_ia, ropa recién creados) no se consideran completados
 function isCompleted(doc: RgpdDocumento): boolean {
   if (!doc.actualizado_at) return false
   if (doc.id === 'formacion_ia') {
     const r = (doc.contenido as { registros?: unknown[] }).registros ?? []
     return r.length > 0
   }
+  if (doc.id === 'ropa') return false
   return true
 }
 
