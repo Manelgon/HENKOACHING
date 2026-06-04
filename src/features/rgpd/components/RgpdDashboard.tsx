@@ -56,7 +56,6 @@ function isCompleted(doc: RgpdDocumento): boolean {
     const r = (doc.contenido as { registros?: unknown[] }).registros ?? []
     return r.length > 0
   }
-  if (doc.id === 'ropa') return false
   return true
 }
 
