@@ -116,7 +116,7 @@ export async function aplicarAOferta(ofertaId: string, mensaje?: string) {
         await sendTransactional({ to: adminEmail, subject, html, tipo: 'candidatura.admin', metadata: { solicitud_id: nueva?.id, oferta_id: ofertaId, candidato_id: user.id } })
       }
     } catch (e) {
-      console.error('[email] hook aplicarAOferta:', e)
+      console.error('[email] hook aplicarAOferta:', e instanceof Error ? e.message : String(e))
     }
   })()
 
@@ -189,7 +189,7 @@ export async function cambiarEstadoSolicitud(solicitudId: string, estado: Estado
           metadata: { solicitud_id: solicitudId, candidato_id: candidatoId, estado },
         })
       } catch (e) {
-        console.error('[email] hook cambiarEstadoSolicitud:', e)
+        console.error('[email] hook cambiarEstadoSolicitud:', e instanceof Error ? e.message : String(e))
       }
     })()
   }

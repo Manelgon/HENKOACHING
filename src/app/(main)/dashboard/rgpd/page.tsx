@@ -1,0 +1,42 @@
+import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
+import { getCompanySettings, getSignedAssetUrl } from '@/lib/company-settings'
+import { getRgpdDocumentos, getDerechosArco } from '@/actions/rgpd'
+import RgpdDashboard from '@/features/rgpd/components/RgpdDashboard'
+
+export const metadata = {
+  title: 'Cumplimiento RGPD — Henkoaching',
+}
+
+export const dynamic = 'force-dynamic'
+
+export default async function RgpdPage() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (profile?.role !== 'admin') redirect('/dashboard')
+
+  const [documentos, solicitudes, settings] = await Promise.all([
+    getRgpdDocumentos(),
+    getDerechosArco(),
+    getCompanySettings(),
+  ])
+
+  const ratFirmadoUrl = await getSignedAssetUrl(settings.rat_firmado_path)
+
+  return (
+    <RgpdDashboard
+      documentos={documentos}
+      solicitudes={solicitudes}
+      ratFirmadoUrl={ratFirmadoUrl}
+      ratFirmadoAt={settings.rat_firmado_at}
+    />
+  )
+}

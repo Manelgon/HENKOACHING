@@ -87,7 +87,7 @@ export async function crearLead(input: {
         metadata: { lead_id: nuevo?.id, nombre: input.nombre },
       })
     } catch (e) {
-      console.error('[email] hook crearLead:', e)
+      console.error('[email] hook crearLead:', e instanceof Error ? e.message : String(e))
     }
   })()
 

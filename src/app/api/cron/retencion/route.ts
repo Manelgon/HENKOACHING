@@ -30,6 +30,7 @@ export async function GET(request: Request) {
 
   const candidatosEliminados = await purgarCandidatosInactivos(admin)
   const leadsEliminados = await purgarLeadsAntiguos(admin)
+  const auditLogsPurgados = await purgarAuditLogsAntiguos(admin)
 
   const ms = Date.now() - inicio
   await logAction({
@@ -38,6 +39,7 @@ export async function GET(request: Request) {
     metadata: {
       candidatos_eliminados: candidatosEliminados.length,
       leads_eliminados: leadsEliminados,
+      audit_logs_purgados: auditLogsPurgados,
       duracion_ms: ms,
     },
   })
@@ -46,6 +48,7 @@ export async function GET(request: Request) {
     ok: true,
     candidatos_eliminados: candidatosEliminados.length,
     leads_eliminados: leadsEliminados,
+    audit_logs_purgados: auditLogsPurgados,
     duracion_ms: ms,
   })
 }
@@ -138,6 +141,33 @@ async function purgarLeadsAntiguos(admin: AdminClient): Promise<number> {
     recursoTipo: 'lead',
     metadata: { eliminados: ids.length, motivo: 'antiguedad_24m' },
   })
+
+  return ids.length
+}
+
+async function purgarAuditLogsAntiguos(admin: AdminClient): Promise<number> {
+  const limite = new Date()
+  limite.setMonth(limite.getMonth() - 12)
+
+  const { data: viejos, error: selErr } = await admin
+    .from('audit_logs')
+    .select('id')
+    .lt('created_at', limite.toISOString())
+    .limit(1000)
+
+  if (selErr) {
+    console.error('[cron-retencion] Error listando audit_logs:', selErr.message)
+    return 0
+  }
+
+  const ids = (viejos ?? []).map((l: { id: string }) => l.id)
+  if (ids.length === 0) return 0
+
+  const { error: delErr } = await admin.from('audit_logs').delete().in('id', ids)
+  if (delErr) {
+    console.error('[cron-retencion] Error borrando audit_logs:', delErr.message)
+    return 0
+  }
 
   return ids.length
 }

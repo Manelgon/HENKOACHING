@@ -124,11 +124,29 @@ export default function Legal() {
             <p>El consentimiento puede retirarse en cualquier momento sin que ello afecte a la licitud del tratamiento previo.</p>
 
             <h3 className="text-lg font-bold text-gray-900 mt-6 mb-3">4. Datos que tratamos</h3>
-            <ul className="list-disc list-inside space-y-2 ml-2">
-              <li><strong>Identificativos y de contacto:</strong> nombre, apellidos, email, teléfono, ubicación.</li>
-              <li><strong>Profesionales:</strong> cargo actual, experiencia laboral, formación, idiomas, currículum vítae (PDF), enlaces a LinkedIn o web propia, disponibilidad, pretensión salarial.</li>
-              <li><strong>De navegación:</strong> los estrictamente necesarios para el funcionamiento del sitio (ver Política de Cookies).</li>
-            </ul>
+            <p>Recogemos datos personales a través de los siguientes canales:</p>
+            <div className="my-4 space-y-4">
+              <div className="bg-gray-50 rounded-xl p-4">
+                <p className="font-semibold text-gray-800 mb-2">Formulario de contacto</p>
+                <ul className="list-disc list-inside space-y-1 ml-2 text-sm">
+                  <li>Nombre completo</li>
+                  <li>Correo electrónico</li>
+                  <li>Empresa (opcional)</li>
+                  <li>Tipo de necesidad / servicio solicitado</li>
+                  <li>Mensaje descriptivo</li>
+                  <li>Dirección IP (recogida automáticamente)</li>
+                  <li>Fecha y hora del envío</li>
+                </ul>
+              </div>
+              <div className="bg-gray-50 rounded-xl p-4">
+                <p className="font-semibold text-gray-800 mb-2">Registro como candidato</p>
+                <ul className="list-disc list-inside space-y-1 ml-2 text-sm">
+                  <li><strong>Identificativos y de contacto:</strong> nombre, apellidos, email, teléfono, ubicación, código postal.</li>
+                  <li><strong>Profesionales:</strong> cargo actual, experiencia laboral, formación, idiomas, currículum vítae (PDF), enlaces a LinkedIn o web propia, disponibilidad, pretensión salarial.</li>
+                  <li>Dirección IP (recogida automáticamente al crear la cuenta)</li>
+                </ul>
+              </div>
+            </div>
             <p>Solo solicitamos los datos estrictamente necesarios para la finalidad declarada (principio de minimización, art. 5.1.c RGPD).</p>
 
             <h3 className="text-lg font-bold text-gray-900 mt-6 mb-3">5. Plazos de conservación</h3>
@@ -140,29 +158,55 @@ export default function Legal() {
               <li>Transcurridos estos plazos, los datos son eliminados o anonimizados de forma segura.</li>
             </ul>
 
-            <h3 className="text-lg font-bold text-gray-900 mt-6 mb-3">6. Destinatarios</h3>
+            <h3 className="text-lg font-bold text-gray-900 mt-6 mb-3">6. Destinatarios de los datos</h3>
             <p>
-              Tus datos <strong>no se ceden a terceros</strong>. Las ofertas publicadas en este sitio son gestionadas directamente por Jennifer Cervera Alzate como responsable del proceso de selección. Tu CV y tus datos solo son accesibles por ella y, en su caso, por personal autorizado vinculado por deber de confidencialidad.
+              Tus datos <strong>no se ceden a terceros con fines comerciales</strong>. Para prestar el servicio utilizamos los siguientes encargados del tratamiento con garantías RGPD:
             </p>
-            <p>
-              Para prestar el servicio, utilizamos los siguientes encargados del tratamiento, todos ellos con garantías de cumplimiento del RGPD:
-            </p>
-            <ul className="list-disc list-inside space-y-2 ml-2">
-              <li>
-                <strong>Supabase</strong> (alojamiento de base de datos y archivos, región UE — Irlanda).{" "}
-                <a href="https://supabase.com/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-700">Política de privacidad</a>{" "}·{" "}
-                <a href="https://supabase.com/dpa" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-700">Acuerdo de tratamiento de datos (DPA)</a>
-              </li>
-              <li>
-                <strong>Vercel</strong> (alojamiento web).{" "}
-                <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-700">Política de privacidad</a>{" "}·{" "}
-                <a href="https://vercel.com/legal/dpa" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-700">Acuerdo de tratamiento de datos (DPA)</a>
-              </li>
-            </ul>
-            <p>No se realizan transferencias internacionales de datos fuera del Espacio Económico Europeo.</p>
-            <p>
-              <strong>Comunicación a la Agencia Tributaria (AEAT):</strong> los datos identificativos y fiscales de las facturas emitidas (nº de factura, fecha, NIF y nombre del destinatario, base imponible, IVA e importe total) se comunican a la Agencia Estatal de Administración Tributaria mediante el sistema <em>Veri*factu</em>, en cumplimiento del Real Decreto 1007/2023 y la Orden HAC/1177/2024. La base legal es el cumplimiento de una obligación legal (art. 6.1.c RGPD).
-            </p>
+            <div className="my-4 overflow-x-auto">
+              <table className="w-full text-sm border-collapse">
+                <thead>
+                  <tr className="bg-gray-100">
+                    <th className="text-left p-3 font-semibold text-gray-700 border border-gray-200">Destinatario</th>
+                    <th className="text-left p-3 font-semibold text-gray-700 border border-gray-200">Finalidad</th>
+                    <th className="text-left p-3 font-semibold text-gray-700 border border-gray-200">Ubicación</th>
+                    <th className="text-left p-3 font-semibold text-gray-700 border border-gray-200">Garantía</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="border border-gray-200">
+                    <td className="p-3 border border-gray-200 font-semibold">Supabase Inc.</td>
+                    <td className="p-3 border border-gray-200">Base de datos, autenticación y almacenamiento de archivos (CVs)</td>
+                    <td className="p-3 border border-gray-200">UE — Irlanda (eu-west-1)</td>
+                    <td className="p-3 border border-gray-200">
+                      <a href="https://supabase.com/dpa" target="_blank" rel="noopener noreferrer" className="text-henko-greenblue underline">DPA firmado</a>{' '}·{' '}
+                      <a href="https://supabase.com/privacy" target="_blank" rel="noopener noreferrer" className="text-henko-greenblue underline">Privacidad</a>
+                    </td>
+                  </tr>
+                  <tr className="border border-gray-200 bg-gray-50/50">
+                    <td className="p-3 border border-gray-200 font-semibold">Vercel Inc.</td>
+                    <td className="p-3 border border-gray-200">Alojamiento del sitio web y CDN</td>
+                    <td className="p-3 border border-gray-200">EE. UU. — Cláusulas contractuales tipo (SCCs)</td>
+                    <td className="p-3 border border-gray-200">
+                      <a href="https://vercel.com/legal/dpa" target="_blank" rel="noopener noreferrer" className="text-henko-greenblue underline">DPA firmado</a>{' '}·{' '}
+                      <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-henko-greenblue underline">Privacidad</a>
+                    </td>
+                  </tr>
+                  <tr className="border border-gray-200">
+                    <td className="p-3 border border-gray-200 font-semibold">Proveedor SMTP</td>
+                    <td className="p-3 border border-gray-200">Envío de emails transaccionales (confirmaciones, notificaciones)</td>
+                    <td className="p-3 border border-gray-200">Según configuración del servidor de correo</td>
+                    <td className="p-3 border border-gray-200">Configuración interna segura</td>
+                  </tr>
+                  <tr className="border border-gray-200 bg-gray-50/50">
+                    <td className="p-3 border border-gray-200 font-semibold">AEAT (Veri*factu)</td>
+                    <td className="p-3 border border-gray-200">Comunicación obligatoria de registros de facturación electrónica</td>
+                    <td className="p-3 border border-gray-200">España</td>
+                    <td className="p-3 border border-gray-200">Obligación legal — RD 1007/2023 y Orden HAC/1177/2024 (art. 6.1.c RGPD)</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p className="text-sm text-gray-600">No se realizan otras transferencias internacionales de datos fuera del Espacio Económico Europeo, salvo las indicadas en la tabla anterior con las garantías correspondientes.</p>
 
             <h3 className="text-lg font-bold text-gray-900 mt-6 mb-3">7. Decisiones automatizadas</h3>
             <p>
@@ -182,10 +226,29 @@ export default function Legal() {
               <li><strong>Retirar el consentimiento</strong> en cualquier momento.</li>
             </ul>
             <p>
-              Puedes ejercer estos derechos enviando un email a{' '}
-              <a href="mailto:info@henkoaching.com" className="text-henko-greenblue hover:underline font-semibold">info@henkoaching.com</a>{' '}
-              indicando el derecho que deseas ejercer y adjuntando copia de un documento que acredite tu identidad. Atenderemos tu solicitud en el plazo máximo de un mes.
+              Puedes ejercer estos derechos de dos formas:
             </p>
+            <div className="my-4 flex flex-col sm:flex-row gap-3">
+              <Link
+                href="/legal/derechos-arco"
+                className="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-henko-greenblue text-white font-raleway font-semibold text-sm hover:bg-henko-greenblue/90 transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                Formulario online de derechos RGPD
+              </Link>
+              <a
+                href="mailto:info@henkoaching.com"
+                className="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-henko-greenblue text-henko-greenblue font-raleway font-semibold text-sm hover:bg-henko-greenblue/5 transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                Email: info@henkoaching.com
+              </a>
+            </div>
+            <p className="text-sm text-gray-500">Atenderemos tu solicitud en el plazo máximo de un mes conforme al art. 12 RGPD. Puede que solicitemos una copia de documento identificativo para verificar tu identidad.</p>
             <p>
               Si consideras que el tratamiento de tus datos no se ajusta a la normativa, puedes presentar una reclamación ante la <strong>Agencia Española de Protección de Datos</strong> (AEPD) a través de su sede electrónica:{' '}
               <a href="https://www.aepd.es" target="_blank" rel="noopener noreferrer" className="text-henko-greenblue hover:underline font-semibold">www.aepd.es</a>.
