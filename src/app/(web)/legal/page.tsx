@@ -192,10 +192,13 @@ export default function Legal() {
                     </td>
                   </tr>
                   <tr className="border border-gray-200">
-                    <td className="p-3 border border-gray-200 font-semibold">Proveedor SMTP</td>
-                    <td className="p-3 border border-gray-200">Envío de emails transaccionales (confirmaciones, notificaciones)</td>
-                    <td className="p-3 border border-gray-200">Según configuración del servidor de correo</td>
-                    <td className="p-3 border border-gray-200">Configuración interna segura</td>
+                    <td className="p-3 border border-gray-200 font-semibold">Piensa Solutions S.L.</td>
+                    <td className="p-3 border border-gray-200">Envío de emails transaccionales (confirmaciones de registro, notificaciones de candidatura)</td>
+                    <td className="p-3 border border-gray-200">España (UE)</td>
+                    <td className="p-3 border border-gray-200">
+                      <a href="https://www.piensasolutions.com/legal/privacidad" target="_blank" rel="noopener noreferrer" className="text-henko-greenblue underline">Política de privacidad</a>
+                      {' '}— Empresa española sujeta a RGPD/LOPDGDD
+                    </td>
                   </tr>
                   <tr className="border border-gray-200 bg-gray-50/50">
                     <td className="p-3 border border-gray-200 font-semibold">AEAT (Veri*factu)</td>
