@@ -1,74 +1,80 @@
 'use client'
 
-import { useEffect, useRef, useCallback, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { signout } from '@/actions/auth'
 
 const IDLE_MINUTES = 30
 const WARNING_SECONDS = 60
-
 const IDLE_MS = IDLE_MINUTES * 60 * 1000
 const WARNING_MS = WARNING_SECONDS * 1000
-
 const EVENTS = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'click'] as const
 
 export default function IdleTimeout() {
   const [showWarning, setShowWarning] = useState(false)
   const [countdown, setCountdown] = useState(WARNING_SECONDS)
-  const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const warnTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const countdownInterval = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  const clearAllTimers = () => {
-    if (idleTimer.current) clearTimeout(idleTimer.current)
-    if (warnTimer.current) clearTimeout(warnTimer.current)
-    if (countdownInterval.current) clearInterval(countdownInterval.current)
+  const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const countdownInterval = useRef<ReturnType<typeof setInterval> | null>(null)
+  const isWarning = useRef(false)
+
+  const stopCountdown = () => {
+    if (countdownInterval.current) { clearInterval(countdownInterval.current); countdownInterval.current = null }
   }
 
-  const handleLogout = useCallback(async () => {
-    clearAllTimers()
-    await signout()
-  }, [])
+  const stopIdle = () => {
+    if (idleTimer.current) { clearTimeout(idleTimer.current); idleTimer.current = null }
+  }
 
-  const startCountdown = useCallback(() => {
+  const startWarning = () => {
+    isWarning.current = true
     setShowWarning(true)
     setCountdown(WARNING_SECONDS)
+    let secs = WARNING_SECONDS
     countdownInterval.current = setInterval(() => {
-      setCountdown(prev => {
-        if (prev <= 1) {
-          clearInterval(countdownInterval.current!)
-          return 0
-        }
-        return prev - 1
-      })
+      secs -= 1
+      setCountdown(secs)
+      if (secs <= 0) {
+        stopCountdown()
+        signout()
+      }
     }, 1000)
-    warnTimer.current = setTimeout(() => {
-      handleLogout()
-    }, WARNING_MS)
-  }, [handleLogout])
+  }
 
-  const resetTimer = useCallback(() => {
-    if (showWarning) return
-    clearAllTimers()
-    idleTimer.current = setTimeout(startCountdown, IDLE_MS - WARNING_MS)
-  }, [showWarning, startCountdown])
-
-  const handleStayActive = () => {
-    clearAllTimers()
-    setShowWarning(false)
-    setCountdown(WARNING_SECONDS)
-    idleTimer.current = setTimeout(startCountdown, IDLE_MS - WARNING_MS)
+  const scheduleIdle = () => {
+    stopIdle()
+    idleTimer.current = setTimeout(startWarning, IDLE_MS - WARNING_MS)
   }
 
   useEffect(() => {
-    idleTimer.current = setTimeout(startCountdown, IDLE_MS - WARNING_MS)
+    scheduleIdle()
 
-    EVENTS.forEach(e => window.addEventListener(e, resetTimer, { passive: true }))
-
-    return () => {
-      clearAllTimers()
-      EVENTS.forEach(e => window.removeEventListener(e, resetTimer))
+    const onActivity = () => {
+      if (isWarning.current) return
+      scheduleIdle()
     }
-  }, [resetTimer, startCountdown])
+
+    EVENTS.forEach(e => window.addEventListener(e, onActivity, { passive: true }))
+    return () => {
+      stopIdle()
+      stopCountdown()
+      EVENTS.forEach(e => window.removeEventListener(e, onActivity))
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const handleStayActive = () => {
+    stopCountdown()
+    isWarning.current = false
+    setShowWarning(false)
+    setCountdown(WARNING_SECONDS)
+    scheduleIdle()
+  }
+
+  const handleLogout = async () => {
+    stopIdle()
+    stopCountdown()
+    await signout()
+  }
 
   if (!showWarning) return null
 
