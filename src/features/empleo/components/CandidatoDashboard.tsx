@@ -241,12 +241,6 @@ export default function CandidatoDashboard({ perfil, completion, cv, solicitudes
               <p className="text-[10px] text-gray-500">Candidata</p>
             </div>
           </div>
-          <Link
-            href="/empleo"
-            className="block w-full px-3.5 py-2 rounded-xl text-xs text-gray-500 hover:text-gray-900 transition-colors"
-          >
-            ← Ver ofertas
-          </Link>
           <form action={signout}>
             <button
               type="submit"
