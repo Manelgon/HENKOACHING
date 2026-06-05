@@ -18,7 +18,7 @@ export default function Legal() {
       </div>
 
       {/* Content */}
-      <div className="max-w-4xl mx-auto px-4 md:px-8 py-16 md:py-20">
+      <div className="max-w-4xl mx-auto px-4 md:px-8 py-8 md:py-10">
         {/* Navigation */}
         <div className="mb-12 grid grid-cols-1 md:grid-cols-4 gap-4">
           {[
@@ -196,8 +196,8 @@ export default function Legal() {
                     <td className="p-3 border border-gray-200">Envío de emails transaccionales (confirmaciones de registro, notificaciones de candidatura)</td>
                     <td className="p-3 border border-gray-200">España (UE)</td>
                     <td className="p-3 border border-gray-200">
-                      <a href="https://www.piensasolutions.com/legal/privacidad" target="_blank" rel="noopener noreferrer" className="text-henko-turquoise underline">DPA firmado</a>{' '}·{' '}
-                      <a href="https://www.piensasolutions.com/legal/privacidad" target="_blank" rel="noopener noreferrer" className="text-henko-turquoise underline">Privacidad</a>
+                      <a href="https://www.piensasolutions.com/legal" target="_blank" rel="noopener noreferrer" className="text-henko-turquoise underline">Cláusula encargado art. 28 RGPD</a>{' '}·{' '}
+                      <a href="https://www.piensasolutions.com/legal" target="_blank" rel="noopener noreferrer" className="text-henko-turquoise underline">Información legal</a>
                       {' '}— Empresa española sujeta a RGPD/LOPDGDD
                     </td>
                   </tr>
