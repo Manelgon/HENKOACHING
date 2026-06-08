@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
-import { after } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import BlogCard, { type BlogCardData } from '@/features/blog/components/BlogCard'
 import { SITE_URL, BLOG_AUTHOR, urlAbsoluta } from '@/features/blog/lib/site-config'
@@ -64,18 +63,6 @@ export default async function ArticuloPage({ params }: PageProps) {
   const { slug } = await params
   const post = await obtenerArticulo(slug)
   if (!post) notFound()
-
-  // Incremento de vistas después de enviar la respuesta (cliente sin cookies para evitar contexto de request)
-  after(async () => {
-    try {
-      const anon = (await import('@supabase/supabase-js')).createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      )
-      const { data } = await anon.from('blog_posts').select('vistas').eq('id', post.id).single()
-      if (data) await anon.from('blog_posts').update({ vistas: (data.vistas ?? 0) + 1 }).eq('id', post.id)
-    } catch {}
-  })
 
   const supabase = await createClient()
   const { data: relacionados } = await supabase
