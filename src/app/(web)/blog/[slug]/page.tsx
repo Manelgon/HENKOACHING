@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
+import { after } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import BlogCard, { type BlogCardData } from '@/features/blog/components/BlogCard'
 import { incrementarVistasArticulo } from '@/actions/blog'
@@ -65,8 +66,8 @@ export default async function ArticuloPage({ params }: PageProps) {
   const post = await obtenerArticulo(slug)
   if (!post) notFound()
 
-  // Incremento de vistas de forma no bloqueante
-  incrementarVistasArticulo(post.id).catch(() => {})
+  // Incremento de vistas después de enviar la respuesta (patrón correcto en Next.js)
+  after(() => incrementarVistasArticulo(post.id).catch(() => {}))
 
   const supabase = await createClient()
   const { data: relacionados } = await supabase
@@ -104,7 +105,7 @@ export default async function ArticuloPage({ params }: PageProps) {
       logo: { '@type': 'ImageObject', url: `${SITE_URL}/henkologo.png` },
     },
     mainEntityOfPage: { '@type': 'WebPage', '@id': `${SITE_URL}/blog/${post.slug}` },
-    keywords: (post.keywords ?? []).join(', ') || undefined,
+    keywords: Array.isArray(post.keywords) ? post.keywords.join(', ') || undefined : undefined,
     articleSection: post.categoria?.nombre ?? undefined,
   }
 
