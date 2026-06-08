@@ -176,7 +176,7 @@ export default async function ArticuloPage({ params }: PageProps) {
       <article className="px-6 md:px-12 max-w-3xl mx-auto pb-20">
         <div
           className="prose prose-lg prose-gray max-w-none font-raleway prose-headings:font-roxborough prose-headings:text-gray-900 prose-a:text-henko-turquoise hover:prose-a:text-henko-turquoise-light prose-img:rounded-2xl prose-blockquote:border-henko-turquoise prose-blockquote:bg-henko-greenblue/5 prose-blockquote:py-1 prose-blockquote:px-4 prose-blockquote:rounded-r-xl"
-          dangerouslySetInnerHTML={{ __html: post.contenido }}
+          dangerouslySetInnerHTML={{ __html: post.contenido ?? '' }}
         />
 
         <div className="border-t border-gray-100 mt-16 pt-10 flex items-center justify-between gap-4">

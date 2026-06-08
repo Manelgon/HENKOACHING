@@ -13,23 +13,32 @@ type Service = {
 
 const SERVICES: Service[] = [
   {
-    title: 'Consultoría de Operaciones',
+    title: 'Orden y Estructura',
     subtitle: 'Estructura y procesos que liberan tu tiempo',
-    desc: 'Analizo la estructura actual de tu empresa, identifico cuellos de botella y diseño procesos claros y replicables. El objetivo: que tu negocio funcione con o sin ti presente.',
-    points: ['Mapeo de procesos actuales', 'Diseño de flujos de trabajo', 'Implementación de herramientas de gestión', 'Métricas y seguimiento de resultados'],
+    desc: 'Analizo la estructura actual de tu empresa, identifico cuellos de botella y juntos diseñamos procesos claros teniendo en cuenta la operativa, cultura y estrategia de tu empresa.',
+    points: ['Mapeo de procesos actuales', 'Diseño de flujos de trabajo', 'Implementación de herramientas de gestión'],
   },
   {
     title: 'Reclutamiento Consciente',
-    subtitle: 'El talento correcto, en el rol correcto',
-    desc: 'Más allá del currículum. Proceso de selección alineado con la cultura, los valores y las necesidades reales de tu empresa. Personas que encajan y que se quedan.',
-    points: ['Definición de perfiles por competencias', 'Entrevistas alineadas con cultura', 'Onboarding estructurado', 'Seguimiento a 3 y 6 meses'],
+    subtitle: 'La persona correcta en el lugar correcto',
+    desc: 'Proceso de selección más allá del currículum. Me encargo de buscar un match entre empresa y talento para crear relaciones más alineadas y que encajan con las necesidades no solo de la empresa sino también del trabajador.',
+    points: ['Definición de perfiles a nivel técnico y humano', 'Proceso de selección personalizado y detallado', 'Seguimiento antes, durante y después del proceso', 'Entrevistas a conciencia con la empresa y los candidatos'],
   },
   {
-    title: 'Desarrollo de Liderazgo',
+    title: 'Desarrollo Organizacional y Liderazgo',
     subtitle: 'Líderes que inspiran, no que controlan',
     desc: 'Trabajo con líderes y equipos directivos para desarrollar un estilo de liderazgo consciente, basado en la confianza y la delegación efectiva.',
-    points: ['Sesiones individuales de coaching', 'Talleres para equipos directivos', 'Herramientas de delegación', 'Mindfulness aplicado al liderazgo'],
+    points: ['Sesiones individuales de coaching', 'Talleres para equipos directivos', 'Mindfulness aplicado al liderazgo'],
   },
+]
+
+const AUDIENCE = [
+  { title: 'Empresas en crecimiento',    sub: 'Que necesitan estructura firme para escalar sin caer en el caos organizativo.' },
+  { title: 'Cambio generacional',         sub: 'Transiciones familiares o de liderazgo que requieren orden y claridad de roles desde el primer día.' },
+  { title: 'Transformación digital',      sub: 'Procesos operativos que deben evolucionar hacia lo digital sin que el equipo se quede atrás.' },
+  { title: 'Cambio cultural',             sub: 'Organizaciones que quieren renovar su forma de trabajar y comunicarse internamente.' },
+  { title: 'Equipos que crecieron rápido', sub: 'Equipos que escalaron muy rápido sin una base clara desde la que sostenerse.' },
+  { title: 'CEOs que quieren soltar',      sub: 'Líderes y fundadores que ya no quieren ni deben participar en la microgestión diaria.' },
 ]
 
 const STEPS: [string, string][] = [
@@ -39,10 +48,11 @@ const STEPS: [string, string][] = [
   ['Seguimiento', 'Revisión de resultados y ajustes para que el cambio sea duradero.'],
 ]
 
-const FORMATOS = [
-  { title: 'Sesiones individuales', desc: 'Para CEOs, directores y líderes de equipo. 1h semanales o quincenales.', tag: '1:1' },
-  { title: 'Talleres de equipo',     desc: 'Formaciones presenciales o en remoto para grupos de hasta 15 personas.', tag: 'GRUPO' },
-  { title: 'Proyecto integral',      desc: 'Acompañamiento completo a tu empresa durante 3-6 meses.', tag: 'EMPRESA' },
+const FORMATOS_ITEMS = [
+  'Seguimiento operativo semanal',
+  'Sesiones individuales',
+  'Reuniones con jefes de departamentos',
+  'Formaciones grupales',
 ]
 
 const FAQS: { q: string; a: string }[] = [
@@ -93,7 +103,7 @@ export default function ServiciosClient() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
       <PageHeader
-        overline="Servicios"
+        overline="Trabaja conmigo"
         title={
           <>
             Tres áreas que<br />
@@ -114,8 +124,47 @@ export default function ServiciosClient() {
         </div>
       </section>
 
-      {/* Metodología */}
+      {/* Para quién */}
       <section className="px-6 md:px-12 py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto">
+          <p data-animate className="font-raleway font-bold text-henko-turquoise tracking-[0.18em] uppercase text-[11px] mb-4">Para quién</p>
+          <h2 data-animate data-delay="100" className="font-roxborough text-2xl md:text-4xl text-gray-900 mb-12 leading-tight">
+            Empresas en<br />
+            <em className="italic text-henko-turquoise font-light">momentos clave</em>
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {AUDIENCE.map((a, i) => (
+              <div
+                key={i}
+                data-animate
+                data-delay={i * 80}
+                className="flex items-start gap-4 bg-white border border-henko-turquoise/15 rounded-[2rem] px-7 py-6 shadow-sm hover:border-henko-turquoise/40 hover:shadow-[0_16px_48px_rgba(31,143,155,0.06)] transition-all duration-300"
+              >
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-henko-turquoise flex items-center justify-center mt-0.5">
+                  <svg viewBox="0 0 12 12" fill="none" className="w-3 h-3" aria-hidden>
+                    <path d="M2 6l3 3 5-5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </span>
+                <div>
+                  <p className="font-roxborough text-base md:text-lg text-gray-900 leading-tight mb-1">{a.title}</p>
+                  <p className="text-[13.5px] text-gray-500 leading-relaxed">{a.sub}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="text-center mt-12">
+            <Link
+              href="/contacto"
+              className="inline-flex items-center gap-2 bg-henko-turquoise text-white px-8 py-3.5 rounded-full text-sm font-semibold tracking-wide hover:bg-henko-turquoise-light hover:shadow-lg hover:shadow-henko-turquoise/30 transition-all duration-200"
+            >
+              Agenda una llamada de consulta →
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Metodología */}
+      <section className="px-6 md:px-12 py-20 bg-white">
         <div className="max-w-7xl mx-auto">
           <p data-animate className="font-raleway font-bold text-henko-turquoise tracking-[0.18em] uppercase text-[11px] mb-4">Metodología</p>
           <h2 data-animate data-delay="100" className="font-roxborough text-2xl md:text-4xl text-gray-900 mb-13 leading-tight">¿Cómo trabajo?</h2>
@@ -127,7 +176,6 @@ export default function ServiciosClient() {
                 data-delay={i * 100}
                 className="group relative bg-white rounded-[2rem] p-8 md:p-9 border border-henko-turquoise/15 shadow-sm hover:border-henko-turquoise/40 hover:shadow-[0_16px_48px_rgba(31,143,155,0.08)] hover:-translate-y-1 transition-all duration-300 overflow-hidden min-h-[220px]"
               >
-                {/* Watermark number */}
                 <span
                   aria-hidden
                   className="pointer-events-none absolute -top-4 -right-2 font-roxborough italic text-[6.5rem] leading-none text-henko-turquoise/[0.07] group-hover:text-henko-turquoise/[0.12] transition-colors duration-300 select-none"
@@ -150,44 +198,35 @@ export default function ServiciosClient() {
         </div>
       </section>
 
-      {/* Formatos */}
-      <section className="px-6 md:px-12 py-20 bg-white">
+      {/* Cómo nos adaptamos */}
+      <section className="px-6 md:px-12 py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto">
-          <p data-animate className="font-raleway font-bold text-henko-turquoise tracking-[0.18em] uppercase text-[11px] mb-4">Formatos de trabajo</p>
-          <h2 data-animate data-delay="100" className="font-roxborough text-2xl md:text-4xl text-gray-900 mb-12 leading-tight">¿Cómo nos adaptamos?</h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {FORMATOS.map((f, i) => (
-              <div
-                key={f.title}
-                data-animate="scale"
-                data-delay={i * 100}
-                className="group relative bg-white rounded-[2.5rem] p-8 md:p-9 min-h-[220px] border border-henko-turquoise/15 shadow-sm hover:border-henko-turquoise/40 hover:shadow-[0_16px_48px_rgba(31,143,155,0.08)] hover:-translate-y-1 transition-all duration-300 overflow-hidden flex"
-              >
-                {/* Vertical accent bar */}
-                <span
-                  aria-hidden
-                  className="absolute top-8 bottom-8 left-0 w-px bg-gradient-to-b from-transparent via-henko-turquoise to-transparent opacity-50 group-hover:opacity-100 transition-opacity duration-300"
-                />
-
-                <div className="relative flex flex-col justify-center pl-2 w-full">
-                  <div className="flex items-center gap-3 mb-4">
-                    <span className="block w-8 h-px bg-henko-turquoise" />
-                    <span className="text-[10px] font-bold tracking-[0.22em] uppercase text-henko-turquoise">
-                      {f.tag}
-                    </span>
-                  </div>
-                  <h3 className="font-roxborough text-xl md:text-[22px] text-gray-900 mb-2.5 leading-tight">{f.title}</h3>
-                  <p className="text-[14px] text-gray-500 leading-[1.7]">{f.desc}</p>
-                </div>
-              </div>
-            ))}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+            <div>
+              <p data-animate className="font-raleway font-bold text-henko-turquoise tracking-[0.18em] uppercase text-[11px] mb-4">Cómo nos adaptamos</p>
+              <h2 data-animate data-delay="100" className="font-roxborough text-2xl md:text-4xl text-gray-900 mb-8 leading-tight">¿Cómo nos adaptamos?</h2>
+              <p data-animate data-delay="200" className="text-base md:text-[15px] leading-[1.85] text-gray-600">
+                En función del servicio que necesites y del caso concreto de tu empresa, adaptamos el tiempo online y/o presencial para conseguir el objetivo planteado. Puede ser:
+              </p>
+            </div>
+            <ul className="flex flex-col gap-4 justify-center h-full">
+              {FORMATOS_ITEMS.map((item, i) => (
+                <li key={i} data-animate data-delay={i * 80} className="flex items-center gap-4">
+                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-henko-turquoise flex items-center justify-center">
+                    <svg viewBox="0 0 12 12" fill="none" className="w-3 h-3" aria-hidden>
+                      <path d="M2 6l3 3 5-5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </span>
+                  <span className="text-[15px] text-gray-700">{item}</span>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       </section>
 
       {/* FAQ */}
-      <section className="px-6 md:px-12 py-20 bg-gray-50">
+      <section className="px-6 md:px-12 py-20 bg-white">
         <div className="max-w-4xl mx-auto">
           <p data-animate className="font-raleway font-bold text-henko-turquoise tracking-[0.18em] uppercase text-[11px] mb-4">Preguntas frecuentes</p>
           <h2 data-animate data-delay="100" className="font-roxborough text-2xl md:text-4xl text-gray-900 mb-12 leading-tight">¿Tienes dudas antes de empezar?</h2>
@@ -227,18 +266,24 @@ export default function ServiciosClient() {
               )
             })}
           </div>
+
+          <div className="text-center mt-12">
+            <Link
+              href="/contacto"
+              className="inline-flex items-center gap-2 bg-transparent border-2 border-henko-turquoise text-henko-turquoise px-8 py-3.5 rounded-full text-sm font-semibold tracking-wide hover:bg-henko-turquoise hover:text-white transition-all duration-200"
+            >
+              Cuéntame tu caso →
+            </Link>
+          </div>
         </div>
       </section>
 
       {/* CTA */}
       <section className="relative bg-henko-turquoise py-24 md:py-28 px-6 md:px-12 text-center overflow-hidden">
-        {/* Decorative blobs */}
         <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="blob-1 absolute -top-32 -left-32 w-[480px] h-[480px] bg-white/[0.08]" />
           <div className="blob-2 absolute -bottom-40 -right-32 w-[520px] h-[520px] bg-white/[0.06]" />
         </div>
-
-        {/* Giant decorative mark */}
         <span
           aria-hidden
           className="pointer-events-none absolute top-4 left-1/2 -translate-x-1/2 font-roxborough italic text-[18rem] md:text-[22rem] leading-none text-white/[0.06] select-none"
@@ -284,7 +329,6 @@ function ServiceRow({ s, i, open, toggle }: { s: Service; i: number; open: boole
           : 'border-henko-turquoise/15 shadow-sm hover:border-henko-turquoise/40 hover:shadow-[0_16px_48px_rgba(31,143,155,0.08)] hover:-translate-y-1'
       }`}
     >
-      {/* Watermark number */}
       <span
         aria-hidden
         className={`pointer-events-none absolute -top-6 right-6 font-roxborough italic text-[8rem] leading-none select-none transition-colors duration-300 ${
