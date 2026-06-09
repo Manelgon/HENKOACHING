@@ -300,8 +300,7 @@ export default function ServiciosClient() {
             <span className="block w-8 h-px bg-white/60" />
           </div>
           <h2 data-animate className="font-roxborough text-3xl md:text-5xl text-white mb-4 leading-[1.15]">
-            ¿Por dónde<br />
-            <em className="italic font-light">empezamos?</em>
+            ¿Por dónde <em className="italic font-light">empezamos?</em>
           </h2>
           <p data-animate data-delay="100" className="font-roxborough italic text-lg md:text-xl text-white/90 mb-10">
             Primera consulta gratuita de 45 minutos. Sin compromiso.

@@ -121,69 +121,45 @@ export default async function Home() {
       {/* SÍNTOMAS */}
       <section className="bg-[#f4f6f7] py-24 md:py-28 px-6 md:px-12 border-t border-b border-gray-100">
         <div className="max-w-7xl mx-auto">
+
           <p className="font-raleway font-bold text-henko-turquoise tracking-[0.18em] uppercase text-[11px] mb-4">¿Te suena familiar?</p>
-          <h2 data-animate className="font-roxborough text-3xl md:text-4xl text-gray-900 mb-14 leading-tight">
+          <h2 className="font-roxborough text-3xl md:text-4xl text-gray-900 mb-14 leading-tight">
             Las señales de que<br />
             <em className="italic text-henko-turquoise font-light">algo debe cambiar</em>
           </h2>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Lista de síntomas — layout tipo tabla */}
+          <div className="divide-y divide-[#DDD8CE]">
             {SYMPTOMS.map((s, i) => (
               <div
                 key={i}
-                data-animate="scale"
-                data-delay={i * 100}
-                className="group relative bg-white rounded-[2.5rem] p-9 md:p-10 border border-henko-turquoise/25 shadow-sm hover:border-henko-turquoise/50 hover:shadow-[0_16px_48px_rgba(31,143,155,0.10)] hover:-translate-y-1 transition-all duration-300 overflow-hidden"
+                className="grid grid-cols-[40px_52px_0.6fr_2.8fr] gap-x-6 items-center py-7"
               >
-                <span
-                  aria-hidden
-                  className="pointer-events-none absolute -top-4 right-4 font-roxborough italic text-[7rem] leading-none text-henko-turquoise/[0.08] group-hover:text-henko-turquoise/[0.13] transition-colors duration-300 select-none"
-                >
+                {/* Check icon */}
+                <div className="w-9 h-9 rounded-full bg-henko-turquoise/10 flex items-center justify-center flex-shrink-0">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <path d="M2 7L5.5 10.5L12 3.5" stroke="#1F8F9B" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+
+                {/* Número */}
+                <span className="font-roxborough italic text-[22px] text-gray-400 leading-none">
                   0{i + 1}
                 </span>
 
-                <div className="relative flex items-center gap-3 mb-5">
-                  <span className="block w-8 h-px bg-henko-turquoise" />
-                  <span className="text-[10px] font-bold tracking-[0.18em] uppercase text-henko-turquoise">
-                    Síntoma 0{i + 1}
-                  </span>
-                </div>
-
-                <h3 className="relative font-roxborough text-xl md:text-2xl text-gray-900 mb-3 leading-tight">
+                {/* Título */}
+                <h3 className="font-raleway font-bold text-[15px] text-gray-900 leading-snug">
                   {s.title}
                 </h3>
-                <p className="relative text-[14.5px] leading-[1.75] text-gray-600">
+
+                {/* Descripción */}
+                <p className="font-raleway text-[14px] leading-[1.7] text-gray-500">
                   {s.desc}
                 </p>
               </div>
             ))}
           </div>
 
-          {/* Banner */}
-          <div data-animate data-delay="400" className="mt-5 rounded-[2rem] bg-white border border-henko-turquoise/15 px-10 md:px-12 py-8 md:py-9 flex flex-col md:flex-row items-start md:items-center justify-between gap-8 shadow-sm">
-            <div>
-              <p className="font-roxborough text-xl md:text-2xl text-gray-900 mb-1.5">
-                No falta talento. No falta trabajo.
-              </p>
-              <p className="font-roxborough text-xl md:text-2xl text-henko-turquoise italic">
-                Falta orden, claridad y coherencia.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <Link
-                href="/contacto"
-                className="inline-flex items-center gap-2 bg-henko-turquoise text-white px-7 py-3.5 rounded-full text-sm font-semibold tracking-wide hover:bg-henko-turquoise-light hover:shadow-lg transition-all duration-200 whitespace-nowrap"
-              >
-                Trabaja conmigo
-              </Link>
-              <Link
-                href="/servicios"
-                className="inline-flex items-center gap-2 bg-transparent border-2 border-henko-turquoise text-henko-turquoise px-7 py-3.5 rounded-full text-sm font-semibold tracking-wide hover:bg-henko-turquoise hover:text-white transition-all duration-200 whitespace-nowrap"
-              >
-                Ver más
-              </Link>
-            </div>
-          </div>
         </div>
       </section>
 
@@ -194,8 +170,7 @@ export default async function Home() {
             <div>
               <p className="font-raleway font-bold text-henko-turquoise tracking-[0.18em] uppercase text-[11px] mb-4">Servicios</p>
               <h2 data-animate className="font-roxborough text-3xl md:text-4xl text-gray-900 leading-tight">
-                Tres formas de<br />
-                <em className="italic text-henko-turquoise font-light">acompañar tu organización</em>
+                Tres formas de <em className="italic text-henko-turquoise font-light">acompañar tu organización</em>
               </h2>
             </div>
             <Link

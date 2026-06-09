@@ -1,0 +1,43 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-WmiObject Win32_Process -Filter \"ProcessId=33880\")",
+      "PowerShell(Get-WmiObject Win32_Process -Filter \"ProcessId=39652\")",
+      "PowerShell($r = Invoke-WebRequest \"http://localhost:3001/empleo\" -UseBasicParsing; if \\($r.Content -match 'Responsable'\\) { \"OFERTA ENCONTRADA EN HTML\" } elseif \\($r.Content -match 'ofertas disponibles'\\) { $r.Content | Select-String 'ofertas disponibles' } else { \"No match\" }; $r.StatusCode)",
+      "mcp__next-devtools__nextjs_call",
+      "PowerShell($env = Get-Content \"c:\\\\Users\\\\manel\\\\.000.Proyectos.DEV\\\\005. Jennifer Cervera - copia\\\\.env.local\"; $url = \\($env | Select-String \"NEXT_PUBLIC_SUPABASE_URL=\"\\).ToString\\(\\).Split\\(\"=\",2\\)[1].Trim\\(\\); $key = \\($env | Select-String \"NEXT_PUBLIC_SUPABASE_ANON_KEY=\"\\).ToString\\(\\).Split\\(\"=\",2\\)[1].Trim\\(\\); Write-Host \"URL: $url\"; $r = Invoke-RestMethod \"$url/rest/v1/ofertas?select=id,titulo,estado&estado=eq.publicada&deleted_at=is.null\" -Headers @{\"apikey\"=$key;\"Authorization\"=\"Bearer $key\"} -ErrorAction SilentlyContinue; Write-Host \"Resultado: $\\(ConvertTo-Json $r\\)\")",
+      "PowerShell($env = Get-Content \"c:\\\\Users\\\\manel\\\\.000.Proyectos.DEV\\\\005. Jennifer Cervera - copia\\\\.env.local\"; $key = \\($env | Select-String \"NEXT_PUBLIC_SUPABASE_ANON_KEY=\"\\).ToString\\(\\).Split\\(\"=\",2\\)[1].Trim\\(\\); Write-Host \"Key starts with: $\\($key.Substring\\(0,20\\)\\)...\"; Write-Host \"Key length: $\\($key.Length\\)\")",
+      "PowerShell($env = Get-Content \"c:\\\\Users\\\\manel\\\\.000.Proyectos.DEV\\\\005. Jennifer Cervera - copia\\\\.env.local\"; $url = \\($env | Select-String \"NEXT_PUBLIC_SUPABASE_URL=\"\\).ToString\\(\\).Split\\(\"=\",2\\)[1].Trim\\(\\); $key = \\($env | Select-String \"NEXT_PUBLIC_SUPABASE_ANON_KEY=\"\\).ToString\\(\\).Split\\(\"=\",2\\)[1].Trim\\(\\); try { $r = Invoke-RestMethod \"$url/rest/v1/\" -Headers @{\"apikey\"=$key} -ErrorAction Stop; Write-Host \"OK: $r\" } catch { Write-Host \"Error: $\\($_.Exception.Response.StatusCode\\) - $\\($_.Exception.Message\\)\" })",
+      "mcp__claude_ai_Supabase__get_publishable_keys",
+      "PowerShell($svcKey = \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNhcmRncnF3cWt0anNzc29kdHpwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODc0MTc5NywiZXhwIjoyMDk0MzE3Nzk3fQ.ZCqCC4zXVVy9gPU_TO-1cangG2bGYvZUi_yubSENLdM\"; $r = Invoke-RestMethod \"https://cardgrqwqktjsssodtzp.supabase.co/rest/v1/ofertas?select=id,titulo,estado&estado=eq.publicada\" -Headers @{\"apikey\"=$svcKey;\"Authorization\"=\"Bearer $svcKey\"} -ErrorAction Stop; Write-Host \"OK: $\\(ConvertTo-Json $r\\)\")",
+      "PowerShell($anonKey = \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNhcmRncnF3cWt0anNzc29kdHpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3NDE3OTcsImV4cCI6MjA5NDMxNzc5N30.qEF7fxr9ngBbt-ul7NbUsiwWDnZiEXpatMzfIsUA1oQ\"; try { $r = Invoke-RestMethod \"https://cardgrqwqktjsssodtzp.supabase.co/rest/v1/ofertas?select=id,titulo,estado&estado=eq.publicada\" -Headers @{\"apikey\"=$anonKey;\"Authorization\"=\"Bearer $anonKey\"} -ErrorAction Stop; Write-Host \"OK: $\\(ConvertTo-Json $r\\)\" } catch { Write-Host \"Status: $\\($_.Exception.Response.StatusCode\\)\" })",
+      "Bash(xargs grep -l \"profiles\\\\|candidatos\\\\|leads\\\\|facturas\")",
+      "mcp__claude_ai_Supabase__list_tables",
+      "Bash(Select-String \"SERVICE_ROLE|SUPABASE_URL\" .env.local)",
+      "Bash(Get-ChildItem \"C:\\\\Users\\\\manel\\\\.000.Proyectos.DEV\\\\005. Jennifer Cervera - copia\\\\src\\\\shared\" -Recurse -File)",
+      "Bash(xargs grep -l \"runbook-pdf\\\\|redirect.*login\")",
+      "Bash(Select-Object -ExpandProperty Name)",
+      "Bash(grep -n \"^      [a-z].*: {$\" src/lib/supabase/database.types.ts)",
+      "Bash(xargs grep -l \"mi-cuenta\\\\|mi cuenta\\\\|perfil\\\\|account\\\\|my-account\")",
+      "Bash(cuenta)",
+      "Bash(account)",
+      "Bash(profile\")",
+      "mcp__claude_ai_Supabase__get_logs",
+      "Bash(npx vercel *)",
+      "Bash(Start-Process -NoNewWindow -FilePath \"npm\" -ArgumentList \"run\",\"dev\" -RedirectStandardOutput \"C:\\\\tmp\\\\dev-out.txt\" -RedirectStandardError \"C:\\\\tmp\\\\dev-err.txt\")",
+      "Bash(curl -s http://localhost:3000/blog/lo-que-aprendi-escuchando-lideres-que-ya-no-querian-liderar)",
+      "Bash(npx -y @supabase/mcp-server-supabase@latest --help)",
+      "Bash(node -e \"const m = require\\('next/server'\\); console.log\\('after exported:', typeof m.after\\)\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"http://localhost:3000/blog/lo-que-aprendi-escuchando-lideres-que-ya-no-querian-liderar\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"http://localhost:3003/blog/lo-que-aprendi-escuchando-lideres-que-ya-no-querian-liderar\")",
+      "Bash(curl -v \"http://localhost:3003/blog/lo-que-aprendi-escuchando-lideres-que-ya-no-querian-liderar\")",
+      "PowerShell(Invoke-WebRequest -Uri \"http://localhost:3000/blog/lo-que-aprendi-escuchando-lideres-que-ya-no-querian-liderar\" -UseBasicParsing -TimeoutSec 10 2>&1)",
+      "Bash(grep \"blog\\\\[slug\\\\]\\\\|blog/\\\\[slug\\\\]\")",
+      "WebFetch(domain:es.linkedin.com)",
+      "Bash(python -c ' *)",
+      "Bash(more)",
+      "Bash(Start-Sleep -Seconds 5)",
+      "Bash(Get-Content \"C:\\\\Users\\\\manel\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-manel--000-Proyectos-DEV-005--Jennifer-Cervera---copia\\\\1a699589-9912-4f7f-9c57-d4172883f273\\\\tasks\\\\b8midcauw.output\" -Tail 10)"
+    ]
+  }
+}
