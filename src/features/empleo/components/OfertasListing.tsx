@@ -77,7 +77,7 @@ export default function OfertasListing({
           &mdash;
         </span>
 
-        <div className="relative z-10 max-w-2xl mx-auto">
+        <div className="relative z-10 max-w-7xl mx-auto">
           <div className="flex items-center justify-center gap-3 mb-5">
             <span className="block w-8 h-px bg-white/60" />
             <p className="font-raleway font-bold text-white tracking-[0.22em] uppercase text-[11px]">
@@ -86,12 +86,28 @@ export default function OfertasListing({
             <span className="block w-8 h-px bg-white/60" />
           </div>
           <h2 data-animate className="font-roxborough text-3xl md:text-5xl text-white mb-4 leading-[1.15]">
-            ¿Buscas el<br />
-            <em className="italic font-light">siguiente paso?</em>
+            ¿Buscas el <em className="italic font-light">siguiente paso?</em>
           </h2>
           <p data-animate data-delay="100" className="font-roxborough italic text-lg md:text-xl text-white/90 mb-10">
             Crea tu perfil, sube tu CV y aplica con un solo clic.
           </p>
+
+          <div data-animate data-delay="150" className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10 text-left">
+            {[
+              { num: '01', title: 'Ofertas exclusivas', desc: 'Solo trabajamos con empresas donde la cultura y el talento son una prioridad real.' },
+              { num: '02', title: 'Proceso transparente', desc: 'Sabrás en qué punto está tu candidatura en todo momento, sin silencio radio.' },
+              { num: '03', title: 'Acompañamiento real', desc: 'No eres un CV. Te asesoramos antes y durante el proceso para que llegues preparado.' },
+            ].map((b) => (
+              <div key={b.num} className="bg-white/10 border border-white/20 rounded-[1.5rem] p-6">
+                <div className="flex items-baseline gap-3 mb-2">
+                  <span className="font-roxborough italic text-2xl text-white/20 leading-none shrink-0">{b.num}</span>
+                  <p className="font-roxborough italic text-white text-xl leading-tight">{b.title}</p>
+                </div>
+                <p className="font-raleway text-white/75 text-sm leading-relaxed">{b.desc}</p>
+              </div>
+            ))}
+          </div>
+
           <div data-animate data-delay="200" className="flex flex-wrap gap-4 justify-center">
             <Link
               href="/candidato/signup"

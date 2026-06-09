@@ -104,7 +104,7 @@ export default async function Home() {
       </section>
 
       {/* SÍNTOMAS */}
-      <section className="bg-gray-50 py-24 md:py-28 px-6 md:px-12">
+      <section className="bg-[#f4f6f7] py-24 md:py-28 px-6 md:px-12 border-t border-b border-gray-100">
         <div className="max-w-7xl mx-auto">
           <p className="font-raleway font-bold text-henko-turquoise tracking-[0.18em] uppercase text-[11px] mb-4">¿Te suena familiar?</p>
           <h2 data-animate className="font-roxborough text-3xl md:text-4xl text-gray-900 mb-14 leading-tight">
@@ -118,11 +118,11 @@ export default async function Home() {
                 key={i}
                 data-animate="scale"
                 data-delay={i * 100}
-                className="group relative bg-white rounded-[2.5rem] p-9 md:p-10 border border-henko-turquoise/15 shadow-sm hover:border-henko-turquoise/40 hover:shadow-[0_16px_48px_rgba(31,143,155,0.08)] hover:-translate-y-1 transition-all duration-300"
+                className="group relative bg-white rounded-[2.5rem] p-9 md:p-10 border border-henko-turquoise/25 shadow-sm hover:border-henko-turquoise/50 hover:shadow-[0_16px_48px_rgba(31,143,155,0.10)] hover:-translate-y-1 transition-all duration-300 overflow-hidden"
               >
                 <span
                   aria-hidden
-                  className="pointer-events-none absolute -top-4 -right-2 font-roxborough italic text-[7rem] leading-none text-henko-turquoise/[0.06] group-hover:text-henko-turquoise/10 transition-colors duration-300 select-none"
+                  className="pointer-events-none absolute -top-4 right-4 font-roxborough italic text-[7rem] leading-none text-henko-turquoise/[0.08] group-hover:text-henko-turquoise/[0.13] transition-colors duration-300 select-none"
                 >
                   0{i + 1}
                 </span>
@@ -197,11 +197,11 @@ export default async function Home() {
                 key={s.num}
                 data-animate="scale"
                 data-delay={i * 100}
-                className="group relative bg-white border border-henko-turquoise/15 rounded-[2.5rem] p-10 min-h-[280px] shadow-sm hover:border-henko-turquoise/40 hover:shadow-[0_16px_48px_rgba(31,143,155,0.08)] hover:-translate-y-1 transition-all duration-300"
+                className="group relative bg-white border border-henko-turquoise/15 rounded-[2.5rem] p-10 min-h-[280px] shadow-sm hover:border-henko-turquoise/40 hover:shadow-[0_16px_48px_rgba(31,143,155,0.08)] hover:-translate-y-1 transition-all duration-300 overflow-hidden"
               >
                 <span
                   aria-hidden
-                  className="pointer-events-none absolute -top-6 -right-2 font-roxborough italic text-[8rem] leading-none text-henko-turquoise/[0.07] group-hover:text-henko-turquoise/[0.12] transition-colors duration-300 select-none"
+                  className="pointer-events-none absolute -top-4 right-4 font-roxborough italic text-[8rem] leading-none text-henko-turquoise/[0.07] group-hover:text-henko-turquoise/[0.12] transition-colors duration-300 select-none"
                 >
                   {s.num}
                 </span>

@@ -6,7 +6,7 @@ export default function Legal() {
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
-      <div className="bg-gradient-to-br from-gray-50 to-white border-b border-gray-100 py-16 md:py-20">
+      <div className="bg-gradient-to-br from-gray-50 to-white border-b border-gray-100 pt-24 pb-8 md:pt-28 md:pb-10">
         <div className="max-w-4xl mx-auto px-4 md:px-8">
           <Link href="/" className="inline-flex items-center text-henko-turquoise hover:text-henko-turquoise/80 text-sm font-raleway font-semibold mb-6 transition-colors">
             ← Volver
@@ -18,7 +18,7 @@ export default function Legal() {
       </div>
 
       {/* Content */}
-      <div className="max-w-4xl mx-auto px-4 md:px-8 py-8 md:py-10">
+      <div className="max-w-4xl mx-auto px-4 md:px-8 pt-1 pb-10">
         {/* Navigation */}
         <div className="mb-12 grid grid-cols-1 md:grid-cols-4 gap-4">
           {[
