@@ -200,7 +200,7 @@ export default async function SobreMiPage() {
             ¿Trabajamos <em className="italic font-light">juntos?</em>
           </h2>
           <p data-animate data-delay="100" className="font-roxborough italic text-lg md:text-xl text-white/90 mb-10">
-            Primera consulta gratuita de 45 minutos. Sin compromiso.
+            Primera consulta gratuita de 20 minutos. Sin compromiso.
           </p>
           <Link
             data-animate

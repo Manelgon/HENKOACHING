@@ -74,7 +74,7 @@ export default function ContactoPage() {
             Empecemos por <em className="italic text-henko-turquoise font-light">una conversación</em>
           </>
         }
-        subtitle="45 minutos. Sin compromiso. Prefiero que lo hablemos antes de tomar cualquier decisión."
+        subtitle="20 minutos. Sin compromiso. Prefiero que lo hablemos antes de tomar cualquier decisión."
       />
 
       <section className="px-6 md:px-12 pt-10 pb-20">

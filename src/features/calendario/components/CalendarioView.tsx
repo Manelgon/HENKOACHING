@@ -13,7 +13,6 @@ import EventoModal from './EventoModal'
 import TasksPanel from './TasksPanel'
 import type { CalendarEvent } from '../types'
 import type { CalendarMeta, AppointmentSchedule } from '@/actions/google-calendar'
-import type { Task } from '@/actions/google-tasks'
 import { getCalendarEventsRange, getCalendars, getAppointmentSchedules } from '@/actions/google-calendar'
 import { useState, useRef, useCallback, useEffect } from 'react'
 

@@ -70,7 +70,7 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: '¿Cuánto cuesta y cuánto dura un acompañamiento de coaching empresarial?',
-    a: 'Hay tres modalidades: sesiones 1:1 (CEOs y líderes, 1 hora semanal o quincenal), talleres de equipo (grupos de hasta 15 personas, presencial o remoto) y proyecto integral (acompañamiento completo a la empresa durante 3-6 meses). El precio se ajusta al alcance tras una primera llamada gratuita de diagnóstico de 45 minutos.',
+    a: 'Hay tres modalidades: sesiones 1:1 (CEOs y líderes, 1 hora semanal o quincenal), talleres de equipo (grupos de hasta 15 personas, presencial o remoto) y proyecto integral (acompañamiento completo a la empresa durante 3-6 meses). El precio se ajusta al alcance tras una primera llamada gratuita de diagnóstico de 20 minutos.',
   },
   {
     q: '¿Funciona el coaching en remoto o tiene que ser presencial?',
