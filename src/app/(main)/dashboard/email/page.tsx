@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
-import { getEmailConfig } from '@/actions/email'
+import { getEmailConfig, listarLabelsGmail, listarThreadsGmail } from '@/actions/email'
 import BandejaInbox from '@/features/email/components/BandejaInbox'
 
 export const metadata = {
@@ -25,6 +25,11 @@ export default async function EmailPage() {
 
   const config = await getEmailConfig()
   const hasImapConfig = !!(config.imap_host && config.hasImapPassword)
+
+  const [initialLabels, initialInbox] = await Promise.all([
+    listarLabelsGmail().catch(() => []),
+    listarThreadsGmail('INBOX').catch(() => ({ threads: [], nextPageToken: undefined })),
+  ])
 
   return (
     <div className="w-full">
@@ -63,7 +68,7 @@ export default async function EmailPage() {
           </Link>
         </div>
       ) : (
-        <BandejaInbox hasImapConfig={hasImapConfig} />
+        <BandejaInbox hasImapConfig={hasImapConfig} initialLabels={initialLabels} initialThreads={initialInbox.threads} />
       )}
     </div>
   )

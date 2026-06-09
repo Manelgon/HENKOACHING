@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import {
   listarLabelsGmail,
   listarThreadsGmail,
@@ -17,7 +17,11 @@ import FallosPanel from './FallosPanel'
 import { useEmailStore } from '@/features/email/store/emailStore'
 import type { GmailLabel, GmailThread, GmailMessage } from '../types'
 
-type Props = { hasImapConfig: boolean }
+type Props = {
+  hasImapConfig: boolean
+  initialLabels?: GmailLabel[]
+  initialThreads?: GmailThread[]
+}
 
 const SYSTEM_LABEL_ICONS: Record<string, string> = {
   INBOX:   'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z',
@@ -28,14 +32,14 @@ const SYSTEM_LABEL_ICONS: Record<string, string> = {
   DEFAULT: 'M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z',
 }
 
-export default function BandejaInbox({ hasImapConfig }: Props) {
+export default function BandejaInbox({ hasImapConfig, initialLabels = [], initialThreads }: Props) {
   const runAction = useAction()
   const confirm = useConfirm()
   const { setUnreadCount, failedCount } = useEmailStore()
 
-  const [labels, setLabels] = useState<GmailLabel[]>([])
+  const [labels, setLabels] = useState<GmailLabel[]>(initialLabels)
   const [activeLabelId, setActiveLabelId] = useState('INBOX')
-  const [threads, setThreads] = useState<GmailThread[] | null>(null)
+  const [threads, setThreads] = useState<GmailThread[] | null>(initialThreads ?? null)
   const [pageTokens, setPageTokens] = useState<(string | undefined)[]>([undefined])
   const [page, setPage] = useState(0)
   const [pageSize, setPageSize] = useState(20)
@@ -51,14 +55,22 @@ export default function BandejaInbox({ hasImapConfig }: Props) {
   const [composeDefaults, setComposeDefaults] = useState<{ to?: string; subject?: string; bodyHtml?: string } | null>(null)
   const [activeView, setActiveView] = useState<'gmail' | 'fallos'>('gmail')
   const [seleccionados, setSeleccionados] = useState<Set<string>>(new Set())
+  // Skip first INBOX fetch if data was server-prefetched
+  const skipFirstFetch = useRef(initialThreads != null)
 
-  // Cargar labels
+  // Sync unread count from initial labels (server-prefetched)
   useEffect(() => {
+    if (initialLabels.length > 0) {
+      const inbox = initialLabels.find(x => x.id === 'INBOX')
+      if (inbox) setUnreadCount(inbox.unread)
+      return
+    }
     listarLabelsGmail().then(l => {
       setLabels(l)
       const inbox = l.find(x => x.id === 'INBOX')
       if (inbox) setUnreadCount(inbox.unread)
     }).catch(() => {})
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [setUnreadCount])
 
   const fetchPage = useCallback(async (labelId: string, pg: number, tokens: (string | undefined)[], q?: string, size?: number) => {
@@ -94,7 +106,14 @@ export default function BandejaInbox({ hasImapConfig }: Props) {
     fetchPage(labelId, 0, [undefined], q)
   }, [fetchPage])
 
-  useEffect(() => { resetAndLoad(activeLabelId) }, [activeLabelId, resetAndLoad])
+  useEffect(() => {
+    if (skipFirstFetch.current && activeLabelId === 'INBOX') {
+      skipFirstFetch.current = false
+      return
+    }
+    resetAndLoad(activeLabelId)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeLabelId, resetAndLoad])
 
   // Auto-refresco cada 120s
   useEffect(() => {
