@@ -57,49 +57,64 @@ export default async function Home() {
     <main className="overflow-hidden bg-white">
 
       {/* HERO */}
-      <section className="relative min-h-screen flex items-center justify-center bg-white pt-20 overflow-hidden">
-        <div aria-hidden className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white/60" />
+      <section className="relative bg-[#F6F3EC] pt-[92px] px-6 md:px-12 overflow-hidden">
+        <div className="relative z-10 max-w-[1400px] mx-auto pt-28 pb-14 grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-12 items-center">
 
-        <div className="relative z-10 max-w-3xl mx-auto px-6 text-center">
-          <Image
-            src="/henkologo.png"
-            alt="Henkoaching"
-            width={720}
-            height={500}
-            className="object-contain mx-auto mb-9 w-[360px] h-auto drop-shadow-[0_8px_32px_rgba(31,143,155,0.12)]"
-            priority
-          />
+          {/* Columna izquierda */}
+          <div>
 
-          <p className="font-roxborough italic text-2xl md:text-3xl text-gray-700 mb-4 leading-relaxed">
-            Cuando una empresa crece o cambia,<br />
-            el orden deja de ser opcional.
-          </p>
-          <div className="flex items-center justify-center gap-3 mb-6">
-            <span className="block w-8 h-px bg-henko-turquoise/40" />
-            <p className="text-[11px] md:text-xs tracking-[0.22em] text-henko-turquoise font-semibold uppercase">
-              orden · liderazgo · equipos
+          {/* Kicker con líneas a los lados */}
+          <div className="flex items-center gap-[14px] mb-[22px]">
+            <span className="block w-[34px] h-[1.5px] bg-henko-turquoise opacity-50" />
+            <p className="text-[13px] tracking-[0.2em] text-henko-turquoise font-bold uppercase font-raleway whitespace-nowrap">
+              Orden · Liderazgo · Equipos
             </p>
-            <span className="block w-8 h-px bg-henko-turquoise/40" />
+            <span className="block w-[34px] h-[1.5px] bg-henko-turquoise opacity-50" />
           </div>
 
-          <p className="text-base md:text-[15px] leading-relaxed text-gray-500 mb-12 max-w-xl mx-auto">
-            Ayudamos a CEOs y empresas en crecimiento a crear orden, claridad y estructura para liderar con calma y construir equipos más conscientes.
-          </p>
+          {/* Titular tipográfico audaz */}
+          <h1 className="font-roxborough m-0" style={{fontSize: 'clamp(34px, 4.5vw, 68px)', lineHeight: 0.97, letterSpacing: '-0.025em'}}>
+            <span className="block italic font-light text-[#4C625F]" style={{fontSize: 'clamp(20px, 2.5vw, 36px)', letterSpacing: '-0.01em', marginBottom: 6, fontWeight: 300}}>
+              Cuando una empresa crece o cambia,
+            </span>
+            el <em className="italic text-henko-turquoise not-italic" style={{fontStyle: 'italic'}}>orden</em> deja
+            <span className="block">de ser opcional.</span>
+          </h1>
 
-          <div className="flex flex-wrap gap-4 justify-center">
+          <p className="font-raleway text-[17px] leading-[1.6] text-[#4C625F] mt-[20px]">
+              Acompaño a CEOs y empresas en crecimiento a crear orden, claridad y estructura
+              para liderar con calma y construir equipos más conscientes.
+            </p>
+
+          </div>{/* fin columna izquierda */}
+
+          {/* Columna derecha — logo */}
+          <div className="hidden lg:flex items-center justify-center">
+            <Image
+              src="/henkologo.png"
+              alt="Henkoaching"
+              width={720}
+              height={500}
+              className="object-contain w-[75%] h-auto"
+            />
+          </div>
+
+          {/* Botones centrados entre columnas — fila completa */}
+          <div className="lg:col-span-2 flex gap-4 items-center justify-center pt-4">
             <Link
               href="/contacto"
-              className="inline-flex items-center gap-2 bg-henko-turquoise text-white px-8 py-3.5 rounded-full text-sm font-semibold tracking-wide hover:bg-henko-turquoise-light hover:shadow-lg hover:shadow-henko-turquoise/30 transition-all duration-200"
+              className="inline-flex items-center gap-2.5 bg-henko-turquoise text-white px-8 py-4 rounded-full text-[15.5px] font-semibold hover:bg-henko-turquoise-light hover:-translate-y-0.5 hover:shadow-[0_12px_28px_-12px_rgba(12,82,81,0.55)] transition-all duration-200 whitespace-nowrap"
             >
               Trabaja conmigo
             </Link>
             <Link
               href="/servicios"
-              className="inline-flex items-center gap-2 bg-transparent border-2 border-henko-turquoise text-henko-turquoise px-8 py-3.5 rounded-full text-sm font-semibold tracking-wide hover:bg-henko-turquoise hover:text-white transition-all duration-200"
+              className="inline-flex items-center gap-2.5 bg-transparent border border-[rgba(21,48,46,0.22)] text-[#15302E] px-7 py-4 rounded-full text-[15.5px] font-semibold hover:border-henko-turquoise hover:text-henko-turquoise transition-all duration-200 whitespace-nowrap group"
             >
-              Ver servicios
+              Ver servicios <span className="group-hover:translate-x-1 transition-transform inline-block">→</span>
             </Link>
           </div>
+
         </div>
       </section>
 
