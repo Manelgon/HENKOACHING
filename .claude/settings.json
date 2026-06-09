@@ -37,7 +37,28 @@
       "Bash(python -c ' *)",
       "Bash(more)",
       "Bash(Start-Sleep -Seconds 5)",
-      "Bash(Get-Content \"C:\\\\Users\\\\manel\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-manel--000-Proyectos-DEV-005--Jennifer-Cervera---copia\\\\1a699589-9912-4f7f-9c57-d4172883f273\\\\tasks\\\\b8midcauw.output\" -Tail 10)"
+      "Bash(Get-Content \"C:\\\\Users\\\\manel\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-manel--000-Proyectos-DEV-005--Jennifer-Cervera---copia\\\\1a699589-9912-4f7f-9c57-d4172883f273\\\\tasks\\\\b8midcauw.output\" -Tail 10)",
+      "Bash(Remove-Item audit-*.png, check-*.jpeg, verify-*.png, verify-*.jpeg, henkoaching-full.png, sobre-mi-full.png, sobre-mi-timeline.png, design-ref.html, get-token.js, heroes-ref.jsx, view1.jpeg, zoom-sintomas.png, zoom-top-numbers.png -ErrorAction SilentlyContinue)",
+      "Bash(cd \"c:\\\\Users\\\\manel\\\\.000.Proyectos.DEV\\\\005. Jennifer Cervera - copia\" && rm -f audit-*.png check-*.jpeg verify-*.png verify-*.jpeg henkoaching-full.png sobre-mi-full.png sobre-mi-timeline.png design-ref.html get-token.js heroes-ref.jsx view1.jpeg zoom-sintomas.png zoom-top-numbers.png)",
+      "Bash(node -e \"const p = require\\('./package.json'\\); const fc = Object.keys\\(p.dependencies\\).filter\\(k => k.includes\\('fullcalendar'\\)\\); console.log\\(fc\\)\")",
+      "Bash(node -e \"const p = require\\('./package.json'\\); console.log\\('rhf:', p.dependencies['react-hook-form']\\); console.log\\('resolvers:', p.dependencies['@hookform/resolvers']\\)\")",
+      "Bash(findstr \"LISTENING\")",
+      "Bash(findstr \":300\")",
+      "Bash(taskkill /PID 33880 /F)",
+      "Bash(taskkill /PID 69212 /F)",
+      "Bash(taskkill /PID 13632 /F)",
+      "PowerShell(Stop-Process -Id 33880, 69212, 13632 -Force -ErrorAction SilentlyContinue)",
+      "PowerShell(Set-Location \"C:\\\\Users\\\\manel\\\\.000.Proyectos.DEV\\\\005. Jennifer Cervera - copia\"; Start-Process powershell -ArgumentList \"-NoExit\", \"-Command\", \"npm run dev\" -WindowStyle Normal)",
+      "Bash(node -e \"const p = require\\('./package.json'\\); console.log\\('sanitize-html:', p.dependencies['sanitize-html']\\)\")",
+      "Bash(git -C \"c:\\\\Users\\\\manel\\\\.000.Proyectos.DEV\\\\005. Jennifer Cervera - copia\" diff --stat HEAD)",
+      "Bash(git -C \"c:\\\\Users\\\\manel\\\\.000.Proyectos.DEV\\\\005. Jennifer Cervera - copia\" status --short)",
+      "Bash(grep -E \"^        [a-z]+: Resource\\\\$\" \"c:\\\\Users\\\\manel\\\\.000.Proyectos.DEV\\\\005. Jennifer Cervera - copia\\\\node_modules\\\\googleapis\\\\build\\\\src\\\\apis\\\\calendar\\\\v3.d.ts\")",
+      "Bash(grep \"export interface Schema\\\\$\" \"c:\\\\Users\\\\manel\\\\.000.Proyectos.DEV\\\\005. Jennifer Cervera - copia\\\\node_modules\\\\googleapis\\\\build\\\\src\\\\apis\\\\calendar\\\\v3.d.ts\")",
+      "Bash(grep \"^    export class Resource\\\\$\" \"c:\\\\Users\\\\manel\\\\.000.Proyectos.DEV\\\\005. Jennifer Cervera - copia\\\\node_modules\\\\googleapis\\\\build\\\\src\\\\apis\\\\calendar\\\\v3.d.ts\")",
+      "Bash(grep \"Resource\\\\$\" \"c:\\\\Users\\\\manel\\\\.000.Proyectos.DEV\\\\005. Jennifer Cervera - copia\\\\node_modules\\\\googleapis\\\\build\\\\src\\\\apis\\\\calendar\\\\v3.d.ts\")"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\manel\\.000.Proyectos.DEV\\005. Jennifer Cervera - copia"
     ]
   }
 }

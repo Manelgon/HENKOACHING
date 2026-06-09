@@ -1,202 +1,190 @@
 'use client'
 
-import { useState, useCallback, useEffect, useMemo } from 'react'
-import { listarEmailsBandeja, leerEmailBandeja, listarCarpetasImap, eliminarEmailsBandeja } from '@/actions/email'
+import { useState, useCallback, useEffect } from 'react'
+import {
+  listarLabelsGmail,
+  listarThreadsGmail,
+  leerThreadGmail,
+  archivarThread,
+  toggleLeidoThread,
+  eliminarThreadGmail,
+  buscarThreadsGmail,
+} from '@/actions/email'
 import { useAction, useConfirm } from '@/shared/feedback/FeedbackContext'
 import EmailDrawer from './EmailDrawer'
 import ComposeDrawer from './ComposeDrawer'
 import FallosPanel from './FallosPanel'
 import { useEmailStore } from '@/features/email/store/emailStore'
-import { TablePagination, usePagination } from '@/components/TablePagination'
-import type { EmailMessage, EmailDetail, ImapFolder, FolderType } from '../types'
+import type { GmailLabel, GmailThread, GmailMessage } from '../types'
 
-type Props = {
-  hasImapConfig: boolean
-}
+type Props = { hasImapConfig: boolean }
 
-const FOLDER_ICONS: Record<FolderType, string> = {
-  inbox:  'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z',
-  sent:   'M12 19l9 2-9-18-9 18 9-2zm0 0v-8',
-  drafts: 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z',
-  spam:   'M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636',
-  trash:  'M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16',
+const SYSTEM_LABEL_ICONS: Record<string, string> = {
+  INBOX:   'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z',
+  SENT:    'M12 19l9 2-9-18-9 18 9-2zm0 0v-8',
+  DRAFT:   'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z',
+  SPAM:    'M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636',
+  TRASH:   'M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16',
+  DEFAULT: 'M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z',
 }
 
 export default function BandejaInbox({ hasImapConfig }: Props) {
   const runAction = useAction()
   const confirm = useConfirm()
-  const [mensajes, setMensajes] = useState<EmailMessage[] | null>(null)
+  const { setUnreadCount, failedCount } = useEmailStore()
+
+  const [labels, setLabels] = useState<GmailLabel[]>([])
+  const [activeLabelId, setActiveLabelId] = useState('INBOX')
+  const [threads, setThreads] = useState<GmailThread[] | null>(null)
+  const [pageTokens, setPageTokens] = useState<(string | undefined)[]>([undefined])
+  const [page, setPage] = useState(0)
+  const [pageSize, setPageSize] = useState(20)
+  const [hasNextPage, setHasNextPage] = useState(false)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [selected, setSelected] = useState<EmailDetail | null>(null)
-  const [loadingUid, setLoadingUid] = useState<number | null>(null)
+  const [selectedMessages, setSelectedMessages] = useState<GmailMessage[] | null>(null)
+  const [selectedThread, setSelectedThread] = useState<GmailThread | null>(null)
+  const [loadingThreadId, setLoadingThreadId] = useState<string | null>(null)
   const [busqueda, setBusqueda] = useState('')
-  const [filtroLeido, setFiltroLeido] = useState<'todos' | 'no_leido' | 'leido'>('todos')
+  const [busquedaInput, setBusquedaInput] = useState('')
   const [composing, setComposing] = useState(false)
   const [composeDefaults, setComposeDefaults] = useState<{ to?: string; subject?: string; bodyHtml?: string } | null>(null)
-  const [folders, setFolders] = useState<ImapFolder[]>([])
-  const [activeFolder, setActiveFolder] = useState<ImapFolder>({ path: 'INBOX', label: 'Recibidos', type: 'inbox', unread: 0 })
-  const [seleccionados, setSeleccionados] = useState<Set<number>>(new Set())
+  const [activeView, setActiveView] = useState<'gmail' | 'fallos'>('gmail')
+  const [seleccionados, setSeleccionados] = useState<Set<string>>(new Set())
 
-  const [activeView, setActiveView] = useState<'imap' | 'fallos'>('imap')
-
-  const { markAllSeen, setUnreadCount, failedCount } = useEmailStore()
-
-  const cargar = useCallback(async (mailbox: string, silencioso = false) => {
-    setError(null)
-
-    const doLoad = async () => {
-      const r = await listarEmailsBandeja(mailbox)
-      if ('error' in r) throw new Error(r.error ?? 'Error desconocido')
-      setMensajes(r.messages)
-      const unread = r.messages.filter((m) => !m.seen).length
-      setUnreadCount(unread)
-      return r
-    }
-
-    if (silencioso) {
-      try { await doLoad() } catch (e) { setError(String(e)) }
-    } else {
-      const result = await runAction('Cargando emails', doLoad, { silentSuccess: true })
-      if (!result.ok) setError(result.error)
-    }
-  }, [runAction, setUnreadCount])
-
-  // Cargar carpetas al montar
+  // Cargar labels
   useEffect(() => {
-    if (!hasImapConfig) return
-    listarCarpetasImap().then((r) => {
-      if ('ok' in r && r.folders) setFolders(r.folders)
-    })
-  }, [hasImapConfig])
+    listarLabelsGmail().then(l => {
+      setLabels(l)
+      const inbox = l.find(x => x.id === 'INBOX')
+      if (inbox) setUnreadCount(inbox.unread)
+    }).catch(() => {})
+  }, [setUnreadCount])
 
-  useEffect(() => { markAllSeen() }, [markAllSeen])
-  useEffect(() => { cargar(activeFolder.path) }, [activeFolder.path, cargar])
+  const fetchPage = useCallback(async (labelId: string, pg: number, tokens: (string | undefined)[], q?: string, size?: number) => {
+    setLoading(true)
+    setError(null)
+    setSeleccionados(new Set())
+    try {
+      const token = tokens[pg]
+      const r = q
+        ? await buscarThreadsGmail(q)
+        : await listarThreadsGmail(labelId, undefined, token, size ?? pageSize)
+      setThreads(r.threads)
+      setHasNextPage(!!r.nextPageToken)
+      if (r.nextPageToken) {
+        setPageTokens(prev => {
+          const next = [...prev]
+          next[pg + 1] = r.nextPageToken
+          return next
+        })
+      }
+    } catch (e) {
+      setError(String(e))
+      setThreads([])
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  const resetAndLoad = useCallback((labelId: string, q?: string) => {
+    setPage(0)
+    setPageTokens([undefined])
+    setHasNextPage(false)
+    fetchPage(labelId, 0, [undefined], q)
+  }, [fetchPage])
+
+  useEffect(() => { resetAndLoad(activeLabelId) }, [activeLabelId, resetAndLoad])
 
   // Auto-refresco cada 120s
   useEffect(() => {
-    if (!hasImapConfig) return
-    const interval = setInterval(() => {
-      if (document.visibilityState === 'visible') cargar(activeFolder.path, true)
+    const id = setInterval(() => {
+      if (document.visibilityState === 'visible') fetchPage(activeLabelId, page, pageTokens, busqueda || undefined)
     }, 120_000)
-    return () => clearInterval(interval)
-  }, [hasImapConfig, activeFolder.path, cargar])
+    return () => clearInterval(id)
+  }, [activeLabelId, busqueda, page, pageTokens, fetchPage])
 
-  const filtered = useMemo(() => {
-    if (!mensajes) return []
-    let result = mensajes
-    if (filtroLeido === 'no_leido') result = result.filter((m) => !m.seen)
-    if (filtroLeido === 'leido')    result = result.filter((m) => m.seen)
-    if (busqueda.trim()) {
-      const q = busqueda.toLowerCase()
-      result = result.filter((m) => m.from.toLowerCase().includes(q) || m.subject.toLowerCase().includes(q))
-    }
-    return result
-  }, [mensajes, busqueda, filtroLeido])
-
-  const pagination = usePagination(filtered, 20)
-
-  async function abrirEmail(uid: number) {
-    setLoadingUid(uid)
-    setError(null)
+  const abrirThread = async (thread: GmailThread) => {
+    setLoadingThreadId(thread.id)
     try {
-      const r = await leerEmailBandeja(uid, activeFolder.path)
-      if ('error' in r) {
-        setError(r.error ?? 'Error al abrir el correo')
-      } else {
-        setSelected(r.detail)
-        setMensajes((prev) => prev ? prev.map((m) => m.uid === uid ? { ...m, seen: true } : m) : prev)
+      const messages = await leerThreadGmail(thread.id)
+      setSelectedMessages(messages)
+      setSelectedThread(thread)
+      if (thread.unread) {
+        await toggleLeidoThread(thread.id, true)
+        setThreads(prev => prev ? prev.map(t => t.id === thread.id ? { ...t, unread: false } : t) : prev)
       }
-    } catch (e) {
-      setError(`Error al abrir: ${String(e)}`)
+    } catch {
+      setError('Error al abrir el hilo.')
     } finally {
-      setLoadingUid(null)
+      setLoadingThreadId(null)
     }
   }
 
-  function cambiarCarpeta(folder: ImapFolder) {
-    if (folder.path === activeFolder.path) return
-    setActiveFolder(folder)
-    setMensajes(null)
-    setBusqueda('')
-    setFiltroLeido('todos')
-    setSeleccionados(new Set())
+  const handleArchivar = async (threadId: string) => {
+    setThreads(prev => prev ? prev.filter(t => t.id !== threadId) : prev)
+    try { await archivarThread(threadId) } catch { fetchPage(activeLabelId, page, pageTokens) }
   }
 
-  function toggleSeleccion(uid: number, e: React.MouseEvent) {
-    e.stopPropagation()
-    setSeleccionados((prev) => {
-      const next = new Set(prev)
-      if (next.has(uid)) next.delete(uid); else next.add(uid)
-      return next
-    })
+  const handleEliminar = async (threadId: string) => {
+    setThreads(prev => prev ? prev.filter(t => t.id !== threadId) : prev)
+    try { await eliminarThreadGmail(threadId) } catch { fetchPage(activeLabelId, page, pageTokens) }
   }
 
-  function toggleTodos() {
-    const uidsEnPagina = pagination.paginated.map((m) => m.uid)
-    const todosMarcados = uidsEnPagina.every((uid) => seleccionados.has(uid))
-    if (todosMarcados) {
-      setSeleccionados((prev) => {
-        const next = new Set(prev)
-        uidsEnPagina.forEach((uid) => next.delete(uid))
-        return next
-      })
-    } else {
-      setSeleccionados((prev) => {
-        const next = new Set(prev)
-        uidsEnPagina.forEach((uid) => next.add(uid))
-        return next
-      })
-    }
+  const handleToggleLeido = async (thread: GmailThread) => {
+    const newUnread = !thread.unread
+    setThreads(prev => prev ? prev.map(t => t.id === thread.id ? { ...t, unread: newUnread } : t) : prev)
+    try { await toggleLeidoThread(thread.id, !newUnread) } catch {}
   }
 
-  async function eliminarSeleccionados() {
-    const uids = Array.from(seleccionados)
+  const eliminarSeleccionados = async () => {
+    const ids = Array.from(seleccionados)
     const ok = await confirm({
-      title: `Eliminar ${uids.length} correo${uids.length !== 1 ? 's' : ''}`,
-      description: 'Esta acción es irreversible. Los mensajes se eliminarán del servidor.',
+      title: `Eliminar ${ids.length} hilo${ids.length !== 1 ? 's' : ''}`,
+      description: 'Los mensajes se moverán a la papelera.',
       confirmLabel: 'Eliminar',
       variant: 'danger',
     })
     if (!ok) return
-    const r = await runAction('Eliminando correos', () => eliminarEmailsBandeja(uids, activeFolder.path), {
-      successMessage: `${uids.length} correo${uids.length !== 1 ? 's' : ''} eliminado${uids.length !== 1 ? 's' : ''}`,
-    })
-    if (r.ok) {
+    await runAction('Eliminando', async () => {
+      await Promise.all(ids.map(id => eliminarThreadGmail(id)))
+      setThreads(prev => prev ? prev.filter(t => !ids.includes(t.id)) : prev)
       setSeleccionados(new Set())
-      setMensajes((prev) => prev ? prev.filter((m) => !uids.includes(m.uid)) : prev)
-    }
+    }, { successMessage: `${ids.length} eliminado${ids.length !== 1 ? 's' : ''}` })
   }
 
-  if (!hasImapConfig) {
-    return (
-      <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm px-6 md:px-8 py-16 text-center">
-        <div className="w-16 h-16 bg-amber-50 rounded-2xl border border-amber-200 flex items-center justify-center mx-auto mb-4">
-          <svg className="w-8 h-8 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-          </svg>
-        </div>
-        <p className="font-roxborough text-xl text-gray-400 mb-2">Configura las credenciales IMAP</p>
-        <p className="font-raleway text-gray-400 text-sm font-light">
-          Para ver la bandeja de entrada, ve a la pestaña <strong>Configuración</strong> y añade el servidor IMAP y la contraseña.
-        </p>
-      </div>
-    )
+  const canPrev = page > 0
+  const canNext = hasNextPage
+
+  const handleBuscar = (e: React.FormEvent) => {
+    e.preventDefault()
+    const q = busquedaInput.trim()
+    setBusqueda(q)
+    resetAndLoad(activeLabelId, q || undefined)
   }
 
-  const noLeidos = mensajes ? mensajes.filter((m) => !m.seen).length : 0
+  const cambiarLabel = (labelId: string) => {
+    if (labelId === activeLabelId) return
+    setActiveLabelId(labelId)
+    setThreads(null)
+    setBusqueda('')
+    setBusquedaInput('')
+    setSeleccionados(new Set())
+    setActiveView('gmail')
+  }
 
-  // Carpetas a mostrar: siempre INBOX + las detectadas del servidor
-  const foldersToShow: ImapFolder[] = folders.length > 0 ? folders : [activeFolder]
+  const systemLabels = labels.filter(l => l.type === 'system')
+  const userLabels = labels.filter(l => l.type === 'user')
 
   return (
     <>
       <div className="flex gap-6">
-        {/* Sidebar carpetas */}
+        {/* Sidebar labels */}
         <aside className="hidden lg:flex flex-col gap-1 w-44 flex-shrink-0">
           <button
             type="button"
             onClick={() => setComposing(true)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-henko-turquoise text-white font-raleway font-semibold text-sm hover:bg-henko-turquoise-light transition-colors mb-3"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-henko-turquoise text-white font-raleway font-semibold text-sm hover:opacity-90 transition-opacity mb-3"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -204,330 +192,282 @@ export default function BandejaInbox({ hasImapConfig }: Props) {
             Redactar
           </button>
 
-          {foldersToShow.map((folder) => (
-            <button
-              key={folder.path}
-              type="button"
-              onClick={() => { setActiveView('imap'); cambiarCarpeta(folder) }}
-              className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-raleway text-sm font-medium transition-colors text-left ${
-                activeView === 'imap' && activeFolder.path === folder.path
-                  ? 'bg-henko-turquoise/10 text-henko-turquoise font-semibold'
-                  : 'text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={FOLDER_ICONS[folder.type]} />
-              </svg>
-              <span className="flex-1 truncate">{folder.label}</span>
-              {(folder.unread > 0) && (
-                <span className="text-xs bg-henko-turquoise text-white rounded-full px-1.5 py-0.5 font-bold leading-none">
-                  {folder.unread}
-                </span>
-              )}
-            </button>
+          {systemLabels.map(label => (
+            <LabelButton
+              key={label.id}
+              label={label}
+              active={activeView === 'gmail' && activeLabelId === label.id}
+              onClick={() => { setActiveView('gmail'); cambiarLabel(label.id) }}
+              iconPath={SYSTEM_LABEL_ICONS[label.id] ?? SYSTEM_LABEL_ICONS.DEFAULT}
+            />
           ))}
 
-          {/* Ítem especial: Fallos transaccionales */}
+          {userLabels.length > 0 && (
+            <>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-3 pt-3 pb-1">Etiquetas</p>
+              {userLabels.map(label => (
+                <LabelButton
+                  key={label.id}
+                  label={label}
+                  active={activeView === 'gmail' && activeLabelId === label.id}
+                  onClick={() => { setActiveView('gmail'); cambiarLabel(label.id) }}
+                  iconPath={SYSTEM_LABEL_ICONS.DEFAULT}
+                />
+              ))}
+            </>
+          )}
+
           <button
             type="button"
             onClick={() => setActiveView('fallos')}
             className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-raleway text-sm font-medium transition-colors text-left mt-1 border-t border-gray-100 pt-3 ${
-              activeView === 'fallos'
-                ? 'bg-red-50 text-red-600 font-semibold'
-                : 'text-gray-500 hover:bg-gray-100'
+              activeView === 'fallos' ? 'bg-red-50 text-red-600 font-semibold' : 'text-gray-500 hover:bg-gray-100'
             }`}
           >
             <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
             </svg>
-            <span className="flex-1 truncate">Fallos</span>
+            <span className="flex-1 truncate">Fallos SMTP</span>
             {failedCount > 0 && (
               <span className="text-xs bg-red-500 text-white rounded-full px-1.5 py-0.5 font-bold leading-none">
                 {failedCount > 9 ? '9+' : failedCount}
               </span>
             )}
           </button>
-
         </aside>
 
         {/* Panel principal */}
         <div className="flex-1 min-w-0">
-          {/* Banner de fallos */}
-          {failedCount > 0 && activeView === 'imap' && (
-            <div className="mb-4 flex items-center gap-3 px-5 py-3 rounded-2xl bg-red-50 border border-red-200">
-              <svg className="w-4 h-4 text-red-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-              </svg>
-              <p className="font-raleway text-sm text-red-700 flex-1">
-                <strong>{failedCount}</strong> email{failedCount !== 1 ? 's' : ''} no se {failedCount !== 1 ? 'pudieron enviar' : 'pudo enviar'}.
-              </p>
-              <button
-                type="button"
-                onClick={() => setActiveView('fallos')}
-                className="font-raleway text-xs font-semibold text-red-600 underline underline-offset-2 hover:text-red-800 whitespace-nowrap"
-              >
-                Ver fallos →
-              </button>
-            </div>
-          )}
-
-          {/* Vista Fallos */}
           {activeView === 'fallos' && <FallosPanel />}
 
-          {/* Contenido IMAP */}
-          {activeView === 'imap' && (
-          <><div className="flex items-end justify-between gap-4 mb-4 border-b border-gray-200">
-            <div className="flex items-center gap-1 overflow-x-auto flex-1 min-w-0">
-              {/* Carpetas en móvil */}
-              <div className="flex lg:hidden items-center gap-1 mr-2 border-r border-gray-200 pr-2">
-                {foldersToShow.slice(0, 3).map((folder) => (
-                  <button
-                    key={folder.path}
-                    type="button"
-                    onClick={() => cambiarCarpeta(folder)}
-                    title={folder.label}
-                    className={`p-2 rounded-lg transition-colors ${
-                      activeFolder.path === folder.path ? 'bg-henko-turquoise/10 text-henko-turquoise' : 'text-gray-400 hover:text-gray-600'
-                    }`}
-                  >
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={FOLDER_ICONS[folder.type]} />
-                    </svg>
-                  </button>
-                ))}
-              </div>
+          {activeView === 'gmail' && (
+            <>
+              {/* Buscador */}
+              <form onSubmit={handleBuscar} className="flex items-center gap-3 mb-4">
+                <div className="relative flex-1">
+                  <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  <input
+                    type="text"
+                    placeholder="Buscar en Gmail…"
+                    value={busquedaInput}
+                    onChange={e => setBusquedaInput(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 font-raleway text-sm outline-none focus:border-henko-turquoise focus:bg-white transition-colors"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="px-4 py-2.5 rounded-xl bg-henko-turquoise text-white font-raleway text-sm font-semibold hover:opacity-90 transition-opacity"
+                >Buscar</button>
+                <button
+                  type="button"
+                  onClick={() => fetchPage(activeLabelId, page, pageTokens)}
+                  className="hidden md:flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 text-gray-600 font-raleway text-sm hover:bg-gray-50 transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  Actualizar
+                </button>
+              </form>
 
-              {(['todos', 'no_leido', 'leido'] as const).map((v) => {
-                const labels = { todos: 'Todos', no_leido: 'No leídos', leido: 'Leídos' }
-                const counts = { todos: mensajes?.length ?? 0, no_leido: noLeidos, leido: (mensajes?.length ?? 0) - noLeidos }
-                return (
-                  <button
-                    key={v}
-                    type="button"
-                    onClick={() => setFiltroLeido(v)}
-                    className={`relative flex items-center gap-1.5 px-4 py-3 font-raleway text-sm font-semibold whitespace-nowrap transition-colors ${
-                      filtroLeido === v
-                        ? 'text-henko-turquoise after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-henko-turquoise after:rounded-t'
-                        : 'text-gray-500 hover:text-gray-800'
-                    }`}
-                  >
-                    {v === 'no_leido' && <span className="w-1.5 h-1.5 rounded-full bg-henko-turquoise flex-shrink-0" />}
-                    {labels[v]}
-                    <span className={`text-xs px-1.5 py-0.5 rounded-full font-semibold ${
-                      filtroLeido === v ? 'bg-henko-turquoise/15 text-henko-turquoise' : 'bg-gray-100 text-gray-400'
-                    }`}>{counts[v]}</span>
-                  </button>
-                )
-              })}
-            </div>
-
-            <div className="flex items-center gap-2 mb-2">
-              <button
-                type="button"
-                onClick={() => cargar(activeFolder.path)}
-                className="hidden md:flex flex-shrink-0 items-center gap-2 px-4 py-2 rounded-xl border border-gray-200 text-gray-600 font-raleway text-sm hover:bg-gray-50 transition-colors"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                Actualizar
-              </button>
-              <button
-                type="button"
-                onClick={() => setComposing(true)}
-                className="lg:hidden flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl bg-henko-turquoise text-white font-raleway font-semibold text-sm hover:bg-henko-turquoise-light transition-colors"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                Redactar
-              </button>
-            </div>
-          </div>
-
-          {/* Buscador */}
-          <div className="flex items-center gap-3 mb-4">
-            <div className="relative flex-1">
-              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              <input
-                type="text"
-                placeholder="Buscar por remitente o asunto…"
-                value={busqueda}
-                onChange={(e) => setBusqueda(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 font-raleway text-sm outline-none focus:border-henko-turquoise focus:bg-white transition-colors"
-              />
-            </div>
-            <button
-              type="button"
-              onClick={() => cargar(activeFolder.path)}
-              className="md:hidden flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-xl bg-henko-turquoise text-white hover:bg-henko-turquoise-light transition-colors"
-              aria-label="Actualizar bandeja"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-            </button>
-          </div>
-
-          {error && (
-            <div className="bg-red-50 border border-red-100 rounded-2xl px-5 py-4 mb-4 flex items-start gap-3">
-              <svg className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-              </svg>
-              <p className="font-raleway text-sm text-red-600 flex-1">{error}</p>
-              <button type="button" onClick={() => setError(null)} className="text-red-300 hover:text-red-500">✕</button>
-            </div>
-          )}
-
-          {/* Lista de mensajes */}
-          {mensajes === null ? (
-            <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm px-6 py-20 text-center">
-              <p className="font-raleway text-gray-400 text-sm">Conectando…</p>
-            </div>
-          ) : filtered.length === 0 ? (
-            <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm px-6 py-16 text-center">
-              <svg className="w-10 h-10 text-gray-200 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
-              <p className="font-roxborough text-lg text-gray-400">
-                {!mensajes.length ? `${activeFolder.label} está vacío` : 'Ningún correo coincide'}
-              </p>
-            </div>
-          ) : (
-            <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
-              {/* Barra de acción en masa */}
-              {seleccionados.size > 0 && (
-                <div className="flex items-center gap-3 px-6 py-3 bg-henko-turquoise/5 border-b border-henko-turquoise/20">
-                  <span className="font-raleway text-sm font-semibold text-henko-turquoise">
-                    {seleccionados.size} seleccionado{seleccionados.size !== 1 ? 's' : ''}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={eliminarSeleccionados}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-50 text-red-600 font-raleway text-xs font-semibold hover:bg-red-100 transition-colors"
-                  >
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                    Eliminar
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setSeleccionados(new Set())}
-                    className="font-raleway text-xs text-gray-400 hover:text-gray-600 transition-colors ml-auto"
-                  >
-                    Cancelar
-                  </button>
+              {error && (
+                <div className="bg-red-50 border border-red-100 rounded-2xl px-5 py-4 mb-4 flex items-start gap-3">
+                  <p className="font-raleway text-sm text-red-600 flex-1">{error}</p>
+                  <button type="button" onClick={() => setError(null)} className="text-red-300 hover:text-red-500">✕</button>
                 </div>
               )}
 
-              {/* Cabecera columnas */}
-              <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-3 border-b border-gray-100 bg-gray-50/80 items-center">
-                <div className="col-span-1 flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={pagination.paginated.length > 0 && pagination.paginated.every((m) => seleccionados.has(m.uid))}
-                    onChange={toggleTodos}
-                    className="w-4 h-4 rounded text-henko-turquoise focus:ring-henko-turquoise cursor-pointer"
-                    title="Seleccionar todos"
-                  />
+              {threads === null ? (
+                <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm px-6 py-20 text-center">
+                  <p className="font-raleway text-gray-400 text-sm">Cargando Gmail…</p>
                 </div>
-                <span className="col-span-3 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">De</span>
-                <span className="col-span-6 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Asunto</span>
-                <span className="col-span-2 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Fecha</span>
-              </div>
-
-              {pagination.paginated.map((msg) => {
-                const isLoadingMsg = loadingUid === msg.uid
-                const isSelected = seleccionados.has(msg.uid)
-                return (
-                  <div key={msg.uid} className={`border-b border-gray-100 last:border-0 ${isSelected ? 'bg-henko-turquoise/5' : !msg.seen ? 'bg-henko-greenblue/10' : ''}`}>
-                    {/* Desktop */}
-                    <div
-                      role="button" tabIndex={0}
-                      onClick={() => loadingUid === null && abrirEmail(msg.uid)}
-                      onKeyDown={(e) => e.key === 'Enter' && loadingUid === null && abrirEmail(msg.uid)}
-                      className={`hidden md:grid grid-cols-12 gap-4 px-6 py-3.5 items-center transition-colors ${isLoadingMsg ? 'opacity-60 cursor-wait' : 'cursor-pointer hover:bg-gray-50'}`}
-                    >
-                      <div className="col-span-1" onClick={(e) => toggleSeleccion(msg.uid, e)}>
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={() => {/* controlled via onClick */}}
-                          className="w-4 h-4 rounded text-henko-turquoise focus:ring-henko-turquoise cursor-pointer"
-                        />
-                      </div>
-                      <span className="col-span-3 font-raleway font-semibold text-gray-900 truncate flex items-center gap-2 text-sm">
-                        {isLoadingMsg ? (
-                          <svg className="w-3.5 h-3.5 animate-spin text-henko-turquoise flex-shrink-0" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                          </svg>
-                        ) : !msg.seen ? <span className="w-2 h-2 rounded-full bg-henko-turquoise flex-shrink-0" /> : null}
-                        <span className="truncate">{msg.from}</span>
+              ) : threads.length === 0 ? (
+                <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm px-6 py-16 text-center">
+                  <p className="font-roxborough text-lg text-gray-400">Bandeja vacía</p>
+                </div>
+              ) : (
+                <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
+                  {seleccionados.size > 0 && (
+                    <div className="flex items-center gap-3 px-6 py-3 bg-henko-turquoise/5 border-b border-henko-turquoise/20">
+                      <span className="font-raleway text-sm font-semibold text-henko-turquoise">
+                        {seleccionados.size} seleccionado{seleccionados.size !== 1 ? 's' : ''}
                       </span>
-                      <span className={`col-span-6 font-raleway text-sm truncate ${!msg.seen ? 'font-medium text-gray-800' : 'text-gray-500'}`}>{msg.subject}</span>
-                      <span className="col-span-2 font-raleway text-xs text-gray-400">{formatDate(msg.date)}</span>
+                      <button
+                        type="button"
+                        onClick={eliminarSeleccionados}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-50 text-red-600 font-raleway text-xs font-semibold hover:bg-red-100 transition-colors"
+                      >Eliminar</button>
+                      <button
+                        type="button"
+                        onClick={() => setSeleccionados(new Set())}
+                        className="font-raleway text-xs text-gray-400 hover:text-gray-600 ml-auto"
+                      >Cancelar</button>
+                    </div>
+                  )}
+
+                  {(threads ?? []).map(thread => {
+                    const isLoadingThread = loadingThreadId === thread.id
+                    const selected = seleccionados.has(thread.id)
+                    return (
+                      <div
+                        key={thread.id}
+                        className={`border-b border-gray-100 last:border-0 group ${selected ? 'bg-henko-turquoise/5' : thread.unread ? 'bg-blue-50/30' : ''}`}
+                      >
+                        <div
+                          role="button" tabIndex={0}
+                          onClick={() => !isLoadingThread && abrirThread(thread)}
+                          onKeyDown={e => e.key === 'Enter' && !isLoadingThread && abrirThread(thread)}
+                          className={`flex items-center gap-3 px-5 py-3.5 transition-colors ${isLoadingThread ? 'opacity-60 cursor-wait' : 'cursor-pointer hover:bg-gray-50'}`}
+                        >
+                          {/* Checkbox */}
+                          <div onClick={e => { e.stopPropagation(); setSeleccionados(prev => { const n = new Set(prev); n.has(thread.id) ? n.delete(thread.id) : n.add(thread.id); return n }) }}>
+                            <input
+                              type="checkbox"
+                              checked={selected}
+                              onChange={() => {}}
+                              className="w-4 h-4 rounded text-henko-turquoise focus:ring-henko-turquoise cursor-pointer"
+                            />
+                          </div>
+
+                          {/* Indicador no leído */}
+                          <div className="w-2 flex-shrink-0">
+                            {thread.unread && <span className="block w-2 h-2 rounded-full bg-henko-turquoise" />}
+                          </div>
+
+                          {/* Contenido */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-baseline justify-between gap-3 mb-0.5">
+                              <span className={`font-raleway text-sm truncate ${thread.unread ? 'font-semibold text-gray-900' : 'text-gray-700'}`}>
+                                {thread.from.replace(/<.*?>/, '').trim() || thread.from}
+                                {thread.messageCount > 1 && (
+                                  <span className="ml-1.5 text-[10px] text-gray-400 font-normal">({thread.messageCount})</span>
+                                )}
+                              </span>
+                              <span className="font-raleway text-xs text-gray-400 flex-shrink-0">{formatDate(thread.date)}</span>
+                            </div>
+                            <p className={`font-raleway text-sm truncate ${thread.unread ? 'font-medium text-gray-800' : 'text-gray-500'}`}>{thread.subject}</p>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <p className="font-raleway text-xs text-gray-400 truncate flex-1">{thread.snippet}</p>
+                              <span className="flex-shrink-0 text-[9px] font-raleway font-bold px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-400 border border-blue-100">
+                                Gmail
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Acciones inline (hover) */}
+                          <div className="hidden group-hover:flex items-center gap-1 flex-shrink-0" onClick={e => e.stopPropagation()}>
+                            <ActionBtn title="Archivar" onClick={() => handleArchivar(thread.id)} icon="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                            <ActionBtn title={thread.unread ? 'Marcar como leído' : 'Marcar no leído'} onClick={() => handleToggleLeido(thread)} icon={thread.unread ? 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8' : 'M3 19v-8.93a2 2 0 01.89-1.664l7-4.666a2 2 0 012.22 0l7 4.666A2 2 0 0121 10.07V19M3 19a2 2 0 002 2h14a2 2 0 002-2M3 19l6.75-4.5M21 19l-6.75-4.5M3 10l6.75 4.5M21 10l-6.75 4.5m0 0l-1.14.76a2 2 0 01-2.22 0l-1.14-.76'} />
+                            <ActionBtn title="Eliminar" onClick={() => handleEliminar(thread.id)} icon="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" danger />
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+
+                  {/* Footer paginación */}
+                  <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3 border-t border-gray-100 bg-gray-50/50">
+                    {/* Info + selector tamaño */}
+                    <div className="flex items-center gap-3">
+                      <span className="font-raleway text-xs text-gray-400">
+                        Página {page + 1}{hasNextPage ? '+' : ` de ${pageTokens.length}`}
+                      </span>
+                      <select
+                        value={pageSize}
+                        onChange={e => {
+                          const newSize = Number(e.target.value)
+                          setPageSize(newSize)
+                          setPage(0)
+                          setPageTokens([undefined])
+                          fetchPage(activeLabelId, 0, [undefined], busqueda || undefined, newSize)
+                        }}
+                        className="text-xs font-raleway border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:border-henko-turquoise text-gray-600"
+                      >
+                        {[12, 20, 50, 100].map(s => <option key={s} value={s}>{s} por página</option>)}
+                      </select>
                     </div>
 
-                    {/* Móvil */}
-                    <div className={`md:hidden px-4 py-4 transition-colors flex items-start gap-3 ${isLoadingMsg ? 'opacity-60 cursor-wait' : ''}`}>
-                      <div className="pt-0.5" onClick={(e) => toggleSeleccion(msg.uid, e)}>
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={() => {/* controlled via onClick */}}
-                          className="w-4 h-4 rounded text-henko-turquoise focus:ring-henko-turquoise cursor-pointer"
-                        />
-                      </div>
-                      <div
-                        role="button" tabIndex={0}
-                        onClick={() => loadingUid === null && abrirEmail(msg.uid)}
-                        onKeyDown={(e) => e.key === 'Enter' && loadingUid === null && abrirEmail(msg.uid)}
-                        className="flex-1 min-w-0 cursor-pointer"
+                    {/* Paginación numerada */}
+                    <div className="flex items-center gap-1">
+                      <button
+                        disabled={!canPrev}
+                        onClick={() => {
+                          const newPage = page - 1
+                          setPage(newPage)
+                          fetchPage(activeLabelId, newPage, pageTokens, busqueda || undefined)
+                        }}
+                        className="w-8 h-8 flex items-center justify-center rounded-xl border border-gray-200 font-raleway text-sm text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                      >‹</button>
+
+                      {(() => {
+                        const knownPages = pageTokens.length
+                        const pages: (number | '…')[] = []
+                        if (knownPages <= 7) {
+                          for (let i = 0; i < knownPages; i++) pages.push(i)
+                        } else {
+                          pages.push(0)
+                          if (page > 2) pages.push('…')
+                          for (let i = Math.max(1, page - 1); i <= Math.min(knownPages - 2, page + 1); i++) pages.push(i)
+                          if (page < knownPages - 3) pages.push('…')
+                          pages.push(knownPages - 1)
+                        }
+                        return pages.map((p, i) =>
+                          p === '…' ? (
+                            <span key={`e${i}`} className="w-8 h-8 flex items-center justify-center font-raleway text-xs text-gray-400">…</span>
+                          ) : (
+                            <button
+                              key={p}
+                              disabled={loading}
+                              onClick={() => {
+                                setPage(p)
+                                fetchPage(activeLabelId, p, pageTokens, busqueda || undefined)
+                              }}
+                              className={`w-8 h-8 flex items-center justify-center rounded-xl font-raleway text-sm transition-colors ${page === p ? 'bg-henko-turquoise text-white font-semibold' : 'border border-gray-200 text-gray-600 hover:bg-gray-100'}`}
+                            >{p + 1}</button>
+                          )
+                        )
+                      })()}
+
+                      <button
+                        disabled={!canNext || loading}
+                        onClick={() => {
+                          const newPage = page + 1
+                          setPage(newPage)
+                          fetchPage(activeLabelId, newPage, pageTokens, busqueda || undefined)
+                        }}
+                        className="w-8 h-8 flex items-center justify-center rounded-xl border border-gray-200 font-raleway text-sm text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                       >
-                        <div className="flex items-start justify-between gap-3 mb-1">
-                          <p className="font-raleway font-semibold text-gray-900 text-sm flex items-center min-w-0 gap-1.5 truncate">
-                            {!msg.seen && <span className="w-2 h-2 rounded-full bg-henko-turquoise flex-shrink-0" />}
-                            <span className="truncate">{msg.from}</span>
-                          </p>
-                          <span className="font-raleway text-xs text-gray-400 flex-shrink-0">{formatDate(msg.date)}</span>
-                        </div>
-                        <p className={`font-raleway text-xs truncate ${!msg.seen ? 'font-medium text-gray-700' : 'text-gray-500'}`}>{msg.subject}</p>
-                      </div>
+                        {loading ? <span className="w-3 h-3 rounded-full border-2 border-gray-300 border-t-henko-turquoise animate-spin" /> : '›'}
+                      </button>
                     </div>
                   </div>
-                )
-              })}
-
-              <TablePagination
-                page={pagination.page} pageSize={pagination.pageSize}
-                total={pagination.total} totalPages={pagination.totalPages}
-                from={pagination.from} to={pagination.to}
-                onPageChange={pagination.setPage} onPageSizeChange={pagination.setPageSize}
-              />
-            </div>
+                </div>
+              )}
+            </>
           )}
-          </>)}
         </div>
       </div>
 
-      {selected && (
+      {selectedMessages && selectedThread && (
         <EmailDrawer
-          email={selected}
-          onClose={() => setSelected(null)}
+          messages={selectedMessages}
+          thread={selectedThread}
+          onClose={() => { setSelectedMessages(null); setSelectedThread(null) }}
           onReply={(to, subject, quotedHtml) => {
-            setSelected(null)
+            setSelectedMessages(null); setSelectedThread(null)
             setComposeDefaults({ to, subject, bodyHtml: quotedHtml })
           }}
-          onNewEmail={(to) => {
-            setSelected(null)
+          onNewEmail={to => {
+            setSelectedMessages(null); setSelectedThread(null)
             setComposeDefaults({ to })
           }}
+          onArchivar={() => { handleArchivar(selectedThread.id); setSelectedMessages(null); setSelectedThread(null) }}
+          onEliminar={() => { handleEliminar(selectedThread.id); setSelectedMessages(null); setSelectedThread(null) }}
         />
       )}
+
       {(composing || composeDefaults) && (
         <ComposeDrawer
           onClose={() => { setComposing(false); setComposeDefaults(null) }}
@@ -537,6 +477,43 @@ export default function BandejaInbox({ hasImapConfig }: Props) {
         />
       )}
     </>
+  )
+}
+
+function LabelButton({ label, active, onClick, iconPath }: { label: GmailLabel; active: boolean; onClick: () => void; iconPath: string }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-raleway text-sm font-medium transition-colors text-left ${
+        active ? 'bg-henko-turquoise/10 text-henko-turquoise font-semibold' : 'text-gray-600 hover:bg-gray-100'
+      }`}
+    >
+      <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={iconPath} />
+      </svg>
+      <span className="flex-1 truncate">{label.name}</span>
+      {label.unread > 0 && (
+        <span className="text-xs bg-henko-turquoise text-white rounded-full px-1.5 py-0.5 font-bold leading-none">
+          {label.unread}
+        </span>
+      )}
+    </button>
+  )
+}
+
+function ActionBtn({ title, onClick, icon, danger }: { title: string; onClick: () => void; icon: string; danger?: boolean }) {
+  return (
+    <button
+      type="button"
+      title={title}
+      onClick={onClick}
+      className={`w-7 h-7 flex items-center justify-center rounded-lg transition-colors ${danger ? 'text-gray-300 hover:text-red-400 hover:bg-red-50' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'}`}
+    >
+      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={icon} />
+      </svg>
+    </button>
   )
 }
 

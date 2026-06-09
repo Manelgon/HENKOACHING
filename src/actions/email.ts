@@ -738,3 +738,48 @@ export async function reintentarEmail(id: string): Promise<{ ok: true } | { erro
     return { error: msg }
   }
 }
+
+// ── Gmail API Actions ────────────────────────────────────────────────────────
+
+import {
+  listarLabels,
+  listarThreads,
+  leerThread,
+  modificarThread,
+  eliminarThread,
+} from '@/features/email/services/gmail'
+export async function listarLabelsGmail(): Promise<import('@/features/email/types').GmailLabel[]> {
+  return listarLabels()
+}
+
+export async function listarThreadsGmail(labelId = 'INBOX', q?: string, pageToken?: string, maxResults?: number) {
+  return listarThreads(labelId, q, pageToken, maxResults)
+}
+
+export async function leerThreadGmail(threadId: string): Promise<import('@/features/email/types').GmailMessage[]> {
+  return leerThread(threadId)
+}
+
+export async function archivarThread(threadId: string): Promise<void> {
+  await modificarThread(threadId, [], ['INBOX'])
+}
+
+export async function toggleLeidoThread(threadId: string, markAsRead: boolean): Promise<void> {
+  if (markAsRead) {
+    await modificarThread(threadId, [], ['UNREAD'])
+  } else {
+    await modificarThread(threadId, ['UNREAD'], [])
+  }
+}
+
+export async function eliminarThreadGmail(threadId: string): Promise<void> {
+  await eliminarThread(threadId)
+}
+
+export async function etiquetarThread(threadId: string, addLabelIds: string[], removeLabelIds: string[]): Promise<void> {
+  await modificarThread(threadId, addLabelIds, removeLabelIds)
+}
+
+export async function buscarThreadsGmail(q: string) {
+  return listarThreads('', q)
+}

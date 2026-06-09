@@ -1,5 +1,7 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import CalendarWidget from '@/features/dashboard/components/CalendarWidget'
+import { getCalendarEvents } from '@/actions/google-calendar'
 
 export const metadata = {
   title: 'Panel — Henkoaching',
@@ -14,6 +16,7 @@ export default async function DashboardPage() {
   desdeSemana.setDate(desdeSemana.getDate() - 7)
 
   const [
+    calendarEvents,
     { count: leadsPendientes },
     { count: clientesActivos },
     { count: solicitudesNuevas },
@@ -21,6 +24,7 @@ export default async function DashboardPage() {
     { data: ultimasSolicitudes },
     { data: ultimasLeads },
   ] = await Promise.all([
+    getCalendarEvents(),
     supabase
       .from('leads')
       .select('id', { count: 'exact', head: true })
@@ -187,6 +191,12 @@ export default async function DashboardPage() {
         </div>
 
       </div>
+
+      {/* Calendario */}
+      <div className="mt-5">
+        <CalendarWidget initial={calendarEvents} />
+      </div>
+
     </div>
   )
 }

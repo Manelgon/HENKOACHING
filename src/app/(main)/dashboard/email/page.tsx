@@ -29,10 +29,15 @@ export default async function EmailPage() {
   return (
     <div className="w-full">
       <div className="mb-6 md:mb-8">
-        <h1 className="font-roxborough text-2xl md:text-3xl text-gray-900 mb-1.5">Email</h1>
-        <p className="font-raleway text-gray-500 font-light text-sm">
-          Gestiona tu bandeja de entrada y envía emails desde el panel.
-        </p>
+        <h1 className="font-roxborough text-2xl md:text-3xl text-gray-900 mb-2">Email</h1>
+        <div className="flex items-center gap-2 flex-wrap">
+          <span style={{background:'#eff6ff',border:'1px solid #bfdbfe',color:'#3b82f6',fontSize:'10px',fontWeight:700,padding:'3px 10px',borderRadius:'999px',letterSpacing:'0.05em',textTransform:'uppercase',fontFamily:'Raleway,sans-serif'}}>
+            📨 Gmail — lectura
+          </span>
+          <span style={{background:'#f0fdfb',border:'1px solid #99f6e4',color:'#0d9488',fontSize:'10px',fontWeight:700,padding:'3px 10px',borderRadius:'999px',letterSpacing:'0.05em',textTransform:'uppercase',fontFamily:'Raleway,sans-serif'}}>
+            📤 SMTP — envío
+          </span>
+        </div>
       </div>
 
       {!hasImapConfig ? (
