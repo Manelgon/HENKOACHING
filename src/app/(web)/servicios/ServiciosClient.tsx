@@ -207,9 +207,12 @@ export default function ServiciosClient() {
           <div>
             <p data-animate className="font-raleway font-bold text-henko-turquoise tracking-[0.18em] uppercase text-[11px] mb-4">Cómo nos adaptamos</p>
             <h2 data-animate data-delay="100" className="font-roxborough text-2xl md:text-4xl text-gray-900 mb-6 leading-tight">¿Cómo nos adaptamos?</h2>
-            <p data-animate data-delay="200" className="text-base md:text-[15px] leading-[1.85] text-gray-600">
+            <p data-animate data-delay="200" className="text-base md:text-[15px] leading-[1.85] text-gray-600 mb-8">
               En función del servicio que necesites y del caso concreto de tu empresa, adaptamos el tiempo online y/o presencial para conseguir el objetivo planteado. Puede ser:
             </p>
+            <Link data-animate data-delay="300" href="/contacto" className="inline-flex items-center gap-2 bg-henko-turquoise text-white px-7 py-3 rounded-full text-sm font-semibold tracking-wide hover:bg-henko-turquoise/90 transition-all duration-200">
+              Hablemos →
+            </Link>
           </div>
           <div className="divide-y divide-[#DDD8CE]">
             {FORMATOS_ITEMS.map((item, i) => (
@@ -304,7 +307,7 @@ export default function ServiciosClient() {
             ¿Por dónde <em className="italic font-light">empezamos?</em>
           </h2>
           <p data-animate data-delay="100" className="font-roxborough italic text-lg md:text-xl text-white/90 mb-10">
-            Primera consulta gratuita de 45 minutos. Sin compromiso.
+            Primera consulta gratuita de 20 minutos. Sin compromiso.
           </p>
           <Link
             data-animate

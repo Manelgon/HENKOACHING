@@ -181,19 +181,11 @@ export default async function Home() {
       {/* SERVICIOS */}
       <section className="bg-white py-24 md:py-28 px-6 md:px-12">
         <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row md:justify-between md:items-end mb-14 gap-6">
-            <div>
-              <p className="font-raleway font-bold text-henko-turquoise tracking-[0.18em] uppercase text-[11px] mb-4">Servicios</p>
-              <h2 data-animate className="font-roxborough text-3xl md:text-4xl text-gray-900 leading-tight">
-                Tres formas de <em className="italic text-henko-turquoise font-light">acompañar tu organización</em>
-              </h2>
-            </div>
-            <Link
-              href="/servicios"
-              className="inline-flex items-center gap-2 bg-transparent border-2 border-henko-turquoise text-henko-turquoise px-7 py-3 rounded-full text-sm font-semibold tracking-wide hover:bg-henko-turquoise hover:text-white transition-all duration-200 self-start md:self-auto"
-            >
-              Ver todos →
-            </Link>
+          <div className="mb-14">
+            <p className="font-raleway font-bold text-henko-turquoise tracking-[0.18em] uppercase text-[11px] mb-4">Servicios</p>
+            <h2 data-animate className="font-roxborough text-3xl md:text-4xl text-gray-900 leading-tight">
+              Tres formas de <em className="italic text-henko-turquoise font-light">acompañar tu organización</em>
+            </h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -224,9 +216,17 @@ export default async function Home() {
             ))}
           </div>
 
-          <p className="mt-7 text-sm text-gray-500 italic leading-relaxed max-w-2xl">
-            Puedes trabajar de forma específica en una sola área o integrar las tres disciplinas de manera transversal según la fase en la que se encuentre tu empresa.
-          </p>
+          <div className="mt-7 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+            <p className="text-sm text-gray-500 italic leading-relaxed max-w-2xl">
+              Puedes trabajar de forma específica en una sola área o integrar las tres disciplinas de manera transversal según la fase en la que se encuentre tu empresa.
+            </p>
+            <Link
+              href="/servicios"
+              className="inline-flex items-center gap-2 bg-transparent border-2 border-henko-turquoise text-henko-turquoise px-7 py-3 rounded-full text-sm font-semibold tracking-wide hover:bg-henko-turquoise hover:text-white transition-all duration-200 self-start md:self-auto whitespace-nowrap"
+            >
+              Ver todos →
+            </Link>
+          </div>
         </div>
       </section>
 

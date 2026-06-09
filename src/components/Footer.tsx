@@ -9,10 +9,7 @@ export default function Footer() {
           {/* Brand */}
           <div className="md:col-span-5">
             <p className="font-raleway tracking-widest uppercase text-sm font-bold mb-2">HENKOACHING</p>
-            <p className="text-gray-500 text-xs tracking-[0.2em] font-raleway mb-4 uppercase">coaching & mindfulness</p>
-            <p className="text-gray-700 text-sm font-raleway leading-relaxed max-w-xs">
-              Orden para tu empresa, tu liderazgo y tu mente.
-            </p>
+            <p className="text-henko-turquoise text-xs tracking-[0.2em] font-raleway mb-4 uppercase">Orden · Liderazgo · Equipos</p>
           </div>
 
           {/* Links */}

@@ -87,9 +87,17 @@ export default async function SobreMiPage() {
             <p data-animate="right" data-delay="400" className="text-[15px] leading-[1.85] text-gray-600 mb-5">
               Mi trabajo combina la consultoría estratégica con el coaching consciente. Porque el cambio real no es solo de procesos — es de personas.
             </p>
-            <p data-animate="right" data-delay="500" className="text-[15px] leading-[1.85] text-gray-600">
+            <p data-animate="right" data-delay="500" className="text-[15px] leading-[1.85] text-gray-600 mb-8">
               Soy también instructora de meditación y creo firmemente que el bienestar individual y la salud organizativa van de la mano. Cuando una empresa funciona bien, las personas que la forman también.
             </p>
+            <Link
+              data-animate="right"
+              data-delay="600"
+              href="/contacto"
+              className="inline-flex items-center gap-2 bg-henko-turquoise text-white px-7 py-3 rounded-full text-sm font-semibold tracking-wide hover:bg-henko-turquoise/90 transition-all duration-200"
+            >
+              Hablemos →
+            </Link>
           </div>
         </div>
       </section>
