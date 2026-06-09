@@ -13,22 +13,30 @@ type ListState = {
   newDue: string
 }
 
+type InitialGroup = { list: TaskList; tasks: Task[] }
+
 type Props = {
   onTasksChange: (tasks: Task[]) => void
+  initialGroups?: InitialGroup[]
 }
 
-export default function TasksPanel({ onTasksChange }: Props) {
-  const [groups, setGroups] = useState<ListState[]>([])
+export default function TasksPanel({ onTasksChange, initialGroups = [] }: Props) {
+  const [groups, setGroups] = useState<ListState[]>(
+    initialGroups.map(g => ({ list: g.list, tasks: g.tasks, loading: false, creating: false, newTitle: '', newDue: '' }))
+  )
   const [creatingList, setCreatingList] = useState(false)
   const [newListTitle, setNewListTitle] = useState('')
   const [savingList, setSavingList] = useState(false)
 
   useEffect(() => {
+    if (initialGroups.length > 0) {
+      onTasksChange(initialGroups.flatMap(g => g.tasks))
+      return
+    }
     getTaskLists()
       .then(lists => {
         const initial = lists.map(list => ({ list, tasks: [], loading: true, creating: false, newTitle: '', newDue: '' }))
         setGroups(initial)
-        // Cargar tareas de cada lista en paralelo
         lists.forEach((list, i) => {
           getTasks(list.id)
             .then(tasks => {

@@ -26,9 +26,12 @@ const VIEWS = [
   { value: 'timeGridFourDay', label: '4 días',  key: '4' },
 ]
 
-type Props = { initialEvents: CalendarEvent[]; initialCalendars?: CalendarMeta[] }
+import type { TaskList, Task } from '@/actions/google-tasks'
 
-export default function CalendarioView({ initialEvents, initialCalendars = [] }: Props) {
+type TaskGroup = { list: TaskList; tasks: Task[] }
+type Props = { initialEvents: CalendarEvent[]; initialCalendars?: CalendarMeta[]; initialTaskGroups?: TaskGroup[] }
+
+export default function CalendarioView({ initialEvents, initialCalendars = [], initialTaskGroups = [] }: Props) {
   const cal = useCalendario(initialEvents)
   const [loadingRange, setLoadingRange] = useState(false)
   const [currentView, setCurrentView] = useState('dayGridMonth')
@@ -443,7 +446,7 @@ export default function CalendarioView({ initialEvents, initialCalendars = [] }:
 
       {/* Tareas */}
       <div className="border-t border-gray-100">
-        <TasksPanel onTasksChange={handleTasksChange} />
+        <TasksPanel onTasksChange={handleTasksChange} initialGroups={initialTaskGroups} />
       </div>
     </div>
   )
