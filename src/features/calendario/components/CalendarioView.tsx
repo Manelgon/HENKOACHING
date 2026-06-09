@@ -26,9 +26,9 @@ const VIEWS = [
   { value: 'timeGridFourDay', label: '4 días',  key: '4' },
 ]
 
-type Props = { initialEvents: CalendarEvent[] }
+type Props = { initialEvents: CalendarEvent[]; initialCalendars?: CalendarMeta[] }
 
-export default function CalendarioView({ initialEvents }: Props) {
+export default function CalendarioView({ initialEvents, initialCalendars = [] }: Props) {
   const cal = useCalendario(initialEvents)
   const [loadingRange, setLoadingRange] = useState(false)
   const [currentView, setCurrentView] = useState('dayGridMonth')
@@ -36,7 +36,7 @@ export default function CalendarioView({ initialEvents }: Props) {
   const [title, setTitle] = useState('')
   const [showWeekends, setShowWeekends] = useState(true)
   const [taskEvents, setTaskEvents] = useState<object[]>([])
-  const [calendars, setCalendars] = useState<CalendarMeta[]>([])
+  const [calendars, setCalendars] = useState<CalendarMeta[]>(initialCalendars)
   const [hiddenCals, setHiddenCals] = useState<Set<string>>(new Set())
   const [createOpen, setCreateOpen] = useState(false)
   const [showAgendas, setShowAgendas] = useState(false)
@@ -45,8 +45,10 @@ export default function CalendarioView({ initialEvents }: Props) {
   const calRef = useRef<FullCalendar>(null)
 
   useEffect(() => {
-    getCalendars().then(setCalendars).catch(() => {})
-  }, [])
+    if (initialCalendars.length === 0) {
+      getCalendars().then(setCalendars).catch(() => {})
+    }
+  }, [initialCalendars.length])
 
   const openAgendas = async () => {
     setCreateOpen(false)
