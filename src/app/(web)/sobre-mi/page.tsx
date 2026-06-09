@@ -35,9 +35,9 @@ export default async function SobreMiPage() {
 
       {/* Bio */}
       <section className="px-6 md:px-12 pt-10 pb-20 bg-white">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-20 items-center">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[5fr,7fr] gap-12 lg:gap-16 items-center">
           {/* Foto */}
-          <div data-animate="left" className="relative aspect-[4/5] rounded-[3rem] overflow-hidden bg-gradient-to-br from-henko-turquoise/[0.08] via-white to-henko-turquoise/[0.04] border border-henko-turquoise/15 flex items-center justify-center">
+          <div data-animate="left" className="relative aspect-square rounded-[3rem] overflow-hidden bg-gradient-to-br from-henko-turquoise/[0.08] via-white to-henko-turquoise/[0.04] border border-henko-turquoise/15 flex items-center justify-center">
             {sobreMiUrl ? (
               /* eslint-disable-next-line @next/next/no-img-element */
               <img
@@ -84,9 +84,54 @@ export default async function SobreMiPage() {
             <p data-animate="right" data-delay="300" className="text-[15px] leading-[1.85] text-gray-600 mb-5">
               Nací y crecí en Mallorca, y es desde aquí donde construí Henkoaching — tomando el concepto japonés de <em>henko</em> (cambio transformador) y la metáfora de la oruga que se convierte en mariposa.
             </p>
-            <p data-animate="right" data-delay="400" className="text-[15px] leading-[1.85] text-gray-600">
+            <p data-animate="right" data-delay="400" className="text-[15px] leading-[1.85] text-gray-600 mb-5">
               Mi trabajo combina la consultoría estratégica con el coaching consciente. Porque el cambio real no es solo de procesos — es de personas.
             </p>
+            <p data-animate="right" data-delay="500" className="text-[15px] leading-[1.85] text-gray-600">
+              Soy también instructora de meditación y creo firmemente que el bienestar individual y la salud organizativa van de la mano. Cuando una empresa funciona bien, las personas que la forman también.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Trayectoria */}
+      <section className="px-6 md:px-12 py-16 bg-[#f4f6f7] border-t border-gray-100">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-10">
+            <div>
+              <p data-animate className="font-raleway font-bold text-henko-turquoise tracking-[0.18em] uppercase text-[11px] mb-3">Trayectoria y formación</p>
+              <h2 data-animate data-delay="100" className="font-roxborough text-2xl md:text-3xl text-gray-900 leading-tight">
+                Un recorrido que <em className="italic text-henko-turquoise font-light">tiene sentido</em>
+              </h2>
+            </div>
+          </div>
+
+          {/* Timeline */}
+          <div className="space-y-3">
+            {[
+              { periodo: '2024 – hoy', titulo: 'Henkoaching', desc: 'Coach ejecutiva, instructora de meditación y consultora para CEOs y empresas en transformación. Mallorca como base, el cambio como método.', tag: 'Actualidad' },
+              { periodo: '2022 – 2023', titulo: 'Advanced Coaching Program · EAE', desc: 'EAE Business School. Coaching ejecutivo y de equipo. El paso que transformó mi forma de acompañar a líderes y equipos.', tag: 'Formación' },
+              { periodo: '2020 – 2024', titulo: 'RRHH, bienestar y operaciones', desc: 'De asistente de dirección a Employee Ambassador en Iberostar y Gerente de RRHH. Donde descubrí que las personas son la clave de todo.', tag: 'Experiencia' },
+              { periodo: '2010 – 2016', titulo: 'Administración de Empresas · UIB', desc: 'Universitat de les Illes Balears. Formación base en gestión y organización empresarial, con estancia internacional en Alemania (Paderborn, 2014).', tag: 'Formación' },
+              { periodo: '2014 – 2021', titulo: 'Administración y finanzas', desc: 'Contabilidad, tesorería y gestión administrativa. La base que me enseñó a leer una organización por dentro.', tag: 'Experiencia' },
+            ].map((item, idx) => (
+              <div
+                key={idx}
+                data-animate
+                data-delay={idx * 80}
+                className="group bg-white border border-henko-turquoise/15 rounded-[1.5rem] px-7 py-5 flex flex-col md:flex-row md:items-center gap-4 hover:border-henko-turquoise/35 hover:shadow-[0_8px_32px_rgba(31,143,155,0.07)] transition-all duration-300"
+              >
+                <div className="flex-shrink-0 flex items-center gap-4 md:w-48">
+                  <span className="font-raleway text-[10px] font-bold tracking-[0.15em] text-gray-400 uppercase">{item.periodo}</span>
+                  <span className={`hidden md:block text-[9px] font-bold tracking-widest uppercase px-2.5 py-1 rounded-full ${item.tag === 'Actualidad' ? 'bg-henko-turquoise text-white' : item.tag === 'Formación' ? 'bg-henko-turquoise/12 text-henko-turquoise border border-henko-turquoise/30' : 'bg-gray-100 text-gray-500'}`}>{item.tag}</span>
+                </div>
+                <div className="hidden md:block w-px h-8 bg-henko-turquoise/20 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="font-roxborough text-lg text-gray-900 leading-tight mb-1">{item.titulo}</p>
+                  <p className="text-[13.5px] leading-[1.7] text-gray-500">{item.desc}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -152,8 +197,7 @@ export default async function SobreMiPage() {
             <span className="block w-8 h-px bg-white/60" />
           </div>
           <h2 data-animate className="font-roxborough text-3xl md:text-5xl text-white mb-4 leading-[1.15]">
-            ¿Trabajamos<br />
-            <em className="italic font-light">juntos?</em>
+            ¿Trabajamos <em className="italic font-light">juntos?</em>
           </h2>
           <p data-animate data-delay="100" className="font-roxborough italic text-lg md:text-xl text-white/90 mb-10">
             Primera consulta gratuita de 45 minutos. Sin compromiso.
