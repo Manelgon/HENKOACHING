@@ -118,7 +118,7 @@ export default async function Home() {
                 key={i}
                 data-animate="scale"
                 data-delay={i * 100}
-                className="group relative bg-white rounded-[2.5rem] p-9 md:p-10 border border-henko-turquoise/15 shadow-sm hover:border-henko-turquoise/40 hover:shadow-[0_16px_48px_rgba(31,143,155,0.08)] hover:-translate-y-1 transition-all duration-300 overflow-hidden"
+                className="group relative bg-white rounded-[2.5rem] p-9 md:p-10 border border-henko-turquoise/15 shadow-sm hover:border-henko-turquoise/40 hover:shadow-[0_16px_48px_rgba(31,143,155,0.08)] hover:-translate-y-1 transition-all duration-300"
               >
                 <span
                   aria-hidden
@@ -197,7 +197,7 @@ export default async function Home() {
                 key={s.num}
                 data-animate="scale"
                 data-delay={i * 100}
-                className="group relative bg-white border border-henko-turquoise/15 rounded-[2.5rem] p-10 min-h-[280px] shadow-sm hover:border-henko-turquoise/40 hover:shadow-[0_16px_48px_rgba(31,143,155,0.08)] hover:-translate-y-1 transition-all duration-300 overflow-hidden"
+                className="group relative bg-white border border-henko-turquoise/15 rounded-[2.5rem] p-10 min-h-[280px] shadow-sm hover:border-henko-turquoise/40 hover:shadow-[0_16px_48px_rgba(31,143,155,0.08)] hover:-translate-y-1 transition-all duration-300"
               >
                 <span
                   aria-hidden
