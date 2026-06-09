@@ -57,14 +57,14 @@ export default async function Home() {
     <main className="overflow-hidden bg-white">
 
       {/* HERO */}
-      <section className="relative bg-[#F6F3EC] pt-[92px] px-6 md:px-12 overflow-hidden">
+      <section className="relative bg-white pt-[92px] px-6 md:px-12 overflow-hidden">
         <div className="relative z-10 max-w-[1400px] mx-auto pt-28 pb-14 grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-12 items-center">
 
           {/* Columna izquierda */}
           <div>
 
           {/* Kicker con líneas a los lados */}
-          <div className="flex items-center gap-[14px] mb-[22px]">
+          <div data-animate className="flex items-center gap-[14px] mb-[22px]">
             <span className="block w-[34px] h-[1.5px] bg-henko-turquoise opacity-50" />
             <p className="text-[13px] tracking-[0.2em] text-henko-turquoise font-bold uppercase font-raleway whitespace-nowrap">
               Orden · Liderazgo · Equipos
@@ -73,7 +73,7 @@ export default async function Home() {
           </div>
 
           {/* Titular tipográfico audaz */}
-          <h1 className="font-roxborough m-0" style={{fontSize: 'clamp(34px, 4.5vw, 68px)', lineHeight: 0.97, letterSpacing: '-0.025em'}}>
+          <h1 data-animate data-delay="100" className="font-roxborough m-0" style={{fontSize: 'clamp(34px, 4.5vw, 68px)', lineHeight: 0.97, letterSpacing: '-0.025em'}}>
             <span className="block italic font-light text-[#4C625F]" style={{fontSize: 'clamp(20px, 2.5vw, 36px)', letterSpacing: '-0.01em', marginBottom: 6, fontWeight: 300}}>
               Cuando una empresa crece o cambia,
             </span>
@@ -81,7 +81,7 @@ export default async function Home() {
             <span className="block">de ser opcional.</span>
           </h1>
 
-          <p className="font-raleway text-[17px] leading-[1.6] text-[#4C625F] mt-[20px]">
+          <p data-animate data-delay="200" className="font-raleway text-[17px] leading-[1.6] text-[#4C625F] mt-[20px]">
               Acompaño a CEOs y empresas en crecimiento a crear orden, claridad y estructura
               para liderar con calma y construir equipos más conscientes.
             </p>
@@ -89,7 +89,7 @@ export default async function Home() {
           </div>{/* fin columna izquierda */}
 
           {/* Columna derecha — logo */}
-          <div className="hidden lg:flex items-center justify-center">
+          <div data-animate="right" data-delay="150" className="hidden lg:flex items-center justify-center">
             <Image
               src="/henkologo.png"
               alt="Henkoaching"
@@ -100,7 +100,7 @@ export default async function Home() {
           </div>
 
           {/* Botones centrados entre columnas — fila completa */}
-          <div className="lg:col-span-2 flex gap-4 items-center justify-center pt-4">
+          <div data-animate data-delay="300" className="lg:col-span-2 flex gap-4 items-center justify-center pt-4">
             <Link
               href="/contacto"
               className="inline-flex items-center gap-2.5 bg-henko-turquoise text-white px-8 py-4 rounded-full text-[15.5px] font-semibold hover:bg-henko-turquoise-light hover:-translate-y-0.5 hover:shadow-[0_12px_28px_-12px_rgba(12,82,81,0.55)] transition-all duration-200 whitespace-nowrap"
@@ -119,43 +119,58 @@ export default async function Home() {
       </section>
 
       {/* SÍNTOMAS */}
-      <section className="bg-[#f4f6f7] py-24 md:py-28 px-6 md:px-12 border-t border-b border-gray-100">
-        <div className="max-w-7xl mx-auto">
+      <section className="bg-white py-24 md:py-28 px-6 md:px-12">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[5fr_7fr] gap-16 items-start">
 
-          <p className="font-raleway font-bold text-henko-turquoise tracking-[0.18em] uppercase text-[11px] mb-4">¿Te suena familiar?</p>
-          <h2 className="font-roxborough text-3xl md:text-4xl text-gray-900 mb-14 leading-tight">
-            Las señales de que<br />
-            <em className="italic text-henko-turquoise font-light">algo debe cambiar</em>
-          </h2>
+          {/* Columna izquierda */}
+          <div className="lg:sticky lg:top-32">
+            <div data-animate className="flex items-center gap-[14px] mb-5">
+              <span className="block w-[34px] h-[1.5px] bg-henko-turquoise opacity-50" />
+              <p className="text-[11px] tracking-[0.2em] text-henko-turquoise font-bold uppercase font-raleway whitespace-nowrap">
+                ¿Te suena familiar?
+              </p>
+              <span className="block w-[34px] h-[1.5px] bg-henko-turquoise opacity-50" />
+            </div>
 
-          {/* Lista de síntomas — layout tipo tabla */}
+            <h2 data-animate data-delay="100" className="font-roxborough text-[clamp(28px,3vw,44px)] text-gray-900 mb-6 leading-tight">
+              Las señales de que<br />
+              <em className="italic text-henko-turquoise font-light">algo debe cambiar</em>
+            </h2>
+
+            <p data-animate data-delay="200" className="font-raleway text-[15px] leading-[1.75] text-gray-600 mb-8">
+              No falta talento. No falta trabajo. Cuando aparecen estas señales, lo que falta es{' '}
+              <em className="italic text-henko-turquoise">orden, claridad y coherencia.</em>
+            </p>
+
+            <Link
+              data-animate
+              data-delay="300"
+              href="/contacto"
+              className="inline-flex items-center gap-2 bg-henko-turquoise text-white px-7 py-3.5 rounded-full text-[14.5px] font-semibold hover:bg-henko-turquoise-light hover:-translate-y-0.5 hover:shadow-[0_12px_28px_-12px_rgba(12,82,81,0.55)] transition-all duration-200"
+            >
+              Trabaja conmigo
+            </Link>
+          </div>
+
+          {/* Columna derecha — lista */}
           <div className="divide-y divide-[#DDD8CE]">
             {SYMPTOMS.map((s, i) => (
-              <div
-                key={i}
-                className="grid grid-cols-[40px_52px_0.6fr_2.8fr] gap-x-6 items-center py-7"
-              >
-                {/* Check icon */}
-                <div className="w-9 h-9 rounded-full bg-henko-turquoise/10 flex items-center justify-center flex-shrink-0">
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                    <path d="M2 7L5.5 10.5L12 3.5" stroke="#1F8F9B" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+              <div key={i} data-animate data-delay={i * 80} className="flex gap-4 py-6">
+                {/* Check icon relleno */}
+                <div className="w-7 h-7 rounded-full bg-henko-turquoise flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                    <path d="M2 6L4.8 9L10 3" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 </div>
 
-                {/* Número */}
-                <span className="font-roxborough italic text-[22px] text-gray-400 leading-none">
-                  0{i + 1}
-                </span>
-
-                {/* Título */}
-                <h3 className="font-raleway font-bold text-[15px] text-gray-900 leading-snug">
-                  {s.title}
-                </h3>
-
-                {/* Descripción */}
-                <p className="font-raleway text-[14px] leading-[1.7] text-gray-500">
-                  {s.desc}
-                </p>
+                <div>
+                  <h3 className="font-raleway font-bold text-[15px] text-gray-900 mb-1.5 leading-snug">
+                    {s.title}
+                  </h3>
+                  <p className="font-raleway text-[14px] leading-[1.7] text-gray-500">
+                    {s.desc}
+                  </p>
+                </div>
               </div>
             ))}
           </div>

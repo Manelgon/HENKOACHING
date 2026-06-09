@@ -33,12 +33,12 @@ const SERVICES: Service[] = [
 ]
 
 const AUDIENCE = [
-  { title: 'Empresas en crecimiento',    sub: 'Que necesitan estructura firme para escalar sin caer en el caos organizativo.' },
-  { title: 'Cambio generacional',         sub: 'Transiciones familiares o de liderazgo que requieren orden y claridad de roles desde el primer día.' },
-  { title: 'Transformación digital',      sub: 'Procesos operativos que deben evolucionar hacia lo digital sin que el equipo se quede atrás.' },
-  { title: 'Cambio cultural',             sub: 'Organizaciones que quieren renovar su forma de trabajar y comunicarse internamente.' },
-  { title: 'Equipos que crecieron rápido', sub: 'Equipos que escalaron muy rápido sin una base clara desde la que sostenerse.' },
-  { title: 'CEOs que quieren soltar',      sub: 'Líderes y fundadores que ya no quieren ni deben participar en la microgestión diaria.' },
+  { title: 'Empresas en crecimiento',    sub: 'Necesitan estructura para escalar sin caer en el caos organizativo.' },
+  { title: 'Cambio generacional',         sub: 'Transiciones de liderazgo que requieren orden y claridad de roles.' },
+  { title: 'Transformación digital',      sub: 'Procesos que deben evolucionar hacia lo digital sin perder al equipo.' },
+  { title: 'Cambio cultural',             sub: 'Quieren renovar su forma de trabajar y comunicarse internamente.' },
+  { title: 'Equipos que crecieron rápido', sub: 'Escalaron muy rápido y necesitan una base sólida desde la que sostenerse.' },
+  { title: 'CEOs que quieren soltar',      sub: 'Ya no quieren ni deben participar en la microgestión diaria.' },
 ]
 
 const STEPS: [string, string][] = [
@@ -125,41 +125,44 @@ export default function ServiciosClient() {
       </section>
 
       {/* Para quién */}
-      <section className="px-6 md:px-12 py-20 bg-gray-50">
+      <section className="px-6 md:px-12 py-20 bg-white">
         <div className="max-w-7xl mx-auto">
+
           <p data-animate className="font-raleway font-bold text-henko-turquoise tracking-[0.18em] uppercase text-[11px] mb-4">Para quién</p>
           <h2 data-animate data-delay="100" className="font-roxborough text-2xl md:text-4xl text-gray-900 mb-12 leading-tight">
-            Empresas en<br />
-            <em className="italic text-henko-turquoise font-light">momentos clave</em>
+            Empresas en <em className="italic text-henko-turquoise font-light">momentos clave</em>
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {AUDIENCE.map((a, i) => (
-              <div
-                key={i}
-                data-animate
-                data-delay={i * 80}
-                className="flex items-start gap-4 bg-white border border-henko-turquoise/15 rounded-[2rem] px-7 py-6 shadow-sm hover:border-henko-turquoise/40 hover:shadow-[0_16px_48px_rgba(31,143,155,0.06)] transition-all duration-300"
-              >
-                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-henko-turquoise flex items-center justify-center mt-0.5">
-                  <svg viewBox="0 0 12 12" fill="none" className="w-3 h-3" aria-hidden>
-                    <path d="M2 6l3 3 5-5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </span>
-                <div>
-                  <p className="font-roxborough text-base md:text-lg text-gray-900 leading-tight mb-1">{a.title}</p>
-                  <p className="text-[13.5px] text-gray-500 leading-relaxed">{a.sub}</p>
-                </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12">
+            {[AUDIENCE.slice(0, 3), AUDIENCE.slice(3)].map((col, ci) => (
+              <div key={ci} className="divide-y divide-[#DDD8CE]">
+                {col.map((a, i) => (
+                  <div key={i} data-animate data-delay={(ci * 3 + i) * 80} className="flex gap-4 py-6">
+                    <div className="flex-shrink-0 w-7 h-7 rounded-full bg-henko-turquoise flex items-center justify-center mt-0.5">
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                        <path d="M2 6L4.8 9L10 3" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="font-raleway font-bold text-[15px] text-gray-900 mb-1 leading-snug">{a.title}</p>
+                      <p className="font-raleway text-[14px] text-gray-500 leading-[1.7]">{a.sub}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
             ))}
           </div>
-          <div className="text-center mt-12">
+
+          <div className="mt-10">
             <Link
+              data-animate
               href="/contacto"
-              className="inline-flex items-center gap-2 bg-henko-turquoise text-white px-8 py-3.5 rounded-full text-sm font-semibold tracking-wide hover:bg-henko-turquoise-light hover:shadow-lg hover:shadow-henko-turquoise/30 transition-all duration-200"
+              className="inline-flex items-center gap-2 bg-henko-turquoise text-white px-7 py-3.5 rounded-full text-[14.5px] font-semibold hover:bg-henko-turquoise-light hover:-translate-y-0.5 hover:shadow-[0_12px_28px_-12px_rgba(12,82,81,0.55)] transition-all duration-200"
             >
-              Agenda una llamada de consulta →
+              Agenda una llamada →
             </Link>
           </div>
+
         </div>
       </section>
 
@@ -199,28 +202,26 @@ export default function ServiciosClient() {
       </section>
 
       {/* Cómo nos adaptamos */}
-      <section className="px-6 md:px-12 py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-            <div>
-              <p data-animate className="font-raleway font-bold text-henko-turquoise tracking-[0.18em] uppercase text-[11px] mb-4">Cómo nos adaptamos</p>
-              <h2 data-animate data-delay="100" className="font-roxborough text-2xl md:text-4xl text-gray-900 mb-8 leading-tight">¿Cómo nos adaptamos?</h2>
-              <p data-animate data-delay="200" className="text-base md:text-[15px] leading-[1.85] text-gray-600">
-                En función del servicio que necesites y del caso concreto de tu empresa, adaptamos el tiempo online y/o presencial para conseguir el objetivo planteado. Puede ser:
-              </p>
-            </div>
-            <ul className="flex flex-col gap-4 justify-center h-full">
-              {FORMATOS_ITEMS.map((item, i) => (
-                <li key={i} data-animate data-delay={i * 80} className="flex items-center gap-4">
-                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-henko-turquoise flex items-center justify-center">
-                    <svg viewBox="0 0 12 12" fill="none" className="w-3 h-3" aria-hidden>
-                      <path d="M2 6l3 3 5-5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </span>
-                  <span className="text-[15px] text-gray-700">{item}</span>
-                </li>
-              ))}
-            </ul>
+      <section className="px-6 md:px-12 py-20 bg-white">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[5fr_7fr] gap-16 items-start">
+          <div>
+            <p data-animate className="font-raleway font-bold text-henko-turquoise tracking-[0.18em] uppercase text-[11px] mb-4">Cómo nos adaptamos</p>
+            <h2 data-animate data-delay="100" className="font-roxborough text-2xl md:text-4xl text-gray-900 mb-6 leading-tight">¿Cómo nos adaptamos?</h2>
+            <p data-animate data-delay="200" className="text-base md:text-[15px] leading-[1.85] text-gray-600">
+              En función del servicio que necesites y del caso concreto de tu empresa, adaptamos el tiempo online y/o presencial para conseguir el objetivo planteado. Puede ser:
+            </p>
+          </div>
+          <div className="divide-y divide-[#DDD8CE]">
+            {FORMATOS_ITEMS.map((item, i) => (
+              <div key={i} data-animate data-delay={i * 80} className="flex items-center gap-4 py-5">
+                <div className="flex-shrink-0 w-7 h-7 rounded-full bg-henko-turquoise flex items-center justify-center">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                    <path d="M2 6L4.8 9L10 3" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <span className="font-raleway text-[15px] text-gray-700">{item}</span>
+              </div>
+            ))}
           </div>
         </div>
       </section>
