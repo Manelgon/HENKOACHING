@@ -1,6 +1,6 @@
 # PRP-001: Fusionar tabla `empresas` dentro de `clientes`
 
-> **Estado**: PENDIENTE
+> **Estado**: COMPLETADO (2026-06-10) — fusión aplicada en remoto el 2026-05-15 (migración `fusionar_empresas_en_clientes`); `schema.sql` sincronizado el 2026-06-10
 > **Fecha**: 2026-05-15
 > **Proyecto**: Henkoaching (Jennifer Cervera)
 

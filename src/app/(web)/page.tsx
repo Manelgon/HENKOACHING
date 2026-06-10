@@ -178,10 +178,6 @@ export default async function Home() {
 
       {/* FRASE DESTACADA — franja turquesa */}
       <section className="relative bg-henko-turquoise py-24 md:py-28 px-6 md:px-12 text-center overflow-hidden">
-        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="blob-1 absolute -top-32 -left-32 w-[480px] h-[480px] bg-white/[0.08]" />
-          <div className="blob-2 absolute -bottom-40 -right-32 w-[520px] h-[520px] bg-white/[0.06]" />
-        </div>
         <span
           aria-hidden
           className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 font-roxborough italic text-[16rem] md:text-[22rem] leading-none text-white/[0.07] select-none"

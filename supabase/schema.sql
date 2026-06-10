@@ -64,6 +64,10 @@ do $$ begin
 exception when duplicate_object then null; end $$;
 
 do $$ begin
+  create type tipo_cliente as enum ('particular', 'empresa');
+exception when duplicate_object then null; end $$;
+
+do $$ begin
   create type tarifa_tipo as enum ('mensual', 'proyecto', 'sesion');
 exception when duplicate_object then null; end $$;
 
@@ -245,31 +249,21 @@ create unique index if not exists idx_cvs_principal_unico
 
 
 -- =============================================================================
--- 7. EMPRESAS + OFERTAS
+-- 7. OFERTAS
 -- =============================================================================
-
-create table if not exists public.empresas (
-  id uuid primary key default uuid_generate_v4(),
-  slug text unique not null,
-  nombre text not null,
-  descripcion text,
-  logo_url text,
-  web_url text,
-  ubicacion text,
-  -- Si en el futuro las empresas tienen login propio, se llena este campo
-  owner_user_id uuid references public.profiles(id) on delete set null,
-  created_at timestamptz default now(),
-  updated_at timestamptz default now(),
-  deleted_at timestamptz
-);
-
-create index if not exists idx_empresas_owner on public.empresas(owner_user_id) where deleted_at is null;
+-- NOTA (migración 2026-05-15 "fusionar_empresas_en_clientes"): la tabla
+-- `empresas` se fusionó en `clientes` (sección 9c) con `tipo = 'empresa'`.
+-- Las ofertas referencian `clientes(id)` vía `cliente_id`. El FK se añade
+-- en la sección 9c (después de crear `clientes`) para mantener este archivo
+-- ejecutable de arriba a abajo. La lectura pública de datos de empresa se
+-- hace por la vista `empresas_publicas` (sección 9c).
 
 create table if not exists public.ofertas (
   id uuid primary key default uuid_generate_v4(),
   slug text unique not null,
   titulo text not null,
-  empresa_id uuid not null references public.empresas(id) on delete restrict,
+  -- FK a public.clientes(id) — se crea con ALTER en la sección 9c
+  cliente_id uuid not null,
   sector_id integer references public.sectores(id) on delete set null,
   modalidad_id integer references public.modalidades(id) on delete set null,
   jornada_id integer references public.jornadas(id) on delete set null,
@@ -290,12 +284,13 @@ create table if not exists public.ofertas (
 );
 
 create index if not exists idx_ofertas_estado on public.ofertas(estado) where deleted_at is null;
-create index if not exists idx_ofertas_empresa on public.ofertas(empresa_id);
+create index if not exists idx_ofertas_empresa on public.ofertas(cliente_id);
 create index if not exists idx_ofertas_sector on public.ofertas(sector_id);
 create index if not exists idx_ofertas_publicacion on public.ofertas(fecha_publicacion desc) where deleted_at is null;
 
 -- Computed: oferta visible públicamente
-create or replace view public.ofertas_publicadas as
+create or replace view public.ofertas_publicadas
+  with (security_invoker = on) as
   select * from public.ofertas
   where deleted_at is null
     and estado = 'publicada'
@@ -389,22 +384,37 @@ create index if not exists idx_lead_notas_lead on public.lead_notas(lead_id, cre
 
 
 -- =============================================================================
--- 9c. CLIENTES (lead convertido o cliente manual)
+-- 9c. CLIENTES (lead convertido, cliente manual o empresa del portal de empleo)
 -- =============================================================================
+-- Tras la fusión de `empresas` (2026-05-15), esta tabla guarda tanto
+-- particulares como empresas (`tipo = 'empresa'`). Los campos slug/logo_url/
+-- descripcion/ubicacion solo se usan para empresas; `owner_user_id` enlaza
+-- con el usuario del panel /empresa/* (rol 'empresa').
 create table if not exists public.clientes (
   id uuid primary key default uuid_generate_v4(),
   -- Origen: si viene de un lead, referencia (nullable si es manual)
   lead_id uuid references public.leads(id) on delete set null,
 
-  -- Datos contacto
+  -- Tipo de cliente
+  tipo tipo_cliente not null default 'particular',
+
+  -- Datos contacto (email nullable: las empresas pueden no tenerlo)
   nombre text not null,
-  email text not null,
+  email text,
   telefono text,
 
   -- Datos fiscales
   empresa text,
   nif_cif text,
   direccion_fiscal text,
+
+  -- Datos de empresa (portal de empleo; null para particulares)
+  slug text,
+  logo_url text,
+  descripcion text,
+  ubicacion text,
+  -- Usuario con rol 'empresa' dueño del panel /empresa/*
+  owner_user_id uuid references public.profiles(id) on delete set null,
 
   -- Datos del servicio
   servicio_contratado servicio_contratado,
@@ -434,6 +444,27 @@ create table if not exists public.clientes (
 create index if not exists idx_clientes_estado on public.clientes(estado) where deleted_at is null;
 create index if not exists idx_clientes_email on public.clientes(email);
 create index if not exists idx_clientes_lead on public.clientes(lead_id);
+create index if not exists idx_clientes_tipo on public.clientes(tipo) where deleted_at is null;
+create index if not exists idx_clientes_owner_user_id on public.clientes(owner_user_id);
+create unique index if not exists clientes_slug_unique
+  on public.clientes(slug) where slug is not null and deleted_at is null;
+
+-- FK de ofertas → clientes (declarado aquí porque `ofertas` se crea antes;
+-- ver nota en la sección 7)
+do $$ begin
+  alter table public.ofertas
+    add constraint ofertas_cliente_id_fkey
+    foreign key (cliente_id) references public.clientes(id) on delete restrict;
+exception when duplicate_object then null; end $$;
+
+-- Vista pública con SOLO los campos de empresa visibles en /empleo.
+-- security_invoker: la lectura pasa por las policies de `clientes`
+-- ("anon/authenticated leen empresas públicas").
+create or replace view public.empresas_publicas
+  with (security_invoker = on) as
+  select id, slug, nombre, logo_url, web_url, descripcion, ubicacion, created_at
+  from public.clientes
+  where tipo = 'empresa' and deleted_at is null;
 
 
 -- Notas sobre un cliente (todos los recruiters ven todas)
@@ -564,7 +595,8 @@ create table if not exists public.blog_post_tags (
 create index if not exists idx_post_tags_tag on public.blog_post_tags(tag_id);
 
 -- View: posts publicados (uso público)
-create or replace view public.blog_posts_publicados as
+create or replace view public.blog_posts_publicados
+  with (security_invoker = on) as
   select * from public.blog_posts
   where deleted_at is null
     and estado = 'publicado'
@@ -637,6 +669,18 @@ as $$
   );
 $$;
 
+create or replace function public.is_empresa()
+returns boolean
+language sql
+security definer
+stable
+as $$
+  select exists (
+    select 1 from public.profiles
+    where id = auth.uid() and role = 'empresa'
+  );
+$$;
+
 create or replace function public.is_candidato()
 returns boolean
 language sql
@@ -666,7 +710,7 @@ declare
   t text;
   tablas text[] := array[
     'profiles', 'candidato_profiles', 'candidato_experiencias', 'candidato_educacion',
-    'empresas', 'ofertas', 'solicitudes', 'solicitud_notas',
+    'ofertas', 'solicitudes', 'solicitud_notas',
     'leads', 'lead_notas', 'clientes', 'cliente_notas', 'cliente_sesiones',
     'blog_posts'
   ];
@@ -735,7 +779,6 @@ alter table public.candidato_experiencias enable row level security;
 alter table public.candidato_educacion enable row level security;
 alter table public.candidato_idiomas enable row level security;
 alter table public.cvs enable row level security;
-alter table public.empresas enable row level security;
 alter table public.ofertas enable row level security;
 alter table public.solicitudes enable row level security;
 alter table public.solicitud_eventos enable row level security;
@@ -819,15 +862,6 @@ drop policy if exists "CVs: recruiter lee" on public.cvs;
 create policy "CVs: recruiter lee" on public.cvs
   for select using (public.is_recruiter());
 
--- ----- EMPRESAS -----
-drop policy if exists "Empresas: lectura pública" on public.empresas;
-create policy "Empresas: lectura pública" on public.empresas
-  for select using (deleted_at is null);
-
-drop policy if exists "Empresas: admin escribe" on public.empresas;
-create policy "Empresas: admin escribe" on public.empresas
-  for all using (public.is_recruiter()) with check (public.is_recruiter());
-
 -- ----- OFERTAS -----
 drop policy if exists "Ofertas: lectura pública si publicada" on public.ofertas;
 create policy "Ofertas: lectura pública si publicada" on public.ofertas
@@ -846,6 +880,16 @@ drop policy if exists "Ofertas: recruiter escribe" on public.ofertas;
 create policy "Ofertas: recruiter escribe" on public.ofertas
   for all using (public.is_recruiter()) with check (public.is_recruiter());
 
+-- Panel /empresa/*: una empresa ve sus propias ofertas (cualquier estado)
+drop policy if exists "Ofertas: empresa ve las suyas" on public.ofertas;
+create policy "Ofertas: empresa ve las suyas" on public.ofertas
+  for select using (
+    public.is_empresa()
+    and cliente_id in (
+      select id from public.clientes where owner_user_id = auth.uid()
+    )
+  );
+
 -- ----- SOLICITUDES -----
 drop policy if exists "Solicitudes: candidato ve las suyas" on public.solicitudes;
 create policy "Solicitudes: candidato ve las suyas" on public.solicitudes
@@ -862,6 +906,19 @@ create policy "Solicitudes: recruiter ve todas" on public.solicitudes
 drop policy if exists "Solicitudes: recruiter actualiza" on public.solicitudes;
 create policy "Solicitudes: recruiter actualiza" on public.solicitudes
   for update using (public.is_recruiter());
+
+-- Panel /empresa/*: una empresa ve las solicitudes de sus ofertas
+drop policy if exists "Solicitudes: empresa ve las suyas" on public.solicitudes;
+create policy "Solicitudes: empresa ve las suyas" on public.solicitudes
+  for select using (
+    public.is_empresa()
+    and oferta_id in (
+      select o.id
+      from public.ofertas o
+      join public.clientes c on c.id = o.cliente_id
+      where c.owner_user_id = auth.uid()
+    )
+  );
 
 -- ----- SOLICITUD_EVENTOS -----
 drop policy if exists "Eventos: candidato ve los suyos" on public.solicitud_eventos;
@@ -898,6 +955,29 @@ drop policy if exists "Clientes: recruiter all" on public.clientes;
 create policy "Clientes: recruiter all" on public.clientes
   for all using (public.is_recruiter()) with check (public.is_recruiter());
 
+-- Bolsa de empleo pública: cualquiera lee los datos de empresa no borrada.
+-- La exposición de columnas se limita con la vista `empresas_publicas`
+-- (security_invoker), que es lo que consume /empleo.
+drop policy if exists "Clientes: anon lee empresas públicas" on public.clientes;
+create policy "Clientes: anon lee empresas públicas" on public.clientes
+  for select to anon
+  using (tipo = 'empresa' and deleted_at is null);
+
+drop policy if exists "Clientes: authenticated lee empresas públicas" on public.clientes;
+create policy "Clientes: authenticated lee empresas públicas" on public.clientes
+  for select to authenticated
+  using (tipo = 'empresa' and deleted_at is null);
+
+-- Panel /empresa/*: la empresa ve y actualiza SU ficha de cliente
+drop policy if exists "Clientes: empresa ve el suyo" on public.clientes;
+create policy "Clientes: empresa ve el suyo" on public.clientes
+  for select using (owner_user_id = auth.uid() and public.is_empresa());
+
+drop policy if exists "Clientes: empresa actualiza el suyo" on public.clientes;
+create policy "Clientes: empresa actualiza el suyo" on public.clientes
+  for update using (owner_user_id = auth.uid() and public.is_empresa())
+  with check (owner_user_id = auth.uid() and public.is_empresa());
+
 drop policy if exists "ClienteNotas: recruiter all" on public.cliente_notas;
 create policy "ClienteNotas: recruiter all" on public.cliente_notas
   for all using (public.is_recruiter()) with check (public.is_recruiter());
@@ -909,6 +989,16 @@ create policy "ClienteSesiones: recruiter all" on public.cliente_sesiones
 drop policy if exists "ClienteArchivos: recruiter all" on public.cliente_archivos;
 create policy "ClienteArchivos: recruiter all" on public.cliente_archivos
   for all using (public.is_recruiter()) with check (public.is_recruiter());
+
+-- Panel /empresa/*: la empresa ve los archivos de su ficha de cliente
+drop policy if exists "Cliente archivos: empresa ve los suyos" on public.cliente_archivos;
+create policy "Cliente archivos: empresa ve los suyos" on public.cliente_archivos
+  for select using (
+    public.is_empresa()
+    and cliente_id in (
+      select id from public.clientes where owner_user_id = auth.uid()
+    )
+  );
 
 -- ----- AUDIT_LOGS (solo admins leen; escritura vía service role) -----
 -- No definimos policy de INSERT: el helper logAction() usa service role,
@@ -1111,14 +1201,19 @@ insert into public.jornadas (slug, nombre, orden) values
   ('por-horas', 'Por horas', 3)
 on conflict (slug) do nothing;
 
--- ----- Empresas mock -----
-insert into public.empresas (slug, nombre, ubicacion) values
+-- ----- Empresas mock (clientes con tipo = 'empresa') -----
+insert into public.clientes (slug, nombre, ubicacion, tipo)
+select v.slug, v.nombre, v.ubicacion, 'empresa'::tipo_cliente
+from (values
   ('grupo-mediterraneo', 'Grupo Mediterráneo', 'Palma, Mallorca'),
   ('techmallorca', 'TechMallorca SL', 'Palma, Mallorca'),
   ('inmobiliaria-ruiz', 'Inmobiliaria Ruiz', 'Mallorca'),
   ('restaurantes-ona', 'Restaurantes Ona', 'Mallorca'),
   ('ferrer-e-hijos', 'Ferrer e Hijos', 'Inca, Mallorca')
-on conflict (slug) do nothing;
+) as v(slug, nombre, ubicacion)
+where not exists (
+  select 1 from public.clientes c where c.slug = v.slug and c.deleted_at is null
+);
 
 -- ----- Categorías de blog (ejemplo) -----
 insert into public.blog_categorias (slug, nombre, descripcion, orden) values

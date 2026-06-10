@@ -1,6 +1,6 @@
 # PRP-006: Panel de Empresa
 
-> **Estado**: PENDIENTE
+> **Estado**: COMPLETADO (2026-06-10) — RLS de empresa verificada en BD remota (migración `panel_empresa_owner_user_id_rls`, 2026-06-02); `schema.sql` sincronizado
 > **Fecha**: 2026-06-02
 > **Proyecto**: Henkoaching — Portal de Empleo
 

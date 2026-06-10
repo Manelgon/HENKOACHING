@@ -1,6 +1,6 @@
 # PRP-010: Rediseño Landing Henkoaching
 
-> **Estado**: PENDIENTE
+> **Estado**: COMPLETADO (2026-06-10) — último pendiente (blobs decorativos de la franja turquesa) eliminado
 > **Fecha**: 2026-06-08
 > **Proyecto**: Henkoaching (Jennifer Cervera)
 

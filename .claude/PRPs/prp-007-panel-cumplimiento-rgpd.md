@@ -1,8 +1,8 @@
 # PRP-007: Panel de Cumplimiento RGPD
 
-> **Estado**: CASI COMPLETADO (verificado en auditoría 2026-06-10)
+> **Estado**: COMPLETADO (código, 2026-06-10) — pendiente solo revisión humana
 > **Fecha**: 2026-06-04
-> **Cierre**: Infraestructura implementada — panel /dashboard/rgpd (RgpdDashboard.tsx), formulario público /legal/derechos-arco + tabla derechos_arco (migración 016), registro de consentimientos, purga de audit_logs en el cron, console.error sanitizados (2026-06-10). PENDIENTE solo contenido: redactar los documentos "Política IA", "Formación IA" y "Subencargados" en las tarjetas del panel.
+> **Cierre**: Infraestructura implementada — panel /dashboard/rgpd (RgpdDashboard.tsx), formulario público /legal/derechos-arco + tabla derechos_arco (migración 016), registro de consentimientos, purga de audit_logs en el cron, console.error sanitizados (2026-06-10). Contenido de los 7 documentos sembrado en BD (commits 447981c/313b747); las tarjetas quedan "Pendiente" a propósito hasta que Jennifer las revise y guarde en /dashboard/rgpd (eso fija actualizado_at). Falta de Jennifer: revisar/guardar las 7 tarjetas y poner la fecha en "Registro de formación en IA".
 > **Proyecto**: Henkoaching — Portal de Empleo + SaaS Coaching
 
 ---

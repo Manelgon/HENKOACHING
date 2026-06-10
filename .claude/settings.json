@@ -95,7 +95,13 @@
       "Read(//c/Users/manel/.claude/projects/c--Users-manel--000-Proyectos-DEV-005--Jennifer-Cervera---copia/memory/**)",
       "Bash(sed -n '102,115p;312,330p;352,360p;378,386p' src/actions/leads.ts)",
       "Bash(sed -n '60,68p;193,200p;243,250p;277,284p;312,319p;348,356p;374,382p;399,420p;436,455p;469,476p' src/actions/clientes.ts)",
-      "Bash(sed -n '202,212p' src/actions/solicitudes.ts)"
+      "Bash(sed -n '202,212p' src/actions/solicitudes.ts)",
+      "Bash(\"/c/Program Files/Google/Chrome/Application/chrome.exe\" --headless --disable-gpu --no-sandbox --print-to-pdf=\"C:\\\\\\\\Users\\\\\\\\manel\\\\\\\\.000.Proyectos.DEV\\\\\\\\005. Jennifer Cervera - copia\\\\\\\\docs\\\\\\\\cumplimiento\\\\\\\\2026-06-10 - DPA - Vercel Data Processing Addendum.pdf\" --virtual-time-budget=15000 \"https://vercel.com/legal/dpa\")",
+      "Bash(node scripts/seed-rgpd-docs.mjs --check)",
+      "Bash(node -e ' *)",
+      "Bash(node scripts/seed-rgpd-docs.mjs --write)",
+      "Bash(xargs grep -l \"QR\\\\|PDF\\\\|descarga\\\\|descargar\")",
+      "Bash(grep '^SUPABASE_ACCESS_TOKEN=' \"/c/Users/manel/.000.Proyectos.DEV/005. Jennifer Cervera - copia/.env.local\")"
     ],
     "additionalDirectories": [
       "c:\\Users\\manel\\.000.Proyectos.DEV\\005. Jennifer Cervera - copia"
