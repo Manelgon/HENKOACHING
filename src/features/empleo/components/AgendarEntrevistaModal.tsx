@@ -26,6 +26,10 @@ const DURACIONES = [
   { value: 90, label: '1 h 30 min' },
 ]
 
+// Tipos rápidos (presets). Rellenan el campo, pero sigue siendo editable.
+const TIPOS_CITA = ['Entrevista', '2ª entrevista', 'Llamada', 'Videollamada', 'Contratación', 'Reunión']
+const TIPOS_TAREA = ['Preparar entrevista', 'Revisar CV', 'Llamar al candidato', 'Enviar propuesta', 'Seguimiento']
+
 const pad = (n: number) => String(n).padStart(2, '0')
 const fmtLocal = (dt: Date) =>
   `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}:00`
@@ -115,6 +119,7 @@ export default function AgendarEntrevistaModal({ solicitud, onClose, onDone }: P
               placeholder="Entrevista, llamada, videollamada…"
               className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 font-raleway text-sm outline-none focus:border-henko-turquoise focus:bg-white transition-colors"
             />
+            <Chips items={TIPOS_CITA} onPick={t => setTitulo(`${t} con ${solicitud.candidato}`)} />
           </Field>
 
           <div className="grid grid-cols-2 gap-3">
@@ -181,6 +186,7 @@ export default function AgendarEntrevistaModal({ solicitud, onClose, onDone }: P
                     placeholder={`Preparar: ${titulo.trim() || 'cita'}`}
                     className="w-full px-3 py-2 rounded-lg border border-gray-200 bg-white font-raleway text-sm outline-none focus:border-henko-turquoise transition-colors"
                   />
+                  <Chips items={TIPOS_TAREA} onPick={t => setTareaTitulo(`${t} — ${solicitud.candidato}`)} />
                 </div>
                 <div>
                   <p className="text-[10px] tracking-[0.14em] text-henko-turquoise font-bold mb-1.5">LISTA</p>
@@ -217,6 +223,23 @@ export default function AgendarEntrevistaModal({ solicitud, onClose, onDone }: P
           </button>
         </div>
       </div>
+    </div>
+  )
+}
+
+function Chips({ items, onPick }: { items: string[]; onPick: (t: string) => void }) {
+  return (
+    <div className="flex flex-wrap gap-1.5 mt-2">
+      {items.map(t => (
+        <button
+          key={t}
+          type="button"
+          onClick={() => onPick(t)}
+          className="px-2.5 py-1 rounded-full text-[11px] font-medium text-gray-500 bg-gray-100 hover:bg-henko-turquoise/10 hover:text-henko-turquoise transition-colors"
+        >
+          {t}
+        </button>
+      ))}
     </div>
   )
 }
