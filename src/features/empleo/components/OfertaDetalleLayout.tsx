@@ -8,6 +8,7 @@ import { cambiarEstadoSolicitud, getCvUrl } from '@/actions/solicitudes'
 import { useAction, useConfirm } from '@/shared/feedback/FeedbackContext'
 import { TablePagination, usePagination } from '@/components/TablePagination'
 import CustomSelect from '@/shared/components/CustomSelect'
+import { useUrlState } from '@/shared/hooks/useUrlState'
 import type { EstadoSolicitud } from '@/lib/supabase/database.types'
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
@@ -110,7 +111,7 @@ export default function OfertaDetalleLayout({ oferta: initialOferta, solicitudes
 
   const [oferta, setOferta] = useState(initialOferta)
   const [solicitudes, setSolicitudes] = useState(initialSolicitudes)
-  const [activeTab, setActiveTab] = useState<Tab>('informacion')
+  const [activeTab, setActiveTab] = useUrlState<Tab>('tab', 'informacion', ['informacion', 'candidatos'])
   const [isEditing, setIsEditing] = useState(false)
   const [editError, setEditError] = useState<string | null>(null)
   const [draft, setDraft] = useState<Draft>(() => ofertaToDraft(initialOferta))

@@ -19,6 +19,7 @@ import AccionesMenu, { type AccionItem } from '@/shared/components/AccionesMenu'
 import AgendarCitaModal from '@/shared/components/AgendarCitaModal'
 import { CandidatoExperiencia, CandidatoEducacion, CandidatoIdiomas, CandidatoPreferencias } from './CandidatoExperiencia'
 import CandidatoSolicitudes from './CandidatoSolicitudes'
+import { useUrlState } from '@/shared/hooks/useUrlState'
 import type { CandidatoPerfil, NotaInterna } from '../types'
 
 const TIPOS_CITA_CANDIDATO = ['Entrevista', '2ª entrevista', 'Llamada', 'Videollamada', 'Contratación', 'Reunión']
@@ -38,7 +39,7 @@ export default function CandidatoDetalleLayout({ perfil, cvPrincipal, ofertas, o
   const runAction = useAction()
   const confirm = useConfirm()
 
-  const [activeTab, setActiveTab] = useState<Tab>('trayectoria')
+  const [activeTab, setActiveTab] = useUrlState<Tab>('tab', 'trayectoria', ['trayectoria', 'solicitudes', 'notas'])
   const [composeOpen, setComposeOpen] = useState(false)
   const [agendarOpen, setAgendarOpen] = useState(false)
   const [notas, setNotas] = useState<NotaInterna[]>(perfil.notas)

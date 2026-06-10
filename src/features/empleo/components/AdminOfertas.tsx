@@ -7,6 +7,7 @@ import { useAction, useConfirm } from '@/shared/feedback/FeedbackContext'
 import { TablePagination, usePagination } from '@/components/TablePagination'
 import CustomSelect from '@/shared/components/CustomSelect'
 import { useSortable } from '@/shared/hooks/useSortable'
+import { useUrlState } from '@/shared/hooks/useUrlState'
 import SortHeader from '@/shared/components/SortHeader'
 
 type Catalogo = { id: number; nombre: string; slug: string }
@@ -155,8 +156,8 @@ export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas,
   const confirm = useConfirm()
 
   // ── Filtros ──────────────────────────────────────────────────────────────
-  const [tabEstado, setTabEstado] = useState<TabOferta>('todos')
-  const [busqueda, setBusqueda] = useState('')
+  const [tabEstado, setTabEstado] = useUrlState<TabOferta>('estado', 'todos', TABS_OFERTA.map(t => t.value))
+  const [busqueda, setBusqueda] = useUrlState<string>('q', '')
 
   const counts = useMemo(() => {
     const c: Record<TabOferta, number> = { todos: ofertas.length, publicada: 0, borrador: 0, pausada: 0, cerrada: 0 }

@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
 import EmailConfigForm from './EmailConfigForm'
+import { useUrlState } from '@/shared/hooks/useUrlState'
 import BandejaInbox from './BandejaInbox'
 import type { EmailConfigPublic } from '@/actions/email'
 
@@ -12,7 +12,7 @@ type Props = {
 }
 
 export default function EmailPageClient({ config }: Props) {
-  const [tab, setTab] = useState<Tab>('bandeja')
+  const [tab, setTab] = useUrlState<Tab>('tab', 'bandeja', ['bandeja', 'config'])
 
   return (
     <div className="space-y-6">

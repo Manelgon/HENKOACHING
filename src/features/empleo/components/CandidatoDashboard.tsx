@@ -17,6 +17,7 @@ import { signout } from '@/actions/auth'
 import { getCvUrl, aplicarAOferta } from '@/actions/solicitudes'
 import { getOfertaDetalleAction } from '@/actions/ofertas'
 import type { EstadoSolicitud } from '@/lib/supabase/database.types'
+import { useUrlState } from '@/shared/hooks/useUrlState'
 
 type OfertaDetalleView = {
   id: string; slug: string; titulo: string; empresa: string; empresaOculta: boolean
@@ -138,7 +139,7 @@ function calcCompletion(data: CompletionData) {
 }
 
 export default function CandidatoDashboard({ perfil, completion, cv, solicitudes, ofertas, aplicadas, experiencias, educacion, idiomas, preferencias }: Props) {
-  const [tab, setTab] = useState<Tab>('panel')
+  const [tab, setTab] = useUrlState<Tab>('tab', 'panel', ['panel', 'empleos', 'solicitudes', 'perfil', 'trayectoria', 'preferencias'])
   const [open, setOpen] = useState(false)
   const iniciales = `${perfil.nombre[0] ?? ''}${perfil.apellidos[0] ?? ''}`.toUpperCase() || 'CD'
   const pct = calcCompletion(completion)

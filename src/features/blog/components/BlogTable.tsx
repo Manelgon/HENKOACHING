@@ -10,6 +10,7 @@ import type { EstadoPost, BlogPostListItem } from '../types'
 import { ESTADOS_BLOG, getEstadoMeta } from './estados'
 import CustomSelect from '@/shared/components/CustomSelect'
 import { useSortable } from '@/shared/hooks/useSortable'
+import { useUrlState } from '@/shared/hooks/useUrlState'
 import SortHeader from '@/shared/components/SortHeader'
 
 type Tab = EstadoPost
@@ -28,7 +29,7 @@ export default function BlogTable({ posts, categorias }: Props) {
   const router = useRouter()
   const runAction = useAction()
   const confirm = useConfirm()
-  const [tab, setTab] = useState<Tab>('borrador')
+  const [tab, setTab] = useUrlState<Tab>('estado', 'borrador', ESTADOS_BLOG.map(e => e.value))
   const [filtros, setFiltros] = useState<Filtros>({ categoria: 'todas', busqueda: '' })
 
   const tabsContainerRef = useRef<HTMLDivElement>(null)

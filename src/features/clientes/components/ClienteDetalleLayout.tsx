@@ -15,6 +15,7 @@ import {
 import { getOrigenLabel } from '@/features/leads/components/estados'
 import AccionesMenu, { type AccionItem } from '@/shared/components/AccionesMenu'
 import AgendarCitaModal from '@/shared/components/AgendarCitaModal'
+import { useUrlState } from '@/shared/hooks/useUrlState'
 import type { EstadoCliente } from '@/lib/supabase/database.types'
 
 const TIPOS_CITA_CLIENTE = ['Sesión de coaching', 'Reunión de seguimiento', 'Llamada', 'Videollamada', 'Revisión de progreso']
@@ -49,7 +50,7 @@ export default function ClienteDetalleLayout({ cliente, notas, archivos, factura
   const router = useRouter()
   const runAction = useAction()
   const confirm = useConfirm()
-  const [tab, setTab] = useState<Tab>('facturas')
+  const [tab, setTab] = useUrlState<Tab>('tab', 'facturas', TABS.map(t => t.id))
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [agendarOpen, setAgendarOpen] = useState(false)
   const [estadoOpen, setEstadoOpen] = useState(false)

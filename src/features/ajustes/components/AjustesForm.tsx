@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAction, useConfirm } from '@/shared/feedback/FeedbackContext'
 import { guardarAjustes, subirImagenEmisor, quitarImagenEmisor, type AjustesInput } from '@/actions/ajustes'
 import type { CompanySettings } from '@/lib/company-settings'
+import { useUrlState } from '@/shared/hooks/useUrlState'
 
 type Props = {
   settings: CompanySettings
@@ -29,7 +30,7 @@ export default function AjustesForm({ settings, logoUrl, firmaUrl, headerUrl, fo
   const router = useRouter()
   const runAction = useAction()
 
-  const [tab, setTab] = useState<TabKey>('fiscal')
+  const [tab, setTab] = useUrlState<TabKey>('tab', 'fiscal', TABS.map(t => t.key))
   const [editingFiscal, setEditingFiscal] = useState(false)
   const [editingFacturacion, setEditingFacturacion] = useState(false)
   const [datos, setDatos] = useState<AjustesInput>({

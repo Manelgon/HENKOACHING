@@ -10,6 +10,7 @@ import ConsentimientosTable from './ConsentimientosTable'
 import type { RgpdDocId, RgpdDocumento, DerechoArco } from '@/features/rgpd/types'
 import type { ConsentimientoRow } from '@/actions/rgpd'
 import CheckCircleIcon from '@/shared/components/icons/CheckCircleIcon'
+import { useUrlState } from '@/shared/hooks/useUrlState'
 
 type Tab = 'documentos' | 'solicitudes' | 'consentimientos'
 
@@ -239,7 +240,7 @@ export default function RgpdDashboard({
   ratFirmadoAt: string | null
 }) {
   const router = useRouter()
-  const [tab, setTab] = useState<Tab>('documentos')
+  const [tab, setTab] = useUrlState<Tab>('tab', 'documentos', ['documentos', 'solicitudes', 'consentimientos'])
   const [documentos, setDocumentos] = useState(initialDocumentos)
   const [docAbierto, setDocAbierto] = useState<RgpdDocId | null>(null)
 

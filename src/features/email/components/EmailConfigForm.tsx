@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAction } from '@/shared/feedback/FeedbackContext'
 import { guardarEmailConfig, type EmailConfigInput, type EmailConfigPublic } from '@/actions/email'
 import CustomSelect from '@/shared/components/CustomSelect'
+import { useUrlState } from '@/shared/hooks/useUrlState'
 
 type Tab = 'credenciales' | 'templates'
 
@@ -15,7 +16,7 @@ type Props = {
 export default function EmailConfigForm({ config }: Props) {
   const router = useRouter()
   const runAction = useAction()
-  const [activeTab, setActiveTab] = useState<Tab>('credenciales')
+  const [activeTab, setActiveTab] = useUrlState<Tab>('seccion', 'credenciales', ['credenciales', 'templates'])
   const [editingCredenciales, setEditingCredenciales] = useState(false)
   const [previewHtml, setPreviewHtml] = useState<string | null>(null)
 

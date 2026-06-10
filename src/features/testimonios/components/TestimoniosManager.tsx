@@ -13,6 +13,7 @@ import {
 } from '@/actions/testimonios'
 import type { Database } from '@/lib/supabase/database.types'
 import CustomSelect from '@/shared/components/CustomSelect'
+import { useUrlState } from '@/shared/hooks/useUrlState'
 
 type Testimonio = Database['public']['Tables']['testimonios']['Row']
 
@@ -64,7 +65,7 @@ export default function TestimoniosManager({ testimonios }: { testimonios: Testi
   const confirm = useConfirm()
   const [saving, setSaving] = useState(false)
 
-  const [tab, setTab] = useState<'all' | 'visibles' | 'ocultos'>('all')
+  const [tab, setTab] = useUrlState<'all' | 'visibles' | 'ocultos'>('tab', 'all', ['all', 'visibles', 'ocultos'])
   const [filtros, setFiltros] = useState<{ fuente: string | 'todas'; busqueda: string }>({
     fuente: 'todas',
     busqueda: '',
