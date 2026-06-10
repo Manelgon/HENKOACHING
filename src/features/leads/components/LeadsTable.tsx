@@ -13,6 +13,11 @@ import ConvertirClienteModal from './ConvertirClienteModal'
 import CustomSelect from '@/shared/components/CustomSelect'
 import { useSortable } from '@/shared/hooks/useSortable'
 import SortHeader from '@/shared/components/SortHeader'
+import AccionesMenu, { type AccionItem } from '@/shared/components/AccionesMenu'
+import AgendarCitaModal from '@/shared/components/AgendarCitaModal'
+
+const TIPOS_CITA_LEAD = ['Llamada', 'Videollamada', 'Reunión inicial', 'Sesión informativa', 'Seguimiento']
+const TIPOS_TAREA_LEAD = ['Llamar al lead', 'Enviar información', 'Enviar propuesta', 'Hacer seguimiento']
 
 export type LeadRow = {
   id: string
@@ -48,6 +53,7 @@ export default function LeadsTable({ leads }: { leads: LeadRow[] }) {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [showNew, setShowNew] = useState(false)
   const [convertirId, setConvertirId] = useState<string | null>(null)
+  const [agendarLead, setAgendarLead] = useState<LeadRow | null>(null)
   // Overrides optimistas mientras la server action está en vuelo
   const [overrides, setOverrides] = useState<Record<string, Partial<LeadRow>>>({})
 
@@ -229,6 +235,14 @@ export default function LeadsTable({ leads }: { leads: LeadRow[] }) {
     }
   }
 
+  function leadAcciones(l: LeadRow): AccionItem[] {
+    return [
+      { label: 'Agendar cita', onClick: () => setAgendarLead(l), iconPath: 'M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5' },
+      { label: 'Ver detalle', onClick: () => abrirDetalle(l), iconPath: 'M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z M15 12a3 3 0 11-6 0 3 3 0 016 0z' },
+      { label: 'Convertir a cliente', onClick: () => { setConvertirId(l.id); setSelectedId(null) }, iconPath: 'M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM3 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 019.374 21c-2.331 0-4.512-.645-6.374-1.766z', divider: true },
+    ]
+  }
+
   return (
     <>
       {/* Botón "+ Nuevo lead" — encima en móvil, integrado con tabs en desktop */}
@@ -341,9 +355,10 @@ export default function LeadsTable({ leads }: { leads: LeadRow[] }) {
             <div className="col-span-2">
               <SortHeader label="Origen" sortKey="origen" activeSortKey={sortKey} sortDir={sortDir} onSort={(k) => toggleSort(k as keyof LeadRow)} />
             </div>
-            <div className="col-span-2">
+            <div className="col-span-1">
               <SortHeader label="Fecha" sortKey="created_at" activeSortKey={sortKey} sortDir={sortDir} onSort={(k) => toggleSort(k as keyof LeadRow)} />
             </div>
+            <span className="col-span-1 font-raleway text-[10px] font-bold text-gray-400 uppercase tracking-widest self-center text-right">Acciones</span>
           </div>
 
           {pagination.paginated.map((l) => {
@@ -372,7 +387,12 @@ export default function LeadsTable({ leads }: { leads: LeadRow[] }) {
                   </span>
                   <span className="col-span-2 font-raleway text-xs text-gray-500 truncate">{getOrigenLabel(l.origen)}</span>
                   {tab !== 'archivados' ? (
-                    <span className="col-span-2 font-raleway text-xs text-gray-400">{fecha}</span>
+                    <>
+                      <span className="col-span-1 font-raleway text-xs text-gray-400">{fecha}</span>
+                      <span className="col-span-1 flex justify-end" onClick={(e) => e.stopPropagation()}>
+                        <AccionesMenu items={leadAcciones(l)} />
+                      </span>
+                    </>
                   ) : (
                     <span className="col-span-2 flex items-center gap-2">
                       <button
@@ -403,7 +423,10 @@ export default function LeadsTable({ leads }: { leads: LeadRow[] }) {
                       {!l.leido && <span className="inline-block w-2 h-2 rounded-full bg-henko-turquoise mr-2 flex-shrink-0" />}
                       <span className="truncate">{l.nombre}</span>
                     </p>
-                    <span className="font-raleway text-xs text-gray-400 flex-shrink-0">{fecha}</span>
+                    <div className="flex items-center gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                      <span className="font-raleway text-xs text-gray-400">{fecha}</span>
+                      {tab !== 'archivados' && <AccionesMenu items={leadAcciones(l)} />}
+                    </div>
                   </div>
                   <p className="font-raleway text-xs text-gray-500 truncate mb-2">{l.email}</p>
                   <div className="flex items-center gap-2 flex-wrap">
@@ -476,6 +499,17 @@ export default function LeadsTable({ leads }: { leads: LeadRow[] }) {
           lead={convertir}
           onClose={() => setConvertirId(null)}
           onConverted={() => { setConvertirId(null); router.refresh() }}
+        />
+      )}
+
+      {/* Modal agendar cita */}
+      {agendarLead && (
+        <AgendarCitaModal
+          recurso={{ tipo: 'lead', id: agendarLead.id, nombre: agendarLead.nombre, email: agendarLead.email, contexto: agendarLead.asunto ?? agendarLead.servicio_interes ?? undefined }}
+          tiposCita={TIPOS_CITA_LEAD}
+          tiposTarea={TIPOS_TAREA_LEAD}
+          onClose={() => setAgendarLead(null)}
+          onDone={() => setAgendarLead(null)}
         />
       )}
     </>

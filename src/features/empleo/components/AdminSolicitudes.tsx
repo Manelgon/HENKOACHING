@@ -12,7 +12,10 @@ import CustomSelect from '@/shared/components/CustomSelect'
 import { useSortable } from '@/shared/hooks/useSortable'
 import SortHeader from '@/shared/components/SortHeader'
 import AccionesDropdown from './AccionesDropdown'
-import AgendarEntrevistaModal from './AgendarEntrevistaModal'
+import AgendarCitaModal from '@/shared/components/AgendarCitaModal'
+
+const TIPOS_CITA_EMPLEO = ['Entrevista', '2ª entrevista', 'Llamada', 'Videollamada', 'Contratación', 'Reunión']
+const TIPOS_TAREA_EMPLEO = ['Preparar entrevista', 'Revisar CV', 'Llamar al candidato', 'Enviar propuesta', 'Seguimiento']
 
 const ESTADO_META: Record<EstadoSolicitud, { label: string; badge: string; dot: string }> = {
   nuevo:      { label: 'Nueva',       badge: 'bg-henko-greenblue text-henko-turquoise', dot: 'bg-henko-turquoise' },
@@ -486,10 +489,12 @@ export default function AdminSolicitudes({ solicitudes, ofertas }: Props) {
         </div>
       )}
 
-      {/* Modal agendar entrevista */}
+      {/* Modal agendar cita */}
       {agendarSol && (
-        <AgendarEntrevistaModal
-          solicitud={{ id: agendarSol.id, candidato: agendarSol.candidato, email: agendarSol.email, ofertaTitulo: agendarSol.ofertaTitulo }}
+        <AgendarCitaModal
+          recurso={{ tipo: 'solicitud', id: agendarSol.id, nombre: agendarSol.candidato, email: agendarSol.email, contexto: agendarSol.ofertaTitulo }}
+          tiposCita={TIPOS_CITA_EMPLEO}
+          tiposTarea={TIPOS_TAREA_EMPLEO}
           onClose={() => setAgendarSol(null)}
           onDone={() => setAgendarSol(null)}
         />

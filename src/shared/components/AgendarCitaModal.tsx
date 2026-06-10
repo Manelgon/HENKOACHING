@@ -1,20 +1,23 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { agendarCita } from '@/actions/solicitudes'
+import { agendarCita } from '@/actions/citas'
 import { getTaskLists, type TaskList } from '@/actions/google-tasks'
 import { useAction } from '@/shared/feedback/FeedbackContext'
 import CustomSelect from '@/shared/components/CustomSelect'
 
-type Solicitud = {
+export type AgendarCitaRecurso = {
+  tipo: 'solicitud' | 'lead' | 'cliente'
   id: string
-  candidato: string
-  email: string
-  ofertaTitulo: string
+  nombre: string
+  email?: string | null
+  contexto?: string // oferta, servicio, asunto… (subtítulo + descripción del evento)
 }
 
 type Props = {
-  solicitud: Solicitud
+  recurso: AgendarCitaRecurso
+  tiposCita: string[]
+  tiposTarea: string[]
   onClose: () => void
   onDone: () => void
 }
@@ -26,21 +29,20 @@ const DURACIONES = [
   { value: 90, label: '1 h 30 min' },
 ]
 
-// Tipos rápidos (presets). Rellenan el campo, pero sigue siendo editable.
-const TIPOS_CITA = ['Entrevista', '2ª entrevista', 'Llamada', 'Videollamada', 'Contratación', 'Reunión']
-const TIPOS_TAREA = ['Preparar entrevista', 'Revisar CV', 'Llamar al candidato', 'Enviar propuesta', 'Seguimiento']
-
 const pad = (n: number) => String(n).padStart(2, '0')
 const fmtLocal = (dt: Date) =>
   `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}:00`
 
-export default function AgendarEntrevistaModal({ solicitud, onClose, onDone }: Props) {
+const TIPO_OTRO = '__otro__'
+
+export default function AgendarCitaModal({ recurso, tiposCita, tiposTarea, onClose, onDone }: Props) {
   const runAction = useAction()
-  const [titulo, setTitulo] = useState(`Entrevista con ${solicitud.candidato}`)
+  const [tipo, setTipo] = useState(tiposCita[0] ?? TIPO_OTRO)
+  const [asunto, setAsunto] = useState(recurso.nombre)
   const [fecha, setFecha] = useState('')
   const [hora, setHora] = useState('10:00')
   const [duracion, setDuracion] = useState(45)
-  const [invitarCandidato, setInvitarCandidato] = useState(true)
+  const [invitar, setInvitar] = useState(true)
   const [crearTarea, setCrearTarea] = useState(false)
   const [tareaTitulo, setTareaTitulo] = useState('')
   const [taskListId, setTaskListId] = useState('')
@@ -65,23 +67,30 @@ export default function AgendarEntrevistaModal({ solicitud, onClose, onDone }: P
       .finally(() => setCargandoListas(false))
   }, [crearTarea, listas.length, cargandoListas])
 
+  // Título final del evento: "{Tipo} con {nombre}", o libre si el tipo es "Otro".
+  const tipoBase = tipo && tipo !== TIPO_OTRO ? tipo : ''
+  const tituloFinal = tipoBase
+    ? (asunto.trim() ? `${tipoBase} con ${asunto.trim()}` : tipoBase)
+    : asunto.trim()
+
   async function handleSubmit() {
-    if (!fecha || !hora || !titulo.trim()) return
+    if (!fecha || !hora || !tituloFinal) return
     const startDate = new Date(`${fecha}T${hora}:00`)
     const endDate = new Date(startDate.getTime() + duracion * 60000)
 
     setEnviando(true)
     const result = await runAction(
-      `Agendando: ${titulo.trim()}`,
+      `Agendando: ${tituloFinal}`,
       () => agendarCita({
-        solicitudId: solicitud.id,
-        titulo: titulo.trim(),
-        candidatoNombre: solicitud.candidato,
-        candidatoEmail: solicitud.email,
-        ofertaTitulo: solicitud.ofertaTitulo,
+        recursoTipo: recurso.tipo,
+        recursoId: recurso.id,
+        titulo: tituloFinal,
+        contactoNombre: recurso.nombre,
+        contactoEmail: recurso.email || undefined,
+        contexto: recurso.contexto || undefined,
         start: fmtLocal(startDate),
         end: fmtLocal(endDate),
-        invitarCandidato,
+        invitar,
         crearTarea,
         taskListId: crearTarea ? (taskListId || undefined) : undefined,
         tareaTitulo: crearTarea ? (tareaTitulo.trim() || undefined) : undefined,
@@ -92,7 +101,7 @@ export default function AgendarEntrevistaModal({ solicitud, onClose, onDone }: P
     if (result.ok) onDone()
   }
 
-  const sinEmail = !solicitud.email
+  const sinEmail = !recurso.email
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4" onClick={onClose}>
@@ -101,8 +110,8 @@ export default function AgendarEntrevistaModal({ solicitud, onClose, onDone }: P
         <div className="flex items-start justify-between px-7 pt-6 pb-4 border-b border-black/5">
           <div>
             <p className="text-[10px] tracking-[0.14em] text-henko-turquoise font-bold mb-1">AGENDAR CITA</p>
-            <p className="font-roxborough text-xl text-gray-900 leading-tight">{solicitud.candidato}</p>
-            {solicitud.ofertaTitulo && <p className="text-[11px] text-gray-400 mt-0.5">{solicitud.ofertaTitulo}</p>}
+            <p className="font-roxborough text-xl text-gray-900 leading-tight">{recurso.nombre}</p>
+            {recurso.contexto && <p className="text-[11px] text-gray-400 mt-0.5">{recurso.contexto}</p>}
           </div>
           <button type="button" onClick={onClose} className="w-9 h-9 rounded-full hover:bg-black/5 flex items-center justify-center text-gray-400 hover:text-gray-700 transition-colors">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" /></svg>
@@ -111,15 +120,26 @@ export default function AgendarEntrevistaModal({ solicitud, onClose, onDone }: P
 
         {/* Body */}
         <div className="px-7 py-6 space-y-5">
-          <Field label="ASUNTO">
+          <Field label="TIPO">
+            <CustomSelect
+              value={tipo}
+              onChange={setTipo}
+              options={[...tiposCita.map(t => ({ value: t, label: t })), { value: TIPO_OTRO, label: 'Otro (personalizado)' }]}
+              className="w-full"
+            />
+          </Field>
+
+          <Field label={tipo === TIPO_OTRO ? 'TÍTULO' : 'NOMBRE'}>
             <input
               type="text"
-              value={titulo}
-              onChange={e => setTitulo(e.target.value)}
-              placeholder="Entrevista, llamada, videollamada…"
+              value={asunto}
+              onChange={e => setAsunto(e.target.value)}
+              placeholder={tipo === TIPO_OTRO ? 'Escribe el título del evento…' : 'Nombre del contacto'}
               className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 font-raleway text-sm outline-none focus:border-henko-turquoise focus:bg-white transition-colors"
             />
-            <Chips items={TIPOS_CITA} onPick={t => setTitulo(`${t} con ${solicitud.candidato}`)} />
+            <p className="text-[11px] text-gray-400 mt-1.5">
+              Se creará: <span className="text-gray-700 font-medium">{tituloFinal || '—'}</span>
+            </p>
           </Field>
 
           <div className="grid grid-cols-2 gap-3">
@@ -162,11 +182,11 @@ export default function AgendarEntrevistaModal({ solicitud, onClose, onDone }: P
 
           <div className="space-y-2.5 pt-1">
             <Toggle
-              checked={invitarCandidato && !sinEmail}
+              checked={invitar && !sinEmail}
               disabled={sinEmail}
-              onChange={setInvitarCandidato}
-              label="Invitar al candidato + Google Meet"
-              hint={sinEmail ? 'Sin email del candidato' : solicitud.email}
+              onChange={setInvitar}
+              label="Invitar por email + Google Meet"
+              hint={sinEmail ? 'Sin email de contacto' : (recurso.email ?? '')}
             />
             <Toggle
               checked={crearTarea}
@@ -183,10 +203,10 @@ export default function AgendarEntrevistaModal({ solicitud, onClose, onDone }: P
                     type="text"
                     value={tareaTitulo}
                     onChange={e => setTareaTitulo(e.target.value)}
-                    placeholder={`Preparar: ${titulo.trim() || 'cita'}`}
+                    placeholder={`Preparar: ${tituloFinal || 'cita'}`}
                     className="w-full px-3 py-2 rounded-lg border border-gray-200 bg-white font-raleway text-sm outline-none focus:border-henko-turquoise transition-colors"
                   />
-                  <Chips items={TIPOS_TAREA} onPick={t => setTareaTitulo(`${t} — ${solicitud.candidato}`)} />
+                  <Chips items={tiposTarea} onPick={t => setTareaTitulo(`${t} — ${recurso.nombre}`)} />
                 </div>
                 <div>
                   <p className="text-[10px] tracking-[0.14em] text-henko-turquoise font-bold mb-1.5">LISTA</p>
@@ -216,7 +236,7 @@ export default function AgendarEntrevistaModal({ solicitud, onClose, onDone }: P
           <button
             type="button"
             onClick={handleSubmit}
-            disabled={!fecha || !hora || !titulo.trim() || enviando}
+            disabled={!fecha || !hora || !tituloFinal || enviando}
             className="inline-flex items-center gap-2 bg-henko-turquoise text-white px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-henko-turquoise-light hover:shadow-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {enviando ? 'Agendando…' : 'Agendar'}
@@ -228,6 +248,7 @@ export default function AgendarEntrevistaModal({ solicitud, onClose, onDone }: P
 }
 
 function Chips({ items, onPick }: { items: string[]; onPick: (t: string) => void }) {
+  if (!items.length) return null
   return (
     <div className="flex flex-wrap gap-1.5 mt-2">
       {items.map(t => (

@@ -1,15 +1,12 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { logAction } from '@/lib/audit/log-action'
 import { sendTransactional } from '@/lib/email/send'
 import { templateCandidaturaCandidato, templateCandidaturaAdmin } from '@/lib/email/templates/candidatura'
 import { templateEstadoSolicitud } from '@/lib/email/templates/estado-solicitud'
-import { createCalendarEvent } from '@/actions/google-calendar'
-import { getTaskLists, createTask } from '@/actions/google-tasks'
 import type { EstadoSolicitud } from '@/lib/supabase/database.types'
 
 const ESTADOS_CON_EMAIL: EstadoSolicitud[] = ['revisando', 'entrevista', 'contratado', 'descartado']
@@ -211,80 +208,4 @@ export async function getCvUrl(storagePath: string): Promise<{ url?: string; err
 
   if (error || !data) return { error: error?.message || 'No se pudo generar URL' }
   return { url: data.signedUrl }
-}
-
-// ─── Agendar cita ────────────────────────────────────────────────────────────
-// Crea un evento en Google Calendar (entrevista, llamada, videollamada, lo que
-// sea) y opcionalmente una tarea de seguimiento en Google Tasks.
-// NO cambia el estado de la solicitud: agendar es independiente del estado
-// (puede ser una 2ª entrevista, una llamada de contratación, etc.).
-const AgendarCitaSchema = z.object({
-  solicitudId: z.string().uuid(),
-  titulo: z.string().min(1, 'El asunto es requerido').max(200),
-  candidatoNombre: z.string().min(1),
-  candidatoEmail: z.string().email(),
-  ofertaTitulo: z.string().default(''),
-  start: z.string().min(1), // local naive "YYYY-MM-DDTHH:mm:ss" (Europe/Madrid)
-  end: z.string().min(1),
-  invitarCandidato: z.boolean(),
-  crearTarea: z.boolean(),
-  taskListId: z.string().optional(),       // lista de Google Tasks elegida
-  tareaTitulo: z.string().max(200).optional(), // título de la tarea (opcional)
-})
-
-export type AgendarCitaInput = z.infer<typeof AgendarCitaSchema>
-
-export async function agendarCita(input: AgendarCitaInput) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: 'No autenticado' }
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
-  if (profile?.role !== 'admin') return { error: 'Sin permisos' }
-
-  const parsed = AgendarCitaSchema.safeParse(input)
-  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Datos inválidos' }
-  const d = parsed.data
-
-  try {
-    await createCalendarEvent({
-      title: d.titulo,
-      start: d.start,
-      end: d.end,
-      description: d.ofertaTitulo ? `Candidato: ${d.candidatoNombre}\nOferta: ${d.ofertaTitulo}` : `Candidato: ${d.candidatoNombre}`,
-      attendees: d.invitarCandidato ? [d.candidatoEmail] : undefined,
-      addMeet: d.invitarCandidato,
-    })
-  } catch (e) {
-    return { error: `No se pudo crear el evento en el calendario: ${e instanceof Error ? e.message : 'error desconocido'}` }
-  }
-
-  // Tarea de seguimiento (no abortamos si falla: el evento ya está creado)
-  let tareaCreada = false
-  if (d.crearTarea) {
-    try {
-      const lists = await getTaskLists()
-      // lista elegida si es válida; si no, la primera disponible
-      const listId = (d.taskListId && lists.some(l => l.id === d.taskListId)) ? d.taskListId : lists[0]?.id
-      if (listId) {
-        await createTask(listId, {
-          title: d.tareaTitulo?.trim() || `Preparar: ${d.titulo}`,
-          notes: d.ofertaTitulo || undefined,
-          due: d.start.split('T')[0],
-        })
-        tareaCreada = true
-      }
-    } catch (e) {
-      console.error('[agendarCita] tarea:', e instanceof Error ? e.message : String(e))
-    }
-  }
-
-  await logAction({
-    accion: 'solicitud.agendar_cita',
-    recursoTipo: 'solicitud',
-    recursoId: d.solicitudId,
-    recursoLabel: d.candidatoNombre,
-    metadata: { titulo: d.titulo, start: d.start, invitado: d.invitarCandidato, tarea: tareaCreada },
-  })
-
-  return { ok: true, tareaCreada }
 }

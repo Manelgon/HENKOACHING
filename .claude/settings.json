@@ -70,7 +70,12 @@
       "Bash(git -C \"c:\\\\Users\\\\manel\\\\.000.Proyectos.DEV\\\\005. Jennifer Cervera - copia\" diff --stat)",
       "Bash(git -C \"c:\\\\Users\\\\manel\\\\.000.Proyectos.DEV\\\\005. Jennifer Cervera - copia\" diff src/components/OrganizationJsonLd.tsx .claude/settings.json)",
       "Bash(git -C \"c:\\\\Users\\\\manel\\\\.000.Proyectos.DEV\\\\005. Jennifer Cervera - copia\" diff src/app/\"\\(web\\)\"/page.tsx src/app/\"\\(web\\)\"/sobre-mi/page.tsx src/app/globals.css src/app/\"\\(web\\)\"/servicios/ServiciosClient.tsx)",
-      "Bash(git -C \"c:\\\\Users\\\\manel\\\\.000.Proyectos.DEV\\\\005. Jennifer Cervera - copia\" diff --stat src/features/testimonios/components/TestimoniosCarousel.tsx)"
+      "Bash(git -C \"c:\\\\Users\\\\manel\\\\.000.Proyectos.DEV\\\\005. Jennifer Cervera - copia\" diff --stat src/features/testimonios/components/TestimoniosCarousel.tsx)",
+      "PowerShell(npx tsc --noEmit 2>&1)",
+      "PowerShell($p='C:\\\\Users\\\\manel\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-manel--000-Proyectos-DEV-005--Jennifer-Cervera---copia\\\\c759b1f8-b5f2-44d0-8b61-711bd4c0d8c1\\\\tasks\\\\bvj4vshgw.output'; while\\(Get-Process -Name node -ErrorAction SilentlyContinue | Where-Object {$_.StartTime -gt \\(Get-Date\\).AddMinutes\\(-2\\)}\\){if\\(\\(Test-Path $p\\) -and \\(Get-Content $p -Raw\\)\\){break}; Start-Sleep -Seconds 2}; Start-Sleep -Seconds 8; if\\(Test-Path $p\\){Get-Content $p -Raw}else{'sin salida = sin errores'})",
+      "WebFetch(domain:henkoaching.com)",
+      "Bash(curl -s \"https://henkoaching.com/empleo/responsable-de-recursos-humanos-20260601\")",
+      "Bash(python3 -c ' *)"
     ],
     "additionalDirectories": [
       "c:\\Users\\manel\\.000.Proyectos.DEV\\005. Jennifer Cervera - copia"

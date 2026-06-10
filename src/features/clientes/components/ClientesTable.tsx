@@ -10,6 +10,11 @@ import NewClienteModal from './NewClienteModal'
 import CustomSelect from '@/shared/components/CustomSelect'
 import { useSortable } from '@/shared/hooks/useSortable'
 import SortHeader from '@/shared/components/SortHeader'
+import AccionesMenu, { type AccionItem } from '@/shared/components/AccionesMenu'
+import AgendarCitaModal from '@/shared/components/AgendarCitaModal'
+
+const TIPOS_CITA_CLIENTE = ['Sesión de coaching', 'Reunión de seguimiento', 'Llamada', 'Videollamada', 'Revisión de progreso']
+const TIPOS_TAREA_CLIENTE = ['Preparar sesión', 'Enviar materiales', 'Hacer seguimiento', 'Revisar progreso']
 
 export type ClienteRow = {
   id: string
@@ -40,6 +45,7 @@ export default function ClientesTable({ clientes }: { clientes: ClienteRow[] }) 
   const router = useRouter()
   const [filtros, setFiltros] = useState<Filtros>({ estado: 'todos', servicio: 'todos', tipo: 'todos', busqueda: '' })
   const [showNew, setShowNew] = useState(false)
+  const [agendarCliente, setAgendarCliente] = useState<ClienteRow | null>(null)
 
   const filtered = useMemo(() => {
     const q = filtros.busqueda.trim().toLowerCase()
@@ -57,6 +63,13 @@ export default function ClientesTable({ clientes }: { clientes: ClienteRow[] }) 
 
   const { sorted, sortKey, sortDir, toggleSort } = useSortable(filtered, 'nombre')
   const pagination = usePagination(sorted, 20)
+
+  function clienteAcciones(c: ClienteRow): AccionItem[] {
+    return [
+      { label: 'Agendar cita', onClick: () => setAgendarCliente(c), iconPath: 'M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5' },
+      { label: 'Ver ficha completa', onClick: () => router.push(`/dashboard/clientes/${c.id}`), iconPath: 'M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z M15 12a3 3 0 11-6 0 3 3 0 016 0z', divider: true },
+    ]
+  }
 
   return (
     <>
@@ -137,12 +150,13 @@ export default function ClientesTable({ clientes }: { clientes: ClienteRow[] }) 
             <div className="col-span-2">
               <SortHeader label="Servicio" sortKey="servicio_contratado" activeSortKey={sortKey} sortDir={sortDir} onSort={(k) => toggleSort(k as keyof ClienteRow)} />
             </div>
-            <div className="col-span-3">
+            <div className="col-span-2">
               <SortHeader label="Estado" sortKey="estado" activeSortKey={sortKey} sortDir={sortDir} onSort={(k) => toggleSort(k as keyof ClienteRow)} />
             </div>
             <div className="col-span-1">
               <SortHeader label="Próx." sortKey="proxima_sesion" activeSortKey={sortKey} sortDir={sortDir} onSort={(k) => toggleSort(k as keyof ClienteRow)} />
             </div>
+            <span className="col-span-1 font-raleway text-[10px] font-bold text-gray-400 uppercase tracking-widest self-center text-right">Acciones</span>
           </div>
 
           {pagination.paginated.map((c) => {
@@ -174,13 +188,16 @@ export default function ClientesTable({ clientes }: { clientes: ClienteRow[] }) 
                   <span className="col-span-2 font-raleway text-sm text-gray-600 truncate font-mono">{c.nif_cif ?? '—'}</span>
                   <span className="col-span-1 font-raleway text-sm text-gray-600 truncate">{c.ubicacion ?? '—'}</span>
                   <span className="col-span-2 font-raleway text-sm text-gray-600 truncate">{getServicioLabel(c.servicio_contratado)}</span>
-                  <span className="col-span-3">
+                  <span className="col-span-2">
                     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-raleway font-semibold ${estado.bg} ${estado.color}`}>
                       <span className={`w-1.5 h-1.5 rounded-full ${estado.dot}`} />
                       {estado.label}
                     </span>
                   </span>
                   <span className="col-span-1 font-raleway text-xs text-gray-400">{proxFecha ?? '—'}</span>
+                  <span className="col-span-1 flex justify-end">
+                    <AccionesMenu items={clienteAcciones(c)} />
+                  </span>
                 </div>
 
                 {/* Móvil */}
@@ -198,10 +215,13 @@ export default function ClientesTable({ clientes }: { clientes: ClienteRow[] }) 
                       {c.email && <p className="font-raleway text-[11px] text-gray-400 truncate">{c.email}</p>}
                       {c.telefono && <p className="font-raleway text-[11px] text-gray-400 truncate">{c.telefono}</p>}
                     </div>
-                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-raleway font-semibold flex-shrink-0 ${estado.bg} ${estado.color}`}>
-                      <span className={`w-1 h-1 rounded-full ${estado.dot}`} />
-                      {estado.label}
-                    </span>
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-raleway font-semibold ${estado.bg} ${estado.color}`}>
+                        <span className={`w-1 h-1 rounded-full ${estado.dot}`} />
+                        {estado.label}
+                      </span>
+                      <AccionesMenu items={clienteAcciones(c)} />
+                    </div>
                   </div>
                   {c.ubicacion && (
                     <p className="font-raleway text-xs text-gray-500 truncate mb-1">{c.ubicacion}</p>
@@ -229,6 +249,17 @@ export default function ClientesTable({ clientes }: { clientes: ClienteRow[] }) 
 
       {showNew && (
         <NewClienteModal onClose={() => setShowNew(false)} onCreated={() => { setShowNew(false); router.refresh() }} />
+      )}
+
+      {/* Modal agendar cita */}
+      {agendarCliente && (
+        <AgendarCitaModal
+          recurso={{ tipo: 'cliente', id: agendarCliente.id, nombre: agendarCliente.nombre, email: agendarCliente.email, contexto: getServicioLabel(agendarCliente.servicio_contratado) }}
+          tiposCita={TIPOS_CITA_CLIENTE}
+          tiposTarea={TIPOS_TAREA_CLIENTE}
+          onClose={() => setAgendarCliente(null)}
+          onDone={() => setAgendarCliente(null)}
+        />
       )}
     </>
   )
