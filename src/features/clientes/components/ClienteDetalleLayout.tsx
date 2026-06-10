@@ -13,7 +13,12 @@ import {
   ESTADOS_CLIENTE, getEstadoClienteMeta, getServicioLabel, getTarifaLabel, formatImporte,
 } from './estados'
 import { getOrigenLabel } from '@/features/leads/components/estados'
+import AccionesMenu, { type AccionItem } from '@/shared/components/AccionesMenu'
+import AgendarCitaModal from '@/shared/components/AgendarCitaModal'
 import type { EstadoCliente } from '@/lib/supabase/database.types'
+
+const TIPOS_CITA_CLIENTE = ['Sesión de coaching', 'Reunión de seguimiento', 'Llamada', 'Videollamada', 'Revisión de progreso']
+const TIPOS_TAREA_CLIENTE = ['Preparar sesión', 'Enviar materiales', 'Hacer seguimiento', 'Revisar progreso']
 
 type Nota = { id: string; contenido: string; created_at: string | null; autor_email: string | null }
 type Archivo = { id: string; nombre_archivo: string; storage_path: string; tipo: string; tamano_bytes: number | null; created_at: string | null }
@@ -46,6 +51,7 @@ export default function ClienteDetalleLayout({ cliente, notas, archivos, factura
   const confirm = useConfirm()
   const [tab, setTab] = useState<Tab>('facturas')
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [agendarOpen, setAgendarOpen] = useState(false)
   const [estadoOpen, setEstadoOpen] = useState(false)
   const [estadoPos, setEstadoPos] = useState({ top: 0, left: 0 })
   const estadoBtnRef = useRef<HTMLButtonElement>(null)
@@ -212,27 +218,14 @@ export default function ClienteDetalleLayout({ cliente, notas, archivos, factura
           </div>
 
           {/* Acciones */}
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <button
-              type="button"
-              onClick={() => setDrawerOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-henko-turquoise text-henko-turquoise text-xs font-semibold font-raleway hover:bg-henko-turquoise/5 transition-all"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z" />
-              </svg>
-              Editar
-            </button>
-            <button
-              type="button"
-              onClick={handleEliminar}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-gray-200 text-gray-500 text-xs font-semibold font-raleway hover:border-red-300 hover:text-red-500 hover:bg-red-50 transition-all"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-              </svg>
-              Eliminar
-            </button>
+          <div className="flex-shrink-0">
+            <AccionesMenu
+              items={[
+                { label: 'Agendar cita', onClick: () => setAgendarOpen(true), iconPath: 'M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5' },
+                { label: 'Editar cliente', onClick: () => setDrawerOpen(true), iconPath: 'm16.862 4.487 1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z' },
+                { label: 'Eliminar cliente', onClick: handleEliminar, danger: true, divider: true, iconPath: 'm14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0' },
+              ]}
+            />
           </div>
         </div>
       </div>
@@ -296,6 +289,17 @@ export default function ClienteDetalleLayout({ cliente, notas, archivos, factura
             </div>
           </div>
         </div>
+      )}
+
+      {/* ── MODAL AGENDAR CITA ──────────────────────────────────────────── */}
+      {agendarOpen && (
+        <AgendarCitaModal
+          recurso={{ tipo: 'cliente', id: cliente.id, nombre: cliente.nombre, email: cliente.email, contexto: cliente.servicio_contratado ? getServicioLabel(cliente.servicio_contratado) : undefined }}
+          tiposCita={TIPOS_CITA_CLIENTE}
+          tiposTarea={TIPOS_TAREA_CLIENTE}
+          onClose={() => setAgendarOpen(false)}
+          onDone={() => setAgendarOpen(false)}
+        />
       )}
     </div>
   )

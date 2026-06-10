@@ -12,7 +12,7 @@ import { getTaskLists, createTask } from '@/actions/google-tasks'
 // recurso (solicitud, lead, cliente). NO cambia el estado del recurso: agendar
 // es independiente del estado.
 const AgendarCitaSchema = z.object({
-  recursoTipo: z.enum(['solicitud', 'lead', 'cliente']),
+  recursoTipo: z.enum(['solicitud', 'lead', 'cliente', 'candidato']),
   recursoId: z.string().uuid(),
   titulo: z.string().min(1, 'El asunto es requerido').max(200),
   contactoNombre: z.string().min(1),

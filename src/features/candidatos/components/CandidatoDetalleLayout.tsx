@@ -15,9 +15,14 @@ import { useAction, useConfirm } from '@/shared/feedback/FeedbackContext'
 import ComposeDrawer from '@/features/email/components/ComposeDrawer'
 import CheckCircleIcon from '@/shared/components/icons/CheckCircleIcon'
 import CustomSelect from '@/shared/components/CustomSelect'
+import AccionesMenu, { type AccionItem } from '@/shared/components/AccionesMenu'
+import AgendarCitaModal from '@/shared/components/AgendarCitaModal'
 import { CandidatoExperiencia, CandidatoEducacion, CandidatoIdiomas, CandidatoPreferencias } from './CandidatoExperiencia'
 import CandidatoSolicitudes from './CandidatoSolicitudes'
 import type { CandidatoPerfil, NotaInterna } from '../types'
+
+const TIPOS_CITA_CANDIDATO = ['Entrevista', '2ª entrevista', 'Llamada', 'Videollamada', 'Contratación', 'Reunión']
+const TIPOS_TAREA_CANDIDATO = ['Preparar entrevista', 'Revisar CV', 'Llamar al candidato', 'Enviar propuesta', 'Seguimiento']
 
 type Props = {
   perfil: CandidatoPerfil
@@ -35,6 +40,7 @@ export default function CandidatoDetalleLayout({ perfil, cvPrincipal, ofertas, o
 
   const [activeTab, setActiveTab] = useState<Tab>('trayectoria')
   const [composeOpen, setComposeOpen] = useState(false)
+  const [agendarOpen, setAgendarOpen] = useState(false)
   const [notas, setNotas] = useState<NotaInterna[]>(perfil.notas)
   const [nuevaNota, setNuevaNota] = useState('')
   const [ofertaSeleccionada, setOfertaSeleccionada] = useState('')
@@ -147,6 +153,15 @@ export default function CandidatoDetalleLayout({ perfil, cvPrincipal, ofertas, o
     { id: 'notas', label: 'Notas internas' },
   ]
 
+  const candidatoAcciones: AccionItem[] = [
+    { label: 'Agendar cita', onClick: () => setAgendarOpen(true), iconPath: 'M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5' },
+    ...(cvPrincipal ? [{ label: 'Descargar CV', onClick: handleDescargarCV, iconPath: 'M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3' }] : []),
+    { label: 'PDF trayectoria', onClick: () => window.open(`/api/dashboard/candidatos/${perfil.id}/pdf`, '_blank', 'noopener'), iconPath: 'M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z' },
+    { label: 'Enviar email', onClick: () => setComposeOpen(true), iconPath: 'M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75' },
+    { label: 'Resetear contraseña', onClick: handleReset, iconPath: 'M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 0121.75 8.25z', divider: true },
+    { label: perfil.archivado ? 'Restaurar candidato' : 'Archivar candidato', onClick: handleArchivar, danger: !perfil.archivado, iconPath: 'm20.25 7.5-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10.5 11.25h3M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z' },
+  ]
+
   return (
     <>
       {/* Header card */}
@@ -190,71 +205,9 @@ export default function CandidatoDetalleLayout({ perfil, cvPrincipal, ofertas, o
             </div>
           </div>
 
-          {/* Right: action buttons */}
-          <div className="flex flex-wrap gap-2 flex-shrink-0">
-            {cvPrincipal && (
-              <button
-                type="button"
-                onClick={handleDescargarCV}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-henko-turquoise text-henko-turquoise text-xs font-semibold font-raleway hover:bg-henko-turquoise/5 transition-all"
-              >
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                </svg>
-                Descargar CV
-              </button>
-            )}
-            <a
-              href={`/api/dashboard/candidatos/${perfil.id}/pdf`}
-              target="_blank"
-              rel="noopener"
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-gray-200 text-gray-600 text-xs font-semibold font-raleway hover:border-henko-turquoise hover:text-henko-turquoise hover:bg-henko-turquoise/5 transition-all"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-              </svg>
-              PDF trayectoria
-            </a>
-            <button
-              type="button"
-              onClick={() => setComposeOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-gray-200 text-gray-600 text-xs font-semibold font-raleway hover:border-henko-turquoise hover:text-henko-turquoise hover:bg-henko-turquoise/5 transition-all"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
-              </svg>
-              Email
-            </button>
-            <button
-              type="button"
-              onClick={handleReset}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-gray-200 text-gray-600 text-xs font-semibold font-raleway hover:border-henko-turquoise hover:text-henko-turquoise hover:bg-henko-turquoise/5 transition-all"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 0 1 21.75 8.25Z" />
-              </svg>
-              Reset pwd
-            </button>
-            <button
-              type="button"
-              onClick={handleArchivar}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-semibold font-raleway transition-all ${
-                perfil.archivado
-                  ? 'border-emerald-300 text-emerald-700 hover:bg-emerald-50'
-                  : 'border-gray-200 text-gray-600 hover:border-red-300 hover:text-red-600 hover:bg-red-50'
-              }`}
-            >
-              {perfil.archivado ? (
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3" />
-                </svg>
-              ) : (
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m6 4.125 2.25 2.25m0 0 2.25 2.25M12 13.875l2.25-2.25M12 13.875l-2.25 2.25M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" />
-                </svg>
-              )}
-              {perfil.archivado ? 'Restaurar' : 'Archivar'}
-            </button>
+          {/* Right: menú de acciones */}
+          <div className="flex-shrink-0">
+            <AccionesMenu items={candidatoAcciones} />
           </div>
         </div>
 
@@ -408,6 +361,16 @@ export default function CandidatoDetalleLayout({ perfil, cvPrincipal, ofertas, o
         <ComposeDrawer
           onClose={() => setComposeOpen(false)}
           defaultTo={perfil.email}
+        />
+      )}
+
+      {agendarOpen && (
+        <AgendarCitaModal
+          recurso={{ tipo: 'candidato', id: perfil.id, nombre, email: perfil.email, contexto: cargoDisplay ?? undefined }}
+          tiposCita={TIPOS_CITA_CANDIDATO}
+          tiposTarea={TIPOS_TAREA_CANDIDATO}
+          onClose={() => setAgendarOpen(false)}
+          onDone={() => setAgendarOpen(false)}
         />
       )}
     </>

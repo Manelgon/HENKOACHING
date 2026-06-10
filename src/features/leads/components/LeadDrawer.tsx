@@ -9,6 +9,13 @@ import type { EstadoLead } from '@/lib/supabase/database.types'
 import CheckCircleIcon from '@/shared/components/icons/CheckCircleIcon'
 import { ESTADOS_LEAD, getEstadoMeta, getOrigenLabel } from './estados'
 import type { LeadRow } from './LeadsTable'
+import AccionesMenu, { type AccionItem } from '@/shared/components/AccionesMenu'
+import AgendarCitaModal from '@/shared/components/AgendarCitaModal'
+
+const TIPOS_CITA_LEAD = ['Llamada', 'Videollamada', 'Reunión inicial', 'Sesión informativa', 'Seguimiento']
+const TIPOS_TAREA_LEAD = ['Llamar al lead', 'Enviar información', 'Enviar propuesta', 'Hacer seguimiento']
+
+const ICON_CAL = 'M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5'
 
 type Nota = {
   id: string
@@ -41,7 +48,20 @@ export default function LeadDrawer({
   const [notas, setNotas] = useState<Nota[]>([])
   const [nuevaNota, setNuevaNota] = useState('')
   const [loadingNotas, setLoadingNotas] = useState(true)
+  const [agendarOpen, setAgendarOpen] = useState(false)
   const estado = getEstadoMeta(lead.estado)
+
+  const leadAcciones: AccionItem[] = lead.archivado
+    ? [
+        { label: 'Agendar cita', onClick: () => setAgendarOpen(true), iconPath: ICON_CAL },
+        ...(onDesarchivar ? [{ label: 'Recuperar lead', onClick: onDesarchivar, iconPath: 'M9 15 3 9m0 0 6-6M3 9h12a6 6 0 010 12h-3' }] : []),
+        ...(onEliminar ? [{ label: 'Eliminar definitivamente', onClick: onEliminar, danger: true, divider: true, iconPath: 'm14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0' }] : []),
+      ]
+    : [
+        { label: 'Agendar cita', onClick: () => setAgendarOpen(true), iconPath: ICON_CAL },
+        { label: 'Convertir a cliente', onClick: onConvertir, iconPath: 'M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM3 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 019.374 21c-2.331 0-4.512-.645-6.374-1.766z' },
+        { label: 'Archivar lead', onClick: onArchivar, danger: true, divider: true, iconPath: 'm20.25 7.5-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10.5 11.25h3M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z' },
+      ]
 
   useEffect(() => {
     let cancelled = false
@@ -119,6 +139,7 @@ export default function LeadDrawer({
     : ''
 
   return (
+    <>
     <div className="fixed inset-0 z-50 flex" onClick={onClose}>
       <div className="flex-1 bg-black/40" />
       <div
@@ -131,14 +152,17 @@ export default function LeadDrawer({
             <p className="font-roxborough text-xl text-gray-900 truncate">{lead.nombre}</p>
             <p className="font-raleway text-sm text-gray-500 truncate">{lead.email}</p>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-700 flex-shrink-0"
-            aria-label="Cerrar"
-          >
-            ✕
-          </button>
+          <div className="flex items-center gap-1 flex-shrink-0">
+            <AccionesMenu items={leadAcciones} />
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-700"
+              aria-label="Cerrar"
+            >
+              ✕
+            </button>
+          </div>
         </div>
 
         <div className="px-6 py-6 space-y-6">
@@ -255,49 +279,6 @@ export default function LeadDrawer({
             )}
           </div>
 
-          {/* Acciones */}
-          <div className="border-t border-gray-100 pt-5 flex flex-wrap gap-3">
-            {lead.archivado ? (
-              <>
-                {onDesarchivar && (
-                  <button
-                    type="button"
-                    onClick={onDesarchivar}
-                    className="flex-1 min-w-[140px] px-4 py-2.5 rounded-xl bg-henko-turquoise text-white font-raleway font-semibold text-sm hover:bg-henko-turquoise-light transition-colors"
-                  >
-                    ↺ Recuperar lead
-                  </button>
-                )}
-                {onEliminar && (
-                  <button
-                    type="button"
-                    onClick={onEliminar}
-                    className="px-4 py-2.5 rounded-xl border border-red-200 text-red-500 font-raleway text-sm hover:bg-red-50 transition-colors"
-                  >
-                    Eliminar definitivamente
-                  </button>
-                )}
-              </>
-            ) : (
-              <>
-                <button
-                  type="button"
-                  onClick={onConvertir}
-                  className="flex-1 min-w-[140px] px-4 py-2.5 rounded-xl bg-henko-turquoise text-white font-raleway font-semibold text-sm hover:bg-henko-turquoise-light transition-colors"
-                >
-                  ✓ Convertir a cliente
-                </button>
-                <button
-                  type="button"
-                  onClick={onArchivar}
-                  className="px-4 py-2.5 rounded-xl border border-red-200 text-red-500 font-raleway text-sm hover:bg-red-50 transition-colors"
-                >
-                  Archivar
-                </button>
-              </>
-            )}
-          </div>
-
           {/* Consentimiento RGPD */}
           {(lead.acepto_privacidad_at || lead.consent_text) && (
             <div className="pt-4 border-t border-gray-100">
@@ -325,6 +306,17 @@ export default function LeadDrawer({
         </div>
       </div>
     </div>
+
+    {agendarOpen && (
+      <AgendarCitaModal
+        recurso={{ tipo: 'lead', id: lead.id, nombre: lead.nombre, email: lead.email, contexto: lead.asunto ?? lead.servicio_interes ?? undefined }}
+        tiposCita={TIPOS_CITA_LEAD}
+        tiposTarea={TIPOS_TAREA_LEAD}
+        onClose={() => setAgendarOpen(false)}
+        onDone={() => setAgendarOpen(false)}
+      />
+    )}
+    </>
   )
 }
 

@@ -2,12 +2,18 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { TablePagination, usePagination } from '@/components/TablePagination'
 import { getCvSignedUrl } from '@/actions/candidatos-admin'
 import type { CandidatoRow } from '../types'
 import CustomSelect from '@/shared/components/CustomSelect'
 import { useSortable } from '@/shared/hooks/useSortable'
 import SortHeader from '@/shared/components/SortHeader'
+import AccionesMenu, { type AccionItem } from '@/shared/components/AccionesMenu'
+import AgendarCitaModal from '@/shared/components/AgendarCitaModal'
+
+const TIPOS_CITA_CANDIDATO = ['Entrevista', '2ª entrevista', 'Llamada', 'Videollamada', 'Contratación', 'Reunión']
+const TIPOS_TAREA_CANDIDATO = ['Preparar entrevista', 'Revisar CV', 'Llamar al candidato', 'Enviar propuesta', 'Seguimiento']
 
 function formatDate(d: string | null) {
   if (!d) return '—'
@@ -50,6 +56,8 @@ const JORNADAS = ['Jornada completa', 'Media jornada', 'Por horas', 'Indiferente
 const MODALIDADES = ['Presencial', 'Híbrido', 'Remoto', 'Indiferente']
 
 export default function CandidatosTable({ candidatos }: { candidatos: CandidatoRow[] }) {
+  const router = useRouter()
+  const [agendarCand, setAgendarCand] = useState<CandidatoRow | null>(null)
   const [busqueda, setBusqueda] = useState('')
   const [filtroSolicitudes, setFiltroSolicitudes] = useState<'todos' | 'con' | 'sin' | 'nuevos'>('todos')
   const [filtroJornada, setFiltroJornada] = useState('')
@@ -90,6 +98,25 @@ export default function CandidatosTable({ candidatos }: { candidatos: CandidatoR
     setFiltroExp('todos')
     setFiltroSolicitudes('todos')
     setBusqueda('')
+  }
+
+  async function descargarCv(path: string) {
+    const r = await getCvSignedUrl(path)
+    if (r) window.open(r, '_blank')
+  }
+
+  function candidatoAcciones(c: CandidatoRow): AccionItem[] {
+    const tieneTrayectoria = c.tiene_experiencia || c.tiene_educacion
+    return [
+      { label: 'Agendar cita', onClick: () => setAgendarCand(c), iconPath: 'M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5' },
+      c.tiene_cv && c.cv_storage_path
+        ? { label: 'Descargar CV', onClick: () => descargarCv(c.cv_storage_path!), iconPath: 'M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3' }
+        : { label: 'Sin CV', disabled: true, disabledHint: 'El candidato no tiene CV', iconPath: 'M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3' },
+      tieneTrayectoria
+        ? { label: 'Descargar trayectoria', onClick: () => window.open(`/api/dashboard/candidatos/${c.id}/pdf`, '_blank', 'noopener'), iconPath: 'M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z' }
+        : { label: 'Trayectoria', disabled: true, disabledHint: 'Sin trayectoria rellenada', iconPath: 'M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z' },
+      { label: 'Ver perfil completo', onClick: () => router.push(`/dashboard/candidatos/${c.id}`), divider: true, iconPath: 'M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.5 20.25a7.5 7.5 0 0115 0v.75H4.5v-.75z' },
+    ]
   }
 
   return (
@@ -186,9 +213,9 @@ export default function CandidatosTable({ candidatos }: { candidatos: CandidatoR
             <span className="col-span-2 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Contacto</span>
             <span className="col-span-2 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Cargo / Ubicación</span>
             <span className="col-span-2 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest">Preferencias</span>
-            <span className="col-span-1 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest text-center">CV</span>
             <SortHeader label="Sol." sortKey="solicitudes_count" activeSortKey={sortKey} sortDir={sortDir} onSort={k => toggleSort(k as keyof CandidatoRow)} className="col-span-1 justify-center" />
             <SortHeader label="Registro" sortKey="created_at" activeSortKey={sortKey} sortDir={sortDir} onSort={k => toggleSort(k as keyof CandidatoRow)} className="col-span-1" />
+            <span className="col-span-1 font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest text-right">Acciones</span>
           </div>
 
           {pagination.paginated.map((c) => (
@@ -254,15 +281,6 @@ export default function CandidatosTable({ candidatos }: { candidatos: CandidatoR
                   </div>
                 </div>
 
-                {/* CV */}
-                <div className="col-span-1 flex justify-center" onClick={(e) => e.preventDefault()}>
-                  {c.tiene_cv && c.cv_storage_path ? (
-                    <CvButton storagePath={c.cv_storage_path} />
-                  ) : (
-                    <span className="font-raleway text-xs text-gray-300">—</span>
-                  )}
-                </div>
-
                 {/* Solicitudes */}
                 <div className="col-span-1 flex justify-center">
                   {c.solicitudes_count > 0 ? (
@@ -276,6 +294,11 @@ export default function CandidatosTable({ candidatos }: { candidatos: CandidatoR
 
                 {/* Registro */}
                 <span className="col-span-1 font-raleway text-xs text-gray-400">{formatDate(c.created_at)}</span>
+
+                {/* Acciones */}
+                <div className="col-span-1 flex justify-end">
+                  <AccionesMenu items={candidatoAcciones(c)} />
+                </div>
               </div>
 
               {/* Tarjeta móvil */}
@@ -298,6 +321,7 @@ export default function CandidatosTable({ candidatos }: { candidatos: CandidatoR
                       {c.solicitudes_count} sol.
                     </span>
                   )}
+                  <AccionesMenu items={candidatoAcciones(c)} />
                 </div>
                 <div className="ml-11 flex flex-wrap gap-1">
                   {c.cargo_experiencia && <span className="font-raleway text-xs text-gray-500">{c.cargo_experiencia}</span>}
@@ -314,6 +338,23 @@ export default function CandidatosTable({ candidatos }: { candidatos: CandidatoR
             onPageChange={pagination.setPage} onPageSizeChange={pagination.setPageSize}
           />
         </div>
+      )}
+
+      {/* Modal agendar cita */}
+      {agendarCand && (
+        <AgendarCitaModal
+          recurso={{
+            tipo: 'candidato',
+            id: agendarCand.id,
+            nombre: [agendarCand.nombre, agendarCand.apellidos].filter(Boolean).join(' ') || agendarCand.email,
+            email: agendarCand.email,
+            contexto: agendarCand.cargo_actual ?? agendarCand.cargo_experiencia ?? undefined,
+          }}
+          tiposCita={TIPOS_CITA_CANDIDATO}
+          tiposTarea={TIPOS_TAREA_CANDIDATO}
+          onClose={() => setAgendarCand(null)}
+          onDone={() => setAgendarCand(null)}
+        />
       )}
     </div>
   )

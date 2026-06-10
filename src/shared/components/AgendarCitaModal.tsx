@@ -8,7 +8,7 @@ import { useAction } from '@/shared/feedback/FeedbackContext'
 import CustomSelect from '@/shared/components/CustomSelect'
 
 export type AgendarCitaRecurso = {
-  tipo: 'solicitud' | 'lead' | 'cliente'
+  tipo: 'solicitud' | 'lead' | 'cliente' | 'candidato'
   id: string
   nombre: string
   email?: string | null
@@ -260,7 +260,7 @@ export default function AgendarCitaModal({ recurso, tiposCita, tiposTarea, onClo
                     onChange={e => setTareaFecha(e.target.value)}
                     className="w-full px-3 py-2 rounded-lg border border-gray-200 bg-white font-raleway text-sm outline-none focus:border-henko-turquoise transition-colors"
                   />
-                  <p className="text-[11px] text-gray-400 mt-1.5">Google Tasks solo admite fecha (sin hora). Si la dejas vacía, usa la fecha de la cita.</p>
+                  <p className="text-[11px] text-gray-400 mt-1.5">Si la dejas vacía, usa la fecha de la cita.</p>
                 </div>
                 <div>
                   <p className="text-[10px] tracking-[0.14em] text-henko-turquoise font-bold mb-1.5">LISTA</p>
