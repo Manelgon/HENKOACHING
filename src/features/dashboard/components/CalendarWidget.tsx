@@ -1,10 +1,18 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { getCalendarEvents, type CalendarEvent } from '@/actions/google-calendar'
+import { getCalendarEvents, getCalendarEventsRange, type CalendarEvent } from '@/actions/google-calendar'
 import { getTaskLists, getTasks, toggleTask, type TaskList, type Task } from '@/actions/google-tasks'
 
 const INTERVAL_MS = 60_000
+
+type Vista = 'hoy' | 'semana' | 'todos'
+
+const VISTAS: { value: Vista; label: string }[] = [
+  { value: 'hoy', label: 'Hoy' },
+  { value: 'semana', label: 'Semana' },
+  { value: 'todos', label: 'Próximos' },
+]
 
 function formatDay(iso: string) {
   return new Date(iso).toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' })
@@ -25,14 +33,49 @@ function getDayLabel(iso: string) {
   return null
 }
 
+function finDeHoy() {
+  const d = new Date()
+  d.setHours(23, 59, 59, 999)
+  return d
+}
+
+const SIN_EVENTOS: Record<Vista, string> = {
+  hoy: 'Sin eventos hoy.',
+  semana: 'Sin eventos esta semana.',
+  todos: 'Sin eventos próximos.',
+}
+
 type ListWithTasks = { list: TaskList; tasks: Task[] }
 
 export default function CalendarWidget({ initial }: { initial: CalendarEvent[] }) {
-  const [events, setEvents] = useState<CalendarEvent[]>(initial)
+  const [vista, setVista] = useState<Vista>('hoy')
+  // La vista por defecto es "hoy": filtramos el initial (próximos 10) para no
+  // mostrar un flash con eventos de otros días mientras llega el fetch real
+  const [events, setEvents] = useState<CalendarEvent[]>(() => {
+    const limite = finDeHoy().toISOString()
+    return initial.filter(ev => ev.start <= limite)
+  })
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
   const [taskGroups, setTaskGroups] = useState<ListWithTasks[]>([])
   const [eventsOpen, setEventsOpen] = useState(true)
   const [tasksOpen, setTasksOpen] = useState(true)
+
+  const loadEvents = useCallback(async (v: Vista) => {
+    try {
+      let fresh: CalendarEvent[]
+      if (v === 'todos') {
+        fresh = await getCalendarEvents()
+      } else {
+        const from = new Date()
+        const to = v === 'hoy' ? finDeHoy() : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+        fresh = (await getCalendarEventsRange(from, to)).sort((a, b) => a.start.localeCompare(b.start))
+      }
+      setEvents(fresh)
+      setLastUpdated(new Date())
+    } catch {
+      // silently ignore
+    }
+  }, [])
 
   const loadTasks = useCallback(async () => {
     try {
@@ -54,15 +97,17 @@ export default function CalendarWidget({ initial }: { initial: CalendarEvent[] }
   }, [])
 
   useEffect(() => {
+    loadEvents(vista)
+  }, [vista, loadEvents])
+
+  useEffect(() => {
     loadTasks()
-    const id = setInterval(async () => {
-      const fresh = await getCalendarEvents()
-      setEvents(fresh)
-      setLastUpdated(new Date())
+    const id = setInterval(() => {
+      loadEvents(vista)
       loadTasks()
     }, INTERVAL_MS)
     return () => clearInterval(id)
-  }, [loadTasks])
+  }, [vista, loadEvents, loadTasks])
 
   const handleToggle = async (listId: string, task: Task) => {
     const newCompleted = task.status !== 'completed'
@@ -91,95 +136,112 @@ export default function CalendarWidget({ initial }: { initial: CalendarEvent[] }
     }
   }
 
+  const pendientes = taskGroups.reduce((n, g) => n + g.tasks.filter(t => t.status === 'needsAction').length, 0)
+
   return (
-    <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm p-6">
+    <>
       {/* Eventos */}
-      <button
-        onClick={() => setEventsOpen(o => !o)}
-        className="w-full flex items-center justify-between mb-4 group"
-        aria-expanded={eventsOpen}
-      >
-        <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg bg-henko-turquoise/10 flex items-center justify-center">
-            <svg className="w-4 h-4 text-henko-turquoise" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
-            </svg>
-          </div>
-          <h2 className="font-roxborough text-lg text-gray-900">Próximos eventos</h2>
-          {events.length > 0 && (
-            <span className="text-[10px] font-bold text-henko-turquoise bg-henko-turquoise/10 px-2 py-0.5 rounded-full">{events.length}</span>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-[10px] font-raleway text-gray-300">
-            {lastUpdated.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
-          </span>
-          <svg
-            className={`w-4 h-4 text-gray-400 group-hover:text-gray-600 transition-transform ${eventsOpen ? 'rotate-180' : ''}`}
-            fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+      <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm p-6">
+        <div className={`flex items-center justify-between gap-3 ${eventsOpen ? 'mb-4' : ''}`}>
+          <button
+            onClick={() => setEventsOpen(o => !o)}
+            className="flex items-center gap-2.5 group min-w-0"
+            aria-expanded={eventsOpen}
           >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-          </svg>
-        </div>
-      </button>
-
-      {!eventsOpen ? null : events.length === 0 ? (
-        <p className="font-raleway text-sm text-gray-400 italic">Sin eventos próximos.</p>
-      ) : (
-        <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
-          {events.map(ev => {
-            const dayLabel = getDayLabel(ev.start)
-            return (
-              <div
-                key={ev.id}
-                className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl border border-gray-100 hover:bg-gray-50 hover:border-henko-greenblue transition-colors"
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="flex-shrink-0 w-10 text-center">
-                    {dayLabel ? (
-                      <span className="text-[10px] font-bold text-henko-turquoise uppercase">{dayLabel}</span>
-                    ) : (
-                      <span className="text-[10px] text-gray-400 font-raleway">{formatDay(ev.start)}</span>
-                    )}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="font-raleway font-semibold text-gray-900 text-sm truncate">{ev.title}</p>
-                    {ev.location && (
-                      <p className="text-xs text-gray-400 font-raleway truncate">{ev.location}</p>
-                    )}
-                  </div>
-                </div>
-                <span className="text-[11px] text-gray-400 font-raleway flex-shrink-0">
-                  {formatTime(ev.start, ev.isAllDay)}
-                </span>
+            <div className="w-7 h-7 rounded-lg bg-henko-turquoise/10 flex items-center justify-center flex-shrink-0">
+              <svg className="w-4 h-4 text-henko-turquoise" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+              </svg>
+            </div>
+            <h2 className="font-roxborough text-lg text-gray-900 whitespace-nowrap">
+              {vista === 'hoy' ? 'Eventos de hoy' : 'Próximos eventos'}
+            </h2>
+            {events.length > 0 && (
+              <span className="text-[10px] font-bold text-henko-turquoise bg-henko-turquoise/10 px-2 py-0.5 rounded-full">{events.length}</span>
+            )}
+            <svg
+              className={`w-4 h-4 text-gray-400 group-hover:text-gray-600 transition-transform ${eventsOpen ? 'rotate-180' : ''}`}
+              fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+            </svg>
+          </button>
+          <div className="flex items-center gap-3 flex-shrink-0">
+            {eventsOpen && (
+              <div className="flex items-center bg-gray-50 rounded-full p-0.5">
+                {VISTAS.map(v => (
+                  <button
+                    key={v.value}
+                    onClick={() => setVista(v.value)}
+                    className={`px-3 py-1 rounded-full text-[11px] font-raleway font-semibold transition-colors ${
+                      vista === v.value ? 'bg-white shadow-sm text-henko-turquoise' : 'text-gray-400 hover:text-gray-600'
+                    }`}
+                  >
+                    {v.label}
+                  </button>
+                ))}
               </div>
-            )
-          })}
+            )}
+            <span className="hidden sm:inline text-[10px] font-raleway text-gray-300">
+              {lastUpdated.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+            </span>
+          </div>
         </div>
-      )}
 
-      {/* Tareas */}
+        {eventsOpen && (events.length === 0 ? (
+          <p className="font-raleway text-sm text-gray-400 italic">{SIN_EVENTOS[vista]}</p>
+        ) : (
+          <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+            {events.map(ev => {
+              const dayLabel = getDayLabel(ev.start)
+              return (
+                <div
+                  key={ev.id}
+                  className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl border border-gray-100 hover:bg-gray-50 hover:border-henko-greenblue transition-colors"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex-shrink-0 w-10 text-center">
+                      {dayLabel ? (
+                        <span className="text-[10px] font-bold text-henko-turquoise uppercase">{dayLabel}</span>
+                      ) : (
+                        <span className="text-[10px] text-gray-400 font-raleway">{formatDay(ev.start)}</span>
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-raleway font-semibold text-gray-900 text-sm truncate">{ev.title}</p>
+                      {ev.location && (
+                        <p className="text-xs text-gray-400 font-raleway truncate">{ev.location}</p>
+                      )}
+                    </div>
+                  </div>
+                  <span className="text-[11px] text-gray-400 font-raleway flex-shrink-0">
+                    {formatTime(ev.start, ev.isAllDay)}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+        ))}
+      </div>
+
+      {/* Tareas — tarjeta independiente */}
       {taskGroups.length > 0 && (
-        <>
-          <div className="border-t border-gray-100 mt-6 pt-6">
+        <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm p-6">
+          <div className={`flex items-center justify-between ${tasksOpen ? 'mb-4' : ''}`}>
             <button
               onClick={() => setTasksOpen(o => !o)}
-              className="w-full flex items-center justify-between mb-4 group"
+              className="flex items-center gap-2.5 group"
               aria-expanded={tasksOpen}
             >
-              <div className="flex items-center gap-2.5">
-                <div className="w-7 h-7 rounded-lg bg-amber-50 flex items-center justify-center">
-                  <svg className="w-4 h-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <h2 className="font-roxborough text-lg text-gray-900">Mis tareas</h2>
-                {taskGroups.reduce((n, g) => n + g.tasks.filter(t => t.status === 'needsAction').length, 0) > 0 && (
-                  <span className="text-[10px] font-bold text-amber-500 bg-amber-50 px-2 py-0.5 rounded-full">
-                    {taskGroups.reduce((n, g) => n + g.tasks.filter(t => t.status === 'needsAction').length, 0)}
-                  </span>
-                )}
+              <div className="w-7 h-7 rounded-lg bg-amber-50 flex items-center justify-center">
+                <svg className="w-4 h-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
               </div>
+              <h2 className="font-roxborough text-lg text-gray-900">Mis tareas</h2>
+              {pendientes > 0 && (
+                <span className="text-[10px] font-bold text-amber-500 bg-amber-50 px-2 py-0.5 rounded-full">{pendientes}</span>
+              )}
               <svg
                 className={`w-4 h-4 text-gray-400 group-hover:text-gray-600 transition-transform ${tasksOpen ? 'rotate-180' : ''}`}
                 fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
@@ -187,12 +249,14 @@ export default function CalendarWidget({ initial }: { initial: CalendarEvent[] }
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
               </svg>
             </button>
-            {tasksOpen && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          </div>
+
+          {tasksOpen && (
+            <div className="flex gap-4 overflow-x-auto pb-2">
               {taskGroups.map(({ list, tasks }) => {
                 const pending = tasks.filter(t => t.status === 'needsAction')
                 return (
-                  <div key={list.id} className="border border-gray-100 rounded-2xl p-4">
+                  <div key={list.id} className="border border-gray-100 rounded-2xl p-4 w-64 flex-shrink-0">
                     <div className="flex items-center justify-between mb-3">
                       <p className="font-raleway font-bold text-xs text-gray-700 uppercase tracking-wider truncate">{list.title}</p>
                       {pending.length > 0 && (
@@ -226,10 +290,9 @@ export default function CalendarWidget({ initial }: { initial: CalendarEvent[] }
                 )
               })}
             </div>
-            )}
-          </div>
-        </>
+          )}
+        </div>
       )}
-    </div>
+    </>
   )
 }

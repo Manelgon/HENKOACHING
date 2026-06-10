@@ -1,7 +1,12 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import CalendarWidget from '@/features/dashboard/components/CalendarWidget'
+import CollapsibleCard from '@/features/dashboard/components/CollapsibleCard'
+import QuickCreate from '@/features/dashboard/components/QuickCreate'
 import { getCalendarEvents } from '@/actions/google-calendar'
+import { getCompanySettings } from '@/lib/company-settings'
+import type { ClienteOption } from '@/app/(main)/dashboard/facturas/page'
+import type { FacturaRectificableOption } from '@/features/facturas/components/NuevaFacturaModal'
 
 export const metadata = {
   title: 'Panel — Henkoaching',
@@ -62,6 +67,41 @@ export default async function DashboardPage() {
       .limit(5),
   ])
 
+  // Datos para los accesos rápidos (formularios de creación en el propio panel)
+  const [
+    settings,
+    { data: clientesOpciones },
+    { data: facturasRaw },
+    { data: sectores },
+    { data: modalidades },
+    { data: jornadas },
+    { data: empresas },
+  ] = await Promise.all([
+    getCompanySettings(),
+    supabase
+      .from('clientes')
+      .select('id, nombre, empresa, email, nif_cif, direccion_fiscal')
+      .is('deleted_at', null)
+      .order('nombre', { ascending: true }),
+    supabase
+      .from('facturas' as never)
+      .select('id, numero, cliente_id, cliente_nombre, total, fecha_emision, estado')
+      .order('fecha_emision', { ascending: false }),
+    supabase.from('sectores').select('id, nombre, slug').order('orden'),
+    supabase.from('modalidades').select('id, nombre, slug').order('orden'),
+    supabase.from('jornadas').select('id, nombre, slug').order('orden'),
+    supabase
+      .from('clientes')
+      .select('id, nombre, ubicacion')
+      .eq('tipo', 'empresa')
+      .is('deleted_at', null)
+      .order('nombre'),
+  ])
+
+  // Mismo criterio que FacturasView: rectificables = ni rectificativas/abonos ni anuladas
+  const facturasRectificables = ((facturasRaw ?? []) as unknown as FacturaRectificableOption[])
+    .filter(f => !f.numero.startsWith('R') && !f.numero.startsWith('A') && f.estado !== 'anulada')
+
   type SolRaw = {
     id: string
     created_at: string | null
@@ -112,22 +152,31 @@ export default async function DashboardPage() {
       {/* Accesos rápidos */}
       <div className="mb-8">
         <p className="font-raleway text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Accesos rápidos</p>
-        <div className="grid grid-cols-3 gap-3">
-          <QuickLink href="/dashboard/ofertas" icon="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" label="Nueva oferta" />
-          <QuickLink href="/dashboard/clientes" icon="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" label="Nuevo cliente" />
-          <QuickLink href="/dashboard/facturas" icon="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" label="Nueva factura" />
+        <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
+          <QuickCreate
+            clientes={(clientesOpciones as unknown as ClienteOption[]) ?? []}
+            facturasRectificables={facturasRectificables}
+            serieDefault={settings.serie_default || 'F'}
+            sectores={sectores ?? []}
+            modalidades={modalidades ?? []}
+            jornadas={jornadas ?? []}
+            empresas={(empresas ?? []).map(e => ({ id: e.id, nombre: e.nombre, ubicacion: e.ubicacion ?? null }))}
+          />
         </div>
       </div>
 
       {/* Actividad reciente */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
 
         {/* Últimas solicitudes empleo */}
-        <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-roxborough text-lg text-gray-900">Últimas solicitudes</h2>
-            <Link href="/dashboard/solicitudes" className="text-xs font-raleway text-henko-turquoise hover:underline">Ver todas →</Link>
-          </div>
+        <CollapsibleCard
+          title="Últimas solicitudes"
+          count={solicitudes.length}
+          href="/dashboard/solicitudes"
+          icon="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+          iconBg="bg-henko-coral/10"
+          iconColor="text-henko-coral"
+        >
           {solicitudes.length === 0 ? (
             <p className="font-raleway text-sm text-gray-400 italic">Sin solicitudes todavía.</p>
           ) : (
@@ -154,14 +203,17 @@ export default async function DashboardPage() {
               })}
             </div>
           )}
-        </div>
+        </CollapsibleCard>
 
         {/* Últimas leads */}
-        <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-roxborough text-lg text-gray-900">Últimas leads</h2>
-            <Link href="/dashboard/leads" className="text-xs font-raleway text-henko-turquoise hover:underline">Ver todas →</Link>
-          </div>
+        <CollapsibleCard
+          title="Últimas leads"
+          count={ultimasLeads?.length ?? 0}
+          href="/dashboard/leads"
+          icon="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM3 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 019.374 21c-2.331 0-4.512-.645-6.374-1.766z"
+          iconBg="bg-henko-turquoise/10"
+          iconColor="text-henko-turquoise"
+        >
           {(!ultimasLeads || ultimasLeads.length === 0) ? (
             <p className="font-raleway text-sm text-gray-400 italic">Sin leads todavía.</p>
           ) : (
@@ -188,12 +240,12 @@ export default async function DashboardPage() {
               })}
             </div>
           )}
-        </div>
+        </CollapsibleCard>
 
       </div>
 
-      {/* Calendario */}
-      <div className="mt-5">
+      {/* Calendario y tareas */}
+      <div className="mt-5 space-y-5">
         <CalendarWidget initial={calendarEvents} />
       </div>
 
@@ -207,22 +259,6 @@ function StatCard({ label, value, accent, href }: { label: string; value: number
     <Link href={href} className="bg-white rounded-2xl md:rounded-[2rem] p-5 md:p-6 border border-gray-100 shadow-sm hover:shadow-md hover:border-gray-200 transition-all">
       <p className="font-raleway text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">{label}</p>
       <p className={`font-roxborough text-3xl md:text-5xl ${colorMap[accent]}`}>{value}</p>
-    </Link>
-  )
-}
-
-function QuickLink({ href, icon, label }: { href: string; icon: string; label: string }) {
-  return (
-    <Link
-      href={href}
-      className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col items-center gap-2.5 hover:shadow-md hover:border-henko-greenblue hover:bg-henko-greenblue/5 transition-all group"
-    >
-      <div className="w-10 h-10 rounded-xl bg-henko-turquoise/10 flex items-center justify-center group-hover:bg-henko-turquoise/20 transition-colors">
-        <svg className="w-5 h-5 text-henko-turquoise" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d={icon} />
-        </svg>
-      </div>
-      <span className="font-raleway text-xs font-semibold text-gray-700 group-hover:text-henko-turquoise transition-colors text-center">{label}</span>
     </Link>
   )
 }

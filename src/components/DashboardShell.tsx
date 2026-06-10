@@ -31,6 +31,19 @@ type Props = {
 export default function DashboardShell({ sections, userEmail, userInitial, homeHref = '/dashboard', children }: Props) {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
+  // Plegado del sidebar en escritorio (persiste entre sesiones)
+  const [collapsed, setCollapsed] = useState(false)
+
+  useEffect(() => {
+    setCollapsed(localStorage.getItem('sidebar-collapsed') === '1')
+  }, [])
+
+  const toggleCollapsed = () => {
+    setCollapsed(v => {
+      localStorage.setItem('sidebar-collapsed', v ? '0' : '1')
+      return !v
+    })
+  }
   const unreadCount = useEmailStore((s) => s.gmailUnread + s.imapUnread)
   const failedCount = useEmailStore((s) => s.failedCount)
   const candidatosNuevos = useCandidatosStore((s) => s.nuevosCount)
@@ -88,10 +101,11 @@ export default function DashboardShell({ sections, userEmail, userInitial, homeH
         />
       )}
 
+      {/* En móvil el menú entra desde la derecha; en escritorio vive a la izquierda */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-gray-100 flex flex-col transform transition-transform duration-300 lg:translate-x-0 ${
-          open ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-        }`}
+        className={`fixed inset-y-0 right-0 lg:right-auto lg:left-0 z-40 w-64 bg-white border-l lg:border-l-0 lg:border-r border-gray-100 flex flex-col transform transition-transform duration-300 ${
+          open ? 'translate-x-0' : 'translate-x-full'
+        } ${collapsed ? 'lg:-translate-x-full' : 'lg:translate-x-0'}`}
       >
         <div className="p-6 border-b border-gray-100">
           <Link href={homeHref} className="flex items-center gap-3">
@@ -206,7 +220,26 @@ export default function DashboardShell({ sections, userEmail, userInitial, homeH
         </div>
       </aside>
 
-      <div className="flex-1 flex flex-col min-w-0 lg:ml-64">
+      {/* Botón plegar/mostrar sidebar (solo escritorio) */}
+      <button
+        type="button"
+        onClick={toggleCollapsed}
+        aria-label={collapsed ? 'Mostrar menú' : 'Ocultar menú'}
+        aria-expanded={!collapsed}
+        title={collapsed ? 'Mostrar menú' : 'Ocultar menú'}
+        className={`hidden lg:flex fixed top-6 z-50 w-7 h-7 items-center justify-center rounded-full bg-white border border-gray-200 shadow-sm text-gray-400 hover:text-henko-turquoise hover:border-henko-turquoise transition-all duration-300 ${
+          collapsed ? 'left-3' : 'left-[15.1rem]'
+        }`}
+      >
+        <svg
+          className={`w-3.5 h-3.5 transition-transform duration-300 ${collapsed ? 'rotate-180' : ''}`}
+          fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+        </svg>
+      </button>
+
+      <div className={`flex-1 flex flex-col min-w-0 transition-[margin] duration-300 ${collapsed ? 'lg:ml-0' : 'lg:ml-64'}`}>
         <div className="sticky top-0 z-20 lg:hidden flex items-center gap-3 px-4 h-14 bg-white/90 backdrop-blur border-b border-gray-100">
           <Link href={homeHref} className="flex items-center gap-2">
             <Image src="/hk.png" alt="Henkoaching" width={60} height={38} className="object-contain w-7 h-auto" />
