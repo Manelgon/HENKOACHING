@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { signout } from '@/actions/auth'
+import { createClient } from '@/lib/supabase/client'
 
 const IDLE_MINUTES = 30
 const WARNING_SECONDS = 60
@@ -13,67 +14,76 @@ export default function IdleTimeout() {
   const [showWarning, setShowWarning] = useState(false)
   const [countdown, setCountdown] = useState(WARNING_SECONDS)
 
-  const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const countdownInterval = useRef<ReturnType<typeof setInterval> | null>(null)
+  // Momento absoluto (epoch ms) en que la sesión debe cerrarse. Se compara
+  // contra Date.now() en cada tick: si el PC estuvo suspendido, al despertar
+  // el primer tick detecta que el plazo ya venció y cierra de inmediato.
+  const deadline = useRef(0)
   const isWarning = useRef(false)
+  const loggingOut = useRef(false)
 
-  const stopCountdown = () => {
-    if (countdownInterval.current) { clearInterval(countdownInterval.current); countdownInterval.current = null }
+  const forceLogout = async () => {
+    if (loggingOut.current) return
+    loggingOut.current = true
+    try {
+      await signout()
+    } catch {
+      // Sin red (típico al despertar de una suspensión) la server action
+      // falla: cerrar la sesión localmente y forzar la redirección igualmente.
+      try {
+        await createClient().auth.signOut({ scope: 'local' })
+      } catch { /* sin sesión local que limpiar */ }
+      window.location.href = '/login'
+    }
   }
 
-  const stopIdle = () => {
-    if (idleTimer.current) { clearTimeout(idleTimer.current); idleTimer.current = null }
+  const resetDeadline = () => {
+    deadline.current = Date.now() + IDLE_MS
   }
 
-  const startWarning = () => {
-    isWarning.current = true
-    setShowWarning(true)
-    setCountdown(WARNING_SECONDS)
-    let secs = WARNING_SECONDS
-    countdownInterval.current = setInterval(() => {
-      secs -= 1
-      setCountdown(secs)
-      if (secs <= 0) {
-        stopCountdown()
-        signout()
-      }
-    }, 1000)
-  }
-
-  const scheduleIdle = () => {
-    stopIdle()
-    idleTimer.current = setTimeout(startWarning, IDLE_MS - WARNING_MS)
+  const check = () => {
+    const remaining = deadline.current - Date.now()
+    if (remaining <= 0) {
+      forceLogout()
+      return
+    }
+    if (remaining <= WARNING_MS) {
+      isWarning.current = true
+      setShowWarning(true)
+      setCountdown(Math.ceil(remaining / 1000))
+    }
   }
 
   useEffect(() => {
-    scheduleIdle()
+    resetDeadline()
+    const ticker = setInterval(check, 1000)
 
     const onActivity = () => {
       if (isWarning.current) return
-      scheduleIdle()
+      resetDeadline()
     }
+    const onWake = () => check()
 
     EVENTS.forEach(e => window.addEventListener(e, onActivity, { passive: true }))
+    document.addEventListener('visibilitychange', onWake)
+    window.addEventListener('focus', onWake)
     return () => {
-      stopIdle()
-      stopCountdown()
+      clearInterval(ticker)
       EVENTS.forEach(e => window.removeEventListener(e, onActivity))
+      document.removeEventListener('visibilitychange', onWake)
+      window.removeEventListener('focus', onWake)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const handleStayActive = () => {
-    stopCountdown()
     isWarning.current = false
     setShowWarning(false)
     setCountdown(WARNING_SECONDS)
-    scheduleIdle()
+    resetDeadline()
   }
 
-  const handleLogout = async () => {
-    stopIdle()
-    stopCountdown()
-    await signout()
+  const handleLogout = () => {
+    forceLogout()
   }
 
   if (!showWarning) return null
