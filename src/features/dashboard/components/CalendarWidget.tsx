@@ -31,6 +31,8 @@ export default function CalendarWidget({ initial }: { initial: CalendarEvent[] }
   const [events, setEvents] = useState<CalendarEvent[]>(initial)
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
   const [taskGroups, setTaskGroups] = useState<ListWithTasks[]>([])
+  const [eventsOpen, setEventsOpen] = useState(true)
+  const [tasksOpen, setTasksOpen] = useState(true)
 
   const loadTasks = useCallback(async () => {
     try {
@@ -92,7 +94,11 @@ export default function CalendarWidget({ initial }: { initial: CalendarEvent[] }
   return (
     <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm p-6">
       {/* Eventos */}
-      <div className="flex items-center justify-between mb-4">
+      <button
+        onClick={() => setEventsOpen(o => !o)}
+        className="w-full flex items-center justify-between mb-4 group"
+        aria-expanded={eventsOpen}
+      >
         <div className="flex items-center gap-2.5">
           <div className="w-7 h-7 rounded-lg bg-henko-turquoise/10 flex items-center justify-center">
             <svg className="w-4 h-4 text-henko-turquoise" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -100,16 +106,27 @@ export default function CalendarWidget({ initial }: { initial: CalendarEvent[] }
             </svg>
           </div>
           <h2 className="font-roxborough text-lg text-gray-900">Próximos eventos</h2>
+          {events.length > 0 && (
+            <span className="text-[10px] font-bold text-henko-turquoise bg-henko-turquoise/10 px-2 py-0.5 rounded-full">{events.length}</span>
+          )}
         </div>
-        <span className="text-[10px] font-raleway text-gray-300">
-          {lastUpdated.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
-        </span>
-      </div>
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-raleway text-gray-300">
+            {lastUpdated.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+          </span>
+          <svg
+            className={`w-4 h-4 text-gray-400 group-hover:text-gray-600 transition-transform ${eventsOpen ? 'rotate-180' : ''}`}
+            fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+          </svg>
+        </div>
+      </button>
 
-      {events.length === 0 ? (
+      {!eventsOpen ? null : events.length === 0 ? (
         <p className="font-raleway text-sm text-gray-400 italic">Sin eventos próximos.</p>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
           {events.map(ev => {
             const dayLabel = getDayLabel(ev.start)
             return (
@@ -145,14 +162,32 @@ export default function CalendarWidget({ initial }: { initial: CalendarEvent[] }
       {taskGroups.length > 0 && (
         <>
           <div className="border-t border-gray-100 mt-6 pt-6">
-            <div className="flex items-center gap-2.5 mb-4">
-              <div className="w-7 h-7 rounded-lg bg-amber-50 flex items-center justify-center">
-                <svg className="w-4 h-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+            <button
+              onClick={() => setTasksOpen(o => !o)}
+              className="w-full flex items-center justify-between mb-4 group"
+              aria-expanded={tasksOpen}
+            >
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-lg bg-amber-50 flex items-center justify-center">
+                  <svg className="w-4 h-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <h2 className="font-roxborough text-lg text-gray-900">Mis tareas</h2>
+                {taskGroups.reduce((n, g) => n + g.tasks.filter(t => t.status === 'needsAction').length, 0) > 0 && (
+                  <span className="text-[10px] font-bold text-amber-500 bg-amber-50 px-2 py-0.5 rounded-full">
+                    {taskGroups.reduce((n, g) => n + g.tasks.filter(t => t.status === 'needsAction').length, 0)}
+                  </span>
+                )}
               </div>
-              <h2 className="font-roxborough text-lg text-gray-900">Mis tareas</h2>
-            </div>
+              <svg
+                className={`w-4 h-4 text-gray-400 group-hover:text-gray-600 transition-transform ${tasksOpen ? 'rotate-180' : ''}`}
+                fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+              </svg>
+            </button>
+            {tasksOpen && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {taskGroups.map(({ list, tasks }) => {
                 const pending = tasks.filter(t => t.status === 'needsAction')
@@ -191,6 +226,7 @@ export default function CalendarWidget({ initial }: { initial: CalendarEvent[] }
                 )
               })}
             </div>
+            )}
           </div>
         </>
       )}

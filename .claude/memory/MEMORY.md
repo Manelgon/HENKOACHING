@@ -15,3 +15,4 @@
 ## reference/ — Donde encontrar cosas
 - [Indexación Google ofertas](reference/indexacion-google-ofertas-empleo.md) — automática vía sitemap; el botón "Solicitar indexación" solo acelera, no es obligatorio
 - [Sitemap ofertas = admin client](reference/sitemap-ofertas-admin-client.md) — getOfertasSlugsPublicados necesita createAdminClient o RLS lo deja vacío (bug fix ea419ff)
+- [Agendar cita reutilizable](reference/agendar-cita-reutilizable.md) — patrón único Calendar+Tasks (citas.ts + AgendarCitaModal + AccionesMenu) usado en solicitudes/leads/clientes

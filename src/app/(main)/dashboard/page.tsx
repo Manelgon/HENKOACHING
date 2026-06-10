@@ -131,7 +131,7 @@ export default async function DashboardPage() {
           {solicitudes.length === 0 ? (
             <p className="font-raleway text-sm text-gray-400 italic">Sin solicitudes todavía.</p>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
               {solicitudes.map(s => {
                 const meta = ESTADO_SOL[s.estado] ?? { label: s.estado, clase: 'bg-gray-100 text-gray-600' }
                 const fecha = s.created_at ? new Date(s.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) : '—'
@@ -165,7 +165,7 @@ export default async function DashboardPage() {
           {(!ultimasLeads || ultimasLeads.length === 0) ? (
             <p className="font-raleway text-sm text-gray-400 italic">Sin leads todavía.</p>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
               {ultimasLeads.map(l => {
                 const meta = ESTADO_LEAD[l.estado as string] ?? { label: l.estado, clase: 'bg-gray-100 text-gray-600' }
                 const fecha = l.created_at ? new Date(l.created_at as string).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) : '—'

@@ -241,8 +241,12 @@ export default function AdminSolicitudes({ solicitudes, ofertas }: Props) {
 
   return (
     <div>
-      <p className="font-raleway font-bold text-henko-turquoise tracking-[0.14em] uppercase text-[11px] mb-1.5">Portal empleo</p>
-      <h2 className="font-roxborough text-2xl text-gray-900 mb-7">Solicitudes recibidas</h2>
+      <div className="mb-8 md:mb-10">
+        <h1 className="font-roxborough text-2xl md:text-3xl text-gray-900 mb-2">Solicitudes</h1>
+        <p className="font-raleway text-gray-500 font-light">
+          Gestiona las candidaturas recibidas en las ofertas del portal de empleo.
+        </p>
+      </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 mb-7">
