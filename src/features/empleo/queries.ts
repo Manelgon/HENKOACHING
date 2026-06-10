@@ -131,7 +131,8 @@ export async function getOfertaPorSlug(slug: string): Promise<OfertaDetalle | nu
 }
 
 export async function getOfertasSlugsPublicados(): Promise<{ slug: string; updated_at: string | null }[]> {
-  const supabase = await createClient()
+  // Admin client: el sitemap se genera sin sesión, RLS bloquearía la lectura y devolvería vacío.
+  const supabase = createAdminClient()
   const { data } = await supabase
     .from('ofertas')
     .select('slug, updated_at, fecha_publicacion, fecha_expiracion')
