@@ -1,7 +1,8 @@
 # PRP-009: Remediación auditoría RGPD / EU AI Act
 
-> **Estado**: PENDIENTE
+> **Estado**: COMPLETADO (verificado en auditoría 2026-06-10)
 > **Fecha**: 2026-06-04
+> **Cierre**: Las 4 fases implementadas — headers de seguridad en next.config.ts (+ HSTS añadido el 2026-06-10), purga de email_envios en el cron de retención, trigger consent_confirmed_at (migración 018), y DPA de Piensa Solutions en la política de privacidad.
 > **Proyecto**: Henkoaching — Portal de empleo Jennifer Cervera
 
 ---

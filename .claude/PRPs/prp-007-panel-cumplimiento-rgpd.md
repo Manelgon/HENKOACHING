@@ -1,7 +1,8 @@
 # PRP-007: Panel de Cumplimiento RGPD
 
-> **Estado**: PENDIENTE
+> **Estado**: CASI COMPLETADO (verificado en auditoría 2026-06-10)
 > **Fecha**: 2026-06-04
+> **Cierre**: Infraestructura implementada — panel /dashboard/rgpd (RgpdDashboard.tsx), formulario público /legal/derechos-arco + tabla derechos_arco (migración 016), registro de consentimientos, purga de audit_logs en el cron, console.error sanitizados (2026-06-10). PENDIENTE solo contenido: redactar los documentos "Política IA", "Formación IA" y "Subencargados" en las tarjetas del panel.
 > **Proyecto**: Henkoaching — Portal de Empleo + SaaS Coaching
 
 ---
