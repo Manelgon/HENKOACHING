@@ -20,10 +20,12 @@ const AgendarCitaSchema = z.object({
   contexto: z.string().max(300).optional(), // oferta, servicio, asunto…
   start: z.string().min(1), // local naive "YYYY-MM-DDTHH:mm:ss" (Europe/Madrid)
   end: z.string().min(1),
+  calendarId: z.string().optional(), // calendario destino (por defecto 'primary')
   invitar: z.boolean(),
   crearTarea: z.boolean(),
   taskListId: z.string().optional(),
   tareaTitulo: z.string().max(200).optional(),
+  tareaFecha: z.string().optional(), // "YYYY-MM-DD"; por defecto la fecha de la cita
 })
 
 export type AgendarCitaInput = z.infer<typeof AgendarCitaSchema>
@@ -46,6 +48,7 @@ export async function agendarCita(input: AgendarCitaInput) {
       title: d.titulo,
       start: d.start,
       end: d.end,
+      calendarId: d.calendarId,
       description: d.contexto ? `${d.contactoNombre}\n${d.contexto}` : d.contactoNombre,
       attendees: puedeInvitar ? [d.contactoEmail!] : undefined,
       addMeet: puedeInvitar,
@@ -64,7 +67,7 @@ export async function agendarCita(input: AgendarCitaInput) {
         await createTask(listId, {
           title: d.tareaTitulo?.trim() || `Preparar: ${d.titulo}`,
           notes: d.contexto || undefined,
-          due: d.start.split('T')[0],
+          due: d.tareaFecha || d.start.split('T')[0],
         })
         tareaCreada = true
       }
