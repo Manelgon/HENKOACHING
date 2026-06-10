@@ -108,9 +108,10 @@ if (process.argv.includes('--write')) {
   for (const row of rows ?? []) {
     // Solo se sobreescriben documentos nunca editados desde el panel (semillas de la migración)
     if (row.actualizado_at !== null && !isEmpty(row.contenido)) { console.log(`  ↷ ${row.id}: editado desde el panel, no se toca`); continue }
+    // actualizado_at queda NULL: la tarjeta sigue "Pendiente" hasta que Jennifer revise y guarde desde el panel
     const { error: upErr } = await supabase
       .from('rgpd_documentos')
-      .update({ contenido: CONTENIDOS[row.id], actualizado_at: new Date().toISOString(), actualizado_por: 'seed-script (auditoría 2026-06-10)' })
+      .update({ contenido: CONTENIDOS[row.id], actualizado_at: null, actualizado_por: null })
       .eq('id', row.id)
     console.log(upErr ? `  ✗ ${row.id}: ${upErr.message}` : `  ✓ ${row.id}: rellenado`)
   }
