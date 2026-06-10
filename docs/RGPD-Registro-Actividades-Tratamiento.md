@@ -32,8 +32,8 @@
 | **Categorías de interesados** | Personas físicas que se registran como candidatos en el portal de empleo. |
 | **Categorías de datos personales** | Identificativos (nombre, apellidos, email, teléfono), profesionales (CV en PDF, experiencia laboral, formación, idiomas, ubicación, cargo objetivo, pretensión salarial, enlaces a LinkedIn / web). |
 | **Categorías de destinatarios** | Únicamente el responsable del tratamiento (Jennifer Cervera Alzate). No se ceden datos a terceros. |
-| **Encargados del tratamiento** | • Supabase Inc. (alojamiento de base de datos y archivos, infraestructura en la UE — región Irlanda eu-west-1)<br>• Vercel Inc. (alojamiento del sitio web) |
-| **Transferencias internacionales** | No. Los datos se almacenan en la Unión Europea. |
+| **Encargados del tratamiento** | • Supabase Inc. (alojamiento de base de datos y archivos, infraestructura en la UE — región Irlanda eu-west-1)<br>• Vercel Inc. (alojamiento del sitio web)<br>• Google LLC (agenda, tareas y correo del responsable: los eventos de cita y los correos pueden contener datos de contacto de candidatos) |
+| **Transferencias internacionales** | La base de datos y los archivos se almacenan en la Unión Europea (Supabase, Irlanda). Vercel Inc. y Google LLC (EE. UU.) actúan como encargados amparados en el EU-US Data Privacy Framework y/o Cláusulas Contractuales Tipo (SCCs). |
 | **Plazo de conservación** | Máximo 12 meses desde la última actividad del candidato en la cuenta (último login). Pasado este plazo, los datos se eliminan automáticamente mediante proceso programado. El interesado puede solicitar la supresión anticipada en cualquier momento desde su área privada o por email. |
 | **Medidas de seguridad** | Cifrado HTTPS en tránsito, cifrado en reposo de la base de datos, autenticación de doble vía con tokens rotativos, control de acceso basado en roles (RLS de Supabase), almacenamiento de CVs en bucket privado, registro de auditoría de accesos y modificaciones (audit_logs), purga automática programada de datos vencidos. |
 | **Decisiones automatizadas** | No se aplican. La valoración de candidaturas es individual y humana. |
@@ -47,8 +47,8 @@
 | **Categorías de interesados** | Personas que envían un mensaje a través del formulario de contacto. |
 | **Categorías de datos personales** | Nombre, email, teléfono (opcional), asunto, contenido del mensaje, servicio de interés. |
 | **Categorías de destinatarios** | Únicamente el responsable. |
-| **Encargados del tratamiento** | Supabase Inc., Vercel Inc. (ver actividad 2.1). |
-| **Transferencias internacionales** | No. |
+| **Encargados del tratamiento** | Supabase Inc., Vercel Inc., Google LLC (ver actividad 2.1). |
+| **Transferencias internacionales** | Las indicadas en la actividad 2.1 (Vercel y Google, EE. UU., con DPF/SCCs). |
 | **Plazo de conservación** | 24 meses desde el último contacto, salvo solicitud previa de supresión. Purga automática programada. |
 | **Medidas de seguridad** | Las mismas que en la actividad 2.1. |
 | **Decisiones automatizadas** | No se aplican. |
@@ -62,8 +62,8 @@
 | **Categorías de interesados** | Personas físicas o representantes de personas jurídicas que contratan servicios. |
 | **Categorías de datos personales** | Identificativos, fiscales (NIF/CIF, dirección fiscal), de contacto, financieros (importe, tarifa), de sesiones (fechas, notas, archivos adjuntos). |
 | **Categorías de destinatarios** | Únicamente el responsable. Agencia Tributaria y entidades bancarias cuando proceda por obligación legal. |
-| **Encargados del tratamiento** | Supabase Inc., Vercel Inc. |
-| **Transferencias internacionales** | No. |
+| **Encargados del tratamiento** | Supabase Inc., Vercel Inc., Google LLC (agenda y correo del responsable). |
+| **Transferencias internacionales** | Las indicadas en la actividad 2.1 (Vercel y Google, EE. UU., con DPF/SCCs). |
 | **Plazo de conservación** | Durante la relación contractual y, una vez finalizada, durante los plazos legales aplicables (6 años fiscal, art. 30 Código de Comercio). |
 | **Medidas de seguridad** | Las mismas que en la actividad 2.1, más bucket privado de Storage exclusivo para archivos de clientes con acceso restringido a personal autorizado. |
 | **Decisiones automatizadas** | No se aplican. |
@@ -95,7 +95,7 @@ Los interesados pueden ejercer en cualquier momento sus derechos de acceso, rect
 
 ### Organizativas
 - Acceso exclusivo del responsable a los datos personales.
-- Encargados del tratamiento sujetos a sus propias políticas RGPD verificadas (DPA de Supabase y Vercel).
+- Encargados del tratamiento sujetos a sus propias políticas RGPD verificadas (DPA de Supabase, Vercel y Google).
 - Documentación de cumplimiento accesible desde el sitio web (Aviso Legal, Política de Privacidad, Política de Cookies).
 - Página específica de derechos ARCO disponible para los candidatos registrados.
 

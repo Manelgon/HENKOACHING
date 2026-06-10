@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { requireRecruiter } from '@/lib/auth/require-recruiter'
 import { logAction } from '@/lib/audit/log-action'
 import { blogPostSchema, type BlogPostInput } from '@/features/blog/lib/validation'
 import { sanitizarHtml } from '@/features/blog/lib/sanitize'
@@ -45,6 +46,9 @@ async function generarSlugUnico(base: string, exceptId?: string): Promise<string
 // CREAR ARTÍCULO (borrador por defecto)
 // =============================================================================
 export async function crearArticulo(input: Partial<BlogPostInput>): Promise<ActionResult<{ id: string; slug: string }>> {
+  const auth = await requireRecruiter()
+  if (!auth.ok) return { error: auth.error }
+
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -93,6 +97,9 @@ export async function crearArticulo(input: Partial<BlogPostInput>): Promise<Acti
 export async function crearYGuardarArticulo(
   input: Partial<BlogPostInput> & { estado: 'borrador' | 'publicado' }
 ): Promise<ActionResult<{ id: string; slug: string }>> {
+  const auth = await requireRecruiter()
+  if (!auth.ok) return { error: auth.error }
+
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -150,6 +157,9 @@ export async function crearYGuardarArticulo(
 // GUARDAR / EDITAR ARTÍCULO
 // =============================================================================
 export async function guardarArticulo(id: string, input: unknown): Promise<ActionResult<{ slug: string }>> {
+  const auth = await requireRecruiter()
+  if (!auth.ok) return { error: auth.error }
+
   const parsed = blogPostSchema.safeParse(input)
   if (!parsed.success) {
     const fieldErrors: Record<string, string> = {}
@@ -215,6 +225,9 @@ export async function guardarArticulo(id: string, input: unknown): Promise<Actio
 // CAMBIAR ESTADO (publicar / despublicar / archivar)
 // =============================================================================
 export async function cambiarEstadoArticulo(id: string, nuevoEstado: EstadoPost): Promise<ActionResult> {
+  const auth = await requireRecruiter()
+  if (!auth.ok) return { error: auth.error }
+
   try {
     const supabase = await createClient()
 
@@ -254,6 +267,9 @@ export async function cambiarEstadoArticulo(id: string, nuevoEstado: EstadoPost)
 // ELIMINAR (soft delete)
 // =============================================================================
 export async function eliminarArticulo(id: string): Promise<ActionResult> {
+  const auth = await requireRecruiter()
+  if (!auth.ok) return { error: auth.error }
+
   try {
     const supabase = await createClient()
 
@@ -291,6 +307,9 @@ export async function eliminarArticulo(id: string): Promise<ActionResult> {
 // SUBIR IMAGEN (portada / cuerpo del artículo)
 // =============================================================================
 export async function subirImagenBlog(formData: FormData): Promise<ActionResult<{ url: string; path: string }>> {
+  const auth = await requireRecruiter()
+  if (!auth.ok) return { error: auth.error }
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'No autenticado' }

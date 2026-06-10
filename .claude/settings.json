@@ -90,7 +90,12 @@
       "Bash(sed -n '1,40p' src/actions/profiles.ts)",
       "Bash(sed -n '740,790p' src/actions/email.ts)",
       "Bash(sed -n '325,345p' src/actions/email.ts)",
-      "Bash(sed -n '495,515p' src/actions/clientes.ts)"
+      "Bash(sed -n '495,515p' src/actions/clientes.ts)",
+      "Bash(cd \"C:\\\\Users\\\\manel\\\\.claude\\\\projects\\\\c--Users-manel--000-Proyectos-DEV-005--Jennifer-Cervera---copia\\\\memory\" && cat MEMORY.md | head -5)",
+      "Read(//c/Users/manel/.claude/projects/c--Users-manel--000-Proyectos-DEV-005--Jennifer-Cervera---copia/memory/**)",
+      "Bash(sed -n '102,115p;312,330p;352,360p;378,386p' src/actions/leads.ts)",
+      "Bash(sed -n '60,68p;193,200p;243,250p;277,284p;312,319p;348,356p;374,382p;399,420p;436,455p;469,476p' src/actions/clientes.ts)",
+      "Bash(sed -n '202,212p' src/actions/solicitudes.ts)"
     ],
     "additionalDirectories": [
       "c:\\Users\\manel\\.000.Proyectos.DEV\\005. Jennifer Cervera - copia"

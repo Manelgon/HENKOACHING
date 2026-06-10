@@ -202,6 +202,15 @@ export default function Legal() {
                     </td>
                   </tr>
                   <tr className="border border-gray-200 bg-gray-50/50">
+                    <td className="p-3 border border-gray-200 font-semibold">Google LLC</td>
+                    <td className="p-3 border border-gray-200">Gestión interna de agenda, tareas y correo del responsable (Google Calendar, Tasks y Gmail). Los eventos de cita y los correos pueden contener nombres y direcciones de contacto de candidatos y clientes</td>
+                    <td className="p-3 border border-gray-200">EE. UU. — EU-US Data Privacy Framework / SCCs</td>
+                    <td className="p-3 border border-gray-200">
+                      <a href="https://business.safety.google/processorterms/" target="_blank" rel="noopener noreferrer" className="text-henko-turquoise underline">Data Processing Terms</a>{' '}·{' '}
+                      <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="text-henko-turquoise underline">Privacidad</a>
+                    </td>
+                  </tr>
+                  <tr className="border border-gray-200">
                     <td className="p-3 border border-gray-200 font-semibold">AEAT (Veri*factu)</td>
                     <td className="p-3 border border-gray-200">Comunicación obligatoria de registros de facturación electrónica</td>
                     <td className="p-3 border border-gray-200">España</td>

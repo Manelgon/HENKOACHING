@@ -328,7 +328,15 @@ async function updateSupabaseSmtpConfig(input: EmailConfigInput, password: strin
   }
 }
 
+/** Guard para actions con retorno tipado: lanza si la sesión no es de admin. */
+async function assertAdmin(): Promise<void> {
+  const auth = await requireAdmin()
+  if (!auth.ok) throw new Error(auth.error)
+}
+
 export async function getEmailConfig(): Promise<EmailConfigPublic> {
+  await assertAdmin()
+
   const admin = createAdminClient()
   const { data } = await admin
     .from('email_settings' as never)
@@ -630,6 +638,9 @@ export type EmailFallido = {
 }
 
 export async function listarEmailsFallidos(): Promise<EmailFallido[]> {
+  const auth = await requireAdmin()
+  if (!auth.ok) return []
+
   const admin = createAdminClient()
   const { data } = await admin
     .from('email_envios' as never)
@@ -641,6 +652,9 @@ export async function listarEmailsFallidos(): Promise<EmailFallido[]> {
 }
 
 export async function contarEmailsFallidos(): Promise<number> {
+  const auth = await requireAdmin()
+  if (!auth.ok) return 0
+
   const admin = createAdminClient()
   const { count } = await admin
     .from('email_envios' as never)
@@ -749,22 +763,27 @@ import {
   eliminarThread,
 } from '@/features/email/services/gmail'
 export async function listarLabelsGmail(): Promise<import('@/features/email/types').GmailLabel[]> {
+  await assertAdmin()
   return listarLabels()
 }
 
 export async function listarThreadsGmail(labelId = 'INBOX', q?: string, pageToken?: string, maxResults?: number) {
+  await assertAdmin()
   return listarThreads(labelId, q, pageToken, maxResults)
 }
 
 export async function leerThreadGmail(threadId: string): Promise<import('@/features/email/types').GmailMessage[]> {
+  await assertAdmin()
   return leerThread(threadId)
 }
 
 export async function archivarThread(threadId: string): Promise<void> {
+  await assertAdmin()
   await modificarThread(threadId, [], ['INBOX'])
 }
 
 export async function toggleLeidoThread(threadId: string, markAsRead: boolean): Promise<void> {
+  await assertAdmin()
   if (markAsRead) {
     await modificarThread(threadId, [], ['UNREAD'])
   } else {
@@ -773,13 +792,16 @@ export async function toggleLeidoThread(threadId: string, markAsRead: boolean): 
 }
 
 export async function eliminarThreadGmail(threadId: string): Promise<void> {
+  await assertAdmin()
   await eliminarThread(threadId)
 }
 
 export async function etiquetarThread(threadId: string, addLabelIds: string[], removeLabelIds: string[]): Promise<void> {
+  await assertAdmin()
   await modificarThread(threadId, addLabelIds, removeLabelIds)
 }
 
 export async function buscarThreadsGmail(q: string) {
+  await assertAdmin()
   return listarThreads('', q)
 }

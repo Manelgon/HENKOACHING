@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { requireRecruiter } from '@/lib/auth/require-recruiter'
 import { logAction } from '@/lib/audit/log-action'
 import { getOfertaPorSlug } from '@/features/empleo/queries'
 
@@ -65,6 +66,9 @@ async function ensureClienteEmpresa(nombre: string): Promise<string> {
 }
 
 export async function crearOferta(input: OfertaInput) {
+  const auth = await requireRecruiter()
+  if (!auth.ok) return { error: auth.error }
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'No autenticado' }
@@ -115,6 +119,9 @@ export async function crearOferta(input: OfertaInput) {
 }
 
 export async function actualizarOferta(id: string, input: OfertaInput) {
+  const auth = await requireRecruiter()
+  if (!auth.ok) return { error: auth.error }
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'No autenticado' }
@@ -165,6 +172,9 @@ export async function actualizarOferta(id: string, input: OfertaInput) {
 }
 
 export async function cambiarEstadoOferta(id: string, estado: 'borrador' | 'publicada' | 'pausada' | 'cerrada') {
+  const auth = await requireRecruiter()
+  if (!auth.ok) return { error: auth.error }
+
   const supabase = await createClient()
 
   const { data: anterior } = await supabase
@@ -197,6 +207,9 @@ export async function cambiarEstadoOferta(id: string, estado: 'borrador' | 'publ
 }
 
 export async function eliminarOferta(id: string) {
+  const auth = await requireRecruiter()
+  if (!auth.ok) return { error: auth.error }
+
   const supabase = await createClient()
 
   const { data: oferta } = await supabase

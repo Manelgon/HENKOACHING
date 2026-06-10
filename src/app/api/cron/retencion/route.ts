@@ -87,7 +87,7 @@ async function purgarCandidatosInactivos(admin: AdminClient): Promise<string[]> 
       // Hard delete del usuario → cascade limpia todas las tablas
       const { error: delErr } = await admin.auth.admin.deleteUser(c.user_id)
       if (delErr) {
-        console.error(`[cron-retencion] No se pudo eliminar ${c.email}:`, delErr.message)
+        console.error(`[cron-retencion] No se pudo eliminar candidato ${c.user_id}:`, delErr.message)
         continue
       }
 
@@ -113,7 +113,7 @@ async function purgarCandidatosInactivos(admin: AdminClient): Promise<string[]> 
       eliminados.push(c.email)
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'desconocido'
-      console.error(`[cron-retencion] Excepción al purgar ${c.email}:`, msg)
+      console.error(`[cron-retencion] Excepción al purgar candidato ${c.user_id}:`, msg)
     }
   }
 

@@ -13,6 +13,8 @@ const CSP = [
 ].join('; ')
 
 const SECURITY_HEADERS = [
+  // 2 años; sin preload hasta confirmar que todos los subdominios sirven HTTPS
+  { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains' },
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   { key: 'X-Frame-Options', value: 'DENY' },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },

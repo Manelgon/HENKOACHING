@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { requireRecruiter } from '@/lib/auth/require-recruiter'
 import { logAction } from '@/lib/audit/log-action'
 import { sendTransactional } from '@/lib/email/send'
 import { templateCandidaturaCandidato, templateCandidaturaAdmin } from '@/lib/email/templates/candidatura'
@@ -127,6 +128,9 @@ export async function aplicarAOferta(ofertaId: string, mensaje?: string) {
 }
 
 export async function cambiarEstadoSolicitud(solicitudId: string, estado: EstadoSolicitud) {
+  const auth = await requireRecruiter()
+  if (!auth.ok) return { error: auth.error }
+
   const supabase = await createClient()
 
   const { data: anterior } = await supabase

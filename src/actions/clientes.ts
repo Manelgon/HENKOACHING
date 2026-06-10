@@ -3,6 +3,8 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { requireAdmin } from '@/lib/auth/require-admin'
+import { requireRecruiter } from '@/lib/auth/require-recruiter'
 import { logAction } from '@/lib/audit/log-action'
 import type {
   EstadoCliente,
@@ -58,6 +60,9 @@ function validateClienteInput(input: ClienteInput): string | null {
 // CONVERTIR LEAD → CLIENTE (mueve el lead, lo archiva y crea el cliente)
 // =============================================================================
 export async function convertirLeadACliente(leadId: string, input: ClienteInput) {
+  const auth = await requireRecruiter()
+  if (!auth.ok) return { error: auth.error }
+
   const validation = validateClienteInput(input)
   if (validation) return { error: validation }
 
@@ -137,6 +142,9 @@ export async function convertirLeadACliente(leadId: string, input: ClienteInput)
 // CREAR CLIENTE MANUALMENTE (sin lead previo)
 // =============================================================================
 export async function crearClienteManual(input: ClienteInput) {
+  const auth = await requireRecruiter()
+  if (!auth.ok) return { error: auth.error }
+
   const validation = validateClienteInput(input)
   if (validation) return { error: validation }
 
@@ -191,6 +199,9 @@ export async function crearClienteManual(input: ClienteInput) {
 // EDITAR CLIENTE
 // =============================================================================
 export async function editarCliente(id: string, input: ClienteInput) {
+  const auth = await requireRecruiter()
+  if (!auth.ok) return { error: auth.error }
+
   const validation = validateClienteInput(input)
   if (validation) return { error: validation }
 
@@ -241,6 +252,9 @@ export async function editarCliente(id: string, input: ClienteInput) {
 // CAMBIAR ESTADO DEL CLIENTE
 // =============================================================================
 export async function cambiarEstadoCliente(id: string, nuevoEstado: EstadoCliente) {
+  const auth = await requireRecruiter()
+  if (!auth.ok) return { error: auth.error }
+
   const supabase = await createClient()
 
   const { data: actual } = await supabase
@@ -275,6 +289,9 @@ export async function cambiarEstadoCliente(id: string, nuevoEstado: EstadoClient
 // ELIMINAR (soft delete)
 // =============================================================================
 export async function eliminarCliente(id: string) {
+  const auth = await requireRecruiter()
+  if (!auth.ok) return { error: auth.error }
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'No autenticado' }
@@ -310,6 +327,9 @@ export async function eliminarCliente(id: string) {
 // RESTAURAR (deshacer soft delete)
 // =============================================================================
 export async function restaurarCliente(id: string) {
+  const auth = await requireRecruiter()
+  if (!auth.ok) return { error: auth.error }
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'No autenticado' }
@@ -346,6 +366,9 @@ export async function restaurarCliente(id: string) {
 // NOTAS DEL CLIENTE
 // =============================================================================
 export async function crearNotaCliente(clienteId: string, contenido: string) {
+  const auth = await requireRecruiter()
+  if (!auth.ok) return { error: auth.error }
+
   if (!contenido.trim()) return { error: 'La nota no puede estar vacía' }
 
   const supabase = await createClient()
@@ -372,6 +395,9 @@ export async function crearNotaCliente(clienteId: string, contenido: string) {
 }
 
 export async function eliminarNotaCliente(notaId: string) {
+  const auth = await requireRecruiter()
+  if (!auth.ok) return { error: auth.error }
+
   const supabase = await createClient()
 
   const { data: nota } = await supabase
@@ -403,6 +429,9 @@ export async function crearSesion(clienteId: string, input: {
   notas?: string
   realizada?: boolean
 }) {
+  const auth = await requireRecruiter()
+  if (!auth.ok) return { error: auth.error }
+
   if (!input.fecha) return { error: 'La fecha es obligatoria' }
 
   const supabase = await createClient()
@@ -440,6 +469,9 @@ export async function actualizarSesion(sesionId: string, input: {
   notas?: string
   realizada?: boolean
 }) {
+  const auth = await requireRecruiter()
+  if (!auth.ok) return { error: auth.error }
+
   const supabase = await createClient()
 
   const { data: sesion } = await supabase
@@ -467,6 +499,9 @@ export async function actualizarSesion(sesionId: string, input: {
 }
 
 export async function eliminarSesion(sesionId: string) {
+  const auth = await requireRecruiter()
+  if (!auth.ok) return { error: auth.error }
+
   const supabase = await createClient()
 
   const { data: sesion } = await supabase
@@ -493,6 +528,9 @@ export async function eliminarSesion(sesionId: string) {
 // ARCHIVOS (subir/eliminar/firmar URL)
 // =============================================================================
 export async function subirArchivoCliente(clienteId: string, formData: FormData) {
+  const auth = await requireAdmin()
+  if (!auth.ok) return { error: auth.error }
+
   const file = formData.get('file') as File | null
   const tipo = (formData.get('tipo') as string | null) ?? 'otro'
 
@@ -500,8 +538,6 @@ export async function subirArchivoCliente(clienteId: string, formData: FormData)
   if (file.size > 10 * 1024 * 1024) return { error: 'El archivo supera 10MB' }
 
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: 'No autenticado' }
 
   const extension = file.name.split('.').pop() ?? 'bin'
   const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
@@ -524,7 +560,7 @@ export async function subirArchivoCliente(clienteId: string, formData: FormData)
     storage_path: path,
     tipo,
     tamano_bytes: file.size,
-    subido_por: user.id,
+    subido_por: auth.user.id,
   })
 
   if (insErr) {
@@ -544,6 +580,9 @@ export async function subirArchivoCliente(clienteId: string, formData: FormData)
 }
 
 export async function eliminarArchivoCliente(archivoId: string) {
+  const auth = await requireAdmin()
+  if (!auth.ok) return { error: auth.error }
+
   const supabase = await createClient()
 
   const { data: archivo } = await supabase
@@ -577,6 +616,9 @@ export async function eliminarArchivoCliente(archivoId: string) {
 }
 
 export async function getArchivoSignedUrl(archivoId: string): Promise<{ url?: string; error?: string }> {
+  const auth = await requireAdmin()
+  if (!auth.ok) return { error: auth.error }
+
   const supabase = await createClient()
   const { data: archivo } = await supabase
     .from('cliente_archivos')

@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { requireRecruiter } from '@/lib/auth/require-recruiter'
 import { logAction } from '@/lib/audit/log-action'
 import { sendTransactional } from '@/lib/email/send'
 import { templateLeadConfirmacion } from '@/lib/email/templates/lead'
@@ -110,6 +111,9 @@ export async function crearLeadManual(input: {
   origen: string
   estado?: EstadoLead
 }) {
+  const auth = await requireRecruiter()
+  if (!auth.ok) return { error: auth.error }
+
   if (!input.nombre.trim() || !input.email.trim() || !input.mensaje.trim() || !input.origen.trim()) {
     return { error: 'Faltan campos obligatorios' }
   }
@@ -150,6 +154,9 @@ export async function crearLeadManual(input: {
 // CAMBIAR ESTADO (incluye auto: nuevo → pendiente al abrir)
 // =============================================================================
 export async function cambiarEstadoLead(id: string, nuevoEstado: EstadoLead) {
+  const auth = await requireRecruiter()
+  if (!auth.ok) return { error: auth.error }
+
   const supabase = await createClient()
 
   const { data: actual } = await supabase
@@ -184,6 +191,9 @@ export async function cambiarEstadoLead(id: string, nuevoEstado: EstadoLead) {
 // MARCAR LEÍDO + auto-pasar de 'nuevo' a 'pendiente' al primer click
 // =============================================================================
 export async function abrirLead(id: string) {
+  const auth = await requireRecruiter()
+  if (!auth.ok) return { error: auth.error }
+
   const supabase = await createClient()
 
   const { data: actual } = await supabase
@@ -221,6 +231,9 @@ export async function abrirLead(id: string) {
 // ARCHIVAR LEAD
 // =============================================================================
 export async function archivarLead(id: string) {
+  const auth = await requireRecruiter()
+  if (!auth.ok) return { error: auth.error }
+
   const supabase = await createClient()
 
   const { data: actual } = await supabase
@@ -251,6 +264,9 @@ export async function archivarLead(id: string) {
 // DESARCHIVAR / RECUPERAR LEAD
 // =============================================================================
 export async function desarchivarLead(id: string) {
+  const auth = await requireRecruiter()
+  if (!auth.ok) return { error: auth.error }
+
   const supabase = await createClient()
 
   const { data: actual } = await supabase
@@ -281,6 +297,9 @@ export async function desarchivarLead(id: string) {
 // ELIMINAR LEAD (definitivo, solo desde archivados)
 // =============================================================================
 export async function eliminarLead(id: string) {
+  const auth = await requireRecruiter()
+  if (!auth.ok) return { error: auth.error }
+
   const supabase = await createClient()
 
   const { data: actual } = await supabase
@@ -318,6 +337,9 @@ export async function editarLead(id: string, input: {
   servicio_interes?: string | null
   origen?: string | null
 }) {
+  const auth = await requireRecruiter()
+  if (!auth.ok) return { error: auth.error }
+
   const supabase = await createClient()
 
   const { error } = await supabase
@@ -350,6 +372,9 @@ export async function editarLead(id: string, input: {
 // NOTAS DEL LEAD
 // =============================================================================
 export async function crearNotaLead(leadId: string, contenido: string) {
+  const auth = await requireRecruiter()
+  if (!auth.ok) return { error: auth.error }
+
   if (!contenido.trim()) return { error: 'La nota no puede estar vacía' }
 
   const supabase = await createClient()
@@ -376,6 +401,9 @@ export async function crearNotaLead(leadId: string, contenido: string) {
 }
 
 export async function eliminarNotaLead(notaId: string) {
+  const auth = await requireRecruiter()
+  if (!auth.ok) return { error: auth.error }
+
   const supabase = await createClient()
 
   const { data: nota } = await supabase
