@@ -39,3 +39,17 @@ export function useUrlIdState(key: string): [string | null, (v: string | null) =
   const set = useCallback((v: string | null) => setValue(v ?? ''), [setValue])
   return [value || null, set]
 }
+
+/**
+ * Variante booleana (seccion desplegada, panel abierto):
+ * false = el param desaparece de la URL.
+ */
+export function useUrlFlagState(key: string): [boolean, (v: boolean | ((prev: boolean) => boolean)) => void] {
+  const [value, setValue] = useUrlState<string>(key, '')
+  const flag = value === '1'
+  const set = useCallback((v: boolean | ((prev: boolean) => boolean)) => {
+    const next = typeof v === 'function' ? v(new URLSearchParams(window.location.search).get(key) === '1') : v
+    setValue(next ? '1' : '')
+  }, [key, setValue])
+  return [flag, set]
+}

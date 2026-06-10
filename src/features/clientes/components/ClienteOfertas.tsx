@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
 import Link from 'next/link'
+import { useUrlIdState } from '@/shared/hooks/useUrlState'
 
 type SolicitudRow = {
   id: string
@@ -43,7 +43,7 @@ const LABEL_SOL: Record<string, string> = {
 }
 
 export default function ClienteOfertas({ ofertas }: { ofertas: OfertaRow[] }) {
-  const [abiertaId, setAbiertaId] = useState<string | null>(null)
+  const [abiertaId, setAbiertaId] = useUrlIdState('oferta')
 
   const totalSolicitudes = ofertas.reduce((acc, o) => acc + (o.solicitudes?.length ?? 0), 0)
 

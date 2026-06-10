@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useUrlFlagState } from '@/shared/hooks/useUrlState'
 import type { Experiencia, CandidatoPerfil } from '../types'
 
-function Accordion({ title, count, children }: { title: string; count: number; children: React.ReactNode }) {
-  const [open, setOpen] = useState(false)
+function Accordion({ title, count, urlKey, children }: { title: string; count: number; urlKey: string; children: React.ReactNode }) {
+  const [open, setOpen] = useUrlFlagState(urlKey)
 
   return (
     <section className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
@@ -40,7 +40,7 @@ function Accordion({ title, count, children }: { title: string; count: number; c
 
 export function CandidatoExperiencia({ experiencias }: { experiencias: Experiencia[] }) {
   return (
-    <Accordion title="Experiencia laboral" count={experiencias.length}>
+    <Accordion title="Experiencia laboral" count={experiencias.length} urlKey="exp">
       {experiencias.length === 0 ? (
         <p className="font-raleway text-sm text-gray-400 italic">Sin experiencia registrada.</p>
       ) : (
@@ -74,7 +74,7 @@ export function CandidatoExperiencia({ experiencias }: { experiencias: Experienc
 
 export function CandidatoEducacion({ educacion }: { educacion: import('../types').Educacion[] }) {
   return (
-    <Accordion title="Educación" count={educacion.length}>
+    <Accordion title="Educación" count={educacion.length} urlKey="edu">
       {educacion.length === 0 ? (
         <p className="font-raleway text-sm text-gray-400 italic">Sin formación registrada.</p>
       ) : (
@@ -102,7 +102,7 @@ export function CandidatoEducacion({ educacion }: { educacion: import('../types'
 
 export function CandidatoIdiomas({ idiomas }: { idiomas: import('../types').Idioma[] }) {
   return (
-    <Accordion title="Idiomas" count={idiomas.length}>
+    <Accordion title="Idiomas" count={idiomas.length} urlKey="idiomas">
       {idiomas.length === 0 ? (
         <p className="font-raleway text-sm text-gray-400 italic">Sin idiomas registrados.</p>
       ) : (
@@ -131,7 +131,7 @@ export function CandidatoPreferencias({ perfil }: { perfil: Pick<CandidatoPerfil
   const total = filas.length + (perfil.sectores_interes?.length ?? 0)
 
   return (
-    <Accordion title="Preferencias laborales" count={total}>
+    <Accordion title="Preferencias laborales" count={total} urlKey="prefs">
       {total === 0 ? (
         <p className="font-raleway text-sm text-gray-400 italic">Sin preferencias registradas.</p>
       ) : (
