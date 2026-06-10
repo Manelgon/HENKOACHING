@@ -11,6 +11,8 @@ import { createClient } from '@/lib/supabase/client'
 import CustomSelect from '@/shared/components/CustomSelect'
 import { useSortable } from '@/shared/hooks/useSortable'
 import SortHeader from '@/shared/components/SortHeader'
+import AccionesDropdown from './AccionesDropdown'
+import AgendarEntrevistaModal from './AgendarEntrevistaModal'
 
 const ESTADO_META: Record<EstadoSolicitud, { label: string; badge: string; dot: string }> = {
   nuevo:      { label: 'Nueva',       badge: 'bg-henko-greenblue text-henko-turquoise', dot: 'bg-henko-turquoise' },
@@ -45,6 +47,7 @@ type SolicitudView = {
   cvNombre: string | null
   cvPath: string | null
   cargo: string
+  tieneTrayectoria: boolean
 }
 
 type Props = {
@@ -128,6 +131,7 @@ export default function AdminSolicitudes({ solicitudes, ofertas }: Props) {
   const [filtroOferta, setFiltroOferta] = useState<string>('todas')
   const [busqueda, setBusqueda] = useState('')
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [agendarSol, setAgendarSol] = useState<SolicitudView | null>(null)
   // Overrides optimistas de estado (como leads) para no esperar al refresh
   const [overrides, setOverrides] = useState<Record<string, EstadoSolicitud>>({})
 
@@ -223,6 +227,12 @@ export default function AdminSolicitudes({ solicitudes, ofertas }: Props) {
     if (result.ok && result.data.url) window.open(result.data.url, '_blank')
   }
 
+  function handleEntrevistaAgendada(id: string) {
+    setOverrides(prev => ({ ...prev, [id]: 'entrevista' }))
+    setAgendarSol(null)
+    router.refresh()
+  }
+
   useEffect(() => {
     if (!selectedId) return
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setSelectedId(null) }
@@ -289,8 +299,8 @@ export default function AdminSolicitudes({ solicitudes, ofertas }: Props) {
           <SortHeader label="CARGO" sortKey="cargo" activeSortKey={sortKey} sortDir={sortDir} onSort={k => toggleSort(k as keyof SolicitudView)} />
           <SortHeader label="OFERTA" sortKey="ofertaTitulo" activeSortKey={sortKey} sortDir={sortDir} onSort={k => toggleSort(k as keyof SolicitudView)} />
           <SortHeader label="FECHA" sortKey="fecha" activeSortKey={sortKey} sortDir={sortDir} onSort={k => toggleSort(k as keyof SolicitudView)} />
-          <span>CV</span>
           <span>ESTADO</span>
+          <span className="text-right pr-1">ACCIONES</span>
         </div>
         {filtradas.length === 0 && (
           <div className="px-5 md:px-7 py-12 text-center text-gray-400 text-sm">No hay solicitudes para mostrar.</div>
@@ -321,24 +331,17 @@ export default function AdminSolicitudes({ solicitudes, ofertas }: Props) {
                 <p className="text-sm text-gray-500 truncate">{s.cargo || '—'}</p>
                 <p className="text-sm text-gray-600 truncate">{s.ofertaTitulo}</p>
                 <p className="text-xs text-gray-400">{s.fecha}</p>
-                <div>
-                  {s.cvPath ? (
-                    <button
-                      type="button"
-                      onClick={e => { e.stopPropagation(); descargarCv(s.cvPath!) }}
-                      className="w-8 h-8 rounded-lg bg-henko-turquoise/10 hover:bg-henko-turquoise/20 flex items-center justify-center transition-colors"
-                      title={s.cvNombre ?? 'Descargar CV'}
-                    >
-                      <svg className="w-4 h-4 text-henko-turquoise" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                      </svg>
-                    </button>
-                  ) : (
-                    <span className="text-xs text-gray-300">—</span>
-                  )}
-                </div>
                 <div onClick={e => e.stopPropagation()}>
                   <EstadoDropdown estado={s.estado} onChange={v => cambiarEstado(s.id, v)} />
+                </div>
+                <div className="flex justify-end" onClick={e => e.stopPropagation()}>
+                  <AccionesDropdown
+                    onAgendar={() => setAgendarSol(s)}
+                    onDescargarCv={s.cvPath ? () => descargarCv(s.cvPath!) : undefined}
+                    trayectoriaUrl={`/api/dashboard/candidatos/${s.candidatoId}/pdf`}
+                    tieneTrayectoria={s.tieneTrayectoria}
+                    perfilUrl={`/dashboard/candidatos/${s.candidatoId}`}
+                  />
                 </div>
               </div>
               {/* Móvil */}
@@ -357,8 +360,15 @@ export default function AdminSolicitudes({ solicitudes, ofertas }: Props) {
                       <p className="text-[11px] text-gray-400 truncate">{s.email} · {s.fecha}</p>
                     </div>
                   </div>
-                  <div onClick={e => e.stopPropagation()} className="flex-shrink-0">
+                  <div onClick={e => e.stopPropagation()} className="flex-shrink-0 flex items-center gap-1">
                     <EstadoDropdown estado={s.estado} onChange={v => cambiarEstado(s.id, v)} />
+                    <AccionesDropdown
+                      onAgendar={() => setAgendarSol(s)}
+                      onDescargarCv={s.cvPath ? () => descargarCv(s.cvPath!) : undefined}
+                      trayectoriaUrl={`/api/dashboard/candidatos/${s.candidatoId}/pdf`}
+                      tieneTrayectoria={s.tieneTrayectoria}
+                      perfilUrl={`/dashboard/candidatos/${s.candidatoId}`}
+                    />
                   </div>
                 </div>
                 <p className="text-xs text-gray-500 truncate mb-1">{s.ofertaTitulo}</p>
@@ -424,6 +434,31 @@ export default function AdminSolicitudes({ solicitudes, ofertas }: Props) {
                 </div>
               )}
 
+              {/* Trayectoria */}
+              <div>
+                <p className="text-[10px] tracking-[0.14em] text-henko-turquoise font-bold mb-2">TRAYECTORIA</p>
+                {selected.tieneTrayectoria ? (
+                  <a
+                    href={`/api/dashboard/candidatos/${selected.candidatoId}/pdf`}
+                    target="_blank"
+                    rel="noopener"
+                    className="inline-flex items-center gap-2 text-sm text-henko-turquoise font-semibold hover:underline"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                    </svg>
+                    Descargar trayectoria (PDF)
+                  </a>
+                ) : (
+                  <p className="inline-flex items-center gap-1.5 text-sm text-gray-300 cursor-not-allowed" title="El candidato aún no ha rellenado su trayectoria">
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75M3.75 21.75h16.5a1.5 1.5 0 001.5-1.5v-8.25a1.5 1.5 0 00-1.5-1.5H3.75a1.5 1.5 0 00-1.5 1.5v8.25a1.5 1.5 0 001.5 1.5z" />
+                    </svg>
+                    Trayectoria sin rellenar
+                  </p>
+                )}
+              </div>
+
               {/* Mensaje */}
               {selected.mensaje && (
                 <div>
@@ -434,16 +469,35 @@ export default function AdminSolicitudes({ solicitudes, ofertas }: Props) {
             </div>
 
             {/* Footer */}
-            <div className="px-8 py-5 border-t border-black/5 bg-white">
+            <div className="px-8 py-5 border-t border-black/5 bg-white flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setAgendarSol(selected)}
+                className="flex-1 inline-flex items-center justify-center gap-2 border border-henko-turquoise text-henko-turquoise px-5 py-3 rounded-full text-sm font-semibold hover:bg-henko-turquoise/5 transition-all"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                </svg>
+                Agendar
+              </button>
               <Link
                 href={`/dashboard/candidatos/${selected.candidatoId}`}
-                className="w-full inline-flex items-center justify-center gap-2 bg-henko-turquoise text-white px-6 py-3 rounded-full text-sm font-semibold hover:bg-henko-turquoise-light hover:shadow-lg transition-all"
+                className="flex-1 inline-flex items-center justify-center gap-2 bg-henko-turquoise text-white px-5 py-3 rounded-full text-sm font-semibold hover:bg-henko-turquoise-light hover:shadow-lg transition-all"
               >
-                Ver perfil completo →
+                Ver perfil →
               </Link>
             </div>
           </div>
         </div>
+      )}
+
+      {/* Modal agendar entrevista */}
+      {agendarSol && (
+        <AgendarEntrevistaModal
+          solicitud={{ id: agendarSol.id, candidato: agendarSol.candidato, email: agendarSol.email, ofertaTitulo: agendarSol.ofertaTitulo }}
+          onClose={() => setAgendarSol(null)}
+          onDone={() => handleEntrevistaAgendada(agendarSol.id)}
+        />
       )}
     </div>
   )

@@ -1,0 +1,192 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { agendarEntrevista } from '@/actions/solicitudes'
+import { useAction } from '@/shared/feedback/FeedbackContext'
+
+type Solicitud = {
+  id: string
+  candidato: string
+  email: string
+  ofertaTitulo: string
+}
+
+type Props = {
+  solicitud: Solicitud
+  onClose: () => void
+  onDone: () => void
+}
+
+const DURACIONES = [
+  { value: 30, label: '30 min' },
+  { value: 45, label: '45 min' },
+  { value: 60, label: '1 hora' },
+  { value: 90, label: '1 h 30 min' },
+]
+
+const pad = (n: number) => String(n).padStart(2, '0')
+const fmtLocal = (dt: Date) =>
+  `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}:00`
+
+export default function AgendarEntrevistaModal({ solicitud, onClose, onDone }: Props) {
+  const runAction = useAction()
+  const [fecha, setFecha] = useState('')
+  const [hora, setHora] = useState('10:00')
+  const [duracion, setDuracion] = useState(45)
+  const [invitarCandidato, setInvitarCandidato] = useState(true)
+  const [crearTarea, setCrearTarea] = useState(false)
+  const [enviando, setEnviando] = useState(false)
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', onKey)
+    document.body.style.overflow = 'hidden'
+    return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = '' }
+  }, [onClose])
+
+  async function handleSubmit() {
+    if (!fecha || !hora) return
+    const startDate = new Date(`${fecha}T${hora}:00`)
+    const endDate = new Date(startDate.getTime() + duracion * 60000)
+
+    setEnviando(true)
+    const result = await runAction(
+      `Agendando entrevista con ${solicitud.candidato}`,
+      () => agendarEntrevista({
+        solicitudId: solicitud.id,
+        candidatoNombre: solicitud.candidato,
+        candidatoEmail: solicitud.email,
+        ofertaTitulo: solicitud.ofertaTitulo,
+        start: fmtLocal(startDate),
+        end: fmtLocal(endDate),
+        invitarCandidato,
+        crearTarea,
+      }),
+      { successMessage: 'Entrevista agendada' },
+    )
+    setEnviando(false)
+    if (result.ok) onDone()
+  }
+
+  const sinEmail = !solicitud.email
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4" onClick={onClose}>
+      <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl flex flex-col" onClick={e => e.stopPropagation()}>
+        {/* Header */}
+        <div className="flex items-start justify-between px-7 pt-6 pb-4 border-b border-black/5">
+          <div>
+            <p className="text-[10px] tracking-[0.14em] text-henko-turquoise font-bold mb-1">AGENDAR ENTREVISTA</p>
+            <p className="font-roxborough text-xl text-gray-900 leading-tight">{solicitud.candidato}</p>
+            {solicitud.ofertaTitulo && <p className="text-[11px] text-gray-400 mt-0.5">{solicitud.ofertaTitulo}</p>}
+          </div>
+          <button type="button" onClick={onClose} className="w-9 h-9 rounded-full hover:bg-black/5 flex items-center justify-center text-gray-400 hover:text-gray-700 transition-colors">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="px-7 py-6 space-y-5">
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="FECHA">
+              <input
+                type="date"
+                value={fecha}
+                onChange={e => setFecha(e.target.value)}
+                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 font-raleway text-sm outline-none focus:border-henko-turquoise focus:bg-white transition-colors"
+              />
+            </Field>
+            <Field label="HORA">
+              <input
+                type="time"
+                value={hora}
+                onChange={e => setHora(e.target.value)}
+                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 font-raleway text-sm outline-none focus:border-henko-turquoise focus:bg-white transition-colors"
+              />
+            </Field>
+          </div>
+
+          <Field label="DURACIÓN">
+            <div className="grid grid-cols-4 gap-2">
+              {DURACIONES.map(d => (
+                <button
+                  key={d.value}
+                  type="button"
+                  onClick={() => setDuracion(d.value)}
+                  className={`px-2 py-2 rounded-xl text-xs font-semibold transition-colors ${
+                    duracion === d.value
+                      ? 'bg-henko-turquoise text-white'
+                      : 'bg-gray-50 text-gray-500 hover:bg-gray-100 border border-gray-200'
+                  }`}
+                >
+                  {d.label}
+                </button>
+              ))}
+            </div>
+          </Field>
+
+          <div className="space-y-2.5 pt-1">
+            <Toggle
+              checked={invitarCandidato && !sinEmail}
+              disabled={sinEmail}
+              onChange={setInvitarCandidato}
+              label="Invitar al candidato + Google Meet"
+              hint={sinEmail ? 'Sin email del candidato' : solicitud.email}
+            />
+            <Toggle
+              checked={crearTarea}
+              onChange={setCrearTarea}
+              label="Crear tarea de seguimiento"
+              hint="Se añadirá a Google Tasks"
+            />
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="px-7 py-5 border-t border-black/5 flex items-center justify-end gap-3">
+          <button type="button" onClick={onClose} className="px-5 py-2.5 rounded-full text-sm font-semibold text-gray-500 hover:bg-black/5 transition-colors">
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={!fecha || !hora || enviando}
+            className="inline-flex items-center gap-2 bg-henko-turquoise text-white px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-henko-turquoise-light hover:shadow-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {enviando ? 'Agendando…' : 'Agendar entrevista'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <p className="text-[10px] tracking-[0.14em] text-henko-turquoise font-bold mb-2">{label}</p>
+      {children}
+    </div>
+  )
+}
+
+function Toggle({ checked, onChange, label, hint, disabled }: { checked: boolean; onChange: (v: boolean) => void; label: string; hint?: string; disabled?: boolean }) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={() => onChange(!checked)}
+      className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl border transition-colors text-left ${
+        disabled ? 'border-gray-100 bg-gray-50 cursor-not-allowed opacity-60' : 'border-gray-200 hover:border-henko-turquoise/50'
+      }`}
+    >
+      <div className="min-w-0">
+        <p className="text-sm font-medium text-gray-700">{label}</p>
+        {hint && <p className="text-[11px] text-gray-400 truncate">{hint}</p>}
+      </div>
+      <span className={`relative w-10 h-6 rounded-full flex-shrink-0 transition-colors ${checked ? 'bg-henko-turquoise' : 'bg-gray-200'}`}>
+        <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${checked ? 'translate-x-4' : ''}`} />
+      </span>
+    </button>
+  )
+}
