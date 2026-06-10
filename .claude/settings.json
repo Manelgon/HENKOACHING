@@ -130,10 +130,35 @@
       "PowerShell(\"borrado\")",
       "PowerShell(git add \"src/app/\\(main\\)/dashboard/page.tsx\" src/components/DashboardShell.tsx src/features/dashboard/components/CalendarWidget.tsx src/features/dashboard/components/CollapsibleCard.tsx src/features/dashboard/components/QuickCreate.tsx src/features/empleo/components/AdminOfertas.tsx src/features/empleo/components/NuevaOfertaDrawer.tsx)",
       "PowerShell(git add docs/manual)",
-      "PowerShell(git add .claude/settings.json next-env.d.ts)"
+      "PowerShell(git add .claude/settings.json next-env.d.ts)",
+      "PowerShell(Remove-Item \".manual-full.html\" -Force -Confirm:$false)",
+      "Skill(code-review)",
+      "Skill(code-review:*)",
+      "PowerShell(Get-ChildItem -Recurse -Directory src | Select-Object -ExpandProperty FullName | ForEach-Object { $_.Replace\\(\"$PWD\\\\\", ''\\) })",
+      "Bash(awk '/^  await admin/{start=NR; text=$0} start && NR<=start+4{text=text \"\\\\n\" $0} start && NR==start+4{print \"Line \" start \": \" text \"\\\\n---\"}' src/actions/facturas.ts)",
+      "Bash(grep -rE \"^[[:space:]]*//\\\\s*\\(const|let|var|function|export|if|return\\)\" src --include=\"*.ts\" --include=\"*.tsx\")",
+      "Bash(awk '/^  revalidatePath/{print NR\": \" $0}' src/actions/*.ts)",
+      "Bash(npx -y marked --gfm -i Tareas_Pendientes_Jennifer.md -o .tareas-body.html)",
+      "Bash(grep -r \"z\\\\\\\\.object\\\\|z\\\\\\\\.string\\\\|z\\\\\\\\.enum\" src --include=\"*.ts\" --include=\"*.tsx\")",
+      "Bash(xargs grep -l \"role.*candidato\\\\|role.*empresa\\\\|role.*admin\")",
+      "Bash(\"/c/Program Files/Google/Chrome/Application/chrome.exe\" --headless=new --disable-gpu --no-pdf-header-footer --virtual-time-budget=60000 --print-to-pdf=\"C:\\\\\\\\Users\\\\\\\\manel\\\\\\\\.000.Proyectos.DEV\\\\\\\\005. Jennifer Cervera - copia\\\\\\\\docs\\\\\\\\manual\\\\\\\\Tareas_Pendientes_Jennifer.pdf\" \"file:///C:/Users/manel/.000.Proyectos.DEV/005. Jennifer Cervera - copia/docs/manual/.tareas-full.html\")",
+      "Bash(\"/c/Program Files/Google/Chrome/Application/chrome.exe\" --headless=new --disable-gpu --screenshot=\"C:\\\\\\\\tmp\\\\\\\\tareas-preview.png\" --window-size=900,2400 --virtual-time-budget=30000 \"file:///C:/Users/manel/.000.Proyectos.DEV/005. Jennifer Cervera - copia/docs/manual/.tareas-full.html\")",
+      "Bash(cd \"/c/Users/manel/.000.Proyectos.DEV/005. Jennifer Cervera - copia/docs/manual\" && rm -f .tareas-body.html .tareas-full.html && ls Tareas_Pendientes_Jennifer.*)",
+      "PowerShell(npx eslint src/lib/pdf src/lib/email/templates src/app/\\(web\\)/blog src/lib/supabase/public.ts 2>&1 | Select-Object -First 40)",
+      "PowerShell(npx eslint \"src/lib/pdf\" \"src/lib/email/templates\" \"src/app/\\(web\\)/blog\" \"src/lib/supabase/public.ts\" 2>&1)",
+      "PowerShell(npm run lint 2>&1)",
+      "PowerShell($env:TSCONFIG=$null; npx tsc --noEmit --noUnusedLocals 2>&1 | Select-String -Pattern \"pdf|email\" | Select-Object -First 30)",
+      "PowerShell(if \\($?\\) { \"TYPECHECK OK\" })",
+      "PowerShell(git add \"src/actions/candidatos-admin.ts\")",
+      "PowerShell(git commit -F c:\\\\tmp\\\\audit-commit-msg.txt)",
+      "PowerShell(git push 2>&1)",
+      "PowerShell(npx eslint src/shared/components/IdleTimeout.tsx)",
+      "PowerShell(git add src/shared/components/IdleTimeout.tsx)",
+      "PowerShell(git add docs/manual/Tareas_Pendientes_Jennifer.md docs/manual/Tareas_Pendientes_Jennifer.pdf .claude/settings.json next-env.d.ts)"
     ],
     "additionalDirectories": [
-      "c:\\Users\\manel\\.000.Proyectos.DEV\\005. Jennifer Cervera - copia"
+      "c:\\Users\\manel\\.000.Proyectos.DEV\\005. Jennifer Cervera - copia",
+      "c:\\c\\Users\\manel\\.000.Proyectos.DEV\\005. Jennifer Cervera - copia\\docs\\manual"
     ]
   }
 }
