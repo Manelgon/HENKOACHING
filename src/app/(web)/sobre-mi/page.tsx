@@ -1,6 +1,7 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
 import PageHeader from '@/components/PageHeader'
+import PersonJsonLd from '@/components/PersonJsonLd'
 import { getCompanySettings, getSignedAssetUrl } from '@/lib/company-settings'
 
 export const dynamic = 'force-dynamic'
@@ -23,6 +24,7 @@ export default async function SobreMiPage() {
 
   return (
     <div className="bg-white pt-24 font-raleway">
+      <PersonJsonLd />
       <PageHeader
         overline="Sobre mí"
         title={
@@ -102,8 +104,67 @@ export default async function SobreMiPage() {
         </div>
       </section>
 
+      {/* Lo que veo */}
+      <section className="px-6 md:px-12 py-20 bg-[#f4f6f7] border-t border-gray-100">
+        <div className="max-w-7xl mx-auto">
+          <p data-animate className="font-raleway font-bold text-henko-turquoise tracking-[0.18em] uppercase text-[11px] mb-4">Mi enfoque</p>
+          <h2 data-animate data-delay="100" className="font-roxborough text-2xl md:text-4xl text-gray-900 mb-4 leading-tight">
+            Lo que veo cuando entro <em className="italic text-henko-turquoise font-light">en una empresa</em>
+          </h2>
+          <p data-animate data-delay="150" className="font-raleway text-[15px] leading-[1.75] text-gray-600 mb-12 max-w-2xl">
+            No necesito un informe de 40 páginas para entender qué está pasando. Cuando acompaño a una organización, lo que observo es esto.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 mb-16">
+            {[
+              ['Dónde se bloquean las decisiones.', 'Qué conversaciones no se están teniendo.', 'Qué responsabilidades no están claras.'],
+              ['Qué líder está sobrecargado.', 'Qué perfil necesita realmente la organización.', 'Qué dinámica del equipo está frenando el crecimiento.'],
+            ].map((col, ci) => (
+              <div key={ci} className="divide-y divide-[#DDD8CE]">
+                {col.map((item, i) => (
+                  <div key={i} data-animate data-delay={(ci * 3 + i) * 80} className="flex gap-4 py-6">
+                    <div className="flex-shrink-0 w-7 h-7 rounded-full bg-henko-turquoise flex items-center justify-center mt-0.5">
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                        <path d="M2 6L4.8 9L10 3" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </div>
+                    <p className="font-raleway text-[15px] text-gray-700 leading-[1.7] self-center">{item}</p>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+
+          {/* Diferenciador: voz auténtica vs. consultor tradicional */}
+          <div data-animate>
+            <div className="flex items-center gap-3 mb-6">
+              <span className="block w-8 h-px bg-henko-turquoise" />
+              <p className="font-raleway font-bold text-henko-turquoise tracking-[0.18em] uppercase text-[11px]">En esencia</p>
+              <span className="block w-8 h-px bg-henko-turquoise" />
+            </div>
+            <p className="text-[15px] leading-[1.85] text-gray-600 mb-12">
+              La diferencia es que yo no llego con un modelo cerrado: llego con presencia, con escucha y con la experiencia de haber visto cómo funcionan las personas por dentro de una organización. Eso, en esencia, es <em className="italic text-henko-turquoise">diagnóstico organizacional.</em>
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center">
+              <div className="relative rounded-2xl p-8 md:p-10 border border-gray-300">
+                <p className="text-[11px] font-bold tracking-[0.15em] uppercase text-gray-400 mb-4">Un consultor tradicional diría:</p>
+                <p className="font-roxborough text-lg md:text-xl text-gray-400 italic leading-relaxed">
+                  &ldquo;He realizado un análisis de procesos y estructura organizacional.&rdquo;
+                </p>
+              </div>
+              <div className="relative rounded-2xl p-8 md:p-10 bg-henko-turquoise">
+                <p className="text-[11px] font-bold tracking-[0.15em] uppercase text-white/60 mb-4">Yo te diría:</p>
+                <p className="font-roxborough text-lg md:text-xl text-white italic leading-relaxed">
+                  &ldquo;He hablado con las personas, he entendido qué está pasando y he ayudado a poner orden.&rdquo;
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Trayectoria */}
-      <section className="px-6 md:px-12 py-16 bg-[#f4f6f7] border-t border-gray-100">
+      <section className="px-6 md:px-12 py-16 bg-white border-t border-gray-100">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-10">
             <div>

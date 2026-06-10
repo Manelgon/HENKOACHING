@@ -124,12 +124,10 @@ export default async function Home() {
 
           {/* Columna izquierda */}
           <div className="lg:sticky lg:top-32">
-            <div data-animate className="flex items-center gap-[14px] mb-5">
-              <span className="block w-[34px] h-[1.5px] bg-henko-turquoise opacity-50" />
+            <div data-animate className="mb-5">
               <p className="text-[11px] tracking-[0.2em] text-henko-turquoise font-bold uppercase font-raleway whitespace-nowrap">
                 ¿Te suena familiar?
               </p>
-              <span className="block w-[34px] h-[1.5px] bg-henko-turquoise opacity-50" />
             </div>
 
             <h2 data-animate data-delay="100" className="font-roxborough text-[clamp(28px,3vw,44px)] text-gray-900 mb-6 leading-tight">
@@ -175,6 +173,36 @@ export default async function Home() {
             ))}
           </div>
 
+        </div>
+      </section>
+
+      {/* FRASE DESTACADA — franja turquesa */}
+      <section className="relative bg-henko-turquoise py-24 md:py-28 px-6 md:px-12 text-center overflow-hidden">
+        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="blob-1 absolute -top-32 -left-32 w-[480px] h-[480px] bg-white/[0.08]" />
+          <div className="blob-2 absolute -bottom-40 -right-32 w-[520px] h-[520px] bg-white/[0.06]" />
+        </div>
+        <span
+          aria-hidden
+          className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 font-roxborough italic text-[16rem] md:text-[22rem] leading-none text-white/[0.07] select-none"
+        >
+          &ldquo;
+        </span>
+
+        <div className="relative z-10 max-w-3xl mx-auto">
+          <div data-animate className="flex items-center justify-center gap-3 mb-7">
+            <span className="block w-8 h-px bg-white/60" />
+            <p className="font-raleway font-bold text-white tracking-[0.22em] uppercase text-[11px]">
+              Mi forma de trabajar
+            </p>
+            <span className="block w-8 h-px bg-white/60" />
+          </div>
+          <h2 data-animate data-delay="100" className="font-roxborough text-white mb-7" style={{fontSize: 'clamp(20px, 2.5vw, 36px)', lineHeight: 1.3, letterSpacing: '-0.01em'}}>
+            No hago un análisis de procesos desde fuera. <em className="italic font-light">Hablo con las personas, entiendo qué está pasando y ayudo a poner orden.</em>
+          </h2>
+          <p data-animate data-delay="200" className="font-roxborough italic text-base md:text-xl text-white/85">
+            Eso, en esencia, es diagnóstico organizacional.
+          </p>
         </div>
       </section>
 

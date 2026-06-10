@@ -153,7 +153,7 @@ export default function ServiciosClient() {
             ))}
           </div>
 
-          <div className="mt-10">
+          <div className="mt-12 flex justify-center">
             <Link
               data-animate
               href="/contacto"
