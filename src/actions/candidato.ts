@@ -81,7 +81,7 @@ export async function checkEmailCandidatoExiste(email: string): Promise<{ exists
 export async function solicitarResetCandidato(email: string): Promise<{ ok?: boolean; error?: string }> {
   const supabase = await createClient()
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/candidato/update-password`,
+    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/update-password`,
   })
   if (error) return { error: error.message }
   await logAction({

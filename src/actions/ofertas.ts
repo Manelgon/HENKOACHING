@@ -129,7 +129,7 @@ export async function actualizarOferta(id: string, input: OfertaInput) {
   try {
     const cliente_id = await ensureClienteEmpresa(input.empresa_nombre)
 
-    const { error } = await supabase
+    const { data: actualizada, error } = await supabase
       .from('ofertas')
       .update({
         titulo: input.titulo,
@@ -151,6 +151,8 @@ export async function actualizarOferta(id: string, input: OfertaInput) {
         fecha_expiracion: input.fecha_expiracion ? new Date(input.fecha_expiracion).toISOString() : null,
       })
       .eq('id', id)
+      .select('slug')
+      .single()
 
     if (error) return { error: error.message }
 
@@ -164,7 +166,7 @@ export async function actualizarOferta(id: string, input: OfertaInput) {
 
     revalidatePath('/dashboard/ofertas')
     revalidatePath('/empleo')
-    revalidatePath(`/empleo/${id}`)
+    if (actualizada?.slug) revalidatePath(`/empleo/${actualizada.slug}`)
     return { ok: true }
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Error desconocido' }

@@ -2,16 +2,16 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { createPublicClient } from '@/lib/supabase/public'
 import BlogCard, { type BlogCardData } from '@/features/blog/components/BlogCard'
 import { SITE_URL, BLOG_AUTHOR, urlAbsoluta } from '@/features/blog/lib/site-config'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 300
 
 type PageProps = { params: Promise<{ slug: string }> }
 
 async function obtenerArticulo(slug: string) {
-  const supabase = await createClient()
+  const supabase = createPublicClient()
   const { data } = await supabase
     .from('blog_posts')
     .select('id, slug, titulo, extracto, contenido, imagen_portada, imagen_portada_alt, og_image_url, meta_titulo, meta_descripcion, canonical_url, keywords, fecha_publicacion, tiempo_lectura, updated_at, categoria:blog_categorias(id, slug, nombre)')
@@ -64,7 +64,7 @@ export default async function ArticuloPage({ params }: PageProps) {
   const post = await obtenerArticulo(slug)
   if (!post) notFound()
 
-  const supabase = await createClient()
+  const supabase = createPublicClient()
   const { data: relacionados } = await supabase
     .from('blog_posts')
     .select('slug, titulo, extracto, imagen_portada, imagen_portada_alt, fecha_publicacion, tiempo_lectura, categoria:blog_categorias(slug, nombre)')

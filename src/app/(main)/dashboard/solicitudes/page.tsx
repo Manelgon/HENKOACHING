@@ -21,7 +21,10 @@ export default async function DashboardSolicitudesPage() {
         cvs(id, nombre_archivo, storage_path),
         candidato_profiles:candidato_id(cargo_actual, resumen, profiles(nombre, apellidos, email, telefono))
       `)
-      .order('created_at', { ascending: false }),
+      .order('created_at', { ascending: false })
+      // Cota de seguridad: la vista filtra en cliente; evitamos cargar la tabla
+      // completa si el volumen de solicitudes crece con el portal de empleo.
+      .limit(500),
     supabase
       .from('ofertas')
       .select('id, titulo')

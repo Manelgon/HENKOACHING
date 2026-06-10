@@ -76,10 +76,16 @@ export async function sendTransactional(input: SendEmailInput): Promise<void> {
 
     // 4a. Marcar como enviado
     if (registroId) {
-      await admin
+      const { error: updateError } = await admin
         .from('email_envios' as never)
         .update({ estado: 'enviado', sent_at: new Date().toISOString() } as never)
         .eq('id', registroId)
+      // Si el envío SMTP fue correcto pero no pudimos persistir el estado,
+      // dejamos rastro: el registro quedaría como 'pendiente' y sería invisible
+      // al panel de reintentos, así que al menos lo registramos en consola.
+      if (updateError) {
+        console.error('[email] Enviado a', input.to, 'pero falló marcar como enviado:', updateError.message)
+      }
     }
 
     await logAction({

@@ -28,7 +28,10 @@ export default async function FacturasPage() {
     supabase
       .from('facturas' as never)
       .select('id, numero, cliente_id, cliente_nombre, cliente_nif, fecha_emision, fecha_vencimiento, total, base_imponible, iva_porcentaje, iva_importe, irpf_porcentaje, irpf_importe, estado, forma_pago, notas, created_at, factura_rectificada_id, motivo_rectificacion')
-      .order('fecha_emision', { ascending: false }),
+      .order('fecha_emision', { ascending: false })
+      // Cota de seguridad: la vista filtra en cliente; evitamos cargar la tabla
+      // completa si el volumen crece. Cubre años de facturación de un autónomo.
+      .limit(500),
     supabase
       .from('clientes')
       .select('id, nombre, empresa, email, nif_cif, direccion_fiscal')

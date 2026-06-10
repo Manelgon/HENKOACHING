@@ -308,10 +308,12 @@ export async function regenerarPdfFactura(facturaId: string) {
 
   if (uploadError) return { error: uploadError.message }
 
-  await admin
+  const { error: updateError } = await admin
     .from('facturas' as never)
     .update({ pdf_path: storagePath } as never)
     .eq('id', facturaId)
+
+  if (updateError) return { error: updateError.message }
 
   return { ok: true, path: storagePath }
 }

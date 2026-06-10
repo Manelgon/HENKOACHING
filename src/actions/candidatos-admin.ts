@@ -228,9 +228,17 @@ export async function resetearPasswordCandidato(candidatoId: string) {
   if (!profile?.email) return { error: 'Candidato no encontrado' }
 
   const { error } = await admin.auth.resetPasswordForEmail(profile.email, {
-    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/candidato/update-password`,
+    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/update-password`,
   })
   if (error) return { error: error.message }
+
+  await logAction({
+    accion: 'candidato.reset_password',
+    recursoTipo: 'candidato',
+    recursoId: candidatoId,
+    recursoLabel: profile.email,
+  })
+
   return { ok: true, email: profile.email }
 }
 

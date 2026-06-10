@@ -11,9 +11,10 @@ async function getRedirectForRole(userId: string): Promise<string> {
     .from('profiles')
     .select('role')
     .eq('id', userId)
-    .single()
+    .maybeSingle()
 
   if (data?.role === 'candidato') return '/candidato/dashboard'
+  if (data?.role === 'empresa') return '/empresa/dashboard'
   return '/dashboard'
 }
 

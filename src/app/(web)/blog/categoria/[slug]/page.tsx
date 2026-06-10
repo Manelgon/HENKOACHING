@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { createPublicClient } from '@/lib/supabase/public'
 import PageHeader from '@/components/PageHeader'
 import BlogCard, { type BlogCardData } from '@/features/blog/components/BlogCard'
 import { SITE_URL } from '@/features/blog/lib/site-config'
@@ -12,7 +12,7 @@ type PageProps = { params: Promise<{ slug: string }> }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params
-  const supabase = await createClient()
+  const supabase = createPublicClient()
   const { data } = await supabase
     .from('blog_categorias')
     .select('nombre, descripcion')
@@ -37,7 +37,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function CategoriaPage({ params }: PageProps) {
   const { slug } = await params
-  const supabase = await createClient()
+  const supabase = createPublicClient()
 
   const { data: categoria } = await supabase
     .from('blog_categorias')
