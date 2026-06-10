@@ -44,6 +44,7 @@ export default function AgendarCitaModal({ recurso, tiposCita, tiposTarea, onClo
   const [duracion, setDuracion] = useState(45)
   const [invitar, setInvitar] = useState(true)
   const [crearTarea, setCrearTarea] = useState(false)
+  const [tipoTarea, setTipoTarea] = useState(tiposTarea[0] ?? TIPO_OTRO)
   const [tareaTitulo, setTareaTitulo] = useState('')
   const [taskListId, setTaskListId] = useState('')
   const [listas, setListas] = useState<TaskList[]>([])
@@ -105,9 +106,9 @@ export default function AgendarCitaModal({ recurso, tiposCita, tiposTarea, onClo
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4" onClick={onClose}>
-      <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl flex flex-col" onClick={e => e.stopPropagation()}>
+      <div className="relative w-full max-w-md max-h-[90vh] bg-white rounded-3xl shadow-2xl flex flex-col" onClick={e => e.stopPropagation()}>
         {/* Header */}
-        <div className="flex items-start justify-between px-7 pt-6 pb-4 border-b border-black/5">
+        <div className="flex items-start justify-between px-7 pt-6 pb-4 border-b border-black/5 flex-shrink-0">
           <div>
             <p className="text-[10px] tracking-[0.14em] text-henko-turquoise font-bold mb-1">AGENDAR CITA</p>
             <p className="font-roxborough text-xl text-gray-900 leading-tight">{recurso.nombre}</p>
@@ -119,7 +120,7 @@ export default function AgendarCitaModal({ recurso, tiposCita, tiposTarea, onClo
         </div>
 
         {/* Body */}
-        <div className="px-7 py-6 space-y-5">
+        <div className="px-7 py-6 space-y-5 overflow-y-auto flex-1">
           <Field label="TIPO">
             <CustomSelect
               value={tipo}
@@ -190,13 +191,22 @@ export default function AgendarCitaModal({ recurso, tiposCita, tiposTarea, onClo
             />
             <Toggle
               checked={crearTarea}
-              onChange={setCrearTarea}
+              onChange={(v) => { setCrearTarea(v); if (v && !tareaTitulo && tipoTarea !== TIPO_OTRO) setTareaTitulo(`${tipoTarea} — ${recurso.nombre}`) }}
               label="Crear tarea de seguimiento"
               hint="Se añadirá a Google Tasks"
             />
 
             {crearTarea && (
               <div className="rounded-xl border border-gray-100 bg-gray-50/60 p-3 space-y-3">
+                <div>
+                  <p className="text-[10px] tracking-[0.14em] text-henko-turquoise font-bold mb-1.5">TIPO DE TAREA</p>
+                  <CustomSelect
+                    value={tipoTarea}
+                    onChange={(v) => { setTipoTarea(v); if (v !== TIPO_OTRO) setTareaTitulo(`${v} — ${recurso.nombre}`) }}
+                    options={[...tiposTarea.map(t => ({ value: t, label: t })), { value: TIPO_OTRO, label: 'Otro (personalizado)' }]}
+                    className="w-full"
+                  />
+                </div>
                 <div>
                   <p className="text-[10px] tracking-[0.14em] text-henko-turquoise font-bold mb-1.5">TÍTULO DE LA TAREA</p>
                   <input
@@ -206,7 +216,6 @@ export default function AgendarCitaModal({ recurso, tiposCita, tiposTarea, onClo
                     placeholder={`Preparar: ${tituloFinal || 'cita'}`}
                     className="w-full px-3 py-2 rounded-lg border border-gray-200 bg-white font-raleway text-sm outline-none focus:border-henko-turquoise transition-colors"
                   />
-                  <Chips items={tiposTarea} onPick={t => setTareaTitulo(`${t} — ${recurso.nombre}`)} />
                 </div>
                 <div>
                   <p className="text-[10px] tracking-[0.14em] text-henko-turquoise font-bold mb-1.5">LISTA</p>
@@ -229,7 +238,7 @@ export default function AgendarCitaModal({ recurso, tiposCita, tiposTarea, onClo
         </div>
 
         {/* Footer */}
-        <div className="px-7 py-5 border-t border-black/5 flex items-center justify-end gap-3">
+        <div className="px-7 py-5 border-t border-black/5 flex items-center justify-end gap-3 flex-shrink-0">
           <button type="button" onClick={onClose} className="px-5 py-2.5 rounded-full text-sm font-semibold text-gray-500 hover:bg-black/5 transition-colors">
             Cancelar
           </button>
@@ -243,24 +252,6 @@ export default function AgendarCitaModal({ recurso, tiposCita, tiposTarea, onClo
           </button>
         </div>
       </div>
-    </div>
-  )
-}
-
-function Chips({ items, onPick }: { items: string[]; onPick: (t: string) => void }) {
-  if (!items.length) return null
-  return (
-    <div className="flex flex-wrap gap-1.5 mt-2">
-      {items.map(t => (
-        <button
-          key={t}
-          type="button"
-          onClick={() => onPick(t)}
-          className="px-2.5 py-1 rounded-full text-[11px] font-medium text-gray-500 bg-gray-100 hover:bg-henko-turquoise/10 hover:text-henko-turquoise transition-colors"
-        >
-          {t}
-        </button>
-      ))}
     </div>
   )
 }
