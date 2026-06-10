@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { agendarCita } from '@/actions/solicitudes'
+import { getTaskLists, type TaskList } from '@/actions/google-tasks'
 import { useAction } from '@/shared/feedback/FeedbackContext'
+import CustomSelect from '@/shared/components/CustomSelect'
 
 type Solicitud = {
   id: string
@@ -36,6 +38,10 @@ export default function AgendarEntrevistaModal({ solicitud, onClose, onDone }: P
   const [duracion, setDuracion] = useState(45)
   const [invitarCandidato, setInvitarCandidato] = useState(true)
   const [crearTarea, setCrearTarea] = useState(false)
+  const [tareaTitulo, setTareaTitulo] = useState('')
+  const [taskListId, setTaskListId] = useState('')
+  const [listas, setListas] = useState<TaskList[]>([])
+  const [cargandoListas, setCargandoListas] = useState(false)
   const [enviando, setEnviando] = useState(false)
 
   useEffect(() => {
@@ -44,6 +50,16 @@ export default function AgendarEntrevistaModal({ solicitud, onClose, onDone }: P
     document.body.style.overflow = 'hidden'
     return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = '' }
   }, [onClose])
+
+  // Carga las listas de Google Tasks la primera vez que se activa el toggle
+  useEffect(() => {
+    if (!crearTarea || listas.length || cargandoListas) return
+    setCargandoListas(true)
+    getTaskLists()
+      .then(ls => { setListas(ls); if (ls[0]) setTaskListId(prev => prev || ls[0].id) })
+      .catch(() => {})
+      .finally(() => setCargandoListas(false))
+  }, [crearTarea, listas.length, cargandoListas])
 
   async function handleSubmit() {
     if (!fecha || !hora || !titulo.trim()) return
@@ -63,6 +79,8 @@ export default function AgendarEntrevistaModal({ solicitud, onClose, onDone }: P
         end: fmtLocal(endDate),
         invitarCandidato,
         crearTarea,
+        taskListId: crearTarea ? (taskListId || undefined) : undefined,
+        tareaTitulo: crearTarea ? (tareaTitulo.trim() || undefined) : undefined,
       }),
       { successMessage: 'Cita agendada en el calendario' },
     )
@@ -151,6 +169,36 @@ export default function AgendarEntrevistaModal({ solicitud, onClose, onDone }: P
               label="Crear tarea de seguimiento"
               hint="Se añadirá a Google Tasks"
             />
+
+            {crearTarea && (
+              <div className="rounded-xl border border-gray-100 bg-gray-50/60 p-3 space-y-3">
+                <div>
+                  <p className="text-[10px] tracking-[0.14em] text-henko-turquoise font-bold mb-1.5">TÍTULO DE LA TAREA</p>
+                  <input
+                    type="text"
+                    value={tareaTitulo}
+                    onChange={e => setTareaTitulo(e.target.value)}
+                    placeholder={`Preparar: ${titulo.trim() || 'cita'}`}
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 bg-white font-raleway text-sm outline-none focus:border-henko-turquoise transition-colors"
+                  />
+                </div>
+                <div>
+                  <p className="text-[10px] tracking-[0.14em] text-henko-turquoise font-bold mb-1.5">LISTA</p>
+                  {cargandoListas ? (
+                    <p className="text-xs text-gray-400 py-2">Cargando listas…</p>
+                  ) : listas.length ? (
+                    <CustomSelect
+                      value={taskListId}
+                      onChange={setTaskListId}
+                      options={listas.map(l => ({ value: l.id, label: l.title }))}
+                      className="w-full"
+                    />
+                  ) : (
+                    <p className="text-xs text-gray-400 py-2">No se encontraron listas (se usará la principal).</p>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

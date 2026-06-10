@@ -228,6 +228,8 @@ const AgendarCitaSchema = z.object({
   end: z.string().min(1),
   invitarCandidato: z.boolean(),
   crearTarea: z.boolean(),
+  taskListId: z.string().optional(),       // lista de Google Tasks elegida
+  tareaTitulo: z.string().max(200).optional(), // título de la tarea (opcional)
 })
 
 export type AgendarCitaInput = z.infer<typeof AgendarCitaSchema>
@@ -261,9 +263,11 @@ export async function agendarCita(input: AgendarCitaInput) {
   if (d.crearTarea) {
     try {
       const lists = await getTaskLists()
-      if (lists[0]) {
-        await createTask(lists[0].id, {
-          title: `Preparar: ${d.titulo}`,
+      // lista elegida si es válida; si no, la primera disponible
+      const listId = (d.taskListId && lists.some(l => l.id === d.taskListId)) ? d.taskListId : lists[0]?.id
+      if (listId) {
+        await createTask(listId, {
+          title: d.tareaTitulo?.trim() || `Preparar: ${d.titulo}`,
           notes: d.ofertaTitulo || undefined,
           due: d.start.split('T')[0],
         })
