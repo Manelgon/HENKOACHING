@@ -13,4 +13,5 @@
 (vacio)
 
 ## reference/ — Donde encontrar cosas
-(vacio)
+- [Indexación Google ofertas](reference/indexacion-google-ofertas-empleo.md) — automática vía sitemap; el botón "Solicitar indexación" solo acelera, no es obligatorio
+- [Sitemap ofertas = admin client](reference/sitemap-ofertas-admin-client.md) — getOfertasSlugsPublicados necesita createAdminClient o RLS lo deja vacío (bug fix ea419ff)

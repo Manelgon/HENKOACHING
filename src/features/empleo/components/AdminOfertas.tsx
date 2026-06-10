@@ -198,8 +198,8 @@ export default function AdminOfertas({ ofertas, sectores, modalidades, jornadas,
   }
 
   const save = async () => {
-    if (!draft.titulo.trim() || !draft.empresa.trim() || !draft.descripcion.trim() || !draft.estado || !draft.modalidad_id || !draft.jornada_id) {
-      setError('Título, empresa, descripción, estado, modalidad y jornada son obligatorios')
+    if (!draft.titulo.trim() || !draft.empresa.trim() || !draft.descripcion.trim() || !draft.estado || !draft.modalidad_id || !draft.jornada_id || !draft.fecha_expiracion) {
+      setError('Título, empresa, descripción, estado, modalidad, jornada y fecha límite son obligatorios')
       return
     }
     setError(null)
@@ -487,7 +487,7 @@ function FormOferta({
         />
       </div>
       <div className="mb-4">
-        <label className={labelClass}>FECHA LÍMITE <span className="text-gray-400 normal-case tracking-normal">(opcional — mejora Google for Jobs)</span></label>
+        <label className={labelClass}>FECHA LÍMITE <span className="text-red-400 normal-case tracking-normal">* (obligatoria — Google deja de mostrar la oferta al caducar)</span></label>
         <input type="date" className={inputClass} value={draft.fecha_expiracion} onChange={e => update('fecha_expiracion', e.target.value)} />
       </div>
       <div className="mb-4">

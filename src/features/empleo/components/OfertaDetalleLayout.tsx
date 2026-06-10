@@ -118,8 +118,8 @@ export default function OfertaDetalleLayout({ oferta: initialOferta, solicitudes
   const update = <K extends keyof Draft>(k: K, v: Draft[K]) => setDraft(d => ({ ...d, [k]: v }))
 
   async function handleGuardar() {
-    if (!draft.titulo.trim() || !draft.empresa.trim() || !draft.descripcion.trim()) {
-      setEditError('Título, empresa y descripción son obligatorios')
+    if (!draft.titulo.trim() || !draft.empresa.trim() || !draft.descripcion.trim() || !draft.fecha_expiracion) {
+      setEditError('Título, empresa, descripción y fecha límite son obligatorios')
       return
     }
     setEditError(null)
@@ -352,8 +352,11 @@ function OfertaInformacion({ oferta: o }: { oferta: OfertaView }) {
         {o.jornada_nombre && <InfoField label="JORNADA" value={o.jornada_nombre} />}
         {o.reporta_a && <InfoField label="REPORTA A" value={o.reporta_a} />}
         {o.contrato && <InfoField label="TIPO CONTRATO" value={o.contrato} />}
-        {o.fecha && <InfoField label="PUBLICADA" value={o.fecha} />}
-        {o.fecha_expiracion && <InfoField label="EXPIRA" value={o.fecha_expiracion} />}
+      </div>
+      {/* Fechas: publicada y límite siempre juntas en la misma fila */}
+      <div className="grid grid-cols-2 gap-4">
+        <InfoField label="PUBLICADA" value={o.fecha || '—'} />
+        <InfoField label="FECHA LÍMITE" value={o.fecha_expiracion ? formatFechaCorta(o.fecha_expiracion) : 'Sin fecha límite'} />
       </div>
 
       {o.descripcion && (
@@ -701,7 +704,7 @@ function FormOferta({
         />
       </div>
       <div className="mb-4">
-        <label className={labelClass}>FECHA LÍMITE <span className="text-gray-400 normal-case tracking-normal">(opcional)</span></label>
+        <label className={labelClass}>FECHA LÍMITE <span className="text-red-400 normal-case tracking-normal">* (obligatoria — Google deja de mostrar la oferta al caducar)</span></label>
         <input type="date" className={inputClass} value={draft.fecha_expiracion} onChange={e => update('fecha_expiracion', e.target.value)} />
       </div>
       <div className="mb-4">
@@ -738,6 +741,11 @@ function InfoField({ label, value }: { label: string; value: string }) {
       <p className="text-sm text-gray-800">{value}</p>
     </div>
   )
+}
+
+// Formatea una fecha ISO (YYYY-MM-DD) a "10 sept 2026". Añade T00:00:00 para evitar desfase de zona horaria.
+function formatFechaCorta(iso: string): string {
+  return new Date(`${iso}T00:00:00`).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
 function ListaDetalle({ label, items }: { label: string; items: string[] }) {
