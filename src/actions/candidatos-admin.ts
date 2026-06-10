@@ -6,6 +6,9 @@ import type { CandidatoRow, CandidatoPerfil } from '@/features/candidatos/types'
 import { requireAdmin } from '@/lib/auth/require-admin'
 
 export async function getCandidatos(): Promise<CandidatoRow[]> {
+  const auth = await requireAdmin()
+  if (!auth.ok) return []
+
   const admin = createAdminClient()
 
   const { data: profiles } = await admin

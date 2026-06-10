@@ -9,16 +9,21 @@ import {
   toggleLeidoThread,
   eliminarThreadGmail,
   buscarThreadsGmail,
+  listarCarpetasImap,
+  listarEmailsBandeja,
+  leerEmailBandeja,
+  eliminarEmailsBandeja,
 } from '@/actions/email'
 import { useAction, useConfirm } from '@/shared/feedback/FeedbackContext'
 import EmailDrawer from './EmailDrawer'
 import ComposeDrawer from './ComposeDrawer'
 import FallosPanel from './FallosPanel'
 import { useEmailStore } from '@/features/email/store/emailStore'
-import type { GmailLabel, GmailThread, GmailMessage } from '../types'
+import type { GmailLabel, GmailThread, GmailMessage, ImapFolder, EmailMessage, FolderType } from '../types'
 
 type Props = {
   hasImapConfig: boolean
+  imapUser?: string | null
   initialLabels?: GmailLabel[]
   initialThreads?: GmailThread[]
 }
@@ -32,10 +37,18 @@ const SYSTEM_LABEL_ICONS: Record<string, string> = {
   DEFAULT: 'M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z',
 }
 
-export default function BandejaInbox({ hasImapConfig, initialLabels = [], initialThreads }: Props) {
+const IMAP_FOLDER_ICONS: Record<FolderType, string> = {
+  inbox:  'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z',
+  sent:   'M12 19l9 2-9-18-9 18 9-2zm0 0v-8',
+  drafts: 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z',
+  spam:   'M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636',
+  trash:  'M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16',
+}
+
+export default function BandejaInbox({ hasImapConfig, imapUser, initialLabels = [], initialThreads }: Props) {
   const runAction = useAction()
   const confirm = useConfirm()
-  const { setUnreadCount, failedCount } = useEmailStore()
+  const { setGmailUnread, setImapUnread, failedCount } = useEmailStore()
 
   const [labels, setLabels] = useState<GmailLabel[]>(initialLabels)
   const [activeLabelId, setActiveLabelId] = useState('INBOX')
@@ -53,8 +66,16 @@ export default function BandejaInbox({ hasImapConfig, initialLabels = [], initia
   const [busquedaInput, setBusquedaInput] = useState('')
   const [composing, setComposing] = useState(false)
   const [composeDefaults, setComposeDefaults] = useState<{ to?: string; subject?: string; bodyHtml?: string } | null>(null)
-  const [activeView, setActiveView] = useState<'gmail' | 'fallos'>('gmail')
+  const [activeView, setActiveView] = useState<'gmail' | 'imap' | 'fallos'>('gmail')
   const [seleccionados, setSeleccionados] = useState<Set<string>>(new Set())
+  // IMAP (cuenta del dominio)
+  const [imapFolders, setImapFolders] = useState<ImapFolder[]>([])
+  const [activeImapPath, setActiveImapPath] = useState('INBOX')
+  const [imapMessages, setImapMessages] = useState<EmailMessage[] | null>(null)
+  const [imapLoading, setImapLoading] = useState(false)
+  const [imapError, setImapError] = useState<string | null>(null)
+  const [loadingImapUid, setLoadingImapUid] = useState<number | null>(null)
+  const [selectedImap, setSelectedImap] = useState<{ uid: number; path: string } | null>(null)
   // Skip first INBOX fetch if data was server-prefetched
   const skipFirstFetch = useRef(initialThreads != null)
 
@@ -62,16 +83,16 @@ export default function BandejaInbox({ hasImapConfig, initialLabels = [], initia
   useEffect(() => {
     if (initialLabels.length > 0) {
       const inbox = initialLabels.find(x => x.id === 'INBOX')
-      if (inbox) setUnreadCount(inbox.unread)
+      if (inbox) setGmailUnread(inbox.unread)
       return
     }
     listarLabelsGmail().then(l => {
       setLabels(l)
       const inbox = l.find(x => x.id === 'INBOX')
-      if (inbox) setUnreadCount(inbox.unread)
+      if (inbox) setGmailUnread(inbox.unread)
     }).catch(() => {})
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [setUnreadCount])
+  }, [setGmailUnread])
 
   const fetchPage = useCallback(async (labelId: string, pg: number, tokens: (string | undefined)[], q?: string, size?: number) => {
     setLoading(true)
@@ -115,13 +136,95 @@ export default function BandejaInbox({ hasImapConfig, initialLabels = [], initia
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeLabelId, resetAndLoad])
 
+  // Cargar carpetas IMAP (cuenta del dominio)
+  useEffect(() => {
+    if (!hasImapConfig) return
+    listarCarpetasImap().then(r => {
+      if ('folders' in r && r.folders) {
+        setImapFolders(r.folders)
+        const inbox = r.folders.find(f => f.type === 'inbox')
+        if (inbox) setImapUnread(inbox.unread)
+      }
+    }).catch(() => {})
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasImapConfig])
+
+  const fetchImap = useCallback(async (path: string) => {
+    setImapLoading(true)
+    setImapError(null)
+    try {
+      const r = await listarEmailsBandeja(path)
+      if ('error' in r && r.error) {
+        setImapError(r.error)
+        setImapMessages([])
+      } else if ('messages' in r) {
+        setImapMessages(r.messages ?? [])
+      }
+    } catch (e) {
+      setImapError(String(e))
+      setImapMessages([])
+    } finally {
+      setImapLoading(false)
+    }
+  }, [])
+
+  const cambiarCarpetaImap = (path: string) => {
+    setActiveView('imap')
+    setActiveImapPath(path)
+    setImapMessages(null)
+    setSeleccionados(new Set())
+    fetchImap(path)
+  }
+
   // Auto-refresco cada 120s
   useEffect(() => {
     const id = setInterval(() => {
-      if (document.visibilityState === 'visible') fetchPage(activeLabelId, page, pageTokens, busqueda || undefined)
+      if (document.visibilityState !== 'visible') return
+      if (activeView === 'imap') fetchImap(activeImapPath)
+      else if (activeView === 'gmail') fetchPage(activeLabelId, page, pageTokens, busqueda || undefined)
     }, 120_000)
     return () => clearInterval(id)
-  }, [activeLabelId, busqueda, page, pageTokens, fetchPage])
+  }, [activeView, activeImapPath, activeLabelId, busqueda, page, pageTokens, fetchPage, fetchImap])
+
+  const abrirImapMsg = async (msg: EmailMessage) => {
+    setLoadingImapUid(msg.uid)
+    try {
+      const r = await leerEmailBandeja(msg.uid, activeImapPath)
+      if ('error' in r && r.error) { setImapError(r.error); return }
+      if (!('detail' in r) || !r.detail) return
+      const d = r.detail
+      const fecha = new Date(d.date)
+      setSelectedMessages([{
+        id: String(d.uid), threadId: String(d.uid), from: d.from, to: d.to,
+        date: fecha, subject: d.subject, bodyHtml: d.bodyHtml, bodyText: d.bodyText, unread: false,
+      }])
+      setSelectedThread({
+        id: String(d.uid), snippet: '', subject: d.subject, from: d.from, to: d.to,
+        date: fecha, unread: false, labels: [], messageCount: 1,
+      })
+      setSelectedImap({ uid: d.uid, path: activeImapPath })
+      setImapMessages(prev => prev ? prev.map(m => m.uid === d.uid ? { ...m, seen: true } : m) : prev)
+    } catch {
+      setImapError('Error al abrir el email.')
+    } finally {
+      setLoadingImapUid(null)
+    }
+  }
+
+  const handleEliminarImap = async (uid: number) => {
+    const ok = await confirm({
+      title: 'Eliminar email',
+      description: 'Se eliminará del servidor de correo del dominio. Esta acción no se puede deshacer.',
+      confirmLabel: 'Eliminar',
+      variant: 'danger',
+    })
+    if (!ok) return
+    await runAction('Eliminando', async () => {
+      const r = await eliminarEmailsBandeja([uid], activeImapPath)
+      if ('error' in r && r.error) throw new Error(r.error)
+      setImapMessages(prev => prev ? prev.filter(m => m.uid !== uid) : prev)
+    }, { successMessage: 'Eliminado' })
+  }
 
   const abrirThread = async (thread: GmailThread) => {
     setLoadingThreadId(thread.id)
@@ -211,6 +314,9 @@ export default function BandejaInbox({ hasImapConfig, initialLabels = [], initia
             Redactar
           </button>
 
+          {systemLabels.length > 0 && (
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-3 pb-1">Gmail</p>
+          )}
           {systemLabels.map(label => (
             <LabelButton
               key={label.id}
@@ -232,6 +338,36 @@ export default function BandejaInbox({ hasImapConfig, initialLabels = [], initia
                   onClick={() => { setActiveView('gmail'); cambiarLabel(label.id) }}
                   iconPath={SYSTEM_LABEL_ICONS.DEFAULT}
                 />
+              ))}
+            </>
+          )}
+
+          {imapFolders.length > 0 && (
+            <>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-3 pt-4 pb-1 truncate" title={imapUser ?? undefined}>
+                {imapUser || 'Correo del dominio'}
+              </p>
+              {imapFolders.map(folder => (
+                <button
+                  key={folder.path}
+                  type="button"
+                  onClick={() => cambiarCarpetaImap(folder.path)}
+                  className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-raleway text-sm font-medium transition-colors text-left ${
+                    activeView === 'imap' && activeImapPath === folder.path
+                      ? 'bg-henko-coral/10 text-henko-coral font-semibold'
+                      : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={IMAP_FOLDER_ICONS[folder.type]} />
+                  </svg>
+                  <span className="flex-1 truncate">{folder.label}</span>
+                  {folder.unread > 0 && (
+                    <span className="text-xs bg-henko-coral text-white rounded-full px-1.5 py-0.5 font-bold leading-none">
+                      {folder.unread}
+                    </span>
+                  )}
+                </button>
               ))}
             </>
           )}
@@ -258,6 +394,90 @@ export default function BandejaInbox({ hasImapConfig, initialLabels = [], initia
         {/* Panel principal */}
         <div className="flex-1 min-w-0">
           {activeView === 'fallos' && <FallosPanel />}
+
+          {activeView === 'imap' && (
+            <>
+              <div className="flex items-center justify-between gap-3 mb-4">
+                <p className="font-raleway text-sm text-gray-500">
+                  <span className="font-semibold text-gray-700">{imapFolders.find(f => f.path === activeImapPath)?.label ?? activeImapPath}</span>
+                  {' '}· {imapUser || 'correo del dominio'}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => fetchImap(activeImapPath)}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 text-gray-600 font-raleway text-sm hover:bg-gray-50 transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  Actualizar
+                </button>
+              </div>
+
+              {imapError && (
+                <div className="bg-red-50 border border-red-100 rounded-2xl px-5 py-4 mb-4 flex items-start gap-3">
+                  <p className="font-raleway text-sm text-red-600 flex-1">{imapError}</p>
+                  <button type="button" onClick={() => setImapError(null)} className="text-red-300 hover:text-red-500">✕</button>
+                </div>
+              )}
+
+              {imapMessages === null || imapLoading ? (
+                <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm px-6 py-20 text-center">
+                  <p className="font-raleway text-gray-400 text-sm">Cargando correo del dominio…</p>
+                </div>
+              ) : imapMessages.length === 0 ? (
+                <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm px-6 py-16 text-center">
+                  <p className="font-roxborough text-lg text-gray-400">Carpeta vacía</p>
+                </div>
+              ) : (
+                <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
+                  {imapMessages.map(msg => {
+                    const isLoadingMsg = loadingImapUid === msg.uid
+                    return (
+                      <div key={msg.uid} className={`border-b border-gray-100 last:border-0 group ${!msg.seen ? 'bg-orange-50/30' : ''}`}>
+                        <div
+                          role="button" tabIndex={0}
+                          onClick={() => !isLoadingMsg && abrirImapMsg(msg)}
+                          onKeyDown={e => e.key === 'Enter' && !isLoadingMsg && abrirImapMsg(msg)}
+                          className={`flex items-center gap-3 px-5 py-3.5 transition-colors ${isLoadingMsg ? 'opacity-60 cursor-wait' : 'cursor-pointer hover:bg-gray-50'}`}
+                        >
+                          {/* Indicador no leído */}
+                          <div className="w-2 flex-shrink-0">
+                            {!msg.seen && <span className="block w-2 h-2 rounded-full bg-henko-coral" />}
+                          </div>
+
+                          {/* Contenido */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-baseline justify-between gap-3 mb-0.5">
+                              <span className={`font-raleway text-sm truncate ${!msg.seen ? 'font-semibold text-gray-900' : 'text-gray-700'}`}>
+                                {msg.from.replace(/<.*?>/, '').trim() || msg.from}
+                              </span>
+                              <span className="font-raleway text-xs text-gray-400 flex-shrink-0">{formatDate(msg.date)}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <p className={`font-raleway text-sm truncate flex-1 ${!msg.seen ? 'font-medium text-gray-800' : 'text-gray-500'}`}>{msg.subject}</p>
+                              <span className="flex-shrink-0 text-[9px] font-raleway font-bold px-1.5 py-0.5 rounded-full bg-orange-50 text-henko-coral border border-orange-100">
+                                Dominio
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Acciones inline (hover) */}
+                          <div className="hidden group-hover:flex items-center gap-1 flex-shrink-0" onClick={e => e.stopPropagation()}>
+                            <ActionBtn title="Eliminar" onClick={() => handleEliminarImap(msg.uid)} icon="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" danger />
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+
+                  <div className="px-5 py-3 border-t border-gray-100 bg-gray-50/50">
+                    <span className="font-raleway text-xs text-gray-400">Mostrando los últimos {imapMessages.length} mensajes de la carpeta.</span>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
 
           {activeView === 'gmail' && (
             <>
@@ -473,17 +693,21 @@ export default function BandejaInbox({ hasImapConfig, initialLabels = [], initia
         <EmailDrawer
           messages={selectedMessages}
           thread={selectedThread}
-          onClose={() => { setSelectedMessages(null); setSelectedThread(null) }}
+          onClose={() => { setSelectedMessages(null); setSelectedThread(null); setSelectedImap(null) }}
           onReply={(to, subject, quotedHtml) => {
-            setSelectedMessages(null); setSelectedThread(null)
+            setSelectedMessages(null); setSelectedThread(null); setSelectedImap(null)
             setComposeDefaults({ to, subject, bodyHtml: quotedHtml })
           }}
           onNewEmail={to => {
-            setSelectedMessages(null); setSelectedThread(null)
+            setSelectedMessages(null); setSelectedThread(null); setSelectedImap(null)
             setComposeDefaults({ to })
           }}
-          onArchivar={() => { handleArchivar(selectedThread.id); setSelectedMessages(null); setSelectedThread(null) }}
-          onEliminar={() => { handleEliminar(selectedThread.id); setSelectedMessages(null); setSelectedThread(null) }}
+          onArchivar={selectedImap ? undefined : () => { handleArchivar(selectedThread.id); setSelectedMessages(null); setSelectedThread(null) }}
+          onEliminar={() => {
+            if (selectedImap) handleEliminarImap(selectedImap.uid)
+            else handleEliminar(selectedThread.id)
+            setSelectedMessages(null); setSelectedThread(null); setSelectedImap(null)
+          }}
         />
       )}
 

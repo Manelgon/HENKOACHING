@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { listarEmailsBandeja, contarEmailsFallidos } from '@/actions/email'
+import { listarEmailsBandeja, contarEmailsFallidos, listarLabelsGmail } from '@/actions/email'
 import { useEmailStore } from '@/features/email/store/emailStore'
 
 type Props = {
@@ -9,7 +9,7 @@ type Props = {
 }
 
 export default function EmailPoller({ hasImapConfig }: Props) {
-  const { lastSeenUids, setLastSeenUids, setUnreadCount, setFailedCount } = useEmailStore()
+  const { lastSeenUids, setLastSeenUids, setGmailUnread, setImapUnread, setFailedCount } = useEmailStore()
   const isFirstLoad = useRef(true)
   const lastSeenRef = useRef(lastSeenUids)
 
@@ -22,6 +22,23 @@ export default function EmailPoller({ hasImapConfig }: Props) {
     contarEmailsFallidos().then(setFailedCount).catch(() => {})
     const interval = setInterval(() => {
       contarEmailsFallidos().then(setFailedCount).catch(() => {})
+    }, 120_000)
+    return () => clearInterval(interval)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Polling de no leídos en Gmail (cuenta de Google)
+  useEffect(() => {
+    async function pollGmail() {
+      try {
+        const labels = await listarLabelsGmail()
+        const inbox = labels.find(l => l.id === 'INBOX')
+        if (inbox) setGmailUnread(inbox.unread)
+      } catch { /* sin Gmail configurado */ }
+    }
+    pollGmail()
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') pollGmail()
     }, 120_000)
     return () => clearInterval(interval)
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -41,7 +58,7 @@ export default function EmailPoller({ hasImapConfig }: Props) {
 
       const messages = r.messages
       const unread = messages.filter((m) => !m.seen)
-      setUnreadCount(unread.length)
+      setImapUnread(unread.length)
 
       if (isFirstLoad.current) {
         // Primera carga: guardar UIDs sin notificar

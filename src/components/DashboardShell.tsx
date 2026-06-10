@@ -31,7 +31,7 @@ type Props = {
 export default function DashboardShell({ sections, userEmail, userInitial, homeHref = '/dashboard', children }: Props) {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
-  const unreadCount = useEmailStore((s) => s.unreadCount)
+  const unreadCount = useEmailStore((s) => s.gmailUnread + s.imapUnread)
   const failedCount = useEmailStore((s) => s.failedCount)
   const candidatosNuevos = useCandidatosStore((s) => s.nuevosCount)
 

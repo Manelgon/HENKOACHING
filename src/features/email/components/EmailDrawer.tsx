@@ -9,7 +9,7 @@ type Props = {
   onClose: () => void
   onReply: (to: string, subject: string, quotedHtml: string) => void
   onNewEmail: (to: string) => void
-  onArchivar: () => void
+  onArchivar?: () => void
   onEliminar: () => void
 }
 
@@ -52,16 +52,18 @@ export default function EmailDrawer({ messages, thread, onClose, onReply, onNewE
             <p className="font-raleway text-xs text-gray-400 mt-1">{messages.length} mensaje{messages.length !== 1 ? 's' : ''}</p>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
-            <button
-              type="button"
-              title="Archivar"
-              onClick={onArchivar}
-              className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-              </svg>
-            </button>
+            {onArchivar && (
+              <button
+                type="button"
+                title="Archivar"
+                onClick={onArchivar}
+                className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                </svg>
+              </button>
+            )}
             <button
               type="button"
               title="Eliminar"

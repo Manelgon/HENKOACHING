@@ -31,6 +31,8 @@ export default async function EmailPage() {
     listarThreadsGmail('INBOX').catch(() => ({ threads: [], nextPageToken: undefined })),
   ])
 
+  const hasGmail = initialLabels.length > 0
+
   return (
     <div className="w-full">
       <div className="mb-8 md:mb-10">
@@ -40,7 +42,7 @@ export default async function EmailPage() {
         </p>
       </div>
 
-      {!hasImapConfig ? (
+      {!hasImapConfig && !hasGmail ? (
         <div className="flex flex-col items-center justify-center bg-white rounded-[2rem] border border-gray-100 shadow-sm px-8 py-20 text-center max-w-lg mx-auto">
           <div className="w-20 h-20 rounded-2xl bg-henko-turquoise/10 flex items-center justify-center mb-6">
             <svg className="w-10 h-10 text-henko-turquoise" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -63,7 +65,7 @@ export default async function EmailPage() {
           </Link>
         </div>
       ) : (
-        <BandejaInbox hasImapConfig={hasImapConfig} initialLabels={initialLabels} initialThreads={initialInbox.threads} />
+        <BandejaInbox hasImapConfig={hasImapConfig} imapUser={config.imap_user} initialLabels={initialLabels} initialThreads={initialInbox.threads} />
       )}
     </div>
   )
