@@ -13,7 +13,7 @@ import {
 } from '@/actions/testimonios'
 import type { Database } from '@/lib/supabase/database.types'
 import CustomSelect from '@/shared/components/CustomSelect'
-import { useUrlState } from '@/shared/hooks/useUrlState'
+import { useUrlState, useUrlIdState } from '@/shared/hooks/useUrlState'
 
 type Testimonio = Database['public']['Tables']['testimonios']['Row']
 
@@ -70,7 +70,7 @@ export default function TestimoniosManager({ testimonios }: { testimonios: Testi
     fuente: 'todas',
     busqueda: '',
   })
-  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [selectedId, setSelectedId] = useUrlIdState('sel')
 
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)

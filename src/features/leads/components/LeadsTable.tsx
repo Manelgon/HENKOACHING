@@ -12,7 +12,7 @@ import NewLeadModal from './NewLeadModal'
 import ConvertirClienteModal from './ConvertirClienteModal'
 import CustomSelect from '@/shared/components/CustomSelect'
 import { useSortable } from '@/shared/hooks/useSortable'
-import { useUrlState } from '@/shared/hooks/useUrlState'
+import { useUrlState, useUrlIdState } from '@/shared/hooks/useUrlState'
 import SortHeader from '@/shared/components/SortHeader'
 import AccionesMenu, { type AccionItem } from '@/shared/components/AccionesMenu'
 import AgendarCitaModal from '@/shared/components/AgendarCitaModal'
@@ -51,7 +51,7 @@ export default function LeadsTable({ leads }: { leads: LeadRow[] }) {
   const confirm = useConfirm()
   const [tab, setTab] = useUrlState<Tab>('tab', 'todos', ['todos', ...ESTADOS_LEAD.map(e => e.value), 'archivados'])
   const [filtros, setFiltros] = useState<Filtros>({ origen: 'todos', busqueda: '' })
-  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [selectedId, setSelectedId] = useUrlIdState('lead')
   const [showNew, setShowNew] = useState(false)
   const [convertirId, setConvertirId] = useState<string | null>(null)
   const [agendarLead, setAgendarLead] = useState<LeadRow | null>(null)

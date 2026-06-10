@@ -10,7 +10,7 @@ import { TablePagination, usePagination } from '@/components/TablePagination'
 import { createClient } from '@/lib/supabase/client'
 import CustomSelect from '@/shared/components/CustomSelect'
 import { useSortable } from '@/shared/hooks/useSortable'
-import { useUrlState } from '@/shared/hooks/useUrlState'
+import { useUrlState, useUrlIdState } from '@/shared/hooks/useUrlState'
 import SortHeader from '@/shared/components/SortHeader'
 import AccionesDropdown from './AccionesDropdown'
 import AgendarCitaModal from '@/shared/components/AgendarCitaModal'
@@ -134,7 +134,7 @@ export default function AdminSolicitudes({ solicitudes, ofertas }: Props) {
   const [tabEstado, setTabEstado] = useUrlState<TabEstado>('estado', 'todas', TABS.map(t => t.value))
   const [filtroOferta, setFiltroOferta] = useUrlState<string>('oferta', 'todas')
   const [busqueda, setBusqueda] = useUrlState<string>('q', '')
-  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [selectedId, setSelectedId] = useUrlIdState('sol')
   const [agendarSol, setAgendarSol] = useState<SolicitudView | null>(null)
   // Overrides optimistas de estado (como leads) para no esperar al refresh
   const [overrides, setOverrides] = useState<Record<string, EstadoSolicitud>>({})

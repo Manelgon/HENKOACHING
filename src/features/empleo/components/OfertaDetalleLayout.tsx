@@ -8,7 +8,7 @@ import { cambiarEstadoSolicitud, getCvUrl } from '@/actions/solicitudes'
 import { useAction, useConfirm } from '@/shared/feedback/FeedbackContext'
 import { TablePagination, usePagination } from '@/components/TablePagination'
 import CustomSelect from '@/shared/components/CustomSelect'
-import { useUrlState } from '@/shared/hooks/useUrlState'
+import { useUrlState, useUrlIdState } from '@/shared/hooks/useUrlState'
 import type { EstadoSolicitud } from '@/lib/supabase/database.types'
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
@@ -449,7 +449,7 @@ function OfertaCandidatos({
   onCambiarEstado: (id: string, estado: EstadoSolicitud) => void
   onDescargarCv: (path: string) => void
 }) {
-  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [selectedId, setSelectedId] = useUrlIdState('sol')
   const pagination = usePagination(solicitudes, 20)
   const selected = selectedId ? solicitudes.find(s => s.id === selectedId) ?? null : null
 

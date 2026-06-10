@@ -29,3 +29,13 @@ export function useUrlState<T extends string>(
 
   return [value, set]
 }
+
+/**
+ * Variante para ids opcionales (drawer/panel de detalle abierto):
+ * null = cerrado (el param desaparece de la URL).
+ */
+export function useUrlIdState(key: string): [string | null, (v: string | null) => void] {
+  const [value, setValue] = useUrlState<string>(key, '')
+  const set = useCallback((v: string | null) => setValue(v ?? ''), [setValue])
+  return [value || null, set]
+}

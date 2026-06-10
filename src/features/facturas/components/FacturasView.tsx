@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useAction, useConfirm } from '@/shared/feedback/FeedbackContext'
 import { TablePagination, usePagination } from '@/components/TablePagination'
 import { useSortable } from '@/shared/hooks/useSortable'
-import { useUrlState } from '@/shared/hooks/useUrlState'
+import { useUrlState, useUrlIdState } from '@/shared/hooks/useUrlState'
 import SortHeader from '@/shared/components/SortHeader'
 import { actualizarFacturaNoFiscal, cambiarEstadoFactura, eliminarFactura, getFacturaPdfUrl, getVerifactuXml } from '@/actions/facturas'
 import { ESTADOS_FACTURA, getEstadoMeta, isVencida, type EstadoFactura } from './estados'
@@ -39,7 +39,7 @@ export default function FacturasView({ facturas, clientes, serieDefault, emisorL
   const [busqueda, setBusqueda] = useUrlState<string>('q', '')
   const [showNew, setShowNew] = useState(false)
   const [rectificarDe, setRectificarDe] = useState<{ id: string; tipo: TipoRectificacion } | null>(null)
-  const [drawerId, setDrawerId] = useState<string | null>(null)
+  const [drawerId, setDrawerId] = useUrlIdState('factura')
 
   const tabsRef = useRef<HTMLDivElement>(null)
   const activeTabRef = useRef<HTMLButtonElement>(null)
