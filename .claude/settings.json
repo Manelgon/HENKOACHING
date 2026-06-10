@@ -55,7 +55,22 @@
       "Bash(grep -E \"^        [a-z]+: Resource\\\\$\" \"c:\\\\Users\\\\manel\\\\.000.Proyectos.DEV\\\\005. Jennifer Cervera - copia\\\\node_modules\\\\googleapis\\\\build\\\\src\\\\apis\\\\calendar\\\\v3.d.ts\")",
       "Bash(grep \"export interface Schema\\\\$\" \"c:\\\\Users\\\\manel\\\\.000.Proyectos.DEV\\\\005. Jennifer Cervera - copia\\\\node_modules\\\\googleapis\\\\build\\\\src\\\\apis\\\\calendar\\\\v3.d.ts\")",
       "Bash(grep \"^    export class Resource\\\\$\" \"c:\\\\Users\\\\manel\\\\.000.Proyectos.DEV\\\\005. Jennifer Cervera - copia\\\\node_modules\\\\googleapis\\\\build\\\\src\\\\apis\\\\calendar\\\\v3.d.ts\")",
-      "Bash(grep \"Resource\\\\$\" \"c:\\\\Users\\\\manel\\\\.000.Proyectos.DEV\\\\005. Jennifer Cervera - copia\\\\node_modules\\\\googleapis\\\\build\\\\src\\\\apis\\\\calendar\\\\v3.d.ts\")"
+      "Bash(grep \"Resource\\\\$\" \"c:\\\\Users\\\\manel\\\\.000.Proyectos.DEV\\\\005. Jennifer Cervera - copia\\\\node_modules\\\\googleapis\\\\build\\\\src\\\\apis\\\\calendar\\\\v3.d.ts\")",
+      "Bash(curl -s http://localhost:3000/api/debug/appointment-schedules)",
+      "Bash(cat /tmp/devserver.log | tail -20)",
+      "Read(//tmp/**)",
+      "Bash(curl -s http://localhost:3001/api/debug/appointment-schedules)",
+      "Skill(geo-audit)",
+      "Skill(geo-audit:*)",
+      "WebSearch",
+      "Bash(Select-Object -Last 20)",
+      "PowerShell(npm run typecheck 2>&1)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" https://henkoaching.com/sitemap.xml)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" https://henkoaching.com/robots.txt)",
+      "Bash(git -C \"c:\\\\Users\\\\manel\\\\.000.Proyectos.DEV\\\\005. Jennifer Cervera - copia\" diff --stat)",
+      "Bash(git -C \"c:\\\\Users\\\\manel\\\\.000.Proyectos.DEV\\\\005. Jennifer Cervera - copia\" diff src/components/OrganizationJsonLd.tsx .claude/settings.json)",
+      "Bash(git -C \"c:\\\\Users\\\\manel\\\\.000.Proyectos.DEV\\\\005. Jennifer Cervera - copia\" diff src/app/\"\\(web\\)\"/page.tsx src/app/\"\\(web\\)\"/sobre-mi/page.tsx src/app/globals.css src/app/\"\\(web\\)\"/servicios/ServiciosClient.tsx)",
+      "Bash(git -C \"c:\\\\Users\\\\manel\\\\.000.Proyectos.DEV\\\\005. Jennifer Cervera - copia\" diff --stat src/features/testimonios/components/TestimoniosCarousel.tsx)"
     ],
     "additionalDirectories": [
       "c:\\Users\\manel\\.000.Proyectos.DEV\\005. Jennifer Cervera - copia"
