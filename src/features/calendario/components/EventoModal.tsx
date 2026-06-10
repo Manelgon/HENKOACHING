@@ -4,10 +4,14 @@ import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import type { CalendarEvent, CreateEventInput, ModalState } from '../types'
+import type { CalendarEvent, CreateEventInput, ModalState, EventoVinculo } from '../types'
 import type { CalendarMeta } from '@/actions/google-calendar'
 import { createTask, getTaskLists } from '@/actions/google-tasks'
 import type { TaskList } from '@/actions/google-tasks'
+import { crearTareaVinculada, type ContactoEncontrado } from '@/actions/citas'
+import { TIPOS_CITA, TIPOS_TAREA } from '@/shared/lib/tipos-cita'
+import ContactoSelector, { VinculoTipoSelect, VinculoInvitarToggle, TIPO_OTRO } from './ContactoSelector'
+import { Row, ClockIcon, PeopleIcon, MeetIcon, LocationIcon, DescriptionIcon, LinkIcon, CalendarIcon } from './EventoModalUI'
 
 const EventSchema = z.object({
   title: z.string().min(1, 'El título es requerido'),
@@ -31,7 +35,7 @@ type Tab = 'evento' | 'tarea'
 type Props = {
   modal: ModalState
   onClose: () => void
-  onCreate: (data: CreateEventInput & { attendees?: string[]; addMeet?: boolean }) => void
+  onCreate: (data: CreateEventInput & { attendees?: string[]; addMeet?: boolean; vinculo?: EventoVinculo }) => void
   onUpdate: (id: string, data: Partial<CreateEventInput>) => void
   onDelete: (id: string) => void
   calendars?: CalendarMeta[]
@@ -53,13 +57,47 @@ export default function EventoModal({ modal, onClose, onCreate, onUpdate, onDele
   const [taskListId, setTaskListId] = useState('')
   const [selectedCalendarId, setSelectedCalendarId] = useState('primary')
   const [savingTask, setSavingTask] = useState(false)
+  const [taskError, setTaskError] = useState<string | null>(null)
 
-  const { register, handleSubmit, reset, watch, formState: { errors } } = useForm<EventFormValues>({
+  // Vínculo opcional con un contacto del CRM (compartido entre Evento y Tarea)
+  const [contacto, setContacto] = useState<ContactoEncontrado | null>(null)
+  const [tipoCita, setTipoCita] = useState<string>(TIPO_OTRO)
+  const [tipoTarea, setTipoTarea] = useState<string>(TIPO_OTRO)
+  const [invitarContacto, setInvitarContacto] = useState(true)
+
+  const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<EventFormValues>({
     resolver: zodResolver(EventSchema),
   })
-  const { register: registerTask, handleSubmit: handleTaskSubmit, reset: resetTask } = useForm<TaskFormValues>({
+  const { register: registerTask, handleSubmit: handleTaskSubmit, reset: resetTask, setValue: setTaskValue } = useForm<TaskFormValues>({
     resolver: zodResolver(TaskFormSchema),
   })
+
+  function selectContacto(c: ContactoEncontrado) {
+    setContacto(c)
+    setInvitarContacto(!!c.email)
+    const tCita = TIPOS_CITA[c.tipo][0] ?? TIPO_OTRO
+    const tTarea = TIPOS_TAREA[c.tipo][0] ?? TIPO_OTRO
+    setTipoCita(tCita)
+    setTipoTarea(tTarea)
+    if (tCita !== TIPO_OTRO) setValue('title', `${tCita} con ${c.nombre}`)
+    if (tTarea !== TIPO_OTRO) setTaskValue('title', `${tTarea} — ${c.nombre}`)
+  }
+
+  function clearContacto() {
+    setContacto(null)
+    setTipoCita(TIPO_OTRO)
+    setTipoTarea(TIPO_OTRO)
+  }
+
+  function handleTipoCita(t: string) {
+    setTipoCita(t)
+    if (contacto && t !== TIPO_OTRO) setValue('title', `${t} con ${contacto.nombre}`)
+  }
+
+  function handleTipoTarea(t: string) {
+    setTipoTarea(t)
+    if (contacto && t !== TIPO_OTRO) setTaskValue('title', `${t} — ${contacto.nombre}`)
+  }
 
   const startVal = watch('start')
   const endVal = watch('end')
@@ -76,6 +114,11 @@ export default function EventoModal({ modal, onClose, onCreate, onUpdate, onDele
       setShowDescription(false)
       setShowGuestInput(false)
       setTab(modal.defaultTab ?? 'evento')
+      setContacto(null)
+      setTipoCita(TIPO_OTRO)
+      setTipoTarea(TIPO_OTRO)
+      setInvitarContacto(true)
+      setTaskError(null)
     } else if (modal.mode === 'edit') {
       reset({ title: event!.title, start: event!.start, end: event!.end, isAllDay: event!.isAllDay, description: event!.description ?? '', location: event!.location ?? '' })
       setShowLocation(!!event!.location)
@@ -95,18 +138,55 @@ export default function EventoModal({ modal, onClose, onCreate, onUpdate, onDele
   if (modal.mode === 'closed') return null
 
   const onSubmitEvent = (values: EventFormValues) => {
-    const data = { ...values, attendees: guests.length > 0 ? guests : undefined, addMeet, calendarId: selectedCalendarId }
-    if (isEdit && event) onUpdate(event.id, data)
-    else onCreate(data)
+    if (isEdit && event) {
+      onUpdate(event.id, { ...values, attendees: guests.length > 0 ? guests : undefined, addMeet, calendarId: selectedCalendarId })
+      return
+    }
+    if (contacto) {
+      // Con vínculo: agendarCita invita con el email de la BD y registra la
+      // cita en el historial; los invitados manuales no aplican en este modo
+      onCreate({
+        ...values,
+        calendarId: selectedCalendarId,
+        vinculo: {
+          contacto,
+          tipo: tipoCita !== TIPO_OTRO ? tipoCita : undefined,
+          invitar: invitarContacto && !!contacto.email,
+        },
+      })
+      return
+    }
+    onCreate({ ...values, attendees: guests.length > 0 ? guests : undefined, addMeet, calendarId: selectedCalendarId })
   }
 
   const onSubmitTask = async (values: TaskFormValues) => {
     if (!taskListId) return
     setSavingTask(true)
+    setTaskError(null)
     try {
-      await createTask(taskListId, { title: values.title, due: values.due, notes: values.notes })
+      if (contacto) {
+        const result = await crearTareaVinculada({
+          recursoTipo: contacto.tipo,
+          recursoId: contacto.id,
+          tipo: tipoTarea !== TIPO_OTRO ? tipoTarea : undefined,
+          titulo: values.title,
+          contactoNombre: contacto.nombre,
+          contactoEmail: contacto.email ?? undefined,
+          fecha: values.due || new Date().toISOString().slice(0, 10),
+          notas: values.notes || undefined,
+          taskListId,
+        })
+        if ('error' in result && result.error) {
+          setTaskError(result.error)
+          setSavingTask(false)
+          return
+        }
+      } else {
+        await createTask(taskListId, { title: values.title, due: values.due, notes: values.notes })
+      }
       onClose()
     } catch {
+      setTaskError('No se pudo crear la tarea.')
       setSavingTask(false)
     }
   }
@@ -216,7 +296,27 @@ export default function EventoModal({ modal, onClose, onCreate, onUpdate, onDele
                 </div>
               )}
 
-              {/* Invitados */}
+              {/* Vincular contacto del CRM (opcional) */}
+              <Row icon={<LinkIcon />}>
+                <ContactoSelector contacto={contacto} onSelect={selectContacto} onClear={clearContacto} />
+              </Row>
+              {contacto && (
+                <div className="ml-10 pb-2 space-y-2">
+                  <VinculoTipoSelect
+                    tipos={TIPOS_CITA[contacto.tipo]}
+                    value={tipoCita}
+                    onChange={handleTipoCita}
+                  />
+                  <VinculoInvitarToggle
+                    email={contacto.email}
+                    checked={invitarContacto}
+                    onToggle={() => setInvitarContacto(v => !v)}
+                  />
+                </div>
+              )}
+
+              {/* Invitados manuales — solo sin vínculo */}
+              {!contacto && (
               <Row icon={<PeopleIcon />} onClick={() => !showGuestInput && setShowGuestInput(true)}>
                 {showGuestInput ? (
                   <div className="py-1.5 w-full">
@@ -250,8 +350,10 @@ export default function EventoModal({ modal, onClose, onCreate, onUpdate, onDele
                   </span>
                 )}
               </Row>
+              )}
 
-              {/* Google Meet */}
+              {/* Google Meet — solo sin vínculo (con vínculo va en el toggle de invitar) */}
+              {!contacto && (
               <Row icon={<MeetIcon />} onClick={() => setAddMeet(m => !m)}>
                 <div className="flex items-center justify-between w-full py-2 pr-2">
                   <span className={`text-sm font-raleway ${addMeet ? 'text-henko-turquoise' : 'text-gray-400'}`}>
@@ -262,6 +364,7 @@ export default function EventoModal({ modal, onClose, onCreate, onUpdate, onDele
                   </div>
                 </div>
               </Row>
+              )}
 
               {/* Ubicación */}
               <Row icon={<LocationIcon />} onClick={() => !showLocation && setShowLocation(true)}>
@@ -313,6 +416,20 @@ export default function EventoModal({ modal, onClose, onCreate, onUpdate, onDele
             </>
           ) : (
             <>
+              {/* Vincular contacto del CRM (opcional) */}
+              <Row icon={<LinkIcon />}>
+                <ContactoSelector contacto={contacto} onSelect={selectContacto} onClear={clearContacto} />
+              </Row>
+              {contacto && (
+                <div className="ml-10 pb-2">
+                  <VinculoTipoSelect
+                    tipos={TIPOS_TAREA[contacto.tipo]}
+                    value={tipoTarea}
+                    onChange={handleTipoTarea}
+                  />
+                </div>
+              )}
+
               {/* Tarea: fecha */}
               <Row icon={<ClockIcon />}>
                 <input
@@ -342,6 +459,7 @@ export default function EventoModal({ modal, onClose, onCreate, onUpdate, onDele
                   </select>
                 </Row>
               )}
+              {taskError && <p className="text-xs text-red-500 px-2 pt-1 font-raleway">{taskError}</p>}
             </>
           )}
         </div>
@@ -373,35 +491,4 @@ export default function EventoModal({ modal, onClose, onCreate, onUpdate, onDele
       </div>
     </div>
   )
-}
-
-function Row({ icon, children, onClick }: { icon: React.ReactNode; children: React.ReactNode; onClick?: () => void }) {
-  return (
-    <div
-      className={`flex items-start gap-3 px-2 py-0.5 rounded-xl transition-colors ${onClick ? 'hover:bg-gray-50 cursor-pointer' : ''}`}
-      onClick={onClick}
-    >
-      <div className="flex-shrink-0 w-5 h-5 mt-2 text-gray-400">{icon}</div>
-      <div className="flex-1 min-w-0">{children}</div>
-    </div>
-  )
-}
-
-function ClockIcon() {
-  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-}
-function PeopleIcon() {
-  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" /></svg>
-}
-function MeetIcon() {
-  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 9.75v9A2.25 2.25 0 004.5 18.75z" /></svg>
-}
-function LocationIcon() {
-  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" /></svg>
-}
-function DescriptionIcon() {
-  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25H12" /></svg>
-}
-function CalendarIcon() {
-  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" /></svg>
 }

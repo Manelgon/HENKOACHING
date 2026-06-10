@@ -14,9 +14,7 @@ import { useUrlState, useUrlIdState } from '@/shared/hooks/useUrlState'
 import SortHeader from '@/shared/components/SortHeader'
 import AccionesDropdown from './AccionesDropdown'
 import AgendarCitaModal from '@/shared/components/AgendarCitaModal'
-
-const TIPOS_CITA_EMPLEO = ['Entrevista', '2ª entrevista', 'Llamada', 'Videollamada', 'Contratación', 'Reunión']
-const TIPOS_TAREA_EMPLEO = ['Preparar entrevista', 'Revisar CV', 'Llamar al candidato', 'Enviar propuesta', 'Seguimiento']
+import { TIPOS_CITA, TIPOS_TAREA } from '@/shared/lib/tipos-cita'
 
 const ESTADO_META: Record<EstadoSolicitud, { label: string; badge: string; dot: string }> = {
   nuevo:      { label: 'Nueva',       badge: 'bg-henko-greenblue text-henko-turquoise', dot: 'bg-henko-turquoise' },
@@ -498,8 +496,8 @@ export default function AdminSolicitudes({ solicitudes, ofertas }: Props) {
       {agendarSol && (
         <AgendarCitaModal
           recurso={{ tipo: 'solicitud', id: agendarSol.id, nombre: agendarSol.candidato, email: agendarSol.email, contexto: agendarSol.ofertaTitulo }}
-          tiposCita={TIPOS_CITA_EMPLEO}
-          tiposTarea={TIPOS_TAREA_EMPLEO}
+          tiposCita={TIPOS_CITA.solicitud}
+          tiposTarea={TIPOS_TAREA.solicitud}
           onClose={() => setAgendarSol(null)}
           onDone={() => setAgendarSol(null)}
         />

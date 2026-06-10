@@ -11,9 +11,7 @@ import { useSortable } from '@/shared/hooks/useSortable'
 import SortHeader from '@/shared/components/SortHeader'
 import AccionesMenu, { type AccionItem } from '@/shared/components/AccionesMenu'
 import AgendarCitaModal from '@/shared/components/AgendarCitaModal'
-
-const TIPOS_CITA_CANDIDATO = ['Entrevista', '2ª entrevista', 'Llamada', 'Videollamada', 'Contratación', 'Reunión']
-const TIPOS_TAREA_CANDIDATO = ['Preparar entrevista', 'Revisar CV', 'Llamar al candidato', 'Enviar propuesta', 'Seguimiento']
+import { TIPOS_CITA, TIPOS_TAREA } from '@/shared/lib/tipos-cita'
 
 function formatDate(d: string | null) {
   if (!d) return '—'
@@ -350,8 +348,8 @@ export default function CandidatosTable({ candidatos }: { candidatos: CandidatoR
             email: agendarCand.email,
             contexto: agendarCand.cargo_actual ?? agendarCand.cargo_experiencia ?? undefined,
           }}
-          tiposCita={TIPOS_CITA_CANDIDATO}
-          tiposTarea={TIPOS_TAREA_CANDIDATO}
+          tiposCita={TIPOS_CITA.candidato}
+          tiposTarea={TIPOS_TAREA.candidato}
           onClose={() => setAgendarCand(null)}
           onDone={() => setAgendarCand(null)}
         />

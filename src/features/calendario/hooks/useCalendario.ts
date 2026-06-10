@@ -1,12 +1,13 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import type { CalendarEvent, CreateEventInput, UpdateEventInput, ModalState } from '../types'
+import type { CalendarEvent, CreateEventInput, UpdateEventInput, ModalState, EventoVinculo } from '../types'
 import {
   createCalendarEvent,
   updateCalendarEvent,
   deleteCalendarEvent,
 } from '@/actions/google-calendar'
+import { agendarCita } from '@/actions/citas'
 
 export function useCalendario(initialEvents: CalendarEvent[]) {
   const [events, setEvents] = useState<CalendarEvent[]>(initialEvents)
@@ -24,7 +25,7 @@ export function useCalendario(initialEvents: CalendarEvent[]) {
 
   const closeModal = useCallback(() => setModal({ mode: 'closed' }), [])
 
-  const handleCreate = useCallback(async (data: CreateEventInput & { attendees?: string[]; addMeet?: boolean }) => {
+  const handleCreate = useCallback(async (data: CreateEventInput & { attendees?: string[]; addMeet?: boolean; vinculo?: EventoVinculo }) => {
     setLoading(true)
     setError(null)
     const tempId = `temp-${Math.random()}`
@@ -41,8 +42,35 @@ export function useCalendario(initialEvents: CalendarEvent[]) {
     setEvents(prev => [...prev, optimistic])
     closeModal()
     try {
-      const created = await createCalendarEvent(data)
-      setEvents(prev => prev.map(e => e.id === tempId ? created : e))
+      if (data.vinculo) {
+        // Con contacto vinculado: agendarCita crea el evento, invita con el
+        // email de la BD y registra la cita en el historial del recurso.
+        const v = data.vinculo
+        const result = await agendarCita({
+          recursoTipo: v.contacto.tipo,
+          recursoId: v.contacto.id,
+          tipo: v.tipo,
+          titulo: data.title,
+          contactoNombre: v.contacto.nombre,
+          contactoEmail: v.contacto.email ?? undefined,
+          contexto: v.contacto.contexto,
+          start: data.start,
+          end: data.end,
+          calendarId: data.calendarId,
+          invitar: v.invitar,
+          crearTarea: false,
+        })
+        if ('evento' in result && result.ok) {
+          setEvents(prev => prev.map(e => e.id === tempId ? result.evento : e))
+        } else {
+          setEvents(prev => prev.filter(e => e.id !== tempId))
+          setError('error' in result && result.error ? result.error : 'No se pudo crear el evento.')
+        }
+      } else {
+        // Sin vínculo: flujo libre de siempre, sin registro en historial
+        const created = await createCalendarEvent(data)
+        setEvents(prev => prev.map(e => e.id === tempId ? created : e))
+      }
     } catch {
       setEvents(prev => prev.filter(e => e.id !== tempId))
       setError('No se pudo crear el evento.')

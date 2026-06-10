@@ -17,13 +17,12 @@ import CheckCircleIcon from '@/shared/components/icons/CheckCircleIcon'
 import CustomSelect from '@/shared/components/CustomSelect'
 import AccionesMenu, { type AccionItem } from '@/shared/components/AccionesMenu'
 import AgendarCitaModal from '@/shared/components/AgendarCitaModal'
+import CitasHistorial from '@/shared/components/CitasHistorial'
 import { CandidatoExperiencia, CandidatoEducacion, CandidatoIdiomas, CandidatoPreferencias } from './CandidatoExperiencia'
 import CandidatoSolicitudes from './CandidatoSolicitudes'
 import { useUrlState } from '@/shared/hooks/useUrlState'
 import type { CandidatoPerfil, NotaInterna } from '../types'
-
-const TIPOS_CITA_CANDIDATO = ['Entrevista', '2ª entrevista', 'Llamada', 'Videollamada', 'Contratación', 'Reunión']
-const TIPOS_TAREA_CANDIDATO = ['Preparar entrevista', 'Revisar CV', 'Llamar al candidato', 'Enviar propuesta', 'Seguimiento']
+import { TIPOS_CITA, TIPOS_TAREA } from '@/shared/lib/tipos-cita'
 
 type Props = {
   perfil: CandidatoPerfil
@@ -32,14 +31,14 @@ type Props = {
   ofertasVinculadas: string[]
 }
 
-type Tab = 'trayectoria' | 'solicitudes' | 'notas'
+type Tab = 'trayectoria' | 'solicitudes' | 'citas' | 'notas'
 
 export default function CandidatoDetalleLayout({ perfil, cvPrincipal, ofertas, ofertasVinculadas }: Props) {
   const router = useRouter()
   const runAction = useAction()
   const confirm = useConfirm()
 
-  const [activeTab, setActiveTab] = useUrlState<Tab>('tab', 'trayectoria', ['trayectoria', 'solicitudes', 'notas'])
+  const [activeTab, setActiveTab] = useUrlState<Tab>('tab', 'trayectoria', ['trayectoria', 'solicitudes', 'citas', 'notas'])
   const [composeOpen, setComposeOpen] = useState(false)
   const [agendarOpen, setAgendarOpen] = useState(false)
   const [notas, setNotas] = useState<NotaInterna[]>(perfil.notas)
@@ -151,6 +150,7 @@ export default function CandidatoDetalleLayout({ perfil, cvPrincipal, ofertas, o
   const tabs: { id: Tab; label: string }[] = [
     { id: 'trayectoria', label: 'Trayectoria' },
     { id: 'solicitudes', label: 'Solicitudes' },
+    { id: 'citas', label: 'Citas' },
     { id: 'notas', label: 'Notas internas' },
   ]
 
@@ -281,6 +281,14 @@ export default function CandidatoDetalleLayout({ perfil, cvPrincipal, ofertas, o
         </div>
       )}
 
+      {activeTab === 'citas' && (
+        <CitasHistorial
+          recurso={{ tipo: 'candidato', id: perfil.id, nombre, email: perfil.email, contexto: cargoDisplay ?? undefined }}
+          tiposCita={TIPOS_CITA.candidato}
+          tiposTarea={TIPOS_TAREA.candidato}
+        />
+      )}
+
       {activeTab === 'notas' && (
         <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm p-6">
           <p className="font-raleway font-bold text-henko-turquoise tracking-[0.14em] uppercase text-[11px] mb-4">Notas internas</p>
@@ -368,8 +376,8 @@ export default function CandidatoDetalleLayout({ perfil, cvPrincipal, ofertas, o
       {agendarOpen && (
         <AgendarCitaModal
           recurso={{ tipo: 'candidato', id: perfil.id, nombre, email: perfil.email, contexto: cargoDisplay ?? undefined }}
-          tiposCita={TIPOS_CITA_CANDIDATO}
-          tiposTarea={TIPOS_TAREA_CANDIDATO}
+          tiposCita={TIPOS_CITA.candidato}
+          tiposTarea={TIPOS_TAREA.candidato}
           onClose={() => setAgendarOpen(false)}
           onDone={() => setAgendarOpen(false)}
         />

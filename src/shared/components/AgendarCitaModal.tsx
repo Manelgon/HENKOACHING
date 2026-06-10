@@ -103,6 +103,7 @@ export default function AgendarCitaModal({ recurso, tiposCita, tiposTarea, onClo
       () => agendarCita({
         recursoTipo: recurso.tipo,
         recursoId: recurso.id,
+        tipo: tipoBase || undefined,
         titulo: tituloFinal,
         contactoNombre: recurso.nombre,
         contactoEmail: recurso.email || undefined,

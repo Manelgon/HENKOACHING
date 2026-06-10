@@ -452,6 +452,74 @@ export type Database = {
           },
         ]
       }
+      citas: {
+        Row: {
+          calendar_id: string | null
+          clase: string
+          contacto_email: string | null
+          contacto_nombre: string
+          created_at: string | null
+          created_by: string | null
+          end_at: string | null
+          google_event_id: string | null
+          google_task_id: string | null
+          id: string
+          invitado: boolean
+          recurso_id: string
+          recurso_tipo: string
+          start_at: string
+          task_list_id: string | null
+          tipo: string | null
+          titulo: string
+        }
+        Insert: {
+          calendar_id?: string | null
+          clase?: string
+          contacto_email?: string | null
+          contacto_nombre: string
+          created_at?: string | null
+          created_by?: string | null
+          end_at?: string | null
+          google_event_id?: string | null
+          google_task_id?: string | null
+          id?: string
+          invitado?: boolean
+          recurso_id: string
+          recurso_tipo: string
+          start_at: string
+          task_list_id?: string | null
+          tipo?: string | null
+          titulo: string
+        }
+        Update: {
+          calendar_id?: string | null
+          clase?: string
+          contacto_email?: string | null
+          contacto_nombre?: string
+          created_at?: string | null
+          created_by?: string | null
+          end_at?: string | null
+          google_event_id?: string | null
+          google_task_id?: string | null
+          id?: string
+          invitado?: boolean
+          recurso_id?: string
+          recurso_tipo?: string
+          start_at?: string
+          task_list_id?: string | null
+          tipo?: string | null
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "citas_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cliente_archivos: {
         Row: {
           cliente_id: string

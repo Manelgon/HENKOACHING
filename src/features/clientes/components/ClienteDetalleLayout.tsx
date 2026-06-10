@@ -15,11 +15,10 @@ import {
 import { getOrigenLabel } from '@/features/leads/components/estados'
 import AccionesMenu, { type AccionItem } from '@/shared/components/AccionesMenu'
 import AgendarCitaModal from '@/shared/components/AgendarCitaModal'
+import CitasHistorial from '@/shared/components/CitasHistorial'
 import { useUrlState } from '@/shared/hooks/useUrlState'
 import type { EstadoCliente } from '@/lib/supabase/database.types'
-
-const TIPOS_CITA_CLIENTE = ['Sesión de coaching', 'Reunión de seguimiento', 'Llamada', 'Videollamada', 'Revisión de progreso']
-const TIPOS_TAREA_CLIENTE = ['Preparar sesión', 'Enviar materiales', 'Hacer seguimiento', 'Revisar progreso']
+import { TIPOS_CITA, TIPOS_TAREA } from '@/shared/lib/tipos-cita'
 
 type Nota = { id: string; contenido: string; created_at: string | null; autor_email: string | null }
 type Archivo = { id: string; nombre_archivo: string; storage_path: string; tipo: string; tamano_bytes: number | null; created_at: string | null }
@@ -29,7 +28,7 @@ type OfertaRow = {
   solicitudes: { id: string; estado: string; created_at: string | null; candidato_profiles: { profiles: { nombre: string | null; apellidos: string | null; email: string } | null } | null }[]
 }
 
-type Tab = 'facturas' | 'empleo' | 'archivos' | 'notas'
+type Tab = 'facturas' | 'empleo' | 'citas' | 'archivos' | 'notas'
 
 type Props = {
   cliente: Cliente
@@ -42,6 +41,7 @@ type Props = {
 const TABS: { id: Tab; label: string }[] = [
   { id: 'facturas', label: 'Facturas' },
   { id: 'empleo',   label: 'Empleo' },
+  { id: 'citas',    label: 'Citas' },
   { id: 'archivos', label: 'Archivos' },
   { id: 'notas',    label: 'Notas' },
 ]
@@ -272,6 +272,13 @@ export default function ClienteDetalleLayout({ cliente, notas, archivos, factura
       {/* ── TAB CONTENT ─────────────────────────────────────────────────── */}
       {tab === 'facturas' && <ClienteFacturas facturas={facturas} clienteId={cliente.id} />}
       {tab === 'empleo'   && <ClienteOfertas ofertas={ofertas} />}
+      {tab === 'citas'    && (
+        <CitasHistorial
+          recurso={{ tipo: 'cliente', id: cliente.id, nombre: cliente.nombre, email: cliente.email, contexto: cliente.servicio_contratado ? getServicioLabel(cliente.servicio_contratado) : undefined }}
+          tiposCita={TIPOS_CITA.cliente}
+          tiposTarea={TIPOS_TAREA.cliente}
+        />
+      )}
       {tab === 'archivos' && <ClienteArchivos clienteId={cliente.id} archivos={archivos} />}
       {tab === 'notas'    && <ClienteNotas clienteId={cliente.id} notas={notas} />}
 
@@ -296,8 +303,8 @@ export default function ClienteDetalleLayout({ cliente, notas, archivos, factura
       {agendarOpen && (
         <AgendarCitaModal
           recurso={{ tipo: 'cliente', id: cliente.id, nombre: cliente.nombre, email: cliente.email, contexto: cliente.servicio_contratado ? getServicioLabel(cliente.servicio_contratado) : undefined }}
-          tiposCita={TIPOS_CITA_CLIENTE}
-          tiposTarea={TIPOS_TAREA_CLIENTE}
+          tiposCita={TIPOS_CITA.cliente}
+          tiposTarea={TIPOS_TAREA.cliente}
           onClose={() => setAgendarOpen(false)}
           onDone={() => setAgendarOpen(false)}
         />

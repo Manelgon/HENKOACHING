@@ -11,9 +11,9 @@ import { ESTADOS_LEAD, getEstadoMeta, getOrigenLabel } from './estados'
 import type { LeadRow } from './LeadsTable'
 import AccionesMenu, { type AccionItem } from '@/shared/components/AccionesMenu'
 import AgendarCitaModal from '@/shared/components/AgendarCitaModal'
+import CitasHistorial from '@/shared/components/CitasHistorial'
 
-const TIPOS_CITA_LEAD = ['Llamada', 'Videollamada', 'Reunión inicial', 'Sesión informativa', 'Seguimiento']
-const TIPOS_TAREA_LEAD = ['Llamar al lead', 'Enviar información', 'Enviar propuesta', 'Hacer seguimiento']
+import { TIPOS_CITA, TIPOS_TAREA } from '@/shared/lib/tipos-cita'
 
 const ICON_CAL = 'M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5'
 
@@ -232,6 +232,14 @@ export default function LeadDrawer({
             </p>
           </div>
 
+          {/* Citas */}
+          <CitasHistorial
+            recurso={{ tipo: 'lead', id: lead.id, nombre: lead.nombre, email: lead.email, contexto: lead.asunto ?? lead.servicio_interes ?? undefined }}
+            tiposCita={TIPOS_CITA.lead}
+            tiposTarea={TIPOS_TAREA.lead}
+            compact
+          />
+
           {/* Notas */}
           <div>
             <p className="font-raleway text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Notas internas</p>
@@ -310,8 +318,8 @@ export default function LeadDrawer({
     {agendarOpen && (
       <AgendarCitaModal
         recurso={{ tipo: 'lead', id: lead.id, nombre: lead.nombre, email: lead.email, contexto: lead.asunto ?? lead.servicio_interes ?? undefined }}
-        tiposCita={TIPOS_CITA_LEAD}
-        tiposTarea={TIPOS_TAREA_LEAD}
+        tiposCita={TIPOS_CITA.lead}
+        tiposTarea={TIPOS_TAREA.lead}
         onClose={() => setAgendarOpen(false)}
         onDone={() => setAgendarOpen(false)}
       />

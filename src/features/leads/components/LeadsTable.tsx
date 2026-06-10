@@ -16,9 +16,7 @@ import { useUrlState, useUrlIdState } from '@/shared/hooks/useUrlState'
 import SortHeader from '@/shared/components/SortHeader'
 import AccionesMenu, { type AccionItem } from '@/shared/components/AccionesMenu'
 import AgendarCitaModal from '@/shared/components/AgendarCitaModal'
-
-const TIPOS_CITA_LEAD = ['Llamada', 'Videollamada', 'Reunión inicial', 'Sesión informativa', 'Seguimiento']
-const TIPOS_TAREA_LEAD = ['Llamar al lead', 'Enviar información', 'Enviar propuesta', 'Hacer seguimiento']
+import { TIPOS_CITA, TIPOS_TAREA } from '@/shared/lib/tipos-cita'
 
 export type LeadRow = {
   id: string
@@ -507,8 +505,8 @@ export default function LeadsTable({ leads }: { leads: LeadRow[] }) {
       {agendarLead && (
         <AgendarCitaModal
           recurso={{ tipo: 'lead', id: agendarLead.id, nombre: agendarLead.nombre, email: agendarLead.email, contexto: agendarLead.asunto ?? agendarLead.servicio_interes ?? undefined }}
-          tiposCita={TIPOS_CITA_LEAD}
-          tiposTarea={TIPOS_TAREA_LEAD}
+          tiposCita={TIPOS_CITA.lead}
+          tiposTarea={TIPOS_TAREA.lead}
           onClose={() => setAgendarLead(null)}
           onDone={() => setAgendarLead(null)}
         />

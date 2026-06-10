@@ -12,9 +12,7 @@ import { useSortable } from '@/shared/hooks/useSortable'
 import SortHeader from '@/shared/components/SortHeader'
 import AccionesMenu, { type AccionItem } from '@/shared/components/AccionesMenu'
 import AgendarCitaModal from '@/shared/components/AgendarCitaModal'
-
-const TIPOS_CITA_CLIENTE = ['Sesión de coaching', 'Reunión de seguimiento', 'Llamada', 'Videollamada', 'Revisión de progreso']
-const TIPOS_TAREA_CLIENTE = ['Preparar sesión', 'Enviar materiales', 'Hacer seguimiento', 'Revisar progreso']
+import { TIPOS_CITA, TIPOS_TAREA } from '@/shared/lib/tipos-cita'
 
 export type ClienteRow = {
   id: string
@@ -255,8 +253,8 @@ export default function ClientesTable({ clientes }: { clientes: ClienteRow[] }) 
       {agendarCliente && (
         <AgendarCitaModal
           recurso={{ tipo: 'cliente', id: agendarCliente.id, nombre: agendarCliente.nombre, email: agendarCliente.email, contexto: getServicioLabel(agendarCliente.servicio_contratado) }}
-          tiposCita={TIPOS_CITA_CLIENTE}
-          tiposTarea={TIPOS_TAREA_CLIENTE}
+          tiposCita={TIPOS_CITA.cliente}
+          tiposTarea={TIPOS_TAREA.cliente}
           onClose={() => setAgendarCliente(null)}
           onDone={() => setAgendarCliente(null)}
         />
