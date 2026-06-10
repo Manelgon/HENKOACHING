@@ -105,7 +105,7 @@ export function useCalendario(initialEvents: CalendarEvent[]) {
     setEvents(cur => cur.filter(e => e.id !== id))
     closeModal()
     try {
-      await deleteCalendarEvent(id, calId)
+      await deleteCalendarEvent(id, calId, prev?.title)
     } catch {
       if (prev) setEvents(cur => [...cur, prev])
       setError('No se pudo eliminar el evento.')

@@ -2,6 +2,8 @@
 
 import { google } from 'googleapis'
 import { z } from 'zod'
+import { requireAdmin } from '@/lib/auth/require-admin'
+import { logAction } from '@/lib/audit/log-action'
 
 export type CalendarMeta = {
   id: string
@@ -119,7 +121,12 @@ export async function getCalendarEventsRange(from: Date, to: Date): Promise<Cale
   return results.flatMap(r => r.status === 'fulfilled' ? r.value : [])
 }
 
-export async function createCalendarEvent(data: CreateEventInput): Promise<CalendarEvent> {
+// opts.skipLog: las acciones de citas.ts ya escriben su propio log
+// ({recurso}.agendar_cita) y evitan así una entrada duplicada.
+export async function createCalendarEvent(data: CreateEventInput, opts?: { skipLog?: boolean }): Promise<CalendarEvent> {
+  const auth = await requireAdmin()
+  if (!auth.ok) throw new Error(auth.error)
+
   const parsed = CreateEventSchema.parse(data)
   const calendar = google.calendar({ version: 'v3', auth: createAuth() })
   const calId = parsed.calendarId ?? 'primary'
@@ -157,10 +164,25 @@ export async function createCalendarEvent(data: CreateEventInput): Promise<Calen
     requestBody: resource,
     conferenceDataVersion: parsed.addMeet ? 1 : 0,
   })
-  return mapEvent(res.data as Record<string, unknown>, calId, '#1f8f9b')
+  const evento = mapEvent(res.data as Record<string, unknown>, calId, '#1f8f9b')
+
+  if (!opts?.skipLog) {
+    await logAction({
+      accion: 'calendario.crear_evento',
+      recursoTipo: 'calendario',
+      recursoId: evento.id,
+      recursoLabel: evento.title,
+      metadata: { start: evento.start, calendarId: calId, invitados: parsed.attendees ?? [] },
+    })
+  }
+
+  return evento
 }
 
 export async function updateCalendarEvent(id: string, calendarId: string, data: UpdateEventInput): Promise<CalendarEvent> {
+  const auth = await requireAdmin()
+  if (!auth.ok) throw new Error(auth.error)
+
   const parsed = UpdateEventSchema.parse(data)
   const calendar = google.calendar({ version: 'v3', auth: createAuth() })
 
@@ -179,12 +201,34 @@ export async function updateCalendarEvent(id: string, calendarId: string, data: 
   }
 
   const res = await calendar.events.patch({ calendarId, eventId: id, requestBody: resource })
-  return mapEvent(res.data as Record<string, unknown>, calendarId, '#1f8f9b')
+  const evento = mapEvent(res.data as Record<string, unknown>, calendarId, '#1f8f9b')
+
+  await logAction({
+    accion: 'calendario.editar_evento',
+    recursoTipo: 'calendario',
+    recursoId: evento.id,
+    recursoLabel: evento.title,
+    metadata: { start: evento.start, calendarId, cambios: Object.keys(resource) },
+  })
+
+  return evento
 }
 
-export async function deleteCalendarEvent(id: string, calendarId: string): Promise<void> {
+// `titulo` es solo para el log: Google borra el evento por id y no devuelve datos
+export async function deleteCalendarEvent(id: string, calendarId: string, titulo?: string): Promise<void> {
+  const auth = await requireAdmin()
+  if (!auth.ok) throw new Error(auth.error)
+
   const calendar = google.calendar({ version: 'v3', auth: createAuth() })
   await calendar.events.delete({ calendarId, eventId: id })
+
+  await logAction({
+    accion: 'calendario.eliminar_evento',
+    recursoTipo: 'calendario',
+    recursoId: id,
+    recursoLabel: titulo ?? null,
+    metadata: { calendarId },
+  })
 }
 
 export type AppointmentSchedule = {

@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { logAction } from '@/lib/audit/log-action'
+import { requireAdmin } from '@/lib/auth/require-admin'
 import type { NivelIdioma } from '@/lib/supabase/database.types'
 
 type ExperienciaInput = { empresa: string; cargo: string; desde: string; hasta: string }
@@ -217,6 +218,9 @@ export async function signupCandidato(input: CandidatoSignupInput) {
 }
 
 export async function uploadCvPorAdmin(userId: string, formData: FormData): Promise<{ ok?: boolean; error?: string }> {
+  const auth = await requireAdmin()
+  if (!auth.ok) return { error: auth.error }
+
   const admin = createAdminClient()
 
   const file = formData.get('cv') as File | null
@@ -246,6 +250,13 @@ export async function uploadCvPorAdmin(userId: string, formData: FormData): Prom
     await admin.storage.from('cvs').remove([path])
     return { error: insertError.message }
   }
+
+  await logAction({
+    accion: 'candidato.subir_cv_admin',
+    recursoTipo: 'candidato',
+    recursoId: userId,
+    metadata: { archivo: file.name },
+  })
 
   return { ok: true }
 }
@@ -568,6 +579,14 @@ export async function crearExperiencia(formData: FormData) {
   })
 
   if (error) return { error: error.message }
+
+  await logAction({
+    accion: 'candidato.crear_experiencia',
+    recursoTipo: 'candidato',
+    recursoId: user.id,
+    metadata: { empresa },
+  })
+
   revalidatePath('/candidato/dashboard')
   return { ok: true }
 }
@@ -594,6 +613,14 @@ export async function actualizarExperiencia(id: string, formData: FormData) {
     .eq('candidato_id', user.id)
 
   if (error) return { error: error.message }
+
+  await logAction({
+    accion: 'candidato.editar_experiencia',
+    recursoTipo: 'candidato',
+    recursoId: user.id,
+    metadata: { empresa },
+  })
+
   revalidatePath('/candidato/dashboard')
   return { ok: true }
 }
@@ -609,6 +636,13 @@ export async function eliminarExperiencia(id: string) {
     .eq('candidato_id', user.id)
 
   if (error) return { error: error.message }
+
+  await logAction({
+    accion: 'candidato.eliminar_experiencia',
+    recursoTipo: 'candidato',
+    recursoId: user.id,
+  })
+
   revalidatePath('/candidato/dashboard')
   return { ok: true }
 }
@@ -636,6 +670,14 @@ export async function crearEducacion(formData: FormData) {
   })
 
   if (error) return { error: error.message }
+
+  await logAction({
+    accion: 'candidato.crear_educacion',
+    recursoTipo: 'candidato',
+    recursoId: user.id,
+    metadata: { centro },
+  })
+
   revalidatePath('/candidato/dashboard')
   return { ok: true }
 }
@@ -660,6 +702,14 @@ export async function actualizarEducacion(id: string, formData: FormData) {
     .eq('candidato_id', user.id)
 
   if (error) return { error: error.message }
+
+  await logAction({
+    accion: 'candidato.editar_educacion',
+    recursoTipo: 'candidato',
+    recursoId: user.id,
+    metadata: { centro },
+  })
+
   revalidatePath('/candidato/dashboard')
   return { ok: true }
 }
@@ -675,6 +725,13 @@ export async function eliminarEducacion(id: string) {
     .eq('candidato_id', user.id)
 
   if (error) return { error: error.message }
+
+  await logAction({
+    accion: 'candidato.eliminar_educacion',
+    recursoTipo: 'candidato',
+    recursoId: user.id,
+  })
+
   revalidatePath('/candidato/dashboard')
   return { ok: true }
 }
@@ -701,6 +758,14 @@ export async function crearIdioma(formData: FormData) {
   })
 
   if (error) return { error: error.message }
+
+  await logAction({
+    accion: 'candidato.crear_idioma',
+    recursoTipo: 'candidato',
+    recursoId: user.id,
+    metadata: { idioma },
+  })
+
   revalidatePath('/candidato/dashboard')
   return { ok: true }
 }
@@ -724,6 +789,14 @@ export async function actualizarIdioma(id: string, formData: FormData) {
     .eq('candidato_id', user.id)
 
   if (error) return { error: error.message }
+
+  await logAction({
+    accion: 'candidato.editar_idioma',
+    recursoTipo: 'candidato',
+    recursoId: user.id,
+    metadata: { idioma },
+  })
+
   revalidatePath('/candidato/dashboard')
   return { ok: true }
 }
@@ -739,6 +812,13 @@ export async function eliminarIdioma(id: string) {
     .eq('candidato_id', user.id)
 
   if (error) return { error: error.message }
+
+  await logAction({
+    accion: 'candidato.eliminar_idioma',
+    recursoTipo: 'candidato',
+    recursoId: user.id,
+  })
+
   revalidatePath('/candidato/dashboard')
   return { ok: true }
 }
@@ -767,6 +847,14 @@ export async function actualizarPreferencias(formData: FormData) {
     .eq('user_id', user.id)
 
   if (error) return { error: error.message }
+
+  // Metadata mínima a propósito: no volcamos preferencias (datos personales) al log
+  await logAction({
+    accion: 'candidato.editar_preferencias',
+    recursoTipo: 'candidato',
+    recursoId: user.id,
+  })
+
   revalidatePath('/candidato/dashboard')
   return { ok: true }
 }

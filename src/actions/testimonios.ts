@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { requireAdmin } from '@/lib/auth/require-admin'
+import { logAction } from '@/lib/audit/log-action'
 
 type Result<T = undefined> = { ok: true; data?: T } | { error: string }
 
@@ -56,6 +57,15 @@ export async function crearTestimonio(input: TestimonioInput): Promise<Result<{ 
     .single()
 
   if (error) return { error: error.message }
+
+  await logAction({
+    accion: 'testimonio.crear',
+    recursoTipo: 'testimonio',
+    recursoId: data.id,
+    recursoLabel: input.nombre.trim(),
+    metadata: { visible: input.visible ?? true },
+  })
+
   revalidar()
   return { ok: true, data: { id: data.id } }
 }
@@ -83,6 +93,15 @@ export async function actualizarTestimonio(id: string, input: TestimonioInput): 
     .eq('id', id)
 
   if (error) return { error: error.message }
+
+  await logAction({
+    accion: 'testimonio.editar',
+    recursoTipo: 'testimonio',
+    recursoId: id,
+    recursoLabel: input.nombre.trim(),
+    metadata: { visible: input.visible ?? true },
+  })
+
   revalidar()
   return { ok: true }
 }
@@ -98,6 +117,13 @@ export async function eliminarTestimonio(id: string): Promise<Result> {
     .eq('id', id)
 
   if (error) return { error: error.message }
+
+  await logAction({
+    accion: 'testimonio.eliminar',
+    recursoTipo: 'testimonio',
+    recursoId: id,
+  })
+
   revalidar()
   return { ok: true }
 }
@@ -113,6 +139,13 @@ export async function alternarVisibilidad(id: string, visible: boolean): Promise
     .eq('id', id)
 
   if (error) return { error: error.message }
+
+  await logAction({
+    accion: visible ? 'testimonio.mostrar' : 'testimonio.ocultar',
+    recursoTipo: 'testimonio',
+    recursoId: id,
+  })
+
   revalidar()
   return { ok: true }
 }

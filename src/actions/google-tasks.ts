@@ -2,6 +2,8 @@
 
 import { google } from 'googleapis'
 import { z } from 'zod'
+import { requireAdmin } from '@/lib/auth/require-admin'
+import { logAction } from '@/lib/audit/log-action'
 
 export type TaskList = {
   id: string
@@ -66,7 +68,12 @@ export async function getTasks(taskListId: string): Promise<Task[]> {
   }))
 }
 
-export async function createTask(taskListId: string, data: CreateTaskInput): Promise<Task> {
+// opts.skipLog: citas.ts ya escribe su propio log ({recurso}.crear_tarea /
+// agendar_cita) y evita así una entrada duplicada.
+export async function createTask(taskListId: string, data: CreateTaskInput, opts?: { skipLog?: boolean }): Promise<Task> {
+  const auth = await requireAdmin()
+  if (!auth.ok) throw new Error(auth.error)
+
   const parsed = CreateTaskSchema.parse(data)
   const tasks = google.tasks({ version: 'v1', auth: createAuth() })
   const res = await tasks.tasks.insert({
@@ -78,6 +85,17 @@ export async function createTask(taskListId: string, data: CreateTaskInput): Pro
     },
   })
   const t = res.data
+
+  if (!opts?.skipLog) {
+    await logAction({
+      accion: 'tarea.crear',
+      recursoTipo: 'tarea',
+      recursoId: t.id ?? null,
+      recursoLabel: parsed.title,
+      metadata: { due: parsed.due ?? null, taskListId },
+    })
+  }
+
   return {
     id: t.id ?? '',
     title: t.title ?? '',
@@ -88,6 +106,9 @@ export async function createTask(taskListId: string, data: CreateTaskInput): Pro
 }
 
 export async function toggleTask(taskListId: string, taskId: string, completed: boolean): Promise<Task> {
+  const auth = await requireAdmin()
+  if (!auth.ok) throw new Error(auth.error)
+
   const tasks = google.tasks({ version: 'v1', auth: createAuth() })
   const res = await tasks.tasks.patch({
     tasklist: taskListId,
@@ -98,6 +119,15 @@ export async function toggleTask(taskListId: string, taskId: string, completed: 
     },
   })
   const t = res.data
+
+  await logAction({
+    accion: completed ? 'tarea.completar' : 'tarea.reabrir',
+    recursoTipo: 'tarea',
+    recursoId: t.id ?? taskId,
+    recursoLabel: t.title ?? null,
+    metadata: { taskListId },
+  })
+
   return {
     id: t.id ?? '',
     title: t.title ?? '',
@@ -107,14 +137,37 @@ export async function toggleTask(taskListId: string, taskId: string, completed: 
   }
 }
 
-export async function deleteTask(taskListId: string, taskId: string): Promise<void> {
+// `titulo` es solo para el log: Google borra la tarea por id y no devuelve datos
+export async function deleteTask(taskListId: string, taskId: string, titulo?: string): Promise<void> {
+  const auth = await requireAdmin()
+  if (!auth.ok) throw new Error(auth.error)
+
   const tasks = google.tasks({ version: 'v1', auth: createAuth() })
   await tasks.tasks.delete({ tasklist: taskListId, task: taskId })
+
+  await logAction({
+    accion: 'tarea.eliminar',
+    recursoTipo: 'tarea',
+    recursoId: taskId,
+    recursoLabel: titulo ?? null,
+    metadata: { taskListId },
+  })
 }
 
 export async function createTaskList(title: string): Promise<TaskList> {
+  const auth = await requireAdmin()
+  if (!auth.ok) throw new Error(auth.error)
+
   const parsed = z.string().min(1).max(100).parse(title)
   const tasksClient = google.tasks({ version: 'v1', auth: createAuth() })
   const res = await tasksClient.tasklists.insert({ requestBody: { title: parsed } })
+
+  await logAction({
+    accion: 'tarea.crear_lista',
+    recursoTipo: 'tarea',
+    recursoId: res.data.id ?? null,
+    recursoLabel: parsed,
+  })
+
   return { id: res.data.id ?? '', title: res.data.title ?? parsed }
 }

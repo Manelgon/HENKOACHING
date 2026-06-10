@@ -78,7 +78,7 @@ export async function agendarCita(input: AgendarCitaInput) {
       description: d.contexto ? `${d.contactoNombre}\n${d.contexto}` : d.contactoNombre,
       attendees: puedeInvitar ? [d.contactoEmail!] : undefined,
       addMeet: puedeInvitar,
-    })
+    }, { skipLog: true })
   } catch (e) {
     return { error: `No se pudo crear el evento en el calendario: ${e instanceof Error ? e.message : 'error desconocido'}` }
   }
@@ -95,7 +95,7 @@ export async function agendarCita(input: AgendarCitaInput) {
           title: d.tareaTitulo?.trim() || `Preparar: ${d.titulo}`,
           notes: d.contexto || undefined,
           due: d.tareaFecha || d.start.split('T')[0],
-        })
+        }, { skipLog: true })
         tareaCreada = true
       }
     } catch (e) {
@@ -174,7 +174,7 @@ export async function crearTareaVinculada(input: CrearTareaVinculadaInput) {
       title: d.titulo,
       notes: d.notas || undefined,
       due: d.fecha,
-    })
+    }, { skipLog: true })
     taskId = task.id || null
     listIdUsada = listId
   } catch (e) {

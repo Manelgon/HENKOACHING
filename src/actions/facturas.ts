@@ -159,7 +159,7 @@ export async function crearFactura(input: FacturaInput) {
   const verifactuError = 'error' in verifactu ? verifactu.error : null
 
   // Generar PDF (con QR si verifactu ok)
-  await regenerarPdfFactura(facturaId)
+  await regenerarPdfFactura(facturaId, { skipLog: true })
 
   await logAction({
     accion: 'factura.crear',
@@ -176,7 +176,12 @@ export async function crearFactura(input: FacturaInput) {
 // =============================================================================
 // REGENERAR PDF
 // =============================================================================
-export async function regenerarPdfFactura(facturaId: string) {
+// opts.skipLog: las acciones que regeneran el PDF como parte de otra operación
+// (crear, cambiar estado, editar no-fiscal) ya escriben su propio log.
+export async function regenerarPdfFactura(facturaId: string, opts?: { skipLog?: boolean }) {
+  const auth = await requireAdmin()
+  if (!auth.ok) return { error: auth.error }
+
   const admin = createAdminClient()
 
   const { data: factura } = await admin
@@ -315,6 +320,15 @@ export async function regenerarPdfFactura(facturaId: string) {
 
   if (updateError) return { error: updateError.message }
 
+  if (!opts?.skipLog) {
+    await logAction({
+      accion: 'factura.regenerar_pdf',
+      recursoTipo: 'factura',
+      recursoId: facturaId,
+      recursoLabel: f.numero,
+    })
+  }
+
   return { ok: true, path: storagePath }
 }
 
@@ -368,7 +382,7 @@ export async function cambiarEstadoFactura(
   }
 
   // Regenerar PDF para que el sello refleje el nuevo estado
-  await regenerarPdfFactura(id)
+  await regenerarPdfFactura(id, { skipLog: true })
 
   await logAction({
     accion: 'factura.cambiar_estado',
@@ -439,7 +453,7 @@ export async function actualizarFacturaNoFiscal(id: string, input: FacturaNoFisc
 
   if (error) return { error: error.message }
 
-  await regenerarPdfFactura(id)
+  await regenerarPdfFactura(id, { skipLog: true })
 
   await logAction({
     accion: 'factura.actualizar_no_fiscal',

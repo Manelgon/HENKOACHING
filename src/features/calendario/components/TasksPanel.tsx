@@ -96,7 +96,7 @@ export default function TasksPanel({ onTasksChange, initialGroups = [] }: Props)
       return next
     })
     try {
-      await deleteTask(listId, task.id)
+      await deleteTask(listId, task.id, task.title)
     } catch {
       setGroups(prev => {
         const next = prev.map(g => g.list.id !== listId ? g : { ...g, tasks: prevTasks })

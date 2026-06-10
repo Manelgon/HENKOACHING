@@ -568,6 +568,13 @@ export async function eliminarEmailsBandeja(uids: number[], mailbox = 'INBOX') {
       user: config.imap_user as string,
       password: imap,
     }, uids, mailbox)
+
+    await logAction({
+      accion: 'email.eliminar_bandeja',
+      recursoTipo: 'email',
+      metadata: { mailbox, cantidad: uids.length },
+    })
+
     return { ok: true }
   } catch (e) {
     return { error: `Error IMAP: ${String(e)}` }
@@ -780,6 +787,7 @@ export async function leerThreadGmail(threadId: string): Promise<import('@/featu
 export async function archivarThread(threadId: string): Promise<void> {
   await assertAdmin()
   await modificarThread(threadId, [], ['INBOX'])
+  await logAction({ accion: 'email.archivar_thread', recursoTipo: 'email', recursoId: threadId })
 }
 
 export async function toggleLeidoThread(threadId: string, markAsRead: boolean): Promise<void> {
@@ -794,11 +802,18 @@ export async function toggleLeidoThread(threadId: string, markAsRead: boolean): 
 export async function eliminarThreadGmail(threadId: string): Promise<void> {
   await assertAdmin()
   await eliminarThread(threadId)
+  await logAction({ accion: 'email.eliminar_thread', recursoTipo: 'email', recursoId: threadId })
 }
 
 export async function etiquetarThread(threadId: string, addLabelIds: string[], removeLabelIds: string[]): Promise<void> {
   await assertAdmin()
   await modificarThread(threadId, addLabelIds, removeLabelIds)
+  await logAction({
+    accion: 'email.etiquetar_thread',
+    recursoTipo: 'email',
+    recursoId: threadId,
+    metadata: { anadidas: addLabelIds, quitadas: removeLabelIds },
+  })
 }
 
 export async function buscarThreadsGmail(q: string) {
