@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { agendarEntrevista } from '@/actions/solicitudes'
+import { agendarCita } from '@/actions/solicitudes'
 import { useAction } from '@/shared/feedback/FeedbackContext'
 
 type Solicitud = {
@@ -30,6 +30,7 @@ const fmtLocal = (dt: Date) =>
 
 export default function AgendarEntrevistaModal({ solicitud, onClose, onDone }: Props) {
   const runAction = useAction()
+  const [titulo, setTitulo] = useState(`Entrevista con ${solicitud.candidato}`)
   const [fecha, setFecha] = useState('')
   const [hora, setHora] = useState('10:00')
   const [duracion, setDuracion] = useState(45)
@@ -45,15 +46,16 @@ export default function AgendarEntrevistaModal({ solicitud, onClose, onDone }: P
   }, [onClose])
 
   async function handleSubmit() {
-    if (!fecha || !hora) return
+    if (!fecha || !hora || !titulo.trim()) return
     const startDate = new Date(`${fecha}T${hora}:00`)
     const endDate = new Date(startDate.getTime() + duracion * 60000)
 
     setEnviando(true)
     const result = await runAction(
-      `Agendando entrevista con ${solicitud.candidato}`,
-      () => agendarEntrevista({
+      `Agendando: ${titulo.trim()}`,
+      () => agendarCita({
         solicitudId: solicitud.id,
+        titulo: titulo.trim(),
         candidatoNombre: solicitud.candidato,
         candidatoEmail: solicitud.email,
         ofertaTitulo: solicitud.ofertaTitulo,
@@ -62,7 +64,7 @@ export default function AgendarEntrevistaModal({ solicitud, onClose, onDone }: P
         invitarCandidato,
         crearTarea,
       }),
-      { successMessage: 'Entrevista agendada' },
+      { successMessage: 'Cita agendada en el calendario' },
     )
     setEnviando(false)
     if (result.ok) onDone()
@@ -76,7 +78,7 @@ export default function AgendarEntrevistaModal({ solicitud, onClose, onDone }: P
         {/* Header */}
         <div className="flex items-start justify-between px-7 pt-6 pb-4 border-b border-black/5">
           <div>
-            <p className="text-[10px] tracking-[0.14em] text-henko-turquoise font-bold mb-1">AGENDAR ENTREVISTA</p>
+            <p className="text-[10px] tracking-[0.14em] text-henko-turquoise font-bold mb-1">AGENDAR CITA</p>
             <p className="font-roxborough text-xl text-gray-900 leading-tight">{solicitud.candidato}</p>
             {solicitud.ofertaTitulo && <p className="text-[11px] text-gray-400 mt-0.5">{solicitud.ofertaTitulo}</p>}
           </div>
@@ -87,6 +89,16 @@ export default function AgendarEntrevistaModal({ solicitud, onClose, onDone }: P
 
         {/* Body */}
         <div className="px-7 py-6 space-y-5">
+          <Field label="ASUNTO">
+            <input
+              type="text"
+              value={titulo}
+              onChange={e => setTitulo(e.target.value)}
+              placeholder="Entrevista, llamada, videollamada…"
+              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 font-raleway text-sm outline-none focus:border-henko-turquoise focus:bg-white transition-colors"
+            />
+          </Field>
+
           <div className="grid grid-cols-2 gap-3">
             <Field label="FECHA">
               <input
@@ -150,10 +162,10 @@ export default function AgendarEntrevistaModal({ solicitud, onClose, onDone }: P
           <button
             type="button"
             onClick={handleSubmit}
-            disabled={!fecha || !hora || enviando}
+            disabled={!fecha || !hora || !titulo.trim() || enviando}
             className="inline-flex items-center gap-2 bg-henko-turquoise text-white px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-henko-turquoise-light hover:shadow-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            {enviando ? 'Agendando…' : 'Agendar entrevista'}
+            {enviando ? 'Agendando…' : 'Agendar'}
           </button>
         </div>
       </div>

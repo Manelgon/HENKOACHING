@@ -213,11 +213,14 @@ export async function getCvUrl(storagePath: string): Promise<{ url?: string; err
   return { url: data.signedUrl }
 }
 
-// ─── Agendar entrevista ──────────────────────────────────────────────────────
-// Crea el evento en Google Calendar, opcionalmente una tarea de seguimiento en
-// Google Tasks, y pasa la solicitud a estado "entrevista".
-const AgendarEntrevistaSchema = z.object({
+// ─── Agendar cita ────────────────────────────────────────────────────────────
+// Crea un evento en Google Calendar (entrevista, llamada, videollamada, lo que
+// sea) y opcionalmente una tarea de seguimiento en Google Tasks.
+// NO cambia el estado de la solicitud: agendar es independiente del estado
+// (puede ser una 2ª entrevista, una llamada de contratación, etc.).
+const AgendarCitaSchema = z.object({
   solicitudId: z.string().uuid(),
+  titulo: z.string().min(1, 'El asunto es requerido').max(200),
   candidatoNombre: z.string().min(1),
   candidatoEmail: z.string().email(),
   ofertaTitulo: z.string().default(''),
@@ -227,25 +230,25 @@ const AgendarEntrevistaSchema = z.object({
   crearTarea: z.boolean(),
 })
 
-export type AgendarEntrevistaInput = z.infer<typeof AgendarEntrevistaSchema>
+export type AgendarCitaInput = z.infer<typeof AgendarCitaSchema>
 
-export async function agendarEntrevista(input: AgendarEntrevistaInput) {
+export async function agendarCita(input: AgendarCitaInput) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'No autenticado' }
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
   if (profile?.role !== 'admin') return { error: 'Sin permisos' }
 
-  const parsed = AgendarEntrevistaSchema.safeParse(input)
+  const parsed = AgendarCitaSchema.safeParse(input)
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Datos inválidos' }
   const d = parsed.data
 
   try {
     await createCalendarEvent({
-      title: `Entrevista — ${d.candidatoNombre}`,
+      title: d.titulo,
       start: d.start,
       end: d.end,
-      description: d.ofertaTitulo ? `Entrevista para la oferta: ${d.ofertaTitulo}` : undefined,
+      description: d.ofertaTitulo ? `Candidato: ${d.candidatoNombre}\nOferta: ${d.ofertaTitulo}` : `Candidato: ${d.candidatoNombre}`,
       attendees: d.invitarCandidato ? [d.candidatoEmail] : undefined,
       addMeet: d.invitarCandidato,
     })
@@ -260,28 +263,24 @@ export async function agendarEntrevista(input: AgendarEntrevistaInput) {
       const lists = await getTaskLists()
       if (lists[0]) {
         await createTask(lists[0].id, {
-          title: `Preparar entrevista con ${d.candidatoNombre}`,
+          title: `Preparar: ${d.titulo}`,
           notes: d.ofertaTitulo || undefined,
           due: d.start.split('T')[0],
         })
         tareaCreada = true
       }
     } catch (e) {
-      console.error('[agendarEntrevista] tarea:', e instanceof Error ? e.message : String(e))
+      console.error('[agendarCita] tarea:', e instanceof Error ? e.message : String(e))
     }
   }
 
   await logAction({
-    accion: 'solicitud.agendar_entrevista',
+    accion: 'solicitud.agendar_cita',
     recursoTipo: 'solicitud',
     recursoId: d.solicitudId,
     recursoLabel: d.candidatoNombre,
-    metadata: { start: d.start, invitado: d.invitarCandidato, tarea: tareaCreada },
+    metadata: { titulo: d.titulo, start: d.start, invitado: d.invitarCandidato, tarea: tareaCreada },
   })
 
-  // Pasar a estado "entrevista" (reutiliza email al candidato + audit + revalidate)
-  await cambiarEstadoSolicitud(d.solicitudId, 'entrevista')
-
-  revalidatePath('/dashboard/solicitudes')
   return { ok: true, tareaCreada }
 }

@@ -227,11 +227,6 @@ export default function AdminSolicitudes({ solicitudes, ofertas }: Props) {
     if (result.ok && result.data.url) window.open(result.data.url, '_blank')
   }
 
-  function handleEntrevistaAgendada(id: string) {
-    setOverrides(prev => ({ ...prev, [id]: 'entrevista' }))
-    setAgendarSol(null)
-    router.refresh()
-  }
 
   useEffect(() => {
     if (!selectedId) return
@@ -496,7 +491,7 @@ export default function AdminSolicitudes({ solicitudes, ofertas }: Props) {
         <AgendarEntrevistaModal
           solicitud={{ id: agendarSol.id, candidato: agendarSol.candidato, email: agendarSol.email, ofertaTitulo: agendarSol.ofertaTitulo }}
           onClose={() => setAgendarSol(null)}
-          onDone={() => handleEntrevistaAgendada(agendarSol.id)}
+          onDone={() => setAgendarSol(null)}
         />
       )}
     </div>
