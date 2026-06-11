@@ -26,8 +26,9 @@ export default function CustomSelect({ value, onChange, options, placeholder = '
 
   function handleOpen() {
     if (btnRef.current) {
+      // El menú es position:fixed → coordenadas relativas al viewport, sin sumar scroll
       const r = btnRef.current.getBoundingClientRect()
-      setPos({ top: r.bottom + window.scrollY + 4, left: r.left + window.scrollX, width: r.width })
+      setPos({ top: r.bottom + 4, left: r.left, width: r.width })
     }
     setOpen(v => !v)
   }
@@ -40,8 +41,17 @@ export default function CustomSelect({ value, onChange, options, placeholder = '
       const insideMenu = menuRef.current?.contains(target)
       if (!insideBtn && !insideMenu) setOpen(false)
     }
+    // Al hacer scroll (en cualquier contenedor, por eso captura) o redimensionar,
+    // el botón se mueve pero el menú fixed no: cerramos para evitar que quede flotando.
+    const close = () => setOpen(false)
     document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
+    window.addEventListener('scroll', close, true)
+    window.addEventListener('resize', close)
+    return () => {
+      document.removeEventListener('mousedown', handler)
+      window.removeEventListener('scroll', close, true)
+      window.removeEventListener('resize', close)
+    }
   }, [open])
 
   return (
