@@ -1,6 +1,8 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { headers } from 'next/headers'
+import { createHash } from 'crypto'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireRecruiter } from '@/lib/auth/require-recruiter'
@@ -8,6 +10,20 @@ import { logAction } from '@/lib/audit/log-action'
 import { sendTransactional } from '@/lib/email/send'
 import { templateLeadConfirmacion } from '@/lib/email/templates/lead'
 import type { EstadoLead, TipoLead } from '@/lib/supabase/database.types'
+
+// Anti-spam del formulario público: máximo de envíos por IP en una ventana.
+const RATE_LIMIT_MAX = 3
+const RATE_LIMIT_VENTANA_MIN = 10
+
+// Deriva la IP real (Vercel la pone en x-forwarded-for) y devuelve un hash
+// salado — nunca guardamos la IP en claro (minimización RGPD).
+async function ipHashDeLaPeticion(): Promise<string> {
+  const hdrs = await headers()
+  const fwd = hdrs.get('x-forwarded-for') ?? ''
+  const ip = fwd.split(',')[0]?.trim() || hdrs.get('x-real-ip') || 'desconocida'
+  const pepper = process.env.SUPABASE_SERVICE_ROLE_KEY ?? 'henko-rate-limit'
+  return createHash('sha256').update(ip + pepper).digest('hex')
+}
 
 // =============================================================================
 // CREAR LEAD (público — desde formulario web)
@@ -22,13 +38,34 @@ export async function crearLead(input: {
   servicio_interes?: string
   acepto_privacidad: boolean
   consent_text?: string
+  // Honeypot: campo trampa invisible. Un humano nunca lo rellena; si llega con
+  // contenido, es un bot → fingimos éxito y descartamos sin insertar ni enviar.
+  website?: string
 }) {
+  if (input.website && input.website.trim()) {
+    return { ok: true }
+  }
+
   if (!input.nombre.trim() || !input.email.trim() || !input.mensaje.trim()) {
     return { error: 'Faltan campos obligatorios' }
   }
   if (!input.acepto_privacidad) {
     return { error: 'Debes aceptar la política de privacidad' }
   }
+
+  // Rate limit por IP (frena floods y el uso del form como relay de correo).
+  const ipHash = await ipHashDeLaPeticion()
+  const admin = createAdminClient()
+  const desde = new Date(Date.now() - RATE_LIMIT_VENTANA_MIN * 60 * 1000).toISOString()
+  const { count } = await admin
+    .from('lead_rate_limit' as never)
+    .select('id', { count: 'exact', head: true })
+    .eq('ip_hash', ipHash)
+    .gte('created_at', desde)
+  if ((count ?? 0) >= RATE_LIMIT_MAX) {
+    return { error: 'Has enviado demasiados mensajes. Espera unos minutos antes de volver a intentarlo.' }
+  }
+  await admin.from('lead_rate_limit' as never).insert({ ip_hash: ipHash } as never)
 
   const supabase = await createClient()
   const { data: nuevo, error } = await supabase.from('leads').insert({

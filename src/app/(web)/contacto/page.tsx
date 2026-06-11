@@ -13,7 +13,7 @@ type Errors = { nombre?: string; email?: string; mensaje?: string; privacidad?: 
 
 export default function ContactoPage() {
   const runAction = useAction()
-  const [form, setForm] = useState({ nombre: '', empresa: '', email: '', servicio: '', mensaje: '' })
+  const [form, setForm] = useState({ nombre: '', empresa: '', email: '', servicio: '', mensaje: '', website: '' })
   const [aceptoPrivacidad, setAceptoPrivacidad] = useState(false)
   const [errors, setErrors] = useState<Errors>({})
   const [sent, setSent] = useState(false)
@@ -43,6 +43,7 @@ export default function ContactoPage() {
         servicio_interes: form.servicio || undefined,
         acepto_privacidad: aceptoPrivacidad,
         consent_text: CONSENT_TEXT_CONTACTO,
+        website: form.website,
       }),
       { successMessage: 'Mensaje enviado' },
     )
@@ -107,7 +108,7 @@ export default function ContactoPage() {
                 </p>
                 <button
                   type="button"
-                  onClick={() => { setSent(false); setForm({ nombre: '', empresa: '', email: '', servicio: '', mensaje: '' }); setAceptoPrivacidad(false) }}
+                  onClick={() => { setSent(false); setForm({ nombre: '', empresa: '', email: '', servicio: '', mensaje: '', website: '' }); setAceptoPrivacidad(false) }}
                   className="mt-7 inline-flex items-center gap-2 bg-transparent border-2 border-henko-turquoise text-henko-turquoise px-7 py-3 rounded-full text-sm font-semibold hover:bg-henko-turquoise hover:text-white transition-all"
                 >
                   Enviar otro mensaje
@@ -115,6 +116,17 @@ export default function ContactoPage() {
               </div>
             ) : (
               <form onSubmit={handleSubmit} noValidate className="relative">
+                {/* Honeypot anti-bot: oculto a humanos (no a lectores de pantalla maliciosos). */}
+                <input
+                  type="text"
+                  name="website"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  aria-hidden="true"
+                  value={form.website}
+                  onChange={(e) => updateField('website', e.target.value)}
+                  style={{ position: 'absolute', left: '-9999px', width: 1, height: 1, opacity: 0 }}
+                />
                 <div className="flex items-center gap-3 mb-6">
                   <span className="block w-8 h-px bg-henko-turquoise" />
                   <span className="text-[10px] font-bold tracking-[0.22em] uppercase text-henko-turquoise">Cuéntame</span>

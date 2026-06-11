@@ -29,12 +29,13 @@ export async function GET(request: Request) {
   const admin = createAdminClient()
   const inicio = Date.now()
 
-  const [candidatosEliminados, leadsEliminados, auditLogsPurgados, emailEnviosPurgados] =
+  const [candidatosEliminados, leadsEliminados, auditLogsPurgados, emailEnviosPurgados, rateLimitPurgado] =
     await Promise.all([
       purgarCandidatosInactivos(admin),
       purgarLeadsAntiguos(admin),
       purgarAuditLogsAntiguos(admin),
       purgarEmailEnviosAntiguos(admin),
+      purgarRateLimitAntiguo(admin),
     ])
 
   const ms = Date.now() - inicio
@@ -46,6 +47,7 @@ export async function GET(request: Request) {
       leads_eliminados: leadsEliminados,
       audit_logs_purgados: auditLogsPurgados,
       email_envios_purgados: emailEnviosPurgados,
+      rate_limit_purgado: rateLimitPurgado,
       duracion_ms: ms,
     },
   })
@@ -56,6 +58,7 @@ export async function GET(request: Request) {
     leads_eliminados: leadsEliminados,
     audit_logs_purgados: auditLogsPurgados,
     email_envios_purgados: emailEnviosPurgados,
+    rate_limit_purgado: rateLimitPurgado,
     duracion_ms: ms,
   })
 }
@@ -183,6 +186,34 @@ async function purgarAuditLogsAntiguos(admin: AdminClient): Promise<number> {
   const { error: delErr } = await admin.from('audit_logs').delete().in('id', ids)
   if (delErr) {
     console.error('[cron-retencion] Error borrando audit_logs:', delErr.message)
+    return 0
+  }
+
+  return ids.length
+}
+
+// El rate limit del formulario de contacto solo necesita una ventana de minutos;
+// las filas de más de 1 día son basura. Las borramos para acotar la tabla.
+async function purgarRateLimitAntiguo(admin: AdminClient): Promise<number> {
+  const limite = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+
+  const { data: viejos, error: selErr } = await admin
+    .from('lead_rate_limit' as never)
+    .select('id')
+    .lt('created_at', limite)
+    .limit(5000)
+
+  if (selErr) {
+    console.error('[cron-retencion] Error listando lead_rate_limit:', selErr.message)
+    return 0
+  }
+
+  const ids = (viejos ?? []).map((r: { id: string }) => r.id)
+  if (ids.length === 0) return 0
+
+  const { error: delErr } = await admin.from('lead_rate_limit' as never).delete().in('id', ids)
+  if (delErr) {
+    console.error('[cron-retencion] Error borrando lead_rate_limit:', delErr.message)
     return 0
   }
 
