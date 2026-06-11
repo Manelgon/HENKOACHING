@@ -102,7 +102,9 @@ export async function downloadAssetBytes(path: string | null): Promise<Uint8Arra
 
   const ahora = Date.now()
   const cacheado = assetCache.get(path)
-  if (cacheado && cacheado.expira > ahora) return cacheado.bytes
+  // Copia defensiva: el consumidor (pdf-lib) podría mutar el buffer, y está
+  // compartido entre requests mientras viva en la caché.
+  if (cacheado && cacheado.expira > ahora) return new Uint8Array(cacheado.bytes)
 
   const supabase = createAdminClient()
   const { data, error } = await supabase.storage.from('doc-assets').download(path)
@@ -110,5 +112,5 @@ export async function downloadAssetBytes(path: string | null): Promise<Uint8Arra
   const bytes = new Uint8Array(await data.arrayBuffer())
 
   assetCache.set(path, { bytes, expira: ahora + ASSET_TTL_MS })
-  return bytes
+  return new Uint8Array(bytes)
 }

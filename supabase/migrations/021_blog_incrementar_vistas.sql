@@ -12,9 +12,14 @@ returns void
 language sql
 security definer
 as $$
+  -- Solo cuenta vistas de artículos publicados y no borrados. Al ser security
+  -- definer y estar concedida a anon, el filtro de estado evita que cualquiera
+  -- infle el contador de borradores/archivados pasando su UUID.
   update public.blog_posts
     set vistas = coalesce(vistas, 0) + 1
-  where id = post_id;
+  where id = post_id
+    and estado = 'publicado'
+    and deleted_at is null;
 $$;
 
 -- Lectura pública: la página del artículo (anónima) puede registrar la visita

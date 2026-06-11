@@ -302,16 +302,22 @@ export async function uploadCv(formData: FormData): Promise<{ error?: string; cv
 
   if (uploadError) return { error: 'Error subiendo: ' + uploadError.message }
 
-  // Insertar primero el nuevo CV como principal. Solo si ese insert tiene éxito
-  // desmarcamos los anteriores: así un fallo nunca deja al candidato sin ningún
-  // CV principal (antes se desmarcaba primero y un insert fallido rompía el estado).
+  // El índice único parcial idx_cvs_principal_unico prohíbe dos CVs con
+  // es_principal=true por candidato, así que el nuevo NO puede insertarse como
+  // principal mientras exista el anterior. Secuencia segura:
+  //   1) insertar el nuevo como NO principal (nunca viola el índice; si falla,
+  //      el CV principal anterior queda intacto),
+  //   2) desmarcar el anterior,
+  //   3) promover el nuevo a principal.
+  // Entre 2) y 3) puede haber 0 principales momentáneamente, caso que
+  // aplicarAOferta tolera (aplica sin CV en vez de fallar).
   const { error: insertError } = await supabase.from('cvs').insert({
     id: cvId,
     candidato_id: user.id,
     nombre_archivo: file.name,
     storage_path: path,
     tamano_bytes: file.size,
-    es_principal: true,
+    es_principal: false,
   })
 
   if (insertError) {
@@ -319,14 +325,20 @@ export async function uploadCv(formData: FormData): Promise<{ error?: string; cv
     return { error: 'Error guardando: ' + insertError.message }
   }
 
-  // Desmarcar los CVs principales anteriores (todos menos el recién creado)
+  // Desmarcar el principal anterior (el nuevo ya entró como false)
   const { error: desmarcaError } = await supabase
     .from('cvs')
     .update({ es_principal: false })
     .eq('candidato_id', user.id)
     .eq('es_principal', true)
-    .neq('id', cvId)
   if (desmarcaError) return { error: 'Error actualizando CV principal: ' + desmarcaError.message }
+
+  // Promover el nuevo CV a principal
+  const { error: promoverError } = await supabase
+    .from('cvs')
+    .update({ es_principal: true })
+    .eq('id', cvId)
+  if (promoverError) return { error: 'Error marcando CV principal: ' + promoverError.message }
 
   await logAction({
     accion: 'cv.subir',

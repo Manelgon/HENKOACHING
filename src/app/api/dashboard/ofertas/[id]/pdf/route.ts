@@ -4,19 +4,10 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { getCompanySettings, downloadAssetBytes } from '@/lib/company-settings'
 import { buildOfertaPdf, type OfertaPdfData, type EmisorOfertaPdf } from '@/lib/pdf/oferta'
 import { EMPRESA_CONFIDENCIAL } from '@/features/empleo/queries'
+import { slugify } from '@/shared/utils/slug'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
-
-function slugifyFilename(s: string) {
-  return s
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 60)
-}
 
 export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params
@@ -90,7 +81,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
 
   const pdfBytes = await buildOfertaPdf(data, emisor, { logoBytes })
 
-  const filename = `oferta-${slugifyFilename(oferta.titulo || 'sin-titulo')}.pdf`
+  const filename = `oferta-${slugify(oferta.titulo || 'sin-titulo', 60)}.pdf`
 
   return new NextResponse(pdfBytes as unknown as BodyInit, {
     status: 200,
