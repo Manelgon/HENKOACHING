@@ -73,3 +73,7 @@ tsconfig.tsbuildinfo
 # Supabase
 supabase/.branches
 supabase/.temp
+
+# Manuales en PDF (se generan localmente desde el .md, no se versionan)
+docs/manual/Manual_Admin.pdf
+docs/manual/Manual_Candidato.pdf

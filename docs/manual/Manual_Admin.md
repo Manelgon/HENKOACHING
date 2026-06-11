@@ -69,12 +69,14 @@ Después de introducir email y contraseña, el panel pide **siempre** un código
 
 Si tu cuenta todavía no tiene autenticador, al entrar verás la pantalla **"Configura la verificación en dos pasos"** con un **código QR**:
 
+![Configurar la verificación en dos pasos](screenshots/01c-mfa-configurar.png)
+
 1. Instala Google Authenticator o Authy en tu móvil
 2. Escanea el código QR con la app (o introduce manualmente la clave que aparece bajo el QR)
 3. Escribe el código de 6 dígitos que genera la app
 4. Pulsa **"Verificar y acceder"**
 
-*(captura de la pantalla con QR pendiente — solo aparece en cuentas sin autenticador configurado)*
+> En la captura el QR y la clave aparecen difuminados por seguridad: cada cuenta genera **su propio QR único**, nunca compartas el tuyo ni hagas captura de esa pantalla.
 
 > El autenticador se puede **cambiar de dispositivo** o **eliminar** desde [Mi cuenta](#15-mi-cuenta).
 
@@ -1146,7 +1148,6 @@ Estas pantallas están documentadas con texto pero **sin imagen**, porque en el 
 |----------|---------------|
 | **Detalle de una factura emitida** (con QR Veri*factu) | No hay facturas emitidas en este entorno — las facturas reales son inmutables y no se quiso emitir una de prueba |
 | **Veri*factu con registros encadenados** | Mismo motivo: la tabla está vacía sin facturas |
-| **Pantalla de configurar autenticador (código QR)** | Solo aparece en cuentas sin 2FA configurado; capturarla habría creado un autenticador temporal en la cuenta |
 | **Solicitud de derechos RGPD con contenido** | Aún no ha llegado ninguna solicitud por el formulario público |
 | **Fallos SMTP con fallos reales** | No había fallos pendientes (buena señal) |
 
