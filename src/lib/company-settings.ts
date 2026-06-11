@@ -90,10 +90,25 @@ export async function getSignedAssetUrl(path: string | null, expiresInSeconds = 
   return data?.signedUrl ?? null
 }
 
+// Caché en memoria de los assets de documentos (logo, firma, cabeceras). Cambian
+// muy rara vez pero se descargaban de Storage en cada generación de PDF. Un TTL
+// corto evita descargas repetidas en ráfagas de PDFs sin servir bytes obsoletos
+// más allá de unos minutos tras subir un nuevo asset.
+const ASSET_TTL_MS = 5 * 60 * 1000
+const assetCache = new Map<string, { bytes: Uint8Array; expira: number }>()
+
 export async function downloadAssetBytes(path: string | null): Promise<Uint8Array | null> {
   if (!path) return null
+
+  const ahora = Date.now()
+  const cacheado = assetCache.get(path)
+  if (cacheado && cacheado.expira > ahora) return cacheado.bytes
+
   const supabase = createAdminClient()
   const { data, error } = await supabase.storage.from('doc-assets').download(path)
   if (error || !data) return null
-  return new Uint8Array(await data.arrayBuffer())
+  const bytes = new Uint8Array(await data.arrayBuffer())
+
+  assetCache.set(path, { bytes, expira: ahora + ASSET_TTL_MS })
+  return bytes
 }

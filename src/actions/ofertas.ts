@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { requireRecruiter } from '@/lib/auth/require-recruiter'
 import { logAction } from '@/lib/audit/log-action'
 import { getOfertaPorSlug } from '@/features/empleo/queries'
+import { slugify } from '@/shared/utils/slug'
 
 export async function getOfertaDetalleAction(slug: string) {
   return getOfertaPorSlug(slug)
@@ -29,16 +30,6 @@ export type OfertaInput = {
   ofrecemos?: string[]
   estado: 'borrador' | 'publicada' | 'pausada' | 'cerrada'
   fecha_expiracion?: string | null
-}
-
-function slugify(s: string) {
-  return s
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 80)
 }
 
 async function ensureClienteEmpresa(nombre: string): Promise<string> {

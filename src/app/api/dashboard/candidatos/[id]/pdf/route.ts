@@ -3,13 +3,10 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getCompanySettings, downloadAssetBytes } from '@/lib/company-settings'
 import { buildCandidatoPdf, type CandidatoPdfData, type EmisorPdf } from '@/lib/pdf/candidato'
+import { slugify } from '@/shared/utils/slug'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
-
-function slugify(s: string) {
-  return s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60)
-}
 
 export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params
@@ -73,7 +70,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
   const emisor: EmisorPdf = { nombre: settings.emisor_nombre || 'Henkoaching', web: settings.emisor_web }
 
   const pdfBytes = await buildCandidatoPdf(data, emisor, { logoBytes })
-  const filename = `candidato-${slugify(nombre)}.pdf`
+  const filename = `candidato-${slugify(nombre, 60)}.pdf`
 
   return new NextResponse(pdfBytes as unknown as BodyInit, {
     status: 200,

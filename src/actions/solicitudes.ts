@@ -39,14 +39,17 @@ export async function aplicarAOferta(ofertaId: string, mensaje?: string) {
     return { error: 'Solo los candidatos pueden aplicar a ofertas' }
   }
 
-  // Obtener CV principal
-  const { data: cv } = await supabase
+  // Obtener CV principal (limit(1) en vez de maybeSingle: tolera el caso raro de
+  // dos CVs marcados como principal sin que la consulta falle)
+  const { data: cvRows } = await supabase
     .from('cvs')
     .select('id')
     .eq('candidato_id', user.id)
     .eq('es_principal', true)
     .is('deleted_at', null)
-    .maybeSingle()
+    .order('created_at', { ascending: false })
+    .limit(1)
+  const cv = cvRows?.[0] ?? null
 
   // Verificar si ya aplicó
   const { data: existing } = await supabase
@@ -205,6 +208,20 @@ export async function cambiarEstadoSolicitud(solicitudId: string, estado: Estado
 
 export async function getCvUrl(storagePath: string): Promise<{ url?: string; error?: string }> {
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'No autenticado' }
+
+  // Autorización: admins/recruiters pueden ver cualquier CV; un candidato solo
+  // los suyos. Los CVs se guardan bajo el prefijo `${candidatoId}/`.
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .maybeSingle()
+
+  const esStaff = profile?.role === 'admin' || profile?.role === 'recruiter'
+  const esDueno = storagePath.startsWith(`${user.id}/`)
+  if (!esStaff && !esDueno) return { error: 'Sin permisos para acceder a este CV' }
 
   const { data, error } = await supabase.storage
     .from('cvs')

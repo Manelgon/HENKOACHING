@@ -1,3 +1,5 @@
+import { formatEur } from '@/shared/utils/format'
+
 type Factura = {
   id: string
   numero: string
@@ -15,10 +17,6 @@ const ESTADO_LABEL: Record<string, { label: string; cls: string }> = {
   vencida: { label: 'Vencida', cls: 'bg-red-50 text-red-600' },
   anulada: { label: 'Anulada', cls: 'bg-gray-100 text-gray-500' },
   rectificada: { label: 'Rectificada', cls: 'bg-amber-50 text-amber-700' },
-}
-
-function formatEur(n: number) {
-  return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(n)
 }
 
 export default function EmpresaFacturasTable({ facturas }: Props) {

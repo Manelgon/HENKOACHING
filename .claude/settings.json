@@ -154,7 +154,10 @@
       "PowerShell(git push 2>&1)",
       "PowerShell(npx eslint src/shared/components/IdleTimeout.tsx)",
       "PowerShell(git add src/shared/components/IdleTimeout.tsx)",
-      "PowerShell(git add docs/manual/Tareas_Pendientes_Jennifer.md docs/manual/Tareas_Pendientes_Jennifer.pdf .claude/settings.json next-env.d.ts)"
+      "PowerShell(git add docs/manual/Tareas_Pendientes_Jennifer.md docs/manual/Tareas_Pendientes_Jennifer.pdf .claude/settings.json next-env.d.ts)",
+      "Bash(cat)",
+      "Bash(node /tmp/test_rounding.js)",
+      "Bash(xargs grep -n \"0.21\\\\|21\\\\%\\\\|iva.*21\\\\|21.*iva\")"
     ],
     "additionalDirectories": [
       "c:\\Users\\manel\\.000.Proyectos.DEV\\005. Jennifer Cervera - copia",

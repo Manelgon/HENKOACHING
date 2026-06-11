@@ -62,18 +62,14 @@ export async function middleware(request: NextRequest) {
 
     const { currentLevel, nextLevel } = aalData
 
-    // Tiene factores MFA enrollados pero aún no los ha verificado en esta sesión
-    if (nextLevel === 'aal2' && currentLevel !== 'aal2') {
-      return NextResponse.redirect(new URL('/setup-mfa', request.url))
-    }
-
-    // No tiene ningún factor MFA enrollado → forzar configuración
-    if (nextLevel === 'aal1' && currentLevel === 'aal1') {
-      const { data: factors } = await supabase.auth.mfa.listFactors()
-      const hasVerifiedFactor = (factors?.all ?? []).some(f => f.factor_type === 'totp' && f.status === 'verified')
-      if (!hasVerifiedFactor) {
-        return NextResponse.redirect(new URL('/setup-mfa?enroll=1', request.url))
-      }
+    // Invariante: las rutas de admin exigen una sesión verificada con MFA (aal2).
+    // Cualquier sesión que no sea aal2 se redirige — verificar si ya hay un factor
+    // verificado (nextLevel === 'aal2'), o forzar el enrolamiento si no lo hay.
+    // nextLevel ya codifica "existe un factor verificado", por lo que cubre también
+    // el caso degenerado de un factor borrado tras alcanzar aal2.
+    if (currentLevel !== 'aal2') {
+      const destino = nextLevel === 'aal2' ? '/setup-mfa' : '/setup-mfa?enroll=1'
+      return NextResponse.redirect(new URL(destino, request.url))
     }
   }
 

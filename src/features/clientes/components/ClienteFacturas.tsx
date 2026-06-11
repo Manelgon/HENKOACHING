@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { formatEur } from '@/shared/utils/format'
 
 type Factura = {
   id: string
@@ -62,7 +63,7 @@ export default function ClienteFacturas({ facturas, clienteId: _ }: { facturas: 
                 </span>
                 {f.total != null && (
                   <span className="font-raleway text-sm font-semibold text-gray-700 min-w-[70px] text-right">
-                    {f.total.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
+                    {formatEur(f.total)}
                   </span>
                 )}
               </div>

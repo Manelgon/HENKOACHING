@@ -1,3 +1,4 @@
+import { formatEur } from '@/shared/utils/format'
 import type {
   EstadoCliente,
   ServicioContratado,
@@ -39,7 +40,7 @@ export function getTarifaLabel(t: TarifaTipo | null | undefined): string {
 
 export function formatImporte(importe: number | null | undefined, tarifa: TarifaTipo | null | undefined): string {
   if (importe == null) return '—'
-  const num = new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(importe)
+  const num = formatEur(importe)
   if (!tarifa) return num
   const sufijo = tarifa === 'mensual' ? '/mes' : tarifa === 'sesion' ? '/sesión' : ' (proyecto)'
   return `${num}${sufijo}`

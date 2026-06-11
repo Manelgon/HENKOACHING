@@ -55,15 +55,12 @@ export default async function LogsPage({ searchParams }: { searchParams: SearchP
 
   const { data: logs, count } = await query
 
-  // Cargar listas únicas para los filtros (limitar a 200 valores recientes)
-  const { data: facets } = await supabase
-    .from('audit_logs')
-    .select('accion, recurso_tipo')
-    .order('created_at', { ascending: false })
-    .limit(500)
-
-  const accionesUnicas = Array.from(new Set((facets ?? []).map((f) => f.accion))).sort()
-  const recursosUnicos = Array.from(new Set((facets ?? []).map((f) => f.recurso_tipo))).sort()
+  // Valores únicos para los filtros vía DISTINCT en SQL (no transfiere filas y
+  // es constante por más que crezca audit_logs)
+  const { data: facets } = await supabase.rpc('audit_logs_facets')
+  const facetsData = (facets ?? { acciones: [], recursos: [] }) as { acciones: string[] | null; recursos: string[] | null }
+  const accionesUnicas = facetsData.acciones ?? []
+  const recursosUnicos = facetsData.recursos ?? []
 
   return (
     <div className="w-full">

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { getTaskLists, getTasks, createTask, toggleTask, deleteTask, createTaskList } from '@/actions/google-tasks'
 import type { TaskList, Task } from '@/actions/google-tasks'
 
@@ -28,9 +28,15 @@ export default function TasksPanel({ onTasksChange, initialGroups = [] }: Props)
   const [newListTitle, setNewListTitle] = useState('')
   const [savingList, setSavingList] = useState(false)
 
+  // Mantener una referencia viva al callback para no reejecutar la carga inicial
+  // cuando el padre re-renderiza con una nueva función, evitando un closure stale.
+  const onTasksChangeRef = useRef(onTasksChange)
+  useEffect(() => { onTasksChangeRef.current = onTasksChange }, [onTasksChange])
+  const notifyTasksChange = (tasks: Task[]) => onTasksChangeRef.current(tasks)
+
   useEffect(() => {
     if (initialGroups.length > 0) {
-      onTasksChange(initialGroups.flatMap(g => g.tasks))
+      notifyTasksChange(initialGroups.flatMap(g => g.tasks))
       return
     }
     getTaskLists()
@@ -42,7 +48,7 @@ export default function TasksPanel({ onTasksChange, initialGroups = [] }: Props)
             .then(tasks => {
               setGroups(prev => {
                 const next = prev.map((g, idx) => idx === i ? { ...g, tasks, loading: false } : g)
-                onTasksChange(next.flatMap(g => g.tasks))
+                notifyTasksChange(next.flatMap(g => g.tasks))
                 return next
               })
             })
@@ -68,7 +74,7 @@ export default function TasksPanel({ onTasksChange, initialGroups = [] }: Props)
           tasks: g.tasks.map(t => t.id === task.id ? { ...t, status: (newCompleted ? 'completed' : 'needsAction') as Task['status'] } : t),
         }
       )
-      onTasksChange(next.flatMap(g => g.tasks))
+      notifyTasksChange(next.flatMap(g => g.tasks))
       return next
     })
     try {
@@ -78,7 +84,7 @@ export default function TasksPanel({ onTasksChange, initialGroups = [] }: Props)
         const next = prev.map(g =>
           g.list.id !== listId ? g : { ...g, tasks: g.tasks.map(t => t.id === task.id ? task : t) }
         )
-        onTasksChange(next.flatMap(g => g.tasks))
+        notifyTasksChange(next.flatMap(g => g.tasks))
         return next
       })
     }
@@ -92,7 +98,7 @@ export default function TasksPanel({ onTasksChange, initialGroups = [] }: Props)
       const next = prev.map(g =>
         g.list.id !== listId ? g : { ...g, tasks: g.tasks.filter(t => t.id !== task.id) }
       )
-      onTasksChange(next.flatMap(g => g.tasks))
+      notifyTasksChange(next.flatMap(g => g.tasks))
       return next
     })
     try {
@@ -100,7 +106,7 @@ export default function TasksPanel({ onTasksChange, initialGroups = [] }: Props)
     } catch {
       setGroups(prev => {
         const next = prev.map(g => g.list.id !== listId ? g : { ...g, tasks: prevTasks })
-        onTasksChange(next.flatMap(g => g.tasks))
+        notifyTasksChange(next.flatMap(g => g.tasks))
         return next
       })
     }
@@ -117,7 +123,7 @@ export default function TasksPanel({ onTasksChange, initialGroups = [] }: Props)
         const next = prev.map(g =>
           g.list.id !== listId ? g : { ...g, tasks: [created, ...g.tasks], newTitle: '', newDue: '' }
         )
-        onTasksChange(next.flatMap(g => g.tasks))
+        notifyTasksChange(next.flatMap(g => g.tasks))
         return next
       })
     } catch {

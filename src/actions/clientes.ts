@@ -6,6 +6,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/auth/require-admin'
 import { requireRecruiter } from '@/lib/auth/require-recruiter'
 import { logAction } from '@/lib/audit/log-action'
+import { slugify } from '@/shared/utils/slug'
 import type {
   EstadoCliente,
   ServicioContratado,
@@ -35,16 +36,6 @@ type ClienteInput = {
   logo_url?: string | null
   descripcion?: string | null
   ubicacion?: string | null
-}
-
-function slugify(s: string): string {
-  return s
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 80)
 }
 
 function validateClienteInput(input: ClienteInput): string | null {

@@ -172,15 +172,18 @@ export async function guardarArticulo(id: string, input: unknown): Promise<Actio
 
   const data = parsed.data
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: 'No autenticado' }
 
   const { data: actual } = await supabase
     .from('blog_posts')
-    .select('slug, estado, titulo')
+    .select('slug, estado, titulo, autor_id')
     .eq('id', id)
     .single()
   if (!actual) return { error: 'Artículo no encontrado' }
+
+  // Un recruiter solo puede editar sus propios artículos; los admins, cualquiera.
+  if (auth.profile.role !== 'admin' && actual.autor_id !== auth.user.id) {
+    return { error: 'Sin permisos sobre este artículo' }
+  }
 
   const slug = data.slug !== actual.slug
     ? await generarSlugUnico(data.slug, id)
@@ -233,10 +236,14 @@ export async function cambiarEstadoArticulo(id: string, nuevoEstado: EstadoPost)
 
     const { data: actual } = await supabase
       .from('blog_posts')
-      .select('slug, estado, titulo, fecha_publicacion')
+      .select('slug, estado, titulo, fecha_publicacion, autor_id')
       .eq('id', id)
       .single()
     if (!actual) return { error: 'Artículo no encontrado' }
+
+    if (auth.profile.role !== 'admin' && actual.autor_id !== auth.user.id) {
+      return { error: 'Sin permisos sobre este artículo' }
+    }
 
     const updates: { estado: EstadoPost; fecha_publicacion?: string } = { estado: nuevoEstado }
     if (nuevoEstado === 'publicado' && !actual.fecha_publicacion) {
@@ -275,10 +282,14 @@ export async function eliminarArticulo(id: string): Promise<ActionResult> {
 
     const { data: actual } = await supabase
       .from('blog_posts')
-      .select('slug, titulo')
+      .select('slug, titulo, autor_id')
       .eq('id', id)
       .single()
     if (!actual) return { error: 'Artículo no encontrado' }
+
+    if (auth.profile.role !== 'admin' && actual.autor_id !== auth.user.id) {
+      return { error: 'Sin permisos sobre este artículo' }
+    }
 
     const { error } = await supabase
       .from('blog_posts')
@@ -345,15 +356,7 @@ export async function subirImagenBlog(formData: FormData): Promise<ActionResult<
 // =============================================================================
 export async function incrementarVistasArticulo(id: string): Promise<void> {
   const supabase = await createClient()
-  const { data: actual } = await supabase
-    .from('blog_posts')
-    .select('vistas')
-    .eq('id', id)
-    .single()
-
-  if (!actual) return
-  await supabase
-    .from('blog_posts')
-    .update({ vistas: (actual.vistas ?? 0) + 1 })
-    .eq('id', id)
+  // Incremento atómico en la BD: evita perder vistas bajo concurrencia
+  // (el read-modify-write anterior hacía que dos visitas simultáneas contaran una).
+  await supabase.rpc('incrementar_vistas_blog', { post_id: id })
 }

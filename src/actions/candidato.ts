@@ -68,12 +68,22 @@ export async function uploadAvatar(formData: FormData): Promise<{ ok?: boolean; 
   return { ok: true, url: urlWithCache }
 }
 
+// Pre-check de UX en el alta (paso 1) para ofrecer el flujo de "ya tienes cuenta".
+// Es necesariamente pre-autenticación; la información que expone (si un email tiene
+// cuenta) es equivalente a la que ya revela el formulario de login. Validamos el
+// formato para que no pueda usarse como sonda arbitraria de la tabla profiles y
+// solo devolvemos un booleano (nunca datos del perfil).
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
 export async function checkEmailCandidatoExiste(email: string): Promise<{ exists: boolean }> {
+  const normalizado = email.toLowerCase().trim()
+  if (!EMAIL_RE.test(normalizado) || normalizado.length > 254) return { exists: false }
+
   const admin = createAdminClient()
   const { data } = await admin
     .from('profiles')
     .select('id')
-    .eq('email', email.toLowerCase().trim())
+    .eq('email', normalizado)
     .eq('role', 'candidato')
     .maybeSingle()
   return { exists: !!data }
@@ -119,6 +129,22 @@ export async function signupCandidato(input: CandidatoSignupInput) {
 
   const admin = createAdminClient()
 
+  // Compensación: si cualquier paso posterior al signUp falla, borramos el usuario
+  // recién creado para que el alta sea todo-o-nada y no queden cuentas a medias
+  // (sin consentimiento RGPD registrado, sin experiencias, etc.). El usuario puede
+  // reintentar desde cero.
+  const abortarConRollback = async (mensaje: string) => {
+    await admin.auth.admin.deleteUser(userId).catch(() => {})
+    return { error: mensaje }
+  }
+
+  // Filtramos las colecciones antes de empezar a escribir
+  const experienciasValidas = input.experiencias.filter((e) => e.empresa.trim() && e.cargo.trim())
+  const educacionValida = input.educacion.filter((e) => e.centro.trim() && e.titulo.trim())
+  const idiomasValidos = input.idiomas.filter(
+    (i) => i.idioma.trim() && NIVELES_VALIDOS.includes(i.nivel as NivelIdioma),
+  )
+
   // 2. Actualizar candidato_profiles con datos extra (admin para evitar RLS en sesión no confirmada)
   const { error: profileError } = await admin
     .from('candidato_profiles')
@@ -139,7 +165,7 @@ export async function signupCandidato(input: CandidatoSignupInput) {
     .eq('user_id', userId)
 
   if (profileError) {
-    return { error: 'Error guardando perfil: ' + profileError.message }
+    return abortarConRollback('Error guardando perfil: ' + profileError.message)
   }
 
   // 3. Actualizar telefono en profiles (admin para evitar RLS en sesión no confirmada)
@@ -149,12 +175,11 @@ export async function signupCandidato(input: CandidatoSignupInput) {
       .update({ telefono: input.telefono })
       .eq('id', userId)
     if (telefonoError) {
-      return { error: 'Error guardando teléfono: ' + telefonoError.message }
+      return abortarConRollback('Error guardando teléfono: ' + telefonoError.message)
     }
   }
 
   // 4. Insertar experiencias (admin: sin sesión confirmada durante signup)
-  const experienciasValidas = input.experiencias.filter((e) => e.empresa.trim() && e.cargo.trim())
   if (experienciasValidas.length > 0) {
     const { error: expError } = await admin.from('candidato_experiencias').insert(
       experienciasValidas.map((e, i) => ({
@@ -166,11 +191,10 @@ export async function signupCandidato(input: CandidatoSignupInput) {
         orden: i,
       })),
     )
-    if (expError) return { error: 'Error guardando experiencias: ' + expError.message }
+    if (expError) return abortarConRollback('Error guardando experiencias: ' + expError.message)
   }
 
   // 5. Insertar educación
-  const educacionValida = input.educacion.filter((e) => e.centro.trim() && e.titulo.trim())
   if (educacionValida.length > 0) {
     const { error: eduError } = await admin.from('candidato_educacion').insert(
       educacionValida.map((e, i) => ({
@@ -181,13 +205,10 @@ export async function signupCandidato(input: CandidatoSignupInput) {
         orden: i,
       })),
     )
-    if (eduError) return { error: 'Error guardando educación: ' + eduError.message }
+    if (eduError) return abortarConRollback('Error guardando educación: ' + eduError.message)
   }
 
   // 6. Insertar idiomas
-  const idiomasValidos = input.idiomas.filter(
-    (i) => i.idioma.trim() && NIVELES_VALIDOS.includes(i.nivel as NivelIdioma),
-  )
   if (idiomasValidos.length > 0) {
     const { error: idiomaError } = await admin.from('candidato_idiomas').insert(
       idiomasValidos.map((i, idx) => ({
@@ -197,7 +218,7 @@ export async function signupCandidato(input: CandidatoSignupInput) {
         orden: idx,
       })),
     )
-    if (idiomaError) return { error: 'Error guardando idiomas: ' + idiomaError.message }
+    if (idiomaError) return abortarConRollback('Error guardando idiomas: ' + idiomaError.message)
   }
 
   await logAction({
@@ -281,14 +302,9 @@ export async function uploadCv(formData: FormData): Promise<{ error?: string; cv
 
   if (uploadError) return { error: 'Error subiendo: ' + uploadError.message }
 
-  // Marcar como principal y desmarcar los anteriores
-  const { error: desmarcaError } = await supabase
-    .from('cvs')
-    .update({ es_principal: false })
-    .eq('candidato_id', user.id)
-    .eq('es_principal', true)
-  if (desmarcaError) return { error: 'Error actualizando CV principal: ' + desmarcaError.message }
-
+  // Insertar primero el nuevo CV como principal. Solo si ese insert tiene éxito
+  // desmarcamos los anteriores: así un fallo nunca deja al candidato sin ningún
+  // CV principal (antes se desmarcaba primero y un insert fallido rompía el estado).
   const { error: insertError } = await supabase.from('cvs').insert({
     id: cvId,
     candidato_id: user.id,
@@ -302,6 +318,15 @@ export async function uploadCv(formData: FormData): Promise<{ error?: string; cv
     await supabase.storage.from('cvs').remove([path])
     return { error: 'Error guardando: ' + insertError.message }
   }
+
+  // Desmarcar los CVs principales anteriores (todos menos el recién creado)
+  const { error: desmarcaError } = await supabase
+    .from('cvs')
+    .update({ es_principal: false })
+    .eq('candidato_id', user.id)
+    .eq('es_principal', true)
+    .neq('id', cvId)
+  if (desmarcaError) return { error: 'Error actualizando CV principal: ' + desmarcaError.message }
 
   await logAction({
     accion: 'cv.subir',
@@ -532,7 +557,9 @@ export async function eliminarMiCuenta() {
     await admin.storage.from('cvs').remove(storagePaths)
   }
   if (profileRow?.avatar_url) {
-    const avatarPath = profileRow.avatar_url.split('/avatars/')[1]
+    // El avatar_url lleva un cache-buster (?t=...); hay que quitar la query string
+    // o el path no casaría con la clave real del objeto y no se borraría nunca.
+    const avatarPath = profileRow.avatar_url.split('/avatars/')[1]?.split('?')[0]
     if (avatarPath) {
       await admin.storage.from('avatars').remove([avatarPath])
     }
