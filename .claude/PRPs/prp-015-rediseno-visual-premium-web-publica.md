@@ -1,6 +1,6 @@
 # PRP-015: Rediseño Visual Premium de la Web Pública
 
-> **Estado**: PENDIENTE
+> **Estado**: COMPLETADO (2026-06-12, rama `prp-015-rediseno-visual`, pendiente de validación visual del usuario y merge a master)
 > **Fecha**: 2026-06-12
 > **Proyecto**: Henkoaching (Jennifer Cervera)
 
@@ -136,6 +136,16 @@ No aplica. Cero migraciones, cero cambios en Supabase.
 
 > Esta sección CRECE con cada error encontrado durante la implementación.
 > El conocimiento persiste para futuros PRPs. El mismo error NUNCA ocurre dos veces.
+
+### 2026-06-12: Dirección de arte — fondos de bloque siempre claros
+- **Error**: Se propusieron footer/CTA en tinta oscura y después en turquesa a sangre; el usuario rechazó ambos.
+- **Fix**: Franjas y CTA en `bg-henko-paper-deep` con hairlines; footer en `henko-card`. Ink solo para texto. Guardado también en memoria (feedback/no-fondos-oscuros-web-publica).
+- **Aplicar en**: cualquier sección nueva de la web pública.
+
+### 2026-06-12: Hero descompensado en pantallas grandes
+- **Error**: Con padding fijo arriba, en monitores 1080p+ el hero quedaba "ladeado abajo-izquierda" con mucho aire superior.
+- **Fix**: Hero con `min-h-[100svh]` + flex `justify-center` y CTAs centrados bajo la composición de dos columnas.
+- **Aplicar en**: heroes a viewport completo.
 
 ### 2026-06-12: PowerShell 5.1 corrompe UTF-8 al hacer Get-Content/Set-Content sin encoding
 - **Error**: `Get-Content $f -Raw` + `Set-Content -Encoding utf8` en PS 5.1 leyó un .tsx UTF-8 como ANSI y lo reescribió con mojibake (Ã­, Ã©…). Hubo que restaurar desde git.
