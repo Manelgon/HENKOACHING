@@ -200,8 +200,8 @@
 }
 
 /* ═══ HAIRLINE EDITORIAL ═══ */
-.hairline-t { border-top: 1px solid rgba(43, 51, 56, 0.14); }
-.hairline-b { border-bottom: 1px solid rgba(43, 51, 56, 0.14); }
+.hairline-t { border-top: 1px solid rgba(17, 24, 39, 0.12); }
+.hairline-b { border-bottom: 1px solid rgba(17, 24, 39, 0.12); }
 
 /* ═══ BUTTERFLY ═══ */
 @keyframes butterflyFloat {
