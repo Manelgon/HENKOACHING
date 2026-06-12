@@ -4,16 +4,16 @@ const ULTIMA_ACTUALIZACION = '4 de junio de 2026'
 
 export default function Legal() {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen">
       {/* Header */}
-      <div className="bg-gradient-to-br from-gray-50 to-white border-b border-gray-100 pt-24 pb-8 md:pt-28 md:pb-10">
+      <div className="bg-henko-paper-deep hairline-b pt-24 pb-8 md:pt-28 md:pb-10">
         <div className="max-w-4xl mx-auto px-4 md:px-8">
           <Link href="/" className="inline-flex items-center text-henko-turquoise hover:text-henko-turquoise/80 text-sm font-raleway font-semibold mb-6 transition-colors">
             ← Volver
           </Link>
-          <h1 className="font-raleway text-3xl md:text-4xl font-bold text-gray-900 mb-4">Legal</h1>
-          <p className="text-gray-600 font-raleway text-lg">Información legal, privacidad y políticas de Henkoaching</p>
-          <p className="text-gray-400 font-raleway text-xs mt-3">Última actualización: {ULTIMA_ACTUALIZACION}</p>
+          <h1 className="font-roxborough font-black text-display-lg text-henko-ink mb-4">Legal</h1>
+          <p className="text-henko-ink-soft font-raleway text-lg">Información legal, privacidad y políticas de Henkoaching</p>
+          <p className="text-henko-ink-soft/70 font-raleway text-xs mt-3">Última actualización: {ULTIMA_ACTUALIZACION}</p>
         </div>
       </div>
 
@@ -30,7 +30,7 @@ export default function Legal() {
             <a
               key={section.id}
               href={`#${section.id}`}
-              className="px-4 py-3 rounded-lg border border-gray-200 hover:border-henko-turquoise hover:bg-henko-turquoise/5 text-gray-700 hover:text-henko-turquoise font-raleway text-sm font-semibold transition-all duration-300 text-center"
+              className="px-4 py-3 rounded-lg border border-henko-hairline bg-henko-card hover:border-henko-turquoise hover:bg-henko-turquoise/5 text-henko-ink hover:text-henko-turquoise font-raleway text-sm font-semibold transition-all duration-300 text-center"
             >
               {section.label}
             </a>

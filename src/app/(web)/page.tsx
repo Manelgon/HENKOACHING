@@ -58,57 +58,62 @@ export default async function Home() {
     <main className="overflow-hidden">
 
       {/* HERO */}
-      <section className="relative pt-[92px] px-6 md:px-12">
-        <div className="relative z-10 max-w-[1400px] mx-auto pt-24 md:pt-32 pb-16 grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-12 items-center">
+      <section className="relative px-6 md:px-12">
+        <div className="relative z-10 max-w-[1400px] mx-auto min-h-[100svh] pt-[110px] pb-14 flex flex-col justify-center">
 
-          {/* Columna izquierda */}
-          <div>
+          <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-12 items-center">
 
-            {/* Kicker */}
-            <p data-animate className="font-raleway font-semibold uppercase text-overline text-henko-turquoise mb-7 flex items-center gap-3">
-              <span className="inline-block w-9 h-px bg-current opacity-60" aria-hidden="true" />
-              Orden · Liderazgo · Equipos
-            </p>
+            {/* Columna izquierda */}
+            <div>
 
-            {/* Titular serif con reveal por líneas */}
-            <h1 data-animate="reveal" className="font-roxborough font-black text-henko-ink text-display-2xl m-0">
-              <span className="reveal-line">
-                <span className="reveal-inner block italic font-light text-henko-ink-soft text-display-lg mb-2">
-                  Cuando una empresa crece o cambia,
+              {/* Kicker */}
+              <p data-animate className="font-raleway font-semibold uppercase text-overline text-henko-turquoise mb-7 flex items-center gap-3">
+                <span className="inline-block w-9 h-px bg-current opacity-60" aria-hidden="true" />
+                Orden · Liderazgo · Equipos
+              </p>
+
+              {/* Titular serif con reveal por líneas */}
+              <h1 data-animate="reveal" className="font-roxborough font-black text-henko-ink text-display-2xl m-0">
+                <span className="reveal-line">
+                  <span className="reveal-inner block italic font-light text-henko-ink-soft text-display-lg mb-2">
+                    Cuando una empresa crece o cambia,
+                  </span>
                 </span>
-              </span>
-              <span className="reveal-line">
-                <span className="reveal-inner">
-                  el <em className="italic text-henko-turquoise">orden</em> deja
+                <span className="reveal-line">
+                  <span className="reveal-inner">
+                    el <em className="italic text-henko-turquoise">orden</em> deja
+                  </span>
                 </span>
-              </span>
-              <span className="reveal-line">
-                <span className="reveal-inner">de ser opcional.</span>
-              </span>
-            </h1>
+                <span className="reveal-line">
+                  <span className="reveal-inner">de ser opcional.</span>
+                </span>
+              </h1>
 
-            <p data-animate data-delay="400" className="font-raleway text-[17px] leading-[1.7] text-henko-ink-soft mt-7 max-w-xl">
-              Acompaño a CEOs y empresas en crecimiento a crear orden, claridad y estructura
-              para liderar con calma y construir equipos más conscientes.
-            </p>
+              <p data-animate data-delay="400" className="font-raleway text-[17px] leading-[1.7] text-henko-ink-soft mt-7 max-w-xl">
+                Acompaño a CEOs y empresas en crecimiento a crear orden, claridad y estructura
+                para liderar con calma y construir equipos más conscientes.
+              </p>
 
-            <div data-animate data-delay="500" className="flex flex-wrap gap-4 items-center pt-9">
-              <CTAButton href="/contacto" variant="primary">Trabaja conmigo</CTAButton>
-              <CTAButton href="/servicios" variant="secondary">Ver servicios</CTAButton>
+            </div>
+
+            {/* Columna derecha — logo */}
+            <div data-animate="right" data-delay="300" className="hidden lg:flex items-center justify-center">
+              <Image
+                src="/henkologo.png"
+                alt="Henkoaching"
+                width={720}
+                height={500}
+                priority
+                className="object-contain w-[72%] h-auto"
+              />
             </div>
 
           </div>
 
-          {/* Columna derecha — logo */}
-          <div data-animate="right" data-delay="300" className="hidden lg:flex items-center justify-center">
-            <Image
-              src="/henkologo.png"
-              alt="Henkoaching"
-              width={720}
-              height={500}
-              priority
-              className="object-contain w-[72%] h-auto"
-            />
+          {/* Botones centrados en la composición */}
+          <div data-animate data-delay="500" className="flex flex-wrap gap-4 items-center justify-center pt-12">
+            <CTAButton href="/contacto" variant="primary">Trabaja conmigo</CTAButton>
+            <CTAButton href="/servicios" variant="secondary">Ver servicios</CTAButton>
           </div>
 
         </div>
