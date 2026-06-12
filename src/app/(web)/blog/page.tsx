@@ -38,7 +38,7 @@ export default async function BlogIndexPage() {
   const items = (posts ?? []) as unknown as BlogCardData[]
 
   return (
-    <main className="min-h-screen bg-white pt-24">
+    <main className="min-h-screen pt-24">
       <PageHeader
         overline="Blog"
         title={
@@ -63,7 +63,7 @@ export default async function BlogIndexPage() {
               <Link
                 key={c.slug}
                 href={`/blog/categoria/${c.slug}`}
-                className="px-4 py-2 rounded-full border border-henko-turquoise/15 text-gray-600 font-raleway text-[11px] font-semibold tracking-[0.12em] uppercase bg-white hover:border-henko-turquoise/40 hover:text-henko-turquoise hover:-translate-y-0.5 hover:shadow-sm transition-all duration-300"
+                className="px-4 py-2 rounded-full border border-henko-hairline text-henko-ink-soft font-raleway text-[11px] font-semibold tracking-[0.12em] uppercase bg-henko-card hover:border-henko-turquoise/40 hover:text-henko-turquoise hover:-translate-y-0.5 hover:shadow-soft transition-all duration-300"
               >
                 {c.nombre}
               </Link>
@@ -73,8 +73,8 @@ export default async function BlogIndexPage() {
 
         {items.length === 0 ? (
           <div className="text-center py-16">
-            <p className="font-roxborough text-2xl text-gray-400 mb-2">Aún no hay artículos publicados</p>
-            <p className="font-raleway text-gray-400">Vuelve pronto.</p>
+            <p className="font-roxborough text-2xl text-henko-ink-soft/70 mb-2">Aún no hay artículos publicados</p>
+            <p className="font-raleway text-henko-ink-soft/70">Vuelve pronto.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12">

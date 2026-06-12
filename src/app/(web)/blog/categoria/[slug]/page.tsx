@@ -66,7 +66,7 @@ export default async function CategoriaPage({ params }: PageProps) {
   const items = (posts ?? []) as unknown as BlogCardData[]
 
   return (
-    <main className="min-h-screen bg-white pt-24">
+    <main className="min-h-screen pt-24">
       <PageHeader
         overline={`Blog · ${categoria.nombre}`}
         title={categoria.nombre}
@@ -75,7 +75,7 @@ export default async function CategoriaPage({ params }: PageProps) {
 
       <section className="px-6 md:px-12 py-16 max-w-7xl mx-auto">
         <div className="flex flex-wrap gap-2 mb-12">
-          <Link href="/blog" className="px-4 py-2 rounded-full border border-gray-200 text-gray-600 font-raleway text-xs font-semibold tracking-wide uppercase hover:bg-gray-50 hover:text-henko-turquoise transition-colors">
+          <Link href="/blog" className="px-4 py-2 rounded-full border border-henko-hairline bg-henko-card text-henko-ink-soft font-raleway text-xs font-semibold tracking-wide uppercase hover:border-henko-turquoise/40 hover:text-henko-turquoise transition-colors">
             Todos
           </Link>
           {otrasCategorias?.map((c) => (
@@ -85,7 +85,7 @@ export default async function CategoriaPage({ params }: PageProps) {
               className={`px-4 py-2 rounded-full font-raleway text-xs font-semibold tracking-wide uppercase transition-colors ${
                 c.slug === categoria.slug
                   ? 'bg-henko-turquoise text-white'
-                  : 'border border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-henko-turquoise'
+                  : 'border border-henko-hairline bg-henko-card text-henko-ink-soft hover:border-henko-turquoise/40 hover:text-henko-turquoise'
               }`}
             >
               {c.nombre}
@@ -95,7 +95,7 @@ export default async function CategoriaPage({ params }: PageProps) {
 
         {items.length === 0 ? (
           <div className="text-center py-24">
-            <p className="font-roxborough text-2xl text-gray-400 mb-2">Aún no hay artículos en esta categoría</p>
+            <p className="font-roxborough text-2xl text-henko-ink-soft/70 mb-2">Aún no hay artículos en esta categoría</p>
             <Link href="/blog" className="font-raleway text-henko-turquoise hover:text-henko-turquoise-light underline">Ver todos los artículos</Link>
           </div>
         ) : (

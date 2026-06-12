@@ -51,8 +51,8 @@ export default function ContactoPage() {
   }
 
   const inputClass = (hasError: boolean) =>
-    `w-full px-4 py-3.5 rounded-2xl text-sm border-[1.5px] bg-white text-gray-900 outline-none transition-colors ${
-      hasError ? 'border-red-300 focus:border-red-400' : 'border-black/10 focus:border-henko-turquoise'
+    `w-full px-4 py-3.5 rounded-2xl text-sm border-[1.5px] bg-white text-henko-ink outline-none transition-all duration-300 placeholder:text-henko-ink-soft/50 ${
+      hasError ? 'border-red-300 focus:border-red-400' : 'border-henko-hairline focus:border-henko-turquoise focus:shadow-soft'
     }`
   const labelClass = (hasError: boolean) =>
     `text-[11px] tracking-[0.12em] font-bold mb-1.5 block ${
@@ -67,7 +67,7 @@ export default function ContactoPage() {
   }
 
   return (
-    <div className="bg-white pt-24 font-raleway">
+    <div className="pt-24 font-raleway">
       <PageHeader
         overline="Contacto"
         title={
@@ -81,7 +81,7 @@ export default function ContactoPage() {
       <section className="px-6 md:px-12 pt-10 pb-20">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-20">
           {/* Form */}
-          <div data-animate="left" className="relative bg-white border border-henko-turquoise/15 rounded-[2.5rem] p-8 md:p-10 shadow-sm overflow-hidden">
+          <div data-animate="left" className="relative bg-henko-card border border-henko-hairline rounded-[2.5rem] p-8 md:p-10 shadow-soft overflow-hidden">
             {/* Vertical accent bar */}
             <span
               aria-hidden
@@ -100,10 +100,10 @@ export default function ContactoPage() {
                   <span className="text-[10px] font-bold tracking-[0.22em] uppercase text-henko-turquoise">Enviado</span>
                   <span className="block w-8 h-px bg-henko-turquoise" />
                 </div>
-                <h2 className="font-roxborough text-2xl md:text-3xl text-gray-900 mb-3">
+                <h2 className="font-roxborough text-2xl md:text-3xl text-henko-ink mb-3">
                   ¡Mensaje <em className="italic text-henko-turquoise font-light">recibido</em>!
                 </h2>
-                <p className="text-[15px] leading-relaxed text-gray-600 max-w-sm mx-auto">
+                <p className="text-[15px] leading-relaxed text-henko-ink-soft max-w-sm mx-auto">
                   Gracias por escribirme. Me pondré en contacto contigo lo antes posible.
                 </p>
                 <button
@@ -221,7 +221,7 @@ export default function ContactoPage() {
                         errors.privacidad ? 'border-red-400' : 'border-black/20'
                       }`}
                     />
-                    <span className="text-[13px] leading-relaxed text-gray-700 group-hover:text-gray-900 transition-colors">
+                    <span className="text-[13px] leading-relaxed text-henko-ink-soft group-hover:text-henko-ink transition-colors">
                       He leído y acepto la{' '}
                       <Link
                         href="/legal#privacidad"
@@ -252,10 +252,10 @@ export default function ContactoPage() {
               <span className="block w-8 h-px bg-henko-turquoise" />
               <span className="text-[10px] font-bold tracking-[0.22em] uppercase text-henko-turquoise">Desde Mallorca</span>
             </div>
-            <h2 className="font-roxborough text-2xl md:text-3xl text-gray-900 mb-5 leading-tight">
+            <h2 className="font-roxborough text-2xl md:text-3xl text-henko-ink mb-5 leading-tight">
               Otras formas de <em className="italic text-henko-turquoise font-light">encontrarme</em>
             </h2>
-            <p className="text-[15px] leading-[1.8] text-gray-600 mb-10">
+            <p className="text-[15px] leading-[1.8] text-henko-ink-soft mb-10">
               Si prefieres otro canal o solo quieres asomarte a lo que comparto, estoy en estos sitios.
             </p>
 
@@ -275,7 +275,7 @@ export default function ContactoPage() {
                     />
                     <div className="flex-1 min-w-0">
                       <p className="text-[10px] tracking-[0.22em] text-henko-turquoise font-bold uppercase mb-0.5">{item.label}</p>
-                      <p className="text-[15px] text-gray-900 group-hover:text-henko-turquoise transition-colors truncate">{item.val}</p>
+                      <p className="text-[15px] text-henko-ink group-hover:text-henko-turquoise transition-colors truncate">{item.val}</p>
                     </div>
                     {item.href && (
                       <span aria-hidden className="text-henko-turquoise opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all flex-shrink-0">→</span>
@@ -288,26 +288,26 @@ export default function ContactoPage() {
                     href={item.href}
                     target={item.href.startsWith('http') ? '_blank' : undefined}
                     rel={item.href.startsWith('http') ? 'noopener noreferrer' : undefined}
-                    className="group block bg-white border border-henko-turquoise/15 rounded-2xl px-5 py-4 shadow-sm hover:border-henko-turquoise/40 hover:shadow-[0_8px_24px_rgba(31,143,155,0.08)] hover:-translate-y-0.5 transition-all duration-300"
+                    className="group block bg-henko-card border border-henko-hairline rounded-2xl px-5 py-4 shadow-soft hover:border-henko-turquoise/40 hover:shadow-lift hover:-translate-y-0.5 transition-all duration-300"
                   >
                     {inner}
                   </a>
                 ) : (
-                  <div key={item.label} className="group block bg-white border border-henko-turquoise/15 rounded-2xl px-5 py-4 shadow-sm">
+                  <div key={item.label} className="group block bg-henko-card border border-henko-hairline rounded-2xl px-5 py-4 shadow-soft">
                     {inner}
                   </div>
                 )
               })}
             </div>
 
-            <div className="relative bg-henko-turquoise/[0.05] border border-henko-turquoise/15 rounded-[2rem] px-8 py-8 overflow-hidden">
+            <div className="relative bg-henko-paper-deep border border-henko-hairline rounded-[2rem] px-8 py-8 overflow-hidden">
               <span
                 aria-hidden
                 className="pointer-events-none absolute -top-2 -left-2 font-roxborough italic text-[8rem] leading-none text-henko-turquoise/[0.12] select-none"
               >
                 &ldquo;
               </span>
-              <p className="relative font-roxborough italic text-lg leading-snug text-gray-900">
+              <p className="relative font-roxborough italic text-lg leading-snug text-henko-ink">
                 El primer paso es siempre el más difícil.<br />
                 <span className="text-henko-turquoise">Pero también el más importante.</span>
               </p>

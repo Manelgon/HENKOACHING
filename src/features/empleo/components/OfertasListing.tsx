@@ -23,7 +23,7 @@ export default function OfertasListing({
   busqueda,
 }: Props) {
   return (
-    <div className="bg-white pt-24 font-raleway">
+    <div className="pt-24 font-raleway">
       <PageHeader
         overline="Portal de empleo"
         title={
@@ -44,7 +44,7 @@ export default function OfertasListing({
           busqueda={busqueda}
         />
 
-        <p className="text-xs text-gray-400 tracking-wider mb-6">
+        <p className="text-xs text-henko-ink-soft/70 tracking-wider mb-6">
           {filtradas.length} oferta{filtradas.length !== 1 ? 's' : ''} disponible{filtradas.length !== 1 ? 's' : ''}
         </p>
 
@@ -53,7 +53,7 @@ export default function OfertasListing({
             <OfertaRow key={o.id} o={o} />
           ))}
           {filtradas.length === 0 && (
-            <div className="text-center py-20 text-gray-400">
+            <div className="text-center py-20 text-henko-ink-soft/70">
               <p className="font-roxborough text-2xl mb-2">No hay resultados</p>
               <p className="text-sm">
                 {total === 0 ? 'Aún no hay ofertas publicadas' : 'Prueba con otros filtros'}
@@ -64,46 +64,39 @@ export default function OfertasListing({
       </section>
 
       {/* CTA candidatos */}
-      <section className="relative mt-24 px-6 md:px-12 py-24 md:py-28 text-center bg-henko-turquoise overflow-hidden">
-        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="blob-1 absolute -top-32 -left-32 w-[480px] h-[480px] bg-white/[0.08]" />
-          <div className="blob-2 absolute -bottom-40 -right-32 w-[520px] h-[520px] bg-white/[0.06]" />
-        </div>
-
+      <section className="relative mt-24 px-6 md:px-12 py-24 md:py-28 text-center bg-henko-paper-deep hairline-t overflow-hidden">
         <span
           aria-hidden
-          className="pointer-events-none absolute top-4 left-1/2 -translate-x-1/2 font-roxborough italic text-[18rem] md:text-[22rem] leading-none text-white/[0.06] select-none"
+          className="pointer-events-none absolute top-4 left-1/2 -translate-x-1/2 font-roxborough italic text-[18rem] md:text-[22rem] leading-none text-henko-ink/[0.04] select-none"
         >
           &mdash;
         </span>
 
         <div className="relative z-10 max-w-7xl mx-auto">
-          <div className="flex items-center justify-center gap-3 mb-5">
-            <span className="block w-8 h-px bg-white/60" />
-            <p className="font-raleway font-bold text-white tracking-[0.22em] uppercase text-[11px]">
-              Candidatos
-            </p>
-            <span className="block w-8 h-px bg-white/60" />
-          </div>
-          <h2 data-animate className="font-roxborough text-3xl md:text-5xl text-white mb-4 leading-[1.15]">
-            ¿Buscas el <em className="italic font-light">siguiente paso?</em>
+          <p className="font-raleway font-semibold uppercase text-overline text-henko-turquoise mb-6 flex items-center justify-center gap-3">
+            <span className="inline-block w-8 h-px bg-current opacity-60" aria-hidden="true" />
+            Candidatos
+            <span className="inline-block w-8 h-px bg-current opacity-60" aria-hidden="true" />
+          </p>
+          <h2 data-animate className="font-roxborough text-3xl md:text-5xl text-henko-ink mb-4 leading-[1.15]">
+            ¿Buscas el <em className="italic font-light text-henko-turquoise">siguiente paso?</em>
           </h2>
-          <p data-animate data-delay="100" className="font-roxborough italic text-lg md:text-xl text-white/90 mb-10">
+          <p data-animate data-delay="100" className="font-roxborough italic text-lg md:text-xl text-henko-ink-soft mb-10">
             Crea tu perfil, sube tu CV y aplica con un solo clic.
           </p>
 
-          <div data-animate data-delay="150" className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10 text-left">
+          <div data-stagger className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10 text-left">
             {[
               { num: '01', title: 'Ofertas exclusivas', desc: 'Solo trabajamos con empresas donde la cultura y el talento son una prioridad real.' },
               { num: '02', title: 'Proceso transparente', desc: 'Sabrás en qué punto está tu candidatura en todo momento, sin silencio radio.' },
               { num: '03', title: 'Acompañamiento real', desc: 'No eres un CV. Te asesoramos antes y durante el proceso para que llegues preparado.' },
             ].map((b) => (
-              <div key={b.num} className="bg-white/10 border border-white/20 rounded-[1.5rem] p-6">
+              <div key={b.num} className="bg-henko-card border border-henko-hairline rounded-[1.5rem] p-6 shadow-soft">
                 <div className="flex items-baseline gap-3 mb-2">
-                  <span className="font-roxborough italic text-2xl text-white/20 leading-none shrink-0">{b.num}</span>
-                  <p className="font-roxborough italic text-white text-xl leading-tight">{b.title}</p>
+                  <span className="font-roxborough italic text-2xl text-henko-turquoise/30 leading-none shrink-0">{b.num}</span>
+                  <p className="font-roxborough italic text-henko-ink text-xl leading-tight">{b.title}</p>
                 </div>
-                <p className="font-raleway text-white/75 text-sm leading-relaxed">{b.desc}</p>
+                <p className="font-raleway text-henko-ink-soft text-sm leading-relaxed">{b.desc}</p>
               </div>
             ))}
           </div>
@@ -111,13 +104,13 @@ export default function OfertasListing({
           <div data-animate data-delay="200" className="flex flex-wrap gap-4 justify-center">
             <Link
               href="/candidato/signup"
-              className="inline-flex items-center gap-2 bg-white text-henko-turquoise px-8 py-3.5 rounded-full text-[15px] font-semibold tracking-wide hover:bg-gray-50 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200"
+              className="inline-flex items-center gap-2 bg-henko-turquoise text-white px-8 py-3.5 rounded-full text-[15px] font-semibold tracking-wide hover:bg-henko-turquoise-light hover:shadow-lift hover:-translate-y-0.5 transition-all duration-300"
             >
               Crear perfil de candidato →
             </Link>
             <Link
               href="/candidato/login"
-              className="inline-flex items-center gap-2 bg-transparent border-2 border-white text-white px-8 py-3.5 rounded-full text-[15px] font-semibold tracking-wide hover:bg-white hover:text-henko-turquoise transition-all"
+              className="inline-flex items-center gap-2 bg-transparent border border-henko-hairline text-henko-ink px-8 py-3.5 rounded-full text-[15px] font-semibold tracking-wide hover:border-henko-turquoise hover:text-henko-turquoise transition-all"
             >
               Ya tengo cuenta
             </Link>
@@ -132,7 +125,7 @@ function OfertaRow({ o }: { o: OfertaListing }) {
   return (
     <Link
       href={`/empleo/${o.slug}`}
-      className="group relative bg-white rounded-[2rem] px-8 md:px-10 py-7 flex flex-col md:flex-row md:items-center md:justify-between gap-6 border border-henko-turquoise/15 shadow-sm hover:border-henko-turquoise/40 hover:shadow-[0_16px_48px_rgba(31,143,155,0.08)] hover:-translate-y-1 transition-all duration-300 overflow-hidden"
+      className="group relative bg-henko-card rounded-[2rem] px-8 md:px-10 py-7 flex flex-col md:flex-row md:items-center md:justify-between gap-6 border border-henko-hairline shadow-soft hover:border-henko-turquoise/40 hover:shadow-lift hover:-translate-y-1 transition-all duration-300 ease-out-expo overflow-hidden"
     >
       <span
         aria-hidden
@@ -146,11 +139,11 @@ function OfertaRow({ o }: { o: OfertaListing }) {
             Activa · {o.empresa}
           </span>
         </div>
-        <h3 className="font-roxborough text-xl md:text-2xl text-gray-900 mb-2 leading-tight">{o.titulo}</h3>
-        <p className="text-sm text-gray-500 mb-3">{o.ubicacion}</p>
+        <h3 className="font-roxborough text-xl md:text-2xl text-henko-ink mb-2 leading-tight">{o.titulo}</h3>
+        <p className="text-sm text-henko-ink-soft mb-3">{o.ubicacion}</p>
         <div className="flex gap-2 flex-wrap">
           {[o.modalidad, o.jornada, o.sector].filter(Boolean).map((tag, i) => (
-            <span key={i} className="text-[11px] px-3 py-1 rounded-full font-semibold bg-gray-100 text-gray-600 group-hover:bg-henko-turquoise/10 group-hover:text-henko-turquoise transition-colors">
+            <span key={i} className="text-[11px] px-3 py-1 rounded-full font-semibold bg-henko-paper-deep text-henko-ink-soft group-hover:bg-henko-turquoise/10 group-hover:text-henko-turquoise transition-colors">
               {tag}
             </span>
           ))}
@@ -158,7 +151,7 @@ function OfertaRow({ o }: { o: OfertaListing }) {
       </div>
       <div className="relative text-left md:text-right flex-shrink-0">
         <p className="text-sm font-semibold text-henko-turquoise mb-1">{o.salario}</p>
-        <p className="text-xs text-gray-400 mb-2">{o.fecha}</p>
+        <p className="text-xs text-henko-ink-soft/70 mb-2">{o.fecha}</p>
         <p className="text-xs text-henko-turquoise font-bold tracking-wider uppercase group-hover:translate-x-1 transition-transform">
           Ver oferta →
         </p>

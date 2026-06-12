@@ -21,7 +21,7 @@ export default function BlogCard({ post, compact = false }: { post: BlogCardData
     <article className="group">
       <Link href={`/blog/${post.slug}`} className="block">
         <div
-          className={`relative w-full overflow-hidden bg-gray-100 ${
+          className={`relative w-full overflow-hidden bg-henko-paper-deep shadow-soft ${
             compact ? 'rounded-[1.75rem] mb-5 aspect-[16/9]' : 'rounded-[2rem] mb-5 aspect-[16/10]'
           }`}
         >
@@ -47,17 +47,17 @@ export default function BlogCard({ post, compact = false }: { post: BlogCardData
             {fecha && (
               <>
                 <span className="text-henko-turquoise/30">·</span>
-                <span className="text-[11px] text-gray-400 font-raleway">{fecha}</span>
+                <span className="text-[11px] text-henko-ink-soft/70 font-raleway">{fecha}</span>
               </>
             )}
           </div>
         )}
         {!post.categoria && fecha && (
-          <p className="text-[11px] text-gray-400 font-raleway mb-3">{fecha}</p>
+          <p className="text-[11px] text-henko-ink-soft/70 font-raleway mb-3">{fecha}</p>
         )}
 
         <h2
-          className={`font-roxborough text-gray-900 group-hover:text-henko-turquoise transition-colors leading-tight ${
+          className={`font-roxborough text-henko-ink group-hover:text-henko-turquoise transition-colors leading-tight ${
             compact ? 'mb-2.5 text-lg md:text-xl' : 'mb-3 text-xl md:text-2xl'
           }`}
         >
@@ -66,7 +66,7 @@ export default function BlogCard({ post, compact = false }: { post: BlogCardData
 
         {post.extracto && (
           <p
-            className={`font-raleway text-gray-600 leading-relaxed ${
+            className={`font-raleway text-henko-ink-soft leading-relaxed ${
               compact ? 'text-sm line-clamp-2 mb-4' : 'line-clamp-3 mb-4'
             }`}
           >
@@ -76,7 +76,7 @@ export default function BlogCard({ post, compact = false }: { post: BlogCardData
 
         <div className="flex items-center justify-between gap-3 pt-2">
           {post.tiempo_lectura ? (
-            <p className="font-raleway text-xs text-gray-400">{post.tiempo_lectura} min de lectura</p>
+            <p className="font-raleway text-xs text-henko-ink-soft/70">{post.tiempo_lectura} min de lectura</p>
           ) : (
             <span />
           )}

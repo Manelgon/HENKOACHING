@@ -52,7 +52,7 @@ export default function OfertasFiltros({
         value={localBusqueda}
         onChange={e => setLocalBusqueda(e.target.value)}
         placeholder="Buscar por cargo o empresa..."
-        className="flex-1 min-w-[260px] px-5 py-3 rounded-full text-sm border-[1.5px] border-black/10 bg-white outline-none focus:border-henko-turquoise transition-colors"
+        className="flex-1 min-w-[260px] px-5 py-3 rounded-full text-sm border-[1.5px] border-henko-hairline bg-henko-card text-henko-ink placeholder:text-henko-ink-soft/50 outline-none focus:border-henko-turquoise transition-colors"
       />
       <MultiSelect
         label="Sector"
@@ -122,7 +122,7 @@ function MultiSelect({
         className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-semibold transition-all border ${
           selected.length > 0
             ? 'bg-henko-turquoise text-white border-henko-turquoise'
-            : 'bg-white text-gray-600 border-henko-turquoise/15 shadow-sm hover:border-henko-turquoise/40'
+            : 'bg-henko-card text-henko-ink-soft border-henko-hairline shadow-soft hover:border-henko-turquoise/40'
         }`}
         aria-haspopup="listbox"
         aria-expanded={open}
