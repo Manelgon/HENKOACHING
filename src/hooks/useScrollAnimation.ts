@@ -19,7 +19,7 @@ export function useScrollAnimation() {
       { threshold: 0.12 }
     )
 
-    const elements = document.querySelectorAll('[data-animate]')
+    const elements = document.querySelectorAll('[data-animate], [data-stagger]')
     elements.forEach((el) => observer.observe(el))
 
     return () => observer.disconnect()

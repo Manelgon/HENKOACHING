@@ -126,6 +126,83 @@
 [data-delay="500"] { transition-delay: 500ms; }
 [data-delay="600"] { transition-delay: 600ms; }
 
+/* ═══ MOTION V2 (PRP-015): reveal enmascarado por líneas ═══ */
+/* Uso (RSC-friendly):
+   <h1 data-animate="reveal">
+     <span class="reveal-line"><span class="reveal-inner">Línea 1</span></span>
+     <span class="reveal-line"><span class="reveal-inner">Línea 2</span></span>
+   </h1> */
+[data-animate="reveal"] {
+  opacity: 1;
+  transform: none;
+}
+
+.reveal-line {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.08em; /* evita recorte de descendentes serif */
+  margin-bottom: -0.08em;
+}
+
+.reveal-inner {
+  display: inline-block;
+  transform: translateY(115%);
+  transition: transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+
+[data-animate="reveal"].animate-in .reveal-inner { transform: translateY(0); }
+[data-animate="reveal"] .reveal-line:nth-child(2) .reveal-inner { transition-delay: 120ms; }
+[data-animate="reveal"] .reveal-line:nth-child(3) .reveal-inner { transition-delay: 240ms; }
+[data-animate="reveal"] .reveal-line:nth-child(4) .reveal-inner { transition-delay: 360ms; }
+
+/* ═══ MOTION V2: stagger por grupo ═══ */
+/* <div data-stagger> aplica entrada escalonada a sus hijos directos */
+[data-stagger] > * {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-stagger].animate-in > * {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+[data-stagger].animate-in > *:nth-child(2) { transition-delay: 90ms; }
+[data-stagger].animate-in > *:nth-child(3) { transition-delay: 180ms; }
+[data-stagger].animate-in > *:nth-child(4) { transition-delay: 270ms; }
+[data-stagger].animate-in > *:nth-child(5) { transition-delay: 360ms; }
+[data-stagger].animate-in > *:nth-child(6) { transition-delay: 450ms; }
+[data-stagger].animate-in > *:nth-child(n+7) { transition-delay: 540ms; }
+
+/* ═══ MOTION V2: accesibilidad ═══ */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+
+  [data-animate],
+  [data-stagger] > *,
+  .reveal-inner {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
+/* Sin JS, el contenido debe ser visible */
+@media (scripting: none) {
+  [data-animate],
+  [data-stagger] > *,
+  .reveal-inner {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ═══ HAIRLINE EDITORIAL ═══ */
+.hairline-t { border-top: 1px solid rgba(43, 51, 56, 0.14); }
+.hairline-b { border-bottom: 1px solid rgba(43, 51, 56, 0.14); }
+
 /* ═══ BLOB MORPHING ANIMATIONS ═══ */
 @keyframes blobMorph1 {
   0%, 100% { border-radius: 60% 40% 70% 30% / 50% 60% 40% 60%; transform: translate(0, 0) rotate(0deg); }
