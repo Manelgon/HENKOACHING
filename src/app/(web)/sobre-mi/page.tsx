@@ -208,7 +208,7 @@ export default async function SobreMiPage() {
       </section>
 
       {/* Valores */}
-      <section className="px-6 md:px-12 py-20 bg-henko-paper-deep hairline-t">
+      <section className="px-6 md:px-12 py-20 hairline-t">
         <div className="max-w-7xl mx-auto">
           <p data-animate className="font-raleway font-semibold uppercase text-overline text-henko-turquoise mb-5 flex items-center gap-3">
             <span className="inline-block w-8 h-px bg-current opacity-60" aria-hidden="true" />
