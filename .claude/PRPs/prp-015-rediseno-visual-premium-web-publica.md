@@ -137,7 +137,10 @@ No aplica. Cero migraciones, cero cambios en Supabase.
 > Esta sección CRECE con cada error encontrado durante la implementación.
 > El conocimiento persiste para futuros PRPs. El mismo error NUNCA ocurre dos veces.
 
-*(vacío — se completa durante la implementación)*
+### 2026-06-12: PowerShell 5.1 corrompe UTF-8 al hacer Get-Content/Set-Content sin encoding
+- **Error**: `Get-Content $f -Raw` + `Set-Content -Encoding utf8` en PS 5.1 leyó un .tsx UTF-8 como ANSI y lo reescribió con mojibake (Ã­, Ã©…). Hubo que restaurar desde git.
+- **Fix**: NUNCA usar PowerShell para search-replace en archivos de código con acentos. Usar siempre el Edit tool (con `replace_all` si hay varias ocurrencias).
+- **Aplicar en**: cualquier proyecto en Windows con PS 5.1.
 
 ---
 

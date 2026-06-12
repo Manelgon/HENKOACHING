@@ -167,25 +167,25 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* FRASE DESTACADA — franja ink */}
-      <section className="relative bg-henko-ink py-24 md:py-32 px-6 md:px-12 text-center overflow-hidden">
+      {/* FRASE DESTACADA — franja papel profundo */}
+      <section className="relative bg-henko-paper-deep hairline-t hairline-b py-24 md:py-32 px-6 md:px-12 text-center overflow-hidden">
         <span
           aria-hidden
-          className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 font-roxborough italic text-[16rem] md:text-[22rem] leading-none text-henko-paper/[0.05] select-none"
+          className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 font-roxborough italic text-[16rem] md:text-[22rem] leading-none text-henko-ink/[0.04] select-none"
         >
           &ldquo;
         </span>
 
         <div className="relative z-10 max-w-3xl mx-auto">
-          <p data-animate className="font-raleway font-semibold uppercase text-overline text-henko-greenblue mb-8 flex items-center justify-center gap-3">
+          <p data-animate className="font-raleway font-semibold uppercase text-overline text-henko-turquoise mb-8 flex items-center justify-center gap-3">
             <span className="inline-block w-8 h-px bg-current opacity-60" aria-hidden="true" />
             Mi forma de trabajar
             <span className="inline-block w-8 h-px bg-current opacity-60" aria-hidden="true" />
           </p>
-          <h2 data-animate data-delay="100" className="font-roxborough text-henko-paper mb-8" style={{fontSize: 'clamp(22px, 2.6vw, 38px)', lineHeight: 1.3, letterSpacing: '-0.01em'}}>
-            No hago un análisis de procesos desde fuera. <em className="italic font-light text-henko-greenblue">Hablo con las personas, entiendo qué está pasando y ayudo a poner orden.</em>
+          <h2 data-animate data-delay="100" className="font-roxborough text-henko-ink mb-8" style={{fontSize: 'clamp(22px, 2.6vw, 38px)', lineHeight: 1.3, letterSpacing: '-0.01em'}}>
+            No hago un análisis de procesos desde fuera. <em className="italic font-light text-henko-turquoise">Hablo con las personas, entiendo qué está pasando y ayudo a poner orden.</em>
           </h2>
-          <p data-animate data-delay="200" className="font-roxborough italic text-base md:text-xl text-henko-paper/70">
+          <p data-animate data-delay="200" className="font-roxborough italic text-base md:text-xl text-henko-ink-soft">
             Eso, en esencia, es diagnóstico organizacional.
           </p>
         </div>

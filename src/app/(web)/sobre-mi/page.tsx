@@ -23,7 +23,7 @@ export default async function SobreMiPage() {
   const sobreMiUrl = await getSignedAssetUrl(settings.sobre_mi_path, 60 * 60 * 24)
 
   return (
-    <div className="bg-white pt-24 font-raleway">
+    <div className="pt-24 font-raleway">
       <PersonJsonLd />
       <PageHeader
         overline="Sobre mí"
@@ -36,10 +36,10 @@ export default async function SobreMiPage() {
       />
 
       {/* Bio */}
-      <section className="px-6 md:px-12 pt-10 pb-20 bg-white">
+      <section className="px-6 md:px-12 pt-10 pb-20">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[5fr,7fr] gap-12 lg:gap-16 items-center">
           {/* Foto */}
-          <div data-animate="left" className="relative aspect-square rounded-[3rem] overflow-hidden bg-gradient-to-br from-henko-turquoise/[0.08] via-white to-henko-turquoise/[0.04] border border-henko-turquoise/15 flex items-center justify-center">
+          <div data-animate="left" className="relative aspect-square rounded-[3rem] overflow-hidden bg-henko-paper-deep border border-henko-hairline shadow-soft flex items-center justify-center">
             {sobreMiUrl ? (
               /* eslint-disable-next-line @next/next/no-img-element */
               <img
@@ -49,11 +49,6 @@ export default async function SobreMiPage() {
               />
             ) : (
               <>
-                {/* Decorative blobs */}
-                <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-                  <div className="blob-1 absolute -top-12 -left-12 w-72 h-72 bg-henko-turquoise/[0.10]" />
-                  <div className="blob-3 absolute -bottom-12 -right-12 w-72 h-72 bg-henko-turquoise/[0.08]" />
-                </div>
                 <span
                   aria-hidden
                   className="pointer-events-none absolute top-2 left-6 font-roxborough italic text-[10rem] leading-none text-henko-turquoise/[0.12] select-none"
@@ -61,7 +56,7 @@ export default async function SobreMiPage() {
                   J
                 </span>
                 <div className="relative z-10 text-center">
-                  <div className="w-24 h-24 rounded-full bg-white shadow-sm border border-henko-turquoise/20 mx-auto mb-4 flex items-center justify-center">
+                  <div className="w-24 h-24 rounded-full bg-henko-card shadow-soft border border-henko-hairline mx-auto mb-4 flex items-center justify-center">
                     <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#1f8f9b" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="8" r="4" />
                       <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
@@ -75,21 +70,24 @@ export default async function SobreMiPage() {
 
           {/* Text */}
           <div>
-            <p data-animate="right" className="font-raleway font-bold text-henko-turquoise tracking-[0.18em] uppercase text-[11px] mb-4">Mi historia</p>
-            <h2 data-animate="right" data-delay="100" className="font-roxborough text-2xl md:text-4xl text-gray-900 mb-6 leading-tight">
+            <p data-animate="right" className="font-raleway font-semibold uppercase text-overline text-henko-turquoise mb-5 flex items-center gap-3">
+              <span className="inline-block w-8 h-px bg-current opacity-60" aria-hidden="true" />
+              Mi historia
+            </p>
+            <h2 data-animate="right" data-delay="100" className="font-roxborough font-bold text-display-lg text-henko-ink mb-6">
               Del caos a la<br />
               <em className="italic text-henko-turquoise font-light">transformación</em>
             </h2>
-            <p data-animate="right" data-delay="200" className="text-[15px] leading-[1.85] text-gray-600 mb-5">
+            <p data-animate="right" data-delay="200" className="text-[15px] leading-[1.85] text-henko-ink-soft mb-5">
               Soy Jennifer, consultora de operaciones y coach especializada en transformación empresarial. Llevo más de 5 años ayudando a empresas a pasar del caos operativo a la claridad organizativa.
             </p>
-            <p data-animate="right" data-delay="300" className="text-[15px] leading-[1.85] text-gray-600 mb-5">
+            <p data-animate="right" data-delay="300" className="text-[15px] leading-[1.85] text-henko-ink-soft mb-5">
               Nací y crecí en Mallorca, y es desde aquí donde construí Henkoaching — tomando el concepto japonés de <em>henko</em> (cambio transformador) y la metáfora de la oruga que se convierte en mariposa.
             </p>
-            <p data-animate="right" data-delay="400" className="text-[15px] leading-[1.85] text-gray-600 mb-5">
+            <p data-animate="right" data-delay="400" className="text-[15px] leading-[1.85] text-henko-ink-soft mb-5">
               Mi trabajo combina la consultoría estratégica con el coaching consciente. Porque el cambio real no es solo de procesos — es de personas.
             </p>
-            <p data-animate="right" data-delay="500" className="text-[15px] leading-[1.85] text-gray-600 mb-8">
+            <p data-animate="right" data-delay="500" className="text-[15px] leading-[1.85] text-henko-ink-soft mb-8">
               Soy también instructora de meditación y creo firmemente que el bienestar individual y la salud organizativa van de la mano. Cuando una empresa funciona bien, las personas que la forman también.
             </p>
             <Link
@@ -105,13 +103,16 @@ export default async function SobreMiPage() {
       </section>
 
       {/* Lo que veo */}
-      <section className="px-6 md:px-12 py-20 bg-[#f4f6f7] border-t border-gray-100">
+      <section className="px-6 md:px-12 py-20 bg-henko-paper-deep hairline-t">
         <div className="max-w-7xl mx-auto">
-          <p data-animate className="font-raleway font-bold text-henko-turquoise tracking-[0.18em] uppercase text-[11px] mb-4">Mi enfoque</p>
-          <h2 data-animate data-delay="100" className="font-roxborough text-2xl md:text-4xl text-gray-900 mb-4 leading-tight">
+          <p data-animate className="font-raleway font-semibold uppercase text-overline text-henko-turquoise mb-5 flex items-center gap-3">
+            <span className="inline-block w-8 h-px bg-current opacity-60" aria-hidden="true" />
+            Mi enfoque
+          </p>
+          <h2 data-animate data-delay="100" className="font-roxborough font-bold text-display-lg text-henko-ink mb-4">
             Lo que veo cuando entro <em className="italic text-henko-turquoise font-light">en una empresa</em>
           </h2>
-          <p data-animate data-delay="150" className="font-raleway text-[15px] leading-[1.75] text-gray-600 mb-12 max-w-2xl">
+          <p data-animate data-delay="150" className="font-raleway text-[15px] leading-[1.75] text-henko-ink-soft mb-12 max-w-2xl">
             No necesito un informe de 40 páginas para entender qué está pasando. Cuando acompaño a una organización, lo que observo es esto.
           </p>
 
@@ -120,15 +121,15 @@ export default async function SobreMiPage() {
               ['Dónde se bloquean las decisiones.', 'Qué conversaciones no se están teniendo.', 'Qué responsabilidades no están claras.'],
               ['Qué líder está sobrecargado.', 'Qué perfil necesita realmente la organización.', 'Qué dinámica del equipo está frenando el crecimiento.'],
             ].map((col, ci) => (
-              <div key={ci} className="divide-y divide-[#DDD8CE]">
+              <div key={ci} data-stagger className="divide-y divide-henko-hairline">
                 {col.map((item, i) => (
-                  <div key={i} data-animate data-delay={(ci * 3 + i) * 80} className="flex gap-4 py-6">
-                    <div className="flex-shrink-0 w-7 h-7 rounded-full bg-henko-turquoise flex items-center justify-center mt-0.5">
+                  <div key={i} className="flex gap-4 py-6">
+                    <div className="flex-shrink-0 w-7 h-7 rounded-full border border-henko-turquoise/40 bg-henko-turquoise/10 flex items-center justify-center mt-0.5">
                       <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                        <path d="M2 6L4.8 9L10 3" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M2 6L4.8 9L10 3" stroke="#1f8f9b" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
                     </div>
-                    <p className="font-raleway text-[15px] text-gray-700 leading-[1.7] self-center">{item}</p>
+                    <p className="font-raleway text-[15px] text-henko-ink leading-[1.7] self-center">{item}</p>
                   </div>
                 ))}
               </div>
@@ -138,22 +139,22 @@ export default async function SobreMiPage() {
           {/* Diferenciador: voz auténtica vs. consultor tradicional */}
           <div data-animate>
             <div className="flex items-center gap-3 mb-6">
-              <span className="block w-8 h-px bg-henko-turquoise" />
-              <p className="font-raleway font-bold text-henko-turquoise tracking-[0.18em] uppercase text-[11px]">En esencia</p>
-              <span className="block w-8 h-px bg-henko-turquoise" />
+              <span className="block w-8 h-px bg-henko-turquoise opacity-60" />
+              <p className="font-raleway font-semibold uppercase text-overline text-henko-turquoise">En esencia</p>
+              <span className="block w-8 h-px bg-henko-turquoise opacity-60" />
             </div>
-            <p className="text-[15px] leading-[1.85] text-gray-600 mb-12">
+            <p className="text-[15px] leading-[1.85] text-henko-ink-soft mb-12">
               La diferencia es que yo no llego con un modelo cerrado: llego con presencia, con escucha y con la experiencia de haber visto cómo funcionan las personas por dentro de una organización. Eso, en esencia, es <em className="italic text-henko-turquoise">diagnóstico organizacional.</em>
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center">
-              <div className="relative rounded-2xl p-8 md:p-10 border border-gray-300">
-                <p className="text-[11px] font-bold tracking-[0.15em] uppercase text-gray-400 mb-4">Un consultor tradicional diría:</p>
-                <p className="font-roxborough text-lg md:text-xl text-gray-400 italic leading-relaxed">
+              <div className="relative rounded-[2rem] p-8 md:p-10 border border-henko-hairline bg-henko-card/50">
+                <p className="text-[11px] font-semibold tracking-[0.15em] uppercase text-henko-ink-soft/70 mb-4">Un consultor tradicional diría:</p>
+                <p className="font-roxborough text-lg md:text-xl text-henko-ink-soft italic leading-relaxed">
                   &ldquo;He realizado un análisis de procesos y estructura organizacional.&rdquo;
                 </p>
               </div>
-              <div className="relative rounded-2xl p-8 md:p-10 bg-henko-turquoise">
-                <p className="text-[11px] font-bold tracking-[0.15em] uppercase text-white/60 mb-4">Yo te diría:</p>
+              <div className="relative rounded-[2rem] p-8 md:p-10 bg-henko-turquoise shadow-lift">
+                <p className="text-[11px] font-semibold tracking-[0.15em] uppercase text-white/70 mb-4">Yo te diría:</p>
                 <p className="font-roxborough text-lg md:text-xl text-white italic leading-relaxed">
                   &ldquo;He hablado con las personas, he entendido qué está pasando y he ayudado a poner orden.&rdquo;
                 </p>
@@ -164,19 +165,22 @@ export default async function SobreMiPage() {
       </section>
 
       {/* Trayectoria */}
-      <section className="px-6 md:px-12 py-16 bg-white border-t border-gray-100">
+      <section className="px-6 md:px-12 py-16 hairline-t">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-10">
             <div>
-              <p data-animate className="font-raleway font-bold text-henko-turquoise tracking-[0.18em] uppercase text-[11px] mb-3">Trayectoria y formación</p>
-              <h2 data-animate data-delay="100" className="font-roxborough text-2xl md:text-3xl text-gray-900 leading-tight">
+              <p data-animate className="font-raleway font-semibold uppercase text-overline text-henko-turquoise mb-4 flex items-center gap-3">
+                <span className="inline-block w-8 h-px bg-current opacity-60" aria-hidden="true" />
+                Trayectoria y formación
+              </p>
+              <h2 data-animate data-delay="100" className="font-roxborough font-bold text-display-lg text-henko-ink">
                 Un recorrido que <em className="italic text-henko-turquoise font-light">tiene sentido</em>
               </h2>
             </div>
           </div>
 
           {/* Timeline */}
-          <div className="space-y-3">
+          <div data-stagger className="space-y-3">
             {[
               { periodo: '2024 – hoy', titulo: 'Henkoaching', desc: 'Coach ejecutiva, instructora de meditación y consultora para CEOs y empresas en transformación. Mallorca como base, el cambio como método.', tag: 'Actualidad' },
               { periodo: '2022 – 2023', titulo: 'Advanced Coaching Program · EAE', desc: 'EAE Business School. Coaching ejecutivo y de equipo. El paso que transformó mi forma de acompañar a líderes y equipos.', tag: 'Formación' },
@@ -186,18 +190,16 @@ export default async function SobreMiPage() {
             ].map((item, idx) => (
               <div
                 key={idx}
-                data-animate
-                data-delay={idx * 80}
-                className="group bg-white border border-henko-turquoise/15 rounded-[1.5rem] px-7 py-5 flex flex-col md:flex-row md:items-center gap-4 hover:border-henko-turquoise/35 hover:shadow-[0_8px_32px_rgba(31,143,155,0.07)] transition-all duration-300"
+                className="group bg-henko-card border border-henko-hairline rounded-[1.5rem] px-7 py-5 flex flex-col md:flex-row md:items-center gap-4 shadow-soft hover:border-henko-turquoise/35 hover:shadow-lift transition-all duration-300"
               >
                 <div className="flex-shrink-0 flex items-center gap-4 md:w-48">
-                  <span className="font-raleway text-[10px] font-bold tracking-[0.15em] text-gray-400 uppercase">{item.periodo}</span>
-                  <span className={`hidden md:block text-[9px] font-bold tracking-widest uppercase px-2.5 py-1 rounded-full ${item.tag === 'Actualidad' ? 'bg-henko-turquoise text-white' : item.tag === 'Formación' ? 'bg-henko-turquoise/12 text-henko-turquoise border border-henko-turquoise/30' : 'bg-gray-100 text-gray-500'}`}>{item.tag}</span>
+                  <span className="font-raleway text-[10px] font-bold tracking-[0.15em] text-henko-ink-soft/70 uppercase">{item.periodo}</span>
+                  <span className={`hidden md:block text-[9px] font-bold tracking-widest uppercase px-2.5 py-1 rounded-full ${item.tag === 'Actualidad' ? 'bg-henko-turquoise text-white' : item.tag === 'Formación' ? 'bg-henko-turquoise/10 text-henko-turquoise border border-henko-turquoise/30' : 'bg-henko-paper-deep text-henko-ink-soft'}`}>{item.tag}</span>
                 </div>
-                <div className="hidden md:block w-px h-8 bg-henko-turquoise/20 flex-shrink-0" />
+                <div className="hidden md:block w-px h-8 bg-henko-hairline flex-shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <p className="font-roxborough text-lg text-gray-900 leading-tight mb-1">{item.titulo}</p>
-                  <p className="text-[13.5px] leading-[1.7] text-gray-500">{item.desc}</p>
+                  <p className="font-roxborough text-lg text-henko-ink leading-tight mb-1">{item.titulo}</p>
+                  <p className="text-[13.5px] leading-[1.7] text-henko-ink-soft">{item.desc}</p>
                 </div>
               </div>
             ))}
@@ -206,20 +208,21 @@ export default async function SobreMiPage() {
       </section>
 
       {/* Valores */}
-      <section className="px-6 md:px-12 py-20 bg-gray-50">
+      <section className="px-6 md:px-12 py-20 bg-henko-paper-deep hairline-t">
         <div className="max-w-7xl mx-auto">
-          <p data-animate className="font-raleway font-bold text-henko-turquoise tracking-[0.18em] uppercase text-[11px] mb-4">Mis valores</p>
-          <h2 data-animate data-delay="100" className="font-roxborough text-2xl md:text-4xl text-gray-900 mb-12 leading-tight">
+          <p data-animate className="font-raleway font-semibold uppercase text-overline text-henko-turquoise mb-5 flex items-center gap-3">
+            <span className="inline-block w-8 h-px bg-current opacity-60" aria-hidden="true" />
+            Mis valores
+          </p>
+          <h2 data-animate data-delay="100" className="font-roxborough font-bold text-display-lg text-henko-ink mb-12">
             Lo que <em className="italic text-henko-turquoise font-light">me guía</em>
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div data-stagger className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {VALORES.map((item, idx) => (
               <div
                 key={item.v}
-                data-animate="scale"
-                data-delay={idx * 100}
-                className="group relative bg-white border border-henko-turquoise/15 rounded-[2rem] p-8 md:p-9 min-h-[200px] shadow-sm hover:border-henko-turquoise/40 hover:shadow-[0_16px_48px_rgba(31,143,155,0.08)] hover:-translate-y-1 transition-all duration-300 overflow-hidden flex"
+                className="group relative bg-henko-card border border-henko-hairline rounded-[2rem] p-8 md:p-9 min-h-[200px] shadow-soft hover:border-henko-turquoise/40 hover:shadow-lift hover:-translate-y-1 transition-all duration-300 ease-out-expo overflow-hidden flex"
               >
                 {/* Vertical accent bar */}
                 <span
@@ -234,8 +237,8 @@ export default async function SobreMiPage() {
                       Valor 0{idx + 1}
                     </span>
                   </div>
-                  <h3 className="font-roxborough text-xl md:text-[22px] mb-2.5 text-gray-900 leading-tight">{item.v}</h3>
-                  <p className="text-[14px] leading-[1.7] text-gray-600">{item.d}</p>
+                  <h3 className="font-roxborough text-xl md:text-[22px] mb-2.5 text-henko-ink leading-tight">{item.v}</h3>
+                  <p className="text-[14px] leading-[1.7] text-henko-ink-soft">{item.d}</p>
                 </div>
               </div>
             ))}
@@ -244,38 +247,31 @@ export default async function SobreMiPage() {
       </section>
 
       {/* CTA */}
-      <section className="relative bg-henko-turquoise py-24 md:py-28 px-6 md:px-12 text-center overflow-hidden">
-        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="blob-1 absolute -top-32 -left-32 w-[480px] h-[480px] bg-white/[0.08]" />
-          <div className="blob-2 absolute -bottom-40 -right-32 w-[520px] h-[520px] bg-white/[0.06]" />
-        </div>
-
+      <section className="relative bg-henko-paper-deep hairline-t py-24 md:py-28 px-6 md:px-12 text-center overflow-hidden">
         <span
           aria-hidden
-          className="pointer-events-none absolute top-4 left-1/2 -translate-x-1/2 font-roxborough italic text-[18rem] md:text-[22rem] leading-none text-white/[0.06] select-none"
+          className="pointer-events-none absolute top-4 left-1/2 -translate-x-1/2 font-roxborough italic text-[18rem] md:text-[22rem] leading-none text-henko-ink/[0.04] select-none"
         >
           &mdash;
         </span>
 
         <div className="relative z-10 max-w-2xl mx-auto">
-          <div className="flex items-center justify-center gap-3 mb-5">
-            <span className="block w-8 h-px bg-white/60" />
-            <p className="font-raleway font-bold text-white tracking-[0.22em] uppercase text-[11px]">
-              Hablemos
-            </p>
-            <span className="block w-8 h-px bg-white/60" />
-          </div>
-          <h2 data-animate className="font-roxborough text-3xl md:text-5xl text-white mb-4 leading-[1.15]">
-            ¿Trabajamos <em className="italic font-light">juntos?</em>
+          <p data-animate className="font-raleway font-semibold uppercase text-overline text-henko-turquoise mb-6 flex items-center justify-center gap-3">
+            <span className="inline-block w-8 h-px bg-current opacity-60" aria-hidden="true" />
+            Hablemos
+            <span className="inline-block w-8 h-px bg-current opacity-60" aria-hidden="true" />
+          </p>
+          <h2 data-animate data-delay="100" className="font-roxborough text-3xl md:text-5xl text-henko-ink mb-4 leading-[1.15]">
+            ¿Trabajamos <em className="italic font-light text-henko-turquoise">juntos?</em>
           </h2>
-          <p data-animate data-delay="100" className="font-roxborough italic text-lg md:text-xl text-white/90 mb-10">
+          <p data-animate data-delay="200" className="font-roxborough italic text-lg md:text-xl text-henko-ink-soft mb-10">
             Primera consulta gratuita de 20 minutos. Sin compromiso.
           </p>
           <Link
             data-animate
-            data-delay="200"
+            data-delay="300"
             href="/contacto"
-            className="inline-flex items-center gap-2 bg-white text-henko-turquoise px-9 py-4 rounded-full text-[15px] font-semibold tracking-wide hover:bg-gray-50 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200"
+            className="inline-flex items-center gap-2 bg-henko-turquoise text-white px-9 py-4 rounded-full text-[15px] font-semibold tracking-wide hover:bg-henko-turquoise-light hover:shadow-lift hover:-translate-y-0.5 transition-all duration-300"
           >
             Escríbeme →
           </Link>
