@@ -49,7 +49,7 @@ export default async function BlogIndexPage() {
         subtitle="Sobre liderazgo, coaching, gestión de personas y la cultura que se construye en cada decisión."
       />
 
-      <section className="px-6 md:px-12 pt-10 pb-16 max-w-7xl mx-auto">
+      <section className="px-6 md:px-12 pb-16 max-w-7xl mx-auto">
         {categorias && categorias.length > 0 && (
           <div className="flex flex-wrap items-center gap-2 mb-12">
             <div className="flex items-center gap-3 mr-3">

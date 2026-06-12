@@ -35,7 +35,7 @@ export default function OfertasListing({
         subtitle="Posiciones seleccionadas por Henkoaching para empresas en transformación. Solo trabajamos con organizaciones donde el talento realmente importa."
       />
 
-      <section className="px-6 md:px-12 pt-10 max-w-7xl mx-auto">
+      <section className="px-6 md:px-12 max-w-7xl mx-auto">
         <OfertasFiltros
           sectores={sectores}
           modalidades={modalidades}

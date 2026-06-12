@@ -36,7 +36,7 @@ export default async function SobreMiPage() {
       />
 
       {/* Bio */}
-      <section className="px-6 md:px-12 pt-10 pb-20">
+      <section className="px-6 md:px-12 pb-20">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[5fr,7fr] gap-12 lg:gap-16 items-center">
           {/* Foto */}
           <div data-animate="left" className="relative aspect-square rounded-[3rem] overflow-hidden bg-henko-paper-deep border border-henko-hairline shadow-soft flex items-center justify-center">

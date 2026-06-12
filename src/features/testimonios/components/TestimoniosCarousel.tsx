@@ -13,7 +13,7 @@ export type TestimonioPublico = {
 
 const AUTOPLAY_MS = 6000
 
-export default function TestimoniosCarousel({ testimonios }: { testimonios: TestimonioPublico[] }) {
+export default function TestimoniosCarousel({ testimonios, heading }: { testimonios: TestimonioPublico[]; heading?: React.ReactNode }) {
   const [activeIndex, setActiveIndex] = useState(0)
   const [paused, setPaused] = useState(false)
 
@@ -80,42 +80,41 @@ export default function TestimoniosCarousel({ testimonios }: { testimonios: Test
       )}
 
       {/* Cita destacada — layout editorial en 2 columnas */}
-      <figure key={t.id} className="relative grid grid-cols-1 lg:grid-cols-[4fr_8fr] gap-8 lg:gap-14 items-start animate-[fadeIn_0.5s_ease]">
+      <figure className="relative grid grid-cols-1 lg:grid-cols-[4fr_8fr] gap-8 lg:gap-14 items-start">
 
-        {/* Columna izquierda — meta + autor */}
+        {/* Columna izquierda — heading */}
         <div className="lg:pt-4">
-          <div className="flex items-center gap-4 mb-6">
+          {heading && <div>{heading}</div>}
+        </div>
+
+        {/* Columna derecha — cita + autor */}
+        <div key={t.id} className="animate-[fadeIn_0.5s_ease]">
+          <blockquote className="relative font-roxborough text-[19px] md:text-[24px] leading-[1.6] text-gray-800">
+            <span
+              aria-hidden
+              className="pointer-events-none font-roxborough italic text-henko-turquoise/25 select-none mr-1"
+            >
+              &ldquo;
+            </span>
+            {t.texto}
+          </blockquote>
+
+          <figcaption className="mt-7 flex flex-wrap items-center gap-x-4 gap-y-2">
             {t.rating && (
-              <p className="text-yellow-500 text-base" aria-label={`${t.rating} de 5 estrellas`}>
+              <p className="text-yellow-500 text-base leading-none" aria-label={`${t.rating} de 5 estrellas`}>
                 {'★'.repeat(t.rating)}<span className="text-gray-200">{'★'.repeat(5 - t.rating)}</span>
               </p>
             )}
+            <span className="block w-10 h-px bg-henko-turquoise/40" aria-hidden />
+            <p className="font-roxborough text-lg text-gray-900 leading-tight">{t.nombre}</p>
+            {t.rol && <p className="text-[13px] text-gray-500">{t.rol}</p>}
             {t.sector && (
               <span className="text-[10px] font-bold tracking-[0.18em] uppercase text-henko-turquoise">
                 {t.sector}
               </span>
             )}
-          </div>
-
-          <figcaption className="flex items-center gap-3">
-            <span className="block w-10 h-px bg-henko-turquoise/40" />
-            <div>
-              <p className="font-roxborough text-lg text-gray-900 leading-tight">{t.nombre}</p>
-              {t.rol && <p className="text-[13px] text-gray-500 mt-0.5">{t.rol}</p>}
-            </div>
           </figcaption>
         </div>
-
-        {/* Columna derecha — cita */}
-        <blockquote className="relative font-roxborough text-[19px] md:text-[24px] leading-[1.6] text-gray-800">
-          <span
-            aria-hidden
-            className="pointer-events-none font-roxborough italic text-henko-turquoise/25 select-none mr-1"
-          >
-            &ldquo;
-          </span>
-          {t.texto}
-        </blockquote>
 
       </figure>
 

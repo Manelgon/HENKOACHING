@@ -114,7 +114,7 @@ export default function ServiciosClient() {
       />
 
       {/* Acordeón de servicios */}
-      <section className="px-6 md:px-12 pt-10 pb-20 max-w-7xl mx-auto">
+      <section className="px-6 md:px-12 pb-20 max-w-7xl mx-auto">
         <div className="flex flex-col gap-5">
           {SERVICES.map((s, i) => (
             <div key={i} data-animate data-delay={i * 100}>

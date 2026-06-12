@@ -252,23 +252,24 @@ export default async function Home() {
       {/* TESTIMONIOS */}
       {testimonios.length > 0 && (
         <section className="bg-henko-paper-deep py-24 md:py-32 px-6 md:px-12 hairline-t overflow-hidden">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-16">
-              <div>
-                <p data-animate className="font-raleway font-semibold uppercase text-overline text-henko-turquoise mb-5 flex items-center gap-3">
-                  <span className="inline-block w-8 h-px bg-current opacity-60" aria-hidden="true" />
-                  Lo que dicen · {testimonios.length} reseñas verificadas
-                </p>
-                <h2 data-animate="reveal" className="font-roxborough font-bold text-display-lg text-henko-ink">
-                  <span className="reveal-line"><span className="reveal-inner">Quienes ya hicieron</span></span>
-                  <span className="reveal-line">
-                    <span className="reveal-inner italic font-light text-henko-turquoise">el cambio</span>
-                  </span>
-                </h2>
-              </div>
-            </div>
-
-            <TestimoniosCarousel testimonios={testimonios} />
+          <div className="max-w-7xl mx-auto pt-16">
+            <TestimoniosCarousel
+              testimonios={testimonios}
+              heading={
+                <>
+                  <p data-animate className="font-raleway font-semibold uppercase text-overline text-henko-turquoise mb-5 flex items-center gap-3">
+                    <span className="inline-block w-8 h-px bg-current opacity-60" aria-hidden="true" />
+                    Lo que dicen · {testimonios.length} reseñas verificadas
+                  </p>
+                  <h2 data-animate="reveal" className="font-roxborough font-bold text-display-lg text-henko-ink">
+                    <span className="reveal-line"><span className="reveal-inner">Quienes ya hicieron</span></span>
+                    <span className="reveal-line">
+                      <span className="reveal-inner italic font-light text-henko-turquoise">el cambio</span>
+                    </span>
+                  </h2>
+                </>
+              }
+            />
           </div>
         </section>
       )}
