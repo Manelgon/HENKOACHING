@@ -22,7 +22,7 @@ export default function CTAButton({
   const variants: Record<NonNullable<CTAButtonProps['variant']>, string> = {
     primary: onInk
       ? 'bg-henko-paper text-henko-ink px-8 py-4 rounded-full hover:shadow-lift hover:-translate-y-0.5'
-      : 'bg-henko-ink text-henko-paper px-8 py-4 rounded-full hover:bg-henko-turquoise hover:shadow-lift hover:-translate-y-0.5',
+      : 'bg-henko-turquoise text-white px-8 py-4 rounded-full hover:bg-henko-turquoise-light hover:shadow-lift hover:-translate-y-0.5',
     secondary: onInk
       ? 'border border-henko-paper/40 text-henko-paper px-8 py-4 rounded-full hover:border-henko-paper hover:bg-henko-paper/10'
       : 'border border-henko-hairline text-henko-ink px-8 py-4 rounded-full hover:border-henko-ink hover:bg-henko-ink/5',
