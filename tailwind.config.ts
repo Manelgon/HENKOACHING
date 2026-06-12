@@ -17,13 +17,13 @@ const config: Config = {
           white: '#f9f3ef',
           coral: '#d69494',
           orange: '#efb252',
-          // Superficies editoriales (PRP-015) — variante con colores de master
-          paper: '#ffffff',
-          'paper-deep': '#f9fafb',
-          card: '#ffffff',
-          ink: '#111827',
-          'ink-soft': '#4b5563',
-          hairline: 'rgba(17, 24, 39, 0.12)',
+          // Superficies editoriales (PRP-015)
+          paper: '#f9f3ef',
+          'paper-deep': '#f2e9e2',
+          card: '#fffdfb',
+          ink: '#2b3338',
+          'ink-soft': '#5c6a70',
+          hairline: 'rgba(43, 51, 56, 0.14)',
         },
       },
       fontFamily: {
